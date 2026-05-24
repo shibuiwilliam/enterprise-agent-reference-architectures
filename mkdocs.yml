@@ -1,10 +1,9 @@
 site_name: エンタープライズAIエージェント・アーキテクチャ・リファレンス
 site_description: 数万人規模・多様な既存SaaS・厳格な権限管理・階層的組織を前提とした、AIエージェントのエンタープライズ組み込みアーキテクチャパターン集
 site_author: ""
-# GitHub Pages 公開時に正しいパスになるよう、実リポジトリに合わせて書き換える
-site_url: https://USERNAME.github.io/ent-agent-docs/
-repo_url: https://github.com/USERNAME/ent-agent-docs
-repo_name: USERNAME/ent-agent-docs
+site_url: https://shibuiwilliam.github.io/enterprise-agent-reference-architectures/
+repo_url: https://github.com/shibuiwilliam/enterprise-agent-reference-architectures
+repo_name: shibuiwilliam/enterprise-agent-reference-architectures
 edit_uri: edit/main/docs/
 
 theme:
@@ -68,7 +67,7 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/USERNAME/ent-agent-docs
+      link: https://github.com/shibuiwilliam/enterprise-agent-reference-architectures
 
 # nav は scripts/build_nav.sh で再生成できる（CLAUDE.md 参照）
 nav:
