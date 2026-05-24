@@ -24,34 +24,39 @@ status: done
 
 ## 解決策と設計
 
-OBO 委譲の核心は「エージェントが依頼者本人の権限に縮退したトークンを下流 SaaS ごとに動的に取得する」点にある。エージェントは広権限を持たず、「今この依頼者がこの SaaS で持っている権限の範囲内」でのみ動作する。
+OBO 委譲の核心は「エージェントが依頼者の名のもとに scope と audience を限定したトークンを下流 SaaS ごとに動的に取得する」点にある。権限の制約は二段構えで実現される。
 
-ユーザーが IdP で認証した後、Gateway が OAuth 2.0 Token Exchange（RFC 8693）を用いて、下流 SaaS ごとに本人権限に縮退した OBO トークンを発行する。委譲チェーン（user → agent → tool）はトークンに刻まれ、各 SaaS の監査ログで本人に帰責できる。
+1. **Token Exchange（IdP/STS 側）**：Gateway が OAuth 2.0 Token Exchange（RFC 8693）を用いて、対象 SaaS の audience に限定された OBO トークンを発行する。このトークンには依頼者の subject と、要求する scope（権限範囲）が記録される。ただし、**トークン自体が権限を「縮退」させるわけではない**。トークンは「この人がこの SaaS に対して認証済みである」という事実と scope を伝えるだけである。
+2. **SaaS 側ネイティブ認可（RP 側）**：実際の権限制約は、トークンを受け取った SaaS（Relying Party）側のネイティブ認可エンジンが行う。Salesforce であればプロファイル・権限セット、ServiceNow であれば ACL が、トークンの subject に基づいて本人の権限を適用する。
+
+この二段構えにより、「トークンの scope で API の呼び出し範囲を制御し、SaaS 側のネイティブ認可でデータレベルの権限を制約する」という分離が成立する。
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant IdP as IdP（Okta/Entra ID）
+    participant IdP as IdP/STS（Okta/Entra ID）
     participant GW as Agent Gateway
     participant RT as Runtime
-    participant SF as Salesforce
-    participant SW as ServiceNow
+    participant SF as Salesforce（RP）
+    participant SW as ServiceNow（RP）
 
     U->>IdP: 認証
     IdP-->>U: IDトークン
     U->>GW: 依頼（IDトークン）
-    GW->>IdP: Token Exchange（RFC 8693）
-    IdP-->>GW: OBOトークン（Salesforce用）
+    GW->>IdP: Token Exchange（RFC 8693）<br/>audience=Salesforce, scope限定
+    IdP-->>GW: OBOトークン（subject=User, aud=SF）
     GW->>RT: 実行指示＋OBOトークン
-    RT->>SF: 本人権限でAPI呼び出し
-    SF-->>RT: 結果（監査ログに本人帰責）
-    GW->>IdP: Token Exchange（ServiceNow用）
-    IdP-->>GW: OBOトークン（ServiceNow用）
-    RT->>SW: 本人権限でAPI呼び出し
+    RT->>SF: API呼び出し（OBOトークン提示）
+    note over SF: SFネイティブ認可で<br/>Userの権限を適用
+    SF-->>RT: 結果（監査ログにUser帰責）
+    GW->>IdP: Token Exchange（RFC 8693）<br/>audience=ServiceNow, scope限定
+    IdP-->>GW: OBOトークン（subject=User, aud=SN）
+    RT->>SW: API呼び出し（OBOトークン提示）
+    note over SW: SNネイティブACLで<br/>Userの権限を適用
     SW-->>RT: 結果
 ```
 
-サービスアカウントを利用する場合も、実行主体（actor）と依頼者（subject）を分離して記録する。これにより、どの SaaS の監査ログでも「誰がエージェント経由で操作したか」が追跡可能になる。
+委譲チェーン（user → agent → tool）はトークンの actor / subject クレームに記録され、各 SaaS の監査ログで本人に帰責できる。サービスアカウントを利用する場合も、実行主体（actor）と依頼者（subject）を分離して記録する。
 
 ## 向き／不向き
 
@@ -60,6 +65,7 @@ sequenceDiagram
 | 複数SaaS横断で監査要件が厳しい業務 | 完全に公開された情報のみを扱う場合 |
 | 個人業務支援（Employee Copilot）で本人権限が必要 | 委譲非対応の旧式SaaS（別途 Permission Mirror で対処） |
 | 高リスク操作を含むワークフロー | 自律バッチ処理（ID-3 Workload Identity が適する） |
+| — | 数万人×多数 SaaS 環境で同意取得・トークン失効の運用コストが見合わない小規模ユースケース |
 
 ## 要素技術・既存システム連携
 
@@ -76,7 +82,8 @@ sequenceDiagram
 
 - 委譲非対応SaaSでは [ID-4 Permission Mirror](id4-permission-mirror-least-of.md) でエンタイトルメントを再現し、高リスクに分類して運用する。
 - トークンの有効期限は短く保つ。「遅い」という理由でキャッシュを広げて長命化するのは [ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md) の原則に反する。
-- 委譲チェーンが長くなるマルチエージェント構成では、各段で権限が縮退していることを検証する仕組みが必要である。末端エージェントが元のユーザー権限を超えていないかを必ず確認する。
+- 委譲チェーンが長くなるマルチエージェント構成では、各段で scope が縮小していることを検証する仕組みが必要である。末端エージェントが元のユーザー権限を超えていないかを必ず確認する。
+- 数万人×多数 SaaS の環境では、OBO の前提となるユーザー同意の取得（初回の OAuth フロー）と、トークン失効管理（退職・異動・権限変更時）の運用コストが無視できない。IdP の自動プロビジョニング（SCIM）と連携し、ライフサイクル管理を自動化する設計が必要である。
 
 ## 関連パターン
 

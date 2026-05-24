@@ -70,7 +70,7 @@ graph TB
         GW[Enterprise Agent Gateway<br/>認証/分類/リスク/レート/監査入口]
     end
 
-    subgraph F3["面3 アイデンティティ・信頼（ID）★最難関"]
+    subgraph F3["面3 アイデンティティ・信頼（ID）"]
         IDP[IdP連携 / OBO・トークン交換 / ワークロードID]
         PDP[PDP/PEP / Permission Mirror / JIT資格情報]
     end
@@ -115,14 +115,14 @@ graph TB
 |---|---|---|---|
 | [面1 体験・ゲートウェイ (EX)](../patterns/ex-experience/index.md) | 入口と提供面 | 仕事のある場所に届け、入口で統制する | 3 |
 | [面2 制御・ガバナンス (GV)](../patterns/gv-governance/index.md) | 統治・統制 | 一元レジストリ・モデル統制・評価・コスト・事故対応 | 10 |
-| [面3 アイデンティティ・信頼 (ID)](../patterns/id-identity/index.md) | 権限の忠実な伝播 ★最難関 | 誰の権限で動くかを保証する | 8 |
+| [面3 アイデンティティ・信頼 (ID)](../patterns/id-identity/index.md) | 権限の忠実な伝播 | 誰の権限で動くかを保証する（全面の中で最も設計難度が高い） | 8 |
 | [面4 実行・オーケストレーション (RT)](../patterns/rt-runtime/index.md) | 分業・実行・自動化 | 責任分担・自律度・副作用・長尺・イベント | 11 |
 | [面5 知識・メモリ・コンテキスト (KM)](../patterns/km-knowledge/index.md) | 漏らさず活かす | 権限を保ったまま横断文脈を供給 | 7 |
 | [面6 統合・ツール (IN)](../patterns/in-integration/index.md) | 既存システム連携 | 作らず束ね、固有差を吸収 | 4 |
 | [面7 観測・評価・監査 (OB)](../patterns/ob-observability/index.md) | 説明責任 | 三者帰責で全行為を再構成可能に | 2 |
 
 !!! tip "読み方"
-    面1〜2が「入口と統治」、面3が「最難関の権限」、面4〜6が「実行と知識と連携」、面7が「説明責任」。これらを積み上げる依存関係は[依存関係と依存チェーン](../integration/dependency-chain.md)で示す。
+    面1〜2が「入口と統治」、面3が「権限の忠実な伝播（設計難度が高い）」、面4〜6が「実行と知識と連携」、面7が「説明責任」。これらを積み上げる依存関係は[依存関係と依存チェーン](../integration/dependency-chain.md)で示す。
 
 **横断軸**として以下の2つが全面を貫く。
 
@@ -144,6 +144,24 @@ graph TB
 | **MCP（Model Context Protocol）** | ツール接続の標準（企業ではGateway経由に統制） |
 | **CloudEvents** | SaaS/社内イベントの共通記述 |
 | **OpenTelemetry GenAI semantic conventions** | エージェント・モデル・ツール呼び出しの標準観測 |
+
+### 標準・リスク項目 ⇔ パターン対応表
+
+各標準やリスク項目が、本書のどのパターン・選定基準で対処されるかを以下に示す。
+
+| 標準・リスク項目 | 対応パターン・選定基準 |
+|---|---|
+| **OWASP: Prompt Injection** | [ID-7 Policy-as-Code Guardrail](../patterns/id-identity/id7-policy-as-code-guardrail.md)、[TO-12 プロンプト vs 実行基盤](../selection/tradeoff/to12-prompt-vs-platform.md) |
+| **OWASP: Sensitive Information Disclosure** | [KM-1 Access-Controlled RAG](../patterns/km-knowledge/km1-access-controlled-rag.md)、[KM-6 DLP & Redaction](../patterns/km-knowledge/km6-dlp-redaction-boundary.md)、[ID-1 二面分離](../patterns/id-identity/id1-workforce-customer-split.md) |
+| **OWASP: Excessive Agency** | [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md)、[RT-6 SoR Write Boundary](../patterns/rt-runtime/rt6-sor-write-boundary.md)、[ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md) |
+| **OWASP: Unbounded Consumption** | [DC-2 タイムアウト・リトライ・予算](../selection/degree/dc2-timeout-retry-budget.md)、[GV-8 Cost Quota & Chargeback](../patterns/gv-governance/gv8-cost-quota-chargeback.md) |
+| **NIST AI RMF: 生成AIリスク管理** | [GV-7 Evaluation Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)、[GV-4 Industry Policy Pack](../patterns/gv-governance/gv4-industry-policy-pack.md)、[DC-1 自律度ティア](../selection/degree/dc1-risk-tier-boundary.md) |
+| **NIST SP 800-207: Zero Trust** | [ID-6 Zero-Trust PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md)、[ID-2 OBO 委譲](../patterns/id-identity/id2-identity-federation-obo.md)、[ID-5 JIT Credentials](../patterns/id-identity/id5-jit-scoped-credentials.md) |
+| **RFC 8693: Token Exchange** | [ID-2 OBO 委譲](../patterns/id-identity/id2-identity-federation-obo.md) |
+| **OPA/Rego・Cedar** | [ID-7 Policy-as-Code Guardrail](../patterns/id-identity/id7-policy-as-code-guardrail.md) |
+| **MCP** | [IN-1 Tool / MCP Gateway](../patterns/in-integration/in1-tool-mcp-gateway.md) |
+| **CloudEvents** | [RT-10 Event-Driven Orchestrator](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) |
+| **OpenTelemetry** | [OB-1 Observability Lake](../patterns/ob-observability/ob1-observability-lake.md)、[OB-2 Unified Audit](../patterns/ob-observability/ob2-unified-audit-lineage.md) |
 
 ## 本書の歩き方
 

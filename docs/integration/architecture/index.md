@@ -27,7 +27,7 @@ graph TB
         EX3["EX-3 チャネル非依存フロントドア"]
     end
 
-    subgraph ID["面3 アイデンティティ・信頼（ID）★最難関"]
+    subgraph ID["面3 アイデンティティ・信頼（ID）"]
         ID1["ID-1 二面分離"]
         ID2["ID-2 OBO / Token Exchange"]
         ID3["ID-3 Workload ID"]

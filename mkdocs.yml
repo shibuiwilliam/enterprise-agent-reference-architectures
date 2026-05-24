@@ -81,12 +81,11 @@ nav:
       - 面1 体験・ゲートウェイ:
           - patterns/ex-experience/index.md
           - "EX-1 Enterprise Agent Gateway（統一フロントドア）": patterns/ex-experience/ex1-enterprise-agent-gateway.md
-          - "EX-2 業務埋め込み vs 独立ポータル": patterns/ex-experience/ex2-embedded-vs-portal.md
+          - "EX-2 業務埋め込み＋独立ワークベンチ（チャネル配置）": patterns/ex-experience/ex2-embedded-vs-portal.md
           - "EX-3 チャネル非依存フロントドア": patterns/ex-experience/ex3-channel-agnostic-frontdoor.md
       - 面2 制御・ガバナンス:
           - patterns/gv-governance/index.md
           - "GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）": patterns/gv-governance/gv1-agent-control-plane.md
-          - "GV-10 Two-Layer Value Measurement（生産性×経営KPI）": patterns/gv-governance/gv10-two-layer-value-measurement.md
           - "GV-2 Agent Catalog & Marketplace（社内カタログ）": patterns/gv-governance/gv2-agent-catalog-marketplace.md
           - "GV-3 Department Agent Factory（役割テンプレート工場）": patterns/gv-governance/gv3-department-agent-factory.md
           - "GV-4 Industry Policy Pack（業界ポリシーパック）": patterns/gv-governance/gv4-industry-policy-pack.md
@@ -95,6 +94,7 @@ nav:
           - "GV-7 Evaluation & Governance Pipeline（評価CI/CD）": patterns/gv-governance/gv7-evaluation-governance-pipeline.md
           - "GV-8 Cost Quota & Chargeback（コスト配賦）": patterns/gv-governance/gv8-cost-quota-chargeback.md
           - "GV-9 Incident Response & Kill Switch（事故対応・停止）": patterns/gv-governance/gv9-incident-response-kill-switch.md
+          - "GV-10 Two-Layer Value Measurement（生産性×経営KPI）": patterns/gv-governance/gv10-two-layer-value-measurement.md
       - 面3 アイデンティティ・信頼:
           - patterns/id-identity/index.md
           - "ID-1 Workforce/Customer 二面分離": patterns/id-identity/id1-workforce-customer-split.md
@@ -108,8 +108,6 @@ nav:
       - 面4 実行・オーケストレーション:
           - patterns/rt-runtime/index.md
           - "RT-1 Org-Hierarchical Hub & Spoke（意図ルーティング＋ドメインスポーク）": patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md
-          - "RT-10 Event-Driven Enterprise Orchestrator（イベント駆動）": patterns/rt-runtime/rt10-event-driven-orchestrator.md
-          - "RT-11 Project Workspace / Digital Twin Agent（プロジェクト・デジタルツイン）": patterns/rt-runtime/rt11-project-digital-twin.md
           - "RT-2 RACI-based Multi-Agent Orchestration": patterns/rt-runtime/rt2-raci-multi-agent.md
           - "RT-3 Risk-Tiered Autonomy（自律度の階層）": patterns/rt-runtime/rt3-risk-tiered-autonomy.md
           - "RT-4 Human Approval Chain（組織解決型承認）": patterns/rt-runtime/rt4-human-approval-chain.md
@@ -118,6 +116,8 @@ nav:
           - "RT-7 Enterprise Saga Agent（補償トランザクション）": patterns/rt-runtime/rt7-enterprise-saga.md
           - "RT-8 Durable Enterprise Agent Workflow（永続ワークフロー）": patterns/rt-runtime/rt8-durable-workflow.md
           - "RT-9 Enterprise Work Queue Agent（業務キュー参加）": patterns/rt-runtime/rt9-work-queue-agent.md
+          - "RT-10 Event-Driven Enterprise Orchestrator（イベント駆動）": patterns/rt-runtime/rt10-event-driven-orchestrator.md
+          - "RT-11 Project Workspace / Digital Twin Agent（プロジェクト・デジタルツイン）": patterns/rt-runtime/rt11-project-digital-twin.md
       - 面5 知識・メモリ:
           - patterns/km-knowledge/index.md
           - "KM-1 Access-Controlled Enterprise RAG（権限認識RAG）": patterns/km-knowledge/km1-access-controlled-rag.md
