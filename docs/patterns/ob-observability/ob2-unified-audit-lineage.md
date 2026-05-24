@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エージェントのすべての行為を「人（principal）＋エージェント（workload）＋対象システム（tool/system）」の三者で改ざん不能に記録し、後から誰の依頼で・どのエージェントが・どのシステムに・何をしたかを完全再構成できる統一監査基盤である。OpenTelemetry の Trace ID を相関 ID としてエージェント内の監査と各 SaaS（Salesforce Shield・Google Workspace Audit・Okta System Log）の監査ログを一本化し、インシデント時のリプレイと規制当局への報告を可能にする。
+「Salesforce のこのレコード、誰が変えたの？」——答えが「エージェント」では調査にならない。このパターンは、すべてのエージェント行為を「人（依頼者）＋エージェント（ワークロード）＋対象システム」の三者で改ざん不能に記録する。OpenTelemetry の Trace ID を相関 ID として、エージェント内部の監査と各 SaaS（Salesforce Shield・Okta System Log 等）の監査ログを一本化する。インシデント時のリプレイと規制当局への報告に対応する統一監査基盤である。
 
 ## 解決する企業課題
 

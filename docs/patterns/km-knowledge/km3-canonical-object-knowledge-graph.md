@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-Salesforce の Account・Workday の Employee・Sansan の Contact など、SaaS ごとに異なる名前で管理されている同一概念を、共通の業務オブジェクト（Customer / Employee / Project / Contract 等）に正規化し、エンティティ解決で名寄せして関係を張るパターンである。完全な ETL 統合ではなく「意味的統合」——各システムへの参照リンクを保持し、実データは元の SaaS に残す——により、語彙の断絶を橋渡ししつつデータコピーのリスクを回避する。
+Salesforce では「Account」、Workday では「Organization」、Jira では「Project」——同じ顧客を指しているのに SaaS ごとに名前が違う。エージェントは横断検索したくても、語彙がバラバラでは文脈を組み立てられない。このパターンは、共通の業務オブジェクト（Customer / Employee / Project / Contract 等）に正規化し、エンティティ解決で同一人物・同一顧客を名寄せして関係を張る。完全な ETL 統合ではなく「意味的統合」——各 SaaS への参照リンクを持ち、実データは元の場所に残す——を目指す。
 
 ## 解決する企業課題
 

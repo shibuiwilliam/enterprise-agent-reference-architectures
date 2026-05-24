@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-RAG やフェデレーテッド取得で得たコンテキストを、どの程度プロンプトに投入するかを決める連続量パラメータである。「使えるデータ」ではなく「目的に必要な最小データ」で絞る [KM-5 Purpose-Bound Context](../../patterns/km-knowledge/km5-purpose-bound-context.md) の原則を量的にどう適用するかを扱う。
+RAG で社内文書を 50 件取得できたとして、それを全部プロンプトに詰め込めば精度が上がるわけではない。トークンの大量消費、レイテンシ悪化に加え、中盤の情報が無視される「lost in the middle」現象で、むしろ回答品質が下がることもある。「使えるデータ」ではなく「このタスクに必要な最小のデータ」で絞る（[KM-5 Purpose-Bound Context](../../patterns/km-knowledge/km5-purpose-bound-context.md)）ために、top-k やトークン予算をどう設定するかを扱う。
 
 ## 過小・過大の害
 

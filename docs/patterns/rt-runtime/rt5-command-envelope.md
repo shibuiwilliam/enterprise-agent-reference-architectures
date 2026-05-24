@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-ユーザーの自然言語依頼を、構造化された Command Envelope（actor / agent / target_system / resource / action / risk_tier / requires_approval / reason）に変換してから後段に渡すパターンである。自然言語はユーザーインターフェイスとしては優れるが、内部プロトコルとして API に直接渡すと監査不能・ポリシー検証不能・SaaS 仕様依存の三重苦に陥る。Command Envelope への変換により、ポリシーチェック（ID-7）→ 承認（RT-4）→ SaaS アダプタ（IN-2）の一貫したパイプラインを通せるようになる。
+「来週の会議を設定して」という自然言語を、そのまま Google Calendar API に渡してはいけない。自然言語はユーザーとの対話に向いているが、内部プロトコルとしては曖昧すぎて監査もポリシー検証もできない。このパターンでは、自然言語をまず構造化された Command Envelope（actor / agent / target_system / action / risk_tier 等）に変換してから、ポリシーチェック → 承認 → SaaS アダプタの一貫したパイプラインに流す。
 
 ## 解決する企業課題
 

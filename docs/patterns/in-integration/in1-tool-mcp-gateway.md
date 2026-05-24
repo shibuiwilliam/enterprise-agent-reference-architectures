@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エージェントが Salesforce API・社内 REST API・MCP サーバ・データベース・RPA を直接呼び出すことを禁止し、企業管理の Tool Gateway を唯一の通路とするパターンである。Gateway で認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性チェック・ドライランを一元適用する。ツールカタログでスキーマ・権限・コストを管理し、有効化/無効化/版管理を運用制御する。AI 時代の Enterprise Service Bus に相当する役割を担う。
+エージェントが Salesforce API や社内 REST API を直接呼ぶと、API キーが散在し、認可もログもバラバラになる。このパターンでは、すべてのツール呼び出しを企業管理の Tool Gateway に集約し、認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性チェックを一箇所で済ませる。MCP サーバが増えても Gateway が統制する。いわば AI 時代の Enterprise Service Bus である。
 
 ## 解決する企業課題
 

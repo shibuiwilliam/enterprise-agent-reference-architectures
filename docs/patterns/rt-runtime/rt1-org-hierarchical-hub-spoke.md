@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-従業員は全社ポータル（Hub）に話しかけるだけでよい。Hub がセマンティックルーターで意図を分類し、HR Spoke（Workday/Talentio）・Engineering Spoke（Jira/GitHub）・Sales Spoke（Salesforce/Sansan）など部署のドメイン特化エージェント（Spoke）へ処理を委譲する。各 Spoke は独立したコンテキストウィンドウとツールセットを持ち、結果をサマリとして Hub に返す。権限は Hub → Spoke の方向にのみ渡り、子が親の権限を超えることはできない。
+従業員は「有給の残日数を教えて」とも「この商談のステータスを更新して」とも聞く。1つの万能エージェントにすべてを任せるとコンテキストが膨れ、権限も集中する。このパターンでは、従業員は全社ポータル（Hub）に話しかけるだけでよく、Hub が意図を判別して HR・Engineering・Sales 等の専門エージェント（Spoke）に処理を委譲する。各 Spoke は自分の担当 SaaS だけを扱い、権限は Hub → Spoke の方向にのみ減衰して渡される。
 
 ## 解決する企業課題
 
