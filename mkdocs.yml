@@ -1,10 +1,10 @@
-site_name: AIエージェント本番組み込み アーキテクチャ・リファレンス
-site_description: AIエージェントを本番システムに安全・堅牢・スケーラブルに組み込むためのアーキテクチャパターン集
+site_name: エンタープライズAIエージェント・アーキテクチャ・リファレンス
+site_description: 数万人規模・多様な既存SaaS・厳格な権限管理・階層的組織を前提とした、AIエージェントのエンタープライズ組み込みアーキテクチャパターン集
 site_author: ""
 # GitHub Pages 公開時に正しいパスになるよう、実リポジトリに合わせて書き換える
-site_url: https://USERNAME.github.io/agent-arch-docs/
-repo_url: https://github.com/USERNAME/agent-arch-docs
-repo_name: USERNAME/agent-arch-docs
+site_url: https://USERNAME.github.io/ent-agent-docs/
+repo_url: https://github.com/USERNAME/ent-agent-docs
+repo_name: USERNAME/ent-agent-docs
 edit_uri: edit/main/docs/
 
 theme:
@@ -13,15 +13,15 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: teal
+      accent: teal
       toggle:
         icon: material/weather-night
         name: ダークモードへ
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: teal
+      accent: teal
       toggle:
         icon: material/weather-sunny
         name: ライトモードへ
@@ -68,96 +68,81 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/USERNAME/agent-arch-docs
+      link: https://github.com/USERNAME/ent-agent-docs
 
 # nav は scripts/build_nav.sh で再生成できる（CLAUDE.md 参照）
 nav:
   - ホーム: index.md
   - はじめに:
-      - 到達目標とエージェント特性: overview/agenda.md
-      - 項目設計とカテゴリ分類: overview/schema.md
+      - 中心命題・分類学・組織グラフ・7面: overview/agenda.md
+      - 項目設計と面分類: overview/schema.md
   - パターンカタログ:
       - 概要: patterns/index.md
-      - A：実行・セッション:
-          - patterns/a-execution/index.md
-          - "A-1 Request-to-Job Gateway（非同期ジョブ受付）": patterns/a-execution/a1-request-to-job-gateway.md
-          - "A-2 Durable Agent Session（耐久セッション／チェックポイント）": patterns/a-execution/a2-durable-session.md
-          - "A-3 Streaming Progress（進捗ストリーミング）": patterns/a-execution/a3-streaming-progress.md
-          - "A-4 Interruptible Agent（中断・方針変更）": patterns/a-execution/a4-interruptible-agent.md
-          - "A-5 Time-Budgeted Agent Loop（予算制御ループ）": patterns/a-execution/a5-time-budgeted-loop.md
-          - "A-6 Agent Saga（補償トランザクション）": patterns/a-execution/a6-agent-saga.md
-      - B：構成・分担:
-          - patterns/b-composition/index.md
-          - "B-1 Deterministic Backbone, Probabilistic Edge（決定論的バックボーン×確率論的エッジ）": patterns/b-composition/b1-deterministic-backbone.md
-          - "B-2 Planner–Executor–Reviewer（計画・実行・検証の分離）": patterns/b-composition/b2-planner-executor-reviewer.md
-          - "B-3 Supervisor & Specialist（階層委譲・意図ルーティング）": patterns/b-composition/b3-supervisor-specialist.md
-          - "B-4 Agent Ensemble & Debate（合議・討論）": patterns/b-composition/b4-ensemble-debate.md
-          - "B-5 Blackboard Coordination（ブラックボード型協調）": patterns/b-composition/b5-blackboard.md
-      - C：入出力・契約化:
-          - patterns/c-io-contract/index.md
-          - "C-1 Natural Language Boundary Adapter（自然言語境界アダプタ）": patterns/c-io-contract/c1-nl-boundary-adapter.md
-          - "C-2 Structured Output Contract & Self-Correction（構造化出力契約＋自己修正）": patterns/c-io-contract/c2-structured-output-contract.md
-          - "C-3 Inverted Structured Output（意思決定オブジェクト）": patterns/c-io-contract/c3-inverted-structured-output.md
-          - "C-4 Ambiguity Negotiation（曖昧性交渉）": patterns/c-io-contract/c4-ambiguity-negotiation.md
-      - D：ツール・MCP:
-          - patterns/d-tools-mcp/index.md
-          - "D-1 Tool Gateway（ツールゲートウェイ）": patterns/d-tools-mcp/d1-tool-gateway.md
-          - "D-2 Least-Privilege Tool Binding（最小権限ツールバインディング）": patterns/d-tools-mcp/d2-least-privilege-binding.md
-          - "D-3 Dry-Run First Execution（ドライラン先行実行）": patterns/d-tools-mcp/d3-dry-run-execution.md
-          - "D-4 Sandboxed Tool Runtime（サンドボックス実行）": patterns/d-tools-mcp/d4-sandboxed-runtime.md
-          - "D-5 MCP Adapter Isolation（MCP境界分離）": patterns/d-tools-mcp/d5-mcp-adapter-isolation.md
-      - E：メモリ:
-          - patterns/e-memory/index.md
-          - "E-1 Layered Memory（階層メモリ）": patterns/e-memory/e1-layered-memory.md
-          - "E-2 Context Pack（コンテキストパック）": patterns/e-memory/e2-context-pack.md
-          - "E-3 Memory Write Gate（書き込みゲート）": patterns/e-memory/e3-memory-write-gate.md
-          - "E-4 Forgetting & Expiration（忘却・失効）": patterns/e-memory/e4-forgetting-expiration.md
-      - F：信頼性・検証:
-          - patterns/f-reliability/index.md
-          - "F-1 Evidence-First Answer（根拠優先／RAGグラウンディング）": patterns/f-reliability/f1-evidence-first.md
-          - "F-2 Guardrail Sidecar（入出力ガードレール）": patterns/f-reliability/f2-guardrail-sidecar.md
-          - "F-3 Verifier Agent（検証エージェント／LLM-as-Judge）": patterns/f-reliability/f3-verifier-agent.md
-          - "F-4 Policy-as-Code Guardrail（ポリシー・アズ・コード）": patterns/f-reliability/f4-policy-as-code.md
-          - "F-5 Human Approval Checkpoint（人間承認ゲート／HITL）": patterns/f-reliability/f5-human-approval.md
-      - G：セキュリティ:
-          - patterns/g-security/index.md
-          - "G-1 Confused-Deputy Damage Limitation（混乱代理被害限定／Dual-LLM）": patterns/g-security/g1-confused-deputy-limitation.md
-          - "G-2 Data Boundary Firewall（データ境界ファイアウォール／DLP）": patterns/g-security/g2-data-boundary-firewall.md
-          - "G-3 Tenant-Isolated Runtime（テナント分離ランタイム）": patterns/g-security/g3-tenant-isolated-runtime.md
-      - H：コスト・性能:
-          - patterns/h-cost-performance/index.md
-          - "H-1 Cost-Aware Model Router（コスト考慮モデルルーター／カスケード）": patterns/h-cost-performance/h1-cost-aware-router.md
-          - "H-2 Semantic Result Cache（セマンティック結果キャッシュ）": patterns/h-cost-performance/h2-semantic-cache.md
-          - "H-3 Prompt-Cache Optimized Context（プロンプトキャッシュ最適化）": patterns/h-cost-performance/h3-prompt-cache-context.md
-          - "H-4 Graceful Degradation & Fallback（縮退・フォールバック）": patterns/h-cost-performance/h4-graceful-degradation.md
-          - "H-5 Speculative / Hedged Execution（投機・ヘッジ実行）": patterns/h-cost-performance/h5-speculative-hedged.md
-      - I：観測性・LLMOps:
-          - patterns/i-observability/index.md
-          - "I-1 Agent Trace & Observability（トレース・可観測性）": patterns/i-observability/i1-trace-observability.md
-          - "I-2 Evaluation CI/CD（評価CI/CD）": patterns/i-observability/i2-evaluation-cicd.md
-          - "I-3 Production Replay（本番リプレイ／差分テスト）": patterns/i-observability/i3-production-replay.md
-          - "I-4 Version Pinning & Change Management（版固定・カナリア）": patterns/i-observability/i4-version-pinning.md
-      - J：抽象化:
-          - patterns/j-abstraction/index.md
-          - "J-1 Agent Runtime Abstraction（実行基盤の抽象化）": patterns/j-abstraction/j1-runtime-abstraction.md
-          - "J-2 Model Behavior Compatibility Layer（モデル挙動互換レイヤー）": patterns/j-abstraction/j2-model-compatibility-layer.md
-          - "J-3 Agent Capability Registry（能力レジストリ）": patterns/j-abstraction/j3-capability-registry.md
-      - K：人間協調:
-          - patterns/k-human/index.md
-          - "K-1 Agent Workbench（エージェント・ワークベンチ）": patterns/k-human/k1-agent-workbench.md
-          - "K-2 Editable Plan（編集可能な計画）": patterns/k-human/k2-editable-plan.md
-          - "K-3 Agent-to-Human Escalation（人間へのエスカレーション）": patterns/k-human/k3-human-escalation.md
-      - L：導入・移行・統治:
-          - patterns/l-adoption/index.md
-          - "L-1 Shadow Mode & Progressive Autonomy（シャドー運用→段階的自律）": patterns/l-adoption/l1-shadow-progressive-autonomy.md
-          - "L-2 Anti-Corruption Layer（アンチコラプション層）": patterns/l-adoption/l2-anti-corruption-layer.md
-          - "L-3 Agent Constitution（エージェント憲法）": patterns/l-adoption/l3-agent-constitution.md
+      - 面1 体験・ゲートウェイ:
+          - patterns/ex-experience/index.md
+          - "EX-1 Enterprise Agent Gateway（統一フロントドア）": patterns/ex-experience/ex1-enterprise-agent-gateway.md
+          - "EX-2 業務埋め込み vs 独立ポータル": patterns/ex-experience/ex2-embedded-vs-portal.md
+          - "EX-3 チャネル非依存フロントドア": patterns/ex-experience/ex3-channel-agnostic-frontdoor.md
+      - 面2 制御・ガバナンス:
+          - patterns/gv-governance/index.md
+          - "GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）": patterns/gv-governance/gv1-agent-control-plane.md
+          - "GV-10 Two-Layer Value Measurement（生産性×経営KPI）": patterns/gv-governance/gv10-two-layer-value-measurement.md
+          - "GV-2 Agent Catalog & Marketplace（社内カタログ）": patterns/gv-governance/gv2-agent-catalog-marketplace.md
+          - "GV-3 Department Agent Factory（役割テンプレート工場）": patterns/gv-governance/gv3-department-agent-factory.md
+          - "GV-4 Industry Policy Pack（業界ポリシーパック）": patterns/gv-governance/gv4-industry-policy-pack.md
+          - "GV-5 Central Model Gateway（モデル・ベンダー統制）": patterns/gv-governance/gv5-central-model-gateway.md
+          - "GV-6 Version Registry（モデル/プロンプト/ツール/ポリシー/索引の版管理）": patterns/gv-governance/gv6-version-registry.md
+          - "GV-7 Evaluation & Governance Pipeline（評価CI/CD）": patterns/gv-governance/gv7-evaluation-governance-pipeline.md
+          - "GV-8 Cost Quota & Chargeback（コスト配賦）": patterns/gv-governance/gv8-cost-quota-chargeback.md
+          - "GV-9 Incident Response & Kill Switch（事故対応・停止）": patterns/gv-governance/gv9-incident-response-kill-switch.md
+      - 面3 アイデンティティ・信頼:
+          - patterns/id-identity/index.md
+          - "ID-1 Workforce/Customer 二面分離": patterns/id-identity/id1-workforce-customer-split.md
+          - "ID-2 Identity Federation & On-Behalf-Of（OBO委譲）": patterns/id-identity/id2-identity-federation-obo.md
+          - "ID-3 Workload / Agent Identity（エージェント自身のID）": patterns/id-identity/id3-workload-agent-identity.md
+          - "ID-4 Permission Mirror & Least-of Faithful Access（権限忠実アクセス）": patterns/id-identity/id4-permission-mirror-least-of.md
+          - "ID-5 JIT Scoped Credentials（最小・短命・用途限定）": patterns/id-identity/id5-jit-scoped-credentials.md
+          - "ID-6 Zero-Trust Runtime + 中央PDP/分散PEP（ABAC/ReBAC）": patterns/id-identity/id6-zero-trust-pdp-pep.md
+          - "ID-7 Policy-as-Code Guardrail（決定論的行動可否）": patterns/id-identity/id7-policy-as-code-guardrail.md
+          - "ID-8 Consent & Access Transparency（同意・透明化）": patterns/id-identity/id8-consent-access-transparency.md
+      - 面4 実行・オーケストレーション:
+          - patterns/rt-runtime/index.md
+          - "RT-1 Org-Hierarchical Hub & Spoke（意図ルーティング＋ドメインスポーク）": patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md
+          - "RT-10 Event-Driven Enterprise Orchestrator（イベント駆動）": patterns/rt-runtime/rt10-event-driven-orchestrator.md
+          - "RT-11 Project Workspace / Digital Twin Agent（プロジェクト・デジタルツイン）": patterns/rt-runtime/rt11-project-digital-twin.md
+          - "RT-2 RACI-based Multi-Agent Orchestration": patterns/rt-runtime/rt2-raci-multi-agent.md
+          - "RT-3 Risk-Tiered Autonomy（自律度の階層）": patterns/rt-runtime/rt3-risk-tiered-autonomy.md
+          - "RT-4 Human Approval Chain（組織解決型承認）": patterns/rt-runtime/rt4-human-approval-chain.md
+          - "RT-5 Intent-to-Enterprise Command Envelope（構造化コマンド封筒）": patterns/rt-runtime/rt5-command-envelope.md
+          - "RT-6 System-of-Record Write Boundary（書き込み境界）": patterns/rt-runtime/rt6-sor-write-boundary.md
+          - "RT-7 Enterprise Saga Agent（補償トランザクション）": patterns/rt-runtime/rt7-enterprise-saga.md
+          - "RT-8 Durable Enterprise Agent Workflow（永続ワークフロー）": patterns/rt-runtime/rt8-durable-workflow.md
+          - "RT-9 Enterprise Work Queue Agent（業務キュー参加）": patterns/rt-runtime/rt9-work-queue-agent.md
+      - 面5 知識・メモリ:
+          - patterns/km-knowledge/index.md
+          - "KM-1 Access-Controlled Enterprise RAG（権限認識RAG）": patterns/km-knowledge/km1-access-controlled-rag.md
+          - "KM-2 Access-Controlled Context Mesh（フェデレーテッド文脈）": patterns/km-knowledge/km2-context-mesh.md
+          - "KM-3 Canonical Enterprise Object Model & Knowledge Graph（正規オブジェクト／知識グラフ）": patterns/km-knowledge/km3-canonical-object-knowledge-graph.md
+          - "KM-4 Scoped Memory Hierarchy（スコープ記憶階層）": patterns/km-knowledge/km4-scoped-memory-hierarchy.md
+          - "KM-5 Purpose-Bound Context Package（目的限定コンテキスト）": patterns/km-knowledge/km5-purpose-bound-context.md
+          - "KM-6 DLP & Redaction Boundary（DLP・マスキング）": patterns/km-knowledge/km6-dlp-redaction-boundary.md
+          - "KM-7 Ephemeral Secure Context Bus（揮発・機密計算）": patterns/km-knowledge/km7-ephemeral-secure-context-bus.md
+      - 面6 統合・ツール:
+          - patterns/in-integration/index.md
+          - "IN-1 Enterprise Tool / MCP Gateway": patterns/in-integration/in1-tool-mcp-gateway.md
+          - "IN-2 SaaS Connector Adapter（腐敗防止）": patterns/in-integration/in2-saas-connector-adapter.md
+          - "IN-3 Rate / Quota Broker（レート/クォータ調停）": patterns/in-integration/in3-rate-quota-broker.md
+          - "IN-4 Existing iPaaS Reuse（既存統合資産の再利用）": patterns/in-integration/in4-existing-ipaas-reuse.md
+      - 面7 観測・評価・監査:
+          - patterns/ob-observability/index.md
+          - "OB-1 Enterprise Agent Observability Lake": patterns/ob-observability/ob1-observability-lake.md
+          - "OB-2 Unified Audit & Lineage（三者帰責）": patterns/ob-observability/ob2-unified-audit-lineage.md
   - 選定基準:
       - 「程度」の選定基準: selection/degree-criteria.md
       - 「相反する仕組み」の選定基準: selection/tradeoffs.md
   - 統合と組み合わせ方:
-      - パターン間の依存関係: integration/dependencies.md
-      - 成熟度別ロードマップ: integration/roadmap.md
-      - 選定ガイド: integration/selection-guide.md
+      - 依存関係と組み合わせレシピ: integration/dependencies.md
+      - 部門別 適用例: integration/department-examples.md
+      - 成熟度ロードマップ: integration/roadmap.md
       - リファレンスアーキテクチャ: integration/reference-architecture.md
-      - 設計原則と組み合わせ方: integration/principles.md
+      - 設計原則: integration/principles.md

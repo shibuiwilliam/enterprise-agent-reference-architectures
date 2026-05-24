@@ -1,93 +1,73 @@
 ---
 title: "「相反する仕組み」の選定基準"
-description: "同期/非同期・単一/複数エージェントなど、AIエージェント設計で頻出する二者択一の判断軸と選定基準を体系化する。"
+description: "OBO vs サービスアカウント、中央レイク vs Mesh、Copilot vs Autopilot など12軸の二者択一の判断基準。"
 status: done
 ---
 
 # 「相反する仕組み」の選定基準
 
-設計では二者択一に見える対立が頻出する。実務の答えは多くの場合「どちらか一方」でなく「**どこで線を引くか**」である。各軸について判断基準を示す。
+二者択一に見える対立の多くは「どこで線を引くか」が答えである。エンタープライズで決定的な12軸を示す。
 
-## 5.1 同期 vs 非同期
+## 5.1 OBO委譲 vs サービスアカウント
 
-| 判断軸 | 同期を選ぶ | 非同期を選ぶ（[A-1](../patterns/a-execution/a1-request-to-job-gateway.md)/[A-2](../patterns/a-execution/a2-durable-session.md)） |
+| 観点 | User OBO（[ID-2](../patterns/id-identity/id2-identity-federation-obo.md)） | Service Account | Agent Identity（[ID-3](../patterns/id-identity/id3-workload-agent-identity.md)） | Hybrid |
+|---|---|---|---|---|
+| 権限忠実性 | 高 | 低（判定バグ＝漏洩） | 中 | 高 |
+| 対応範囲 | 委譲対応SaaSのみ | どのAPIでも | 自律ジョブ | 広い |
+| 監査帰責 | 本人に明確 | 曖昧になりがち | エージェントに明確 | 明確 |
+| 実装 | 複雑 | 容易 | 中 | 複雑 |
+
+**基準**：個人業務支援＝User OBO。部門代表業務＝Agent Identity＋部門ポリシー。全社バッチ＝Service Account＋厳格監査＋高リスク分類。高リスク操作＝User OBO＋人間承認。最も実務的なのは「**実行主体は Agent、権限上限は User**」の Hybrid である。
+
+## 5.2 中央集権データレイク vs フェデレーテッド Context Mesh
+
+| 観点 | 中央集権ベクトルDB/レイク | Federated Context Mesh（[KM-2](../patterns/km-knowledge/km2-context-mesh.md)） |
 |---|---|---|
-| 処理時間 | 数秒以内で収まる | 数十秒〜数分以上 |
-| UX | 対話的に即応が必要 | 完了後の通知で足りる |
-| 失敗時コスト | やり直しが安い | 途中失敗の再実行が高い→耐久セッション併用 |
-| 接続維持 | コネクション保持が現実的 | 保持コスト/タイムアウトが問題化 |
+| 向き | 分析・BI・統計 | 権限付きAI文脈取得 |
+| メリット | 高速・集計容易 | 権限を維持しやすい |
+| デメリット | 権限のミリ秒同期が事実上不可能→漏洩 | レイテンシ・実装複雑 |
 
-**基準**：チャットの単発応答は同期＋ストリーミング（[A-3](../patterns/a-execution/a3-streaming-progress.md)）で体感改善。バックグラウンドの複数ステップ自律タスクは非同期＋ジョブ＋耐久セッション。**ハイブリッド**（即時に部分結果をストリーム、重い処理を非同期化して後追い通知）が実用上の最適解になりやすい。
+**基準**：権限不要の公開社内規程は中央ベクトル DB へ。機密 SaaS データは本人トークンで JIT 取得するフェデレーテッドへ。**ハイブリッドが必須**。事前索引する場合も ACL 同梱（[KM-1](../patterns/km-knowledge/km1-access-controlled-rag.md)）を必須にする。**「速いから機密も索引化」は禁忌**。
 
-## 5.2 シングルエージェント vs マルチエージェント
+## 5.3 単一エージェント vs RACIマルチエージェント
 
-| 判断軸 | シングル | マルチ（[B-2](../patterns/b-composition/b2-planner-executor-reviewer.md)/[B-3](../patterns/b-composition/b3-supervisor-specialist.md)/[B-5](../patterns/b-composition/b5-blackboard.md)） |
-|---|---|---|
-| タスク構造 | 単一責務で完結 | 明確に分解でき専門性が分かれる |
-| プロンプト | 1つに収まる | 1プロンプトが肥大し精度低下 |
-| コスト/レイテンシ | 制約が厳しい | 余裕があり品質優先 |
-| デバッグ | 単純さ優先 | 複雑な協調を許容できる |
+**基準**：まず単一。マルチ化の基準は「複雑だから」でなく「**企業内の責任分担が複数に分かれるから**」（[RT-2](../patterns/rt-runtime/rt2-raci-multi-agent.md)）。複数部門関与・専門分化・最終責任が重い業務でマルチ、単純 Q&A・低遅延・低コストは単一。マルチはコスト・遅延・複雑性・障害点が増える。
 
-**基準**：**まずシングルで始める**。「責務過多で精度が落ちる」「並列化で速度/専門性の利得が明確」になって初めてマルチへ。マルチはコスト・レイテンシ・協調の複雑性・障害点を増やす。**安易なマルチ化は解決する問題より作る問題が多い**。
+## 5.4 Read-only vs Write-capable（段階的拡張）
 
-## 5.3 汎用 vs 専門エージェント
+**基準**：`Read-only → Draft-only → 承認付き Write → 低リスク自動 Write → 高リスク統制 Write` の順で段階拡張する。参照系は Autopilot、更新系は SoR 経由（[RT-6](../patterns/rt-runtime/rt6-sor-write-boundary.md)）＋ HitL（[RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md)）の Copilot に分離する。
 
-**基準**：入力種別が多様で各々別処理が要る → ルーター＋専門群（[B-3](../patterns/b-composition/b3-supervisor-specialist.md)）。入力が一様 → 単一汎用。専門化はコンテキストを絞れて精度・コストで有利だが、種類増で管理コストとルーティング誤りが増える。能力レジストリ（[J-3](../patterns/j-abstraction/j3-capability-registry.md)）で選定根拠を管理する。
+## 5.5 Copilot（業務支援）vs Autopilot（業務代行）
 
-## 5.4 集中型オーケストレーション vs 分散型協調
+**基準**：経営は Autopilot の ROI を求めるが、確率的挙動による基幹（Workday/SAP/Salesforce）破壊は許容できない。**参照系 API＝Autopilot、更新系 API＝HitL の Copilot** を明確に分離する。Autopilot 化は eval・カナリア・監査が揃った領域から段階的に進める。
 
-**基準**：制御・監査・予測可能性が重要 → 集中型（オーケストレーター/ステートマシン、[B-1](../patterns/b-composition/b1-deterministic-backbone.md)/[B-2](../patterns/b-composition/b2-planner-executor-reviewer.md)）。動的・探索的でどの専門家がいつ要るか事前に決められない → 分散型（ブラックボード/イベント駆動、[B-5](../patterns/b-composition/b5-blackboard.md)）。本番業務は概ね集中型が安全。分散型は柔軟だがデバッグ・保証が難しい。
+## 5.6 個人の記憶 vs プロジェクト/チームの記憶
 
-## 5.5 決定論的バックボーン vs 自律エージェント
+**基準**：個人効率化は個人メモリ、サイロ化防止は共有メモリが要る。**Personal Enclave（個人領域）と Project Workspace（共有領域）を物理的・論理的に分離**（[KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) / [RT-11](../patterns/rt-runtime/rt11-project-digital-twin.md)）し、共有範囲を組織グラフに従わせる。一本化は漏洩・混線の温床である。
 
-**基準**：状態遷移・権限・金額計算・DB更新は決定論コードに残し、曖昧処理・生成・探索だけをエージェントに委ねる（[B-1](../patterns/b-composition/b1-deterministic-backbone.md)）。委任度は「**誤りの不可逆性とコスト**」で決める。規制・監査が重い領域ほど決定論側に寄せ、探索的研究・創作ほどエージェント側に寄せる。
+## 5.7 全プロンプトログ vs 選択的トレースログ
 
-## 5.6 フレームワーク利用 vs 自前実装
+**基準**：再現性のため本文は残したいが、ログ基盤に平文で全件は機密・コストで破綻する。**メタは Trace DB、本文は暗号化ストレージ、集計は DWH** の三層分離（[OB-1](../patterns/ob-observability/ob1-observability-lake.md)）を適用する。極秘処理（[KM-7](../patterns/km-knowledge/km7-ephemeral-secure-context-bus.md)）はメタのみ。
 
-**基準**：標準パターンを素早く立ち上げたい → フレームワーク（LangGraph/CrewAI/Agents SDK）。細かい制御・性能・依存最小化・長期保守が重要 → 薄い自前実装。エージェント領域は進化が速くロックインリスクがあるため、**コア制御フローは自前 or 薄い抽象（[J-1](../patterns/j-abstraction/j1-runtime-abstraction.md)）、周辺（観測・評価）はツール活用**の折衷が堅実。
+## 5.8 中央集権プラットフォーム vs 部署フェデレーション
 
-## 5.7 プロバイダ抽象化 vs プロバイダ固有最適化
+**基準**：認可・監査・モデル統制・コスト・憲法・評価は**中央集権**（GV/ID 面）。ドメイン知識・ユースケース・エージェント中身は**各部署にフェデレート**（[GV-3](../patterns/gv-governance/gv3-department-agent-factory.md) のテンプレで権限委譲）。「中央が全部作る」も「各部署が野放し」も失敗する。**中央がガードレールと舗装路を、部署が業務ロジックを**持つ二層統治。
 
-**基準**：マルチプロバイダ・フェイルオーバー・移行容易性が重要 → 抽象化（[J-1](../patterns/j-abstraction/j1-runtime-abstraction.md)/[J-2](../patterns/j-abstraction/j2-model-compatibility-layer.md)、最大公約数のインターフェイス）。特定モデル固有機能（prompt caching、structured outputs、特殊ツール）で性能/コストを絞り出したい → 固有最適化。両立策：抽象化を基本としつつ、ホットパスだけ固有機能を「逃がし口」で使う。
+## 5.9 コネクタ自前構築 vs 既存iPaaS再利用
 
-## 5.8 RAG vs ロングコンテキスト vs ファインチューニング
+**基準**：既存統合資産がある領域は再利用（[IN-4](../patterns/in-integration/in4-existing-ipaas-reuse.md)）。ただし認可粒度が権限忠実（[ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md)）を満たすか検証する。新規・独自は MCP 化（[IN-1](../patterns/in-integration/in1-tool-mcp-gateway.md)）。
 
-| 手段 | 向く | 不向き |
-|---|---|---|
-| RAG（[F-1](../patterns/f-reliability/f1-evidence-first.md)） | 知識が大量・更新頻繁・出典が要る | 推論力が主役/検索精度が出ない |
-| ロングコンテキスト | 文書が中規模で毎回全体が要る | 巨大/高頻度（コスト・精度劣化） |
-| ファインチューニング | 様式・口調・形式の固定化、専門タスク反復 | 知識の鮮度が要る/データが少ない |
+## 5.10 内部/オンプレモデル vs 外部API
 
-**基準**：鮮度・出典が要る→RAG。振る舞い/様式の固定化→FT。排他でなく**併用**が普通（FTで様式、RAGで知識）。
+**基準**：極秘・規制データ・大量定常→VPC 内/社内推論。一般機密・最新性能・変動需要→外部 API（DPA・リージョン・保持を統制）。[GV-5](../patterns/gv-governance/gv5-central-model-gateway.md) がデータ分類で自動ルーティングする。
 
-## 5.9 事前検証 vs 事後検証
+## 5.11 同期 vs 非同期
 
-**基準**：入力の不正・インジェクション・トピック逸脱 → 事前（入力ガード、[F-2](../patterns/f-reliability/f2-guardrail-sidecar.md)）。出力の形式・事実・安全性 → 事後（出力ガード＋再生成、[F-3](../patterns/f-reliability/f3-verifier-agent.md)）。事前で弾ければLLM呼び出しを節約できるが、事後でしか分からない品質問題も多い。**両方を薄く併置**が基本。
+**基準**：数秒で終わる対話は同期＋ストリーミング。10 秒超・多段階・承認待ちは非同期＋永続ワークフロー（[RT-8](../patterns/rt-runtime/rt8-durable-workflow.md)）。部分結果を即ストリーム、重い処理は非同期化のハイブリッドが実用的である。
 
-## 5.10 ステートレス vs ステートフル
+## 5.12 プロンプトで守る vs ポリシー/実行基盤で守る
 
-**基準**：1回完結・スケール容易性優先 → ステートレス。長期対話・継続パーソナライズ → 実質ステートフルだが、**状態は外部メモリ（[E-1](../patterns/e-memory/e1-layered-memory.md)）/耐久セッション（[A-2](../patterns/a-execution/a2-durable-session.md)）に持たせ、エージェント本体はステートレスに保つ**（水平スケールしやすい）のが定石。
+**基準**：答えは明確である。**プロンプトはセキュリティ境界にならない**。安全保証は権限・承認・検証・隔離・Policy-as-Code（[ID-7](../patterns/id-identity/id7-policy-as-code-guardrail.md)）で実行基盤側に置く。プロンプトは品質・ふるまいの調整に使う。
 
-## 5.11 早期（eager）vs 遅延（lazy）ツール実行
-
-**基準**：必要性が確実なら早期に並列実行してレイテンシ短縮。必要か不確実・高コスト・副作用ありなら遅延（必要と確定してから）。**副作用ツールは原則レイジー＋承認ゲート（[D-3](../patterns/d-tools-mcp/d3-dry-run-execution.md)/[F-5](../patterns/f-reliability/f5-human-approval.md)）**。
-
-## 5.12 構造化出力 vs 自然言語出力
-
-**基準**：下流が機械処理（基幹連携・ツール引数）→ 構造化必須（[C-2](../patterns/c-io-contract/c2-structured-output-contract.md)、JSON Schema＋検証）。最終的に人間が読む対話 → 自然言語。境界（[C-1](../patterns/c-io-contract/c1-nl-boundary-adapter.md)/[L-2](../patterns/l-adoption/l2-anti-corruption-layer.md)）で「**内側は構造化、外側は自然言語**」と層を分けるのが実用的。
-
-## 5.13 自前/オンプレモデル vs API/マネージド
-
-**基準**：データ主権・コンプラ・大量定常トラフィックのコスト → 自前/オンプレ。最新性能・運用負荷最小・変動トラフィック → API。可用性は外因依存のため、APIは**フォールバック前提**（[H-4](../patterns/h-cost-performance/h4-graceful-degradation.md)）で。
-
-## 5.14 自己検証 vs 独立検証器
-
-**基準**：自己採点は甘くなりがち。誤りコストが高いほど**生成器と独立な検証器**（できれば決定論的、[F-3](../patterns/f-reliability/f3-verifier-agent.md)）を置く。低リスクの内部メモなら自己検証で十分。
-
-## 5.15 アンサンブル（N並列）vs 単発
-
-**基準**：正誤が判定可能で誤りコストが高い高価値タスク → アンサンブル/best-of-N（[B-4](../patterns/b-composition/b4-ensemble-debate.md)）。コスト・レイテンシ制約が厳しい大量処理 → 単発。難問のみNを増やす適応制御が現実的。
-
-## 5.16 プロンプトで守る vs ポリシー/実行基盤で守る
-
-**基準**：この軸の答えは明確で、**プロンプトはセキュリティ境界にならない**。権限・承認・検証・隔離・ポリシー（[D-2](../patterns/d-tools-mcp/d2-least-privilege-binding.md)/[F-4](../patterns/f-reliability/f4-policy-as-code.md)/[F-5](../patterns/f-reliability/f5-human-approval.md)/G系/[L-3](../patterns/l-adoption/l3-agent-constitution.md)）で守る。プロンプトは品質・ふるまいの調整に使い、安全保証は実行基盤側に置く。
+!!! danger "プロンプトでの安全保証は禁忌"
+    「プロンプトに『機密情報を出力するな』と書けば安全」という設計は、プロンプトインジェクションで容易に突破される。安全保証は必ず実行基盤側（権限・認可・Policy Engine）に置く。

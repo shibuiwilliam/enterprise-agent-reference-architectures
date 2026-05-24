@@ -1,27 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT=/home/claude/agent-arch-docs
+ROOT=/home/claude/ent-agent-docs
 YML="$ROOT/mkdocs.yml"
 
-# カテゴリ表示名
 declare -A CATNAME=(
-[a-execution]="A：実行・セッション" [b-composition]="B：構成・分担" [c-io-contract]="C：入出力・契約化"
-[d-tools-mcp]="D：ツール・MCP" [e-memory]="E：メモリ" [f-reliability]="F：信頼性・検証"
-[g-security]="G：セキュリティ" [h-cost-performance]="H：コスト・性能" [i-observability]="I：観測性・LLMOps"
-[j-abstraction]="J：抽象化" [k-human]="K：人間協調" [l-adoption]="L：導入・移行・統治"
+[ex-experience]="面1 体験・ゲートウェイ" [gv-governance]="面2 制御・ガバナンス" [id-identity]="面3 アイデンティティ・信頼"
+[rt-runtime]="面4 実行・オーケストレーション" [km-knowledge]="面5 知識・メモリ" [in-integration]="面6 統合・ツール"
+[ob-observability]="面7 観測・評価・監査"
 )
-ORDER=(a-execution b-composition c-io-contract d-tools-mcp e-memory f-reliability g-security h-cost-performance i-observability j-abstraction k-human l-adoption)
-
+ORDER=(ex-experience gv-governance id-identity rt-runtime km-knowledge in-integration ob-observability)
 get_title() { grep -m1 '^title:' "$1" | sed -E 's/^title: *"?//; s/"?$//'; }
 
 cat > "$YML" << 'HEAD'
-site_name: AIエージェント本番組み込み アーキテクチャ・リファレンス
-site_description: AIエージェントを本番システムに安全・堅牢・スケーラブルに組み込むためのアーキテクチャパターン集
+site_name: エンタープライズAIエージェント・アーキテクチャ・リファレンス
+site_description: 数万人規模・多様な既存SaaS・厳格な権限管理・階層的組織を前提とした、AIエージェントのエンタープライズ組み込みアーキテクチャパターン集
 site_author: ""
 # GitHub Pages 公開時に正しいパスになるよう、実リポジトリに合わせて書き換える
-site_url: https://USERNAME.github.io/agent-arch-docs/
-repo_url: https://github.com/USERNAME/agent-arch-docs
-repo_name: USERNAME/agent-arch-docs
+site_url: https://USERNAME.github.io/ent-agent-docs/
+repo_url: https://github.com/USERNAME/ent-agent-docs
+repo_name: USERNAME/ent-agent-docs
 edit_uri: edit/main/docs/
 
 theme:
@@ -30,15 +27,15 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: teal
+      accent: teal
       toggle:
         icon: material/weather-night
         name: ダークモードへ
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: teal
+      accent: teal
       toggle:
         icon: material/weather-sunny
         name: ライトモードへ
@@ -85,19 +82,18 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/USERNAME/agent-arch-docs
+      link: https://github.com/USERNAME/ent-agent-docs
 
 # nav は scripts/build_nav.sh で再生成できる（CLAUDE.md 参照）
 nav:
   - ホーム: index.md
   - はじめに:
-      - 到達目標とエージェント特性: overview/agenda.md
-      - 項目設計とカテゴリ分類: overview/schema.md
+      - 中心命題・分類学・組織グラフ・7面: overview/agenda.md
+      - 項目設計と面分類: overview/schema.md
   - パターンカタログ:
       - 概要: patterns/index.md
 HEAD
 
-# 各カテゴリのnavを生成
 for dir in "${ORDER[@]}"; do
   echo "      - ${CATNAME[$dir]}:" >> "$YML"
   echo "          - patterns/$dir/index.md" >> "$YML"
@@ -114,10 +110,10 @@ cat >> "$YML" << 'TAIL'
       - 「程度」の選定基準: selection/degree-criteria.md
       - 「相反する仕組み」の選定基準: selection/tradeoffs.md
   - 統合と組み合わせ方:
-      - パターン間の依存関係: integration/dependencies.md
-      - 成熟度別ロードマップ: integration/roadmap.md
-      - 選定ガイド: integration/selection-guide.md
+      - 依存関係と組み合わせレシピ: integration/dependencies.md
+      - 部門別 適用例: integration/department-examples.md
+      - 成熟度ロードマップ: integration/roadmap.md
       - リファレンスアーキテクチャ: integration/reference-architecture.md
-      - 設計原則と組み合わせ方: integration/principles.md
+      - 設計原則: integration/principles.md
 TAIL
 echo "mkdocs.yml written ($(wc -l < "$YML") lines)"

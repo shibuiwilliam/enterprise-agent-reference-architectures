@@ -1,86 +1,87 @@
 ---
-title: "設計原則と組み合わせ方"
-description: "「程度」と「相反」の設計判断をパターンへ写像する対応表と、全体を貫く11の設計原則。"
+title: "設計原則"
+description: "エンタープライズAIエージェント・アーキテクチャの12箇条の設計原則。"
 status: done
 ---
 
-# 設計原則と組み合わせ方
+# 設計原則
 
-## 概要
+エンタープライズ AI エージェントのアーキテクチャを貫く12箇条の設計原則を示す。
 
-[「程度」の選定基準](../selection/degree-criteria.md)と[「相反する仕組み」の選定基準](../selection/tradeoffs.md)で定めた設計判断は、抽象論ではなく具体的なパターンの設定値として現れる。本ページでは、設計判断からパターンへの写像表と、全体を貫く設計原則を示す。
+## 原則一覧
 
-## 「程度」と「相反」をパターンへ写像する
+### 1. エージェントは本人の権限を超えない
 
-| 設計判断 | 主に効くパターン | 設定の勘所 |
-|---|---|---|
-| タイムアウト / リトライ | [A-5 Time-Budget](../patterns/a-execution/a5-time-budgeted-loop.md)、[H-4 Fallback](../patterns/h-cost-performance/h4-graceful-degradation.md) | セッション予算に従属させ、副作用は冪等＋Saga |
-| ループ予算 | [A-5 Time-Budget](../patterns/a-execution/a5-time-budgeted-loop.md) | 上限到達を分岐点（部分結果 / 承認 / 縮退）に |
-| ログ粒度 | [I-1 Trace](../patterns/i-observability/i1-trace-observability.md) | メタはトレース、本文はストレージ退避＋サンプリング |
-| コンテキスト量 | [E-2 Context Pack](../patterns/e-memory/e2-context-pack.md)、[F-1 Evidence-First](../patterns/f-reliability/f1-evidence-first.md) | トークン予算内にランキング圧縮 |
-| 温度 / 決定性 | [C-2 Structured Output](../patterns/c-io-contract/c2-structured-output-contract.md)、[B-4 Ensemble](../patterns/b-composition/b4-ensemble-debate.md) | 連携は低温＋検証、合議は高温で多様性 |
-| ガードレール強度 | [F-2 Guardrail Sidecar](../patterns/f-reliability/f2-guardrail-sidecar.md)、[G-2 Data Boundary](../patterns/g-security/g2-data-boundary-firewall.md) | 経路リスク別に閾値、FP/FNを計測 |
-| 承認範囲 | [F-5 Human Approval](../patterns/f-reliability/f5-human-approval.md)、[L-1 Shadow Mode](../patterns/l-adoption/l1-shadow-progressive-autonomy.md) | リスク分類器で自動可 / 要承認 / 禁止 |
-| 同期 / 非同期 | [A-1 Request-to-Job](../patterns/a-execution/a1-request-to-job-gateway.md)、[A-3 Streaming](../patterns/a-execution/a3-streaming-progress.md) | 部分ストリーム＋非同期のハイブリッド |
-| 単一 / 複数エージェント | [B-2 Planner](../patterns/b-composition/b2-planner-executor-reviewer.md)、[B-3 Supervisor](../patterns/b-composition/b3-supervisor-specialist.md)、[B-5 Blackboard](../patterns/b-composition/b5-blackboard.md) | 既定は単一、肥大 / 並列利得で複数化 |
-| 抽象化 / 固有最適化 | [J-1 Runtime Abstraction](../patterns/j-abstraction/j1-runtime-abstraction.md)、[J-2 Model Compatibility](../patterns/j-abstraction/j2-model-compatibility-layer.md)、[H-3 Prompt Cache](../patterns/h-cost-performance/h3-prompt-cache-context.md) | 抽象を基本、ホットパスのみ固有機能 |
-| プロンプト / 基盤で守る | [F-4 Policy-as-Code](../patterns/f-reliability/f4-policy-as-code.md)、[D-2 Least-Privilege](../patterns/d-tools-mcp/d2-least-privilege-binding.md)、[G-1 Confused-Deputy](../patterns/g-security/g1-confused-deputy-limitation.md) | 安全保証は必ず実行基盤側に |
+実効権限は「能力 ∩ 本人権限 ∩ ポリシー」の最小。便利さのための全権化を禁ずる。
 
-## 設計原則
+参照：[ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md) / [ID-2 OBO](../patterns/id-identity/id2-identity-federation-obo.md)
 
-以下の11原則が、全パターンを貫く設計思想である。
+### 2. 従業員面と顧客面を物理的に分ける
 
-### 原則1：同期リクエストでなく、長時間セッションとして扱う
+最重大の事故クラス——顧客向けが社内データに到達する（逆も）——を構造的に排除する。
 
-Session / Job / Workflow / Checkpoint を一級概念にする。[A-1 Request-to-Job Gateway](../patterns/a-execution/a1-request-to-job-gateway.md)・[A-2 Durable Session](../patterns/a-execution/a2-durable-session.md) がこの原則を体現する。
+参照：[ID-1 二面分離](../patterns/id-identity/id1-workforce-customer-split.md)
 
-### 原則2：LLMを業務ロジックの中心に置きすぎない
+### 3. 作らず、寄り添う
 
-中核の状態遷移・権限・金額計算・DB更新は決定論コードに残す。[B-1 Deterministic Backbone](../patterns/b-composition/b1-deterministic-backbone.md) がこの原則を体現する。
+SoR を置き換えず、読み、正規手続きで書く。既存統合資産を再利用する。
 
-### 原則3：自然言語をそのまま実行しない
+参照：[RT-6 SoR Write Boundary](../patterns/rt-runtime/rt6-sor-write-boundary.md) / [IN-4 iPaaS Reuse](../patterns/in-integration/in4-existing-ipaas-reuse.md)
 
-Intent → Plan → Action → Evidence → Approval へ構造化する。[C-1 NL Boundary Adapter](../patterns/c-io-contract/c1-nl-boundary-adapter.md)・[C-2 Structured Output](../patterns/c-io-contract/c2-structured-output-contract.md)・[B-2 Planner–Executor–Reviewer](../patterns/b-composition/b2-planner-executor-reviewer.md) がこのパイプラインを形成する。
+### 4. データはコピーする前に疑う
 
-### 原則4：ツール実行を最重要リスク境界として設計する
+no-copy・JIT・ACL 同梱を既定にし、集約は目的が明確なときだけ。
 
-Gateway・最小権限・Dry-Run・Sandbox・監査を必須にする。[D-1](../patterns/d-tools-mcp/d1-tool-gateway.md)〜[D-5](../patterns/d-tools-mcp/d5-mcp-adapter-isolation.md) のカテゴリD全体がこの原則を担う。
+参照：[KM-2 Context Mesh](../patterns/km-knowledge/km2-context-mesh.md) / [KM-1 Access-Controlled RAG](../patterns/km-knowledge/km1-access-controlled-rag.md)
 
-### 原則5：メモリはデータ管理機能として扱う
+### 5. 組織グラフを唯一の権威に
 
-保存・忘却・権限・鮮度・根拠・テナント分離を設計する。[E-1](../patterns/e-memory/e1-layered-memory.md)〜[E-4](../patterns/e-memory/e4-forgetting-expiration.md) のカテゴリE全体がこの原則を担う。
+スコープ・共有・承認・委譲を組織構造から一貫して導く。
 
-### 原則6：プロンプトでなく、ポリシーと実行基盤で守る
+参照：[KM-3 Canonical Object & KG](../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md) / [KM-4 Scoped Memory](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md)
 
-権限・承認・検証・隔離で守る。プロンプトは攻撃者が操作可能であり、安全保証の最終手段にしない。[F-4 Policy-as-Code](../patterns/f-reliability/f4-policy-as-code.md)・[D-2 Least-Privilege](../patterns/d-tools-mcp/d2-least-privilege-binding.md)・[G-1 Confused-Deputy](../patterns/g-security/g1-confused-deputy-limitation.md) がこの原則を体現する。
+### 6. プロンプトでなく、アイデンティティとポリシーで守る
 
-### 原則7：評価をCI/CDに組み込む
+安全保証は実行基盤側に置く。プロンプトはセキュリティ境界にならない。
 
-モデル・プロンプト・ツール・RAGの変更は eval なしに本番反映しない。[I-2 Evaluation CI/CD](../patterns/i-observability/i2-evaluation-cicd.md)・[I-4 Version Pinning](../patterns/i-observability/i4-version-pinning.md) がこの原則を担う。
+参照：[ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) / [ID-6 Zero-Trust](../patterns/id-identity/id6-zero-trust-pdp-pep.md)
 
-### 原則8：観測性を通常システム以上に重視する
+### 7. すべての行為を三者で帰責する
 
-なぜその判断か・何を見たか・どのツールを呼んだか・いくらかかったか。[I-1 Agent Trace](../patterns/i-observability/i1-trace-observability.md) がこの原則の基盤となる。
+人＋エージェント＋システムを相関 ID で貫き企業横断で監査する。
 
-### 原則9：コストを設計対象にする
+参照：[OB-2 Unified Audit](../patterns/ob-observability/ob2-unified-audit-lineage.md) / [OB-1 Observability Lake](../patterns/ob-observability/ob1-observability-lake.md)
 
-ルーティング・キャッシュ・予算・早期停止・フォールバック。[A-5 Time-Budget](../patterns/a-execution/a5-time-budgeted-loop.md) と [H-1](../patterns/h-cost-performance/h1-cost-aware-router.md)〜[H-5](../patterns/h-cost-performance/h5-speculative-hedged.md) がコスト設計のパターン群である。
+### 8. 中央はガードレールと舗装路を、部署は業務ロジックを
 
-### 原則10：「やるか」でなく「どの程度か」を設計する
+集権と分権の二層統治。中央がインフラ・認可・監査・評価を、部署がドメイン知識・ユースケースを持つ。
 
-極端を避け、トレースと eval で継続調整する。[「程度」の選定基準](../selection/degree-criteria.md)がこの原則の実践ガイドとなる。
+参照：[GV-3 Department Factory](../patterns/gv-governance/gv3-department-agent-factory.md) / [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md)
 
-### 原則11：完全自律でなく、制御された自律性を目指す
+### 9. 自然言語はUIであり内部プロトコルではない
 
-[F-5 Human Approval](../patterns/f-reliability/f5-human-approval.md)・[K-2 Editable Plan](../patterns/k-human/k2-editable-plan.md)・[K-3 Escalation](../patterns/k-human/k3-human-escalation.md)・[L-1 Shadow Mode](../patterns/l-adoption/l1-shadow-progressive-autonomy.md) が、自律と制御のバランスを実現する。
+作用は必ず構造化コマンドへ変換する。自然言語のまま API に渡さない。
 
-## まとめ
+参照：[RT-5 Command Envelope](../patterns/rt-runtime/rt5-command-envelope.md) / [IN-2 SaaS Adapter](../patterns/in-integration/in2-saas-connector-adapter.md)
 
-> AIエージェントの本番化とは、賢いが信用しきれない・遅く・高コストで・騙されうる実行主体を、決定論的な殻・契約・権限・検証・予算・観測・統治の中に安全に閉じ込め、その周囲に従来のソフトウェア工学（状態管理・トランザクション・監査・テスト・デプロイ・可観測性）を配置し、各設計判断を「程度」と「相反軸」の明示的なトレードオフとして決める工学である。
+### 10. エージェントは「業務キューを処理する管理されたデジタル業務主体」
 
-!!! tip "関連ページ"
-    - [「程度」の選定基準](../selection/degree-criteria.md) — 連続量パラメータの決め方
-    - [「相反する仕組み」の選定基準](../selection/tradeoffs.md) — 二者択一の判断軸
-    - [パターン間の依存関係](dependencies.md) — パターンの前提と依存先
-    - [成熟度別ロードマップ](roadmap.md) — 段階的な導入順序
-    - [リファレンスアーキテクチャ](reference-architecture.md) — 全パターンの標準構成図
+チャットボットではなく、登録・監査・権限制御・評価され続ける実行主体として設計する。
+
+参照：[RT-9 Work Queue](../patterns/rt-runtime/rt9-work-queue-agent.md) / [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md)
+
+### 11. AIを賢くするより、企業の境界内で安全に働けるようにする
+
+知能は前提、勝負は権限・統合・統治。
+
+参照：[EX-1 Gateway](../patterns/ex-experience/ex1-enterprise-agent-gateway.md) / [ID-6 Zero-Trust](../patterns/id-identity/id6-zero-trust-pdp-pep.md)
+
+### 12. やるか/やらないかでなく、どの程度かを設計する
+
+自律度・ログ・予算・キャッシュ等の連続量を、トレースと eval で継続調整する。
+
+参照：[「程度」の選定基準](../selection/degree-criteria.md) / [GV-7 Eval Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)
+
+---
+
+> 最も凝縮すると——**AIエージェントを企業に導入するとは、LLMを業務システムにつなぐことではなく、企業のID・権限・責任・データ・プロセス・監査・組織構造の中に、新しい実行主体を安全に参加させることである。** 確率的な知能を、決定論的な権限・組織・監査の檻の中に閉じ込めたとき、初めて数万人規模の本番に耐えるエンタープライズAIエージェントが成立する。

@@ -1,0 +1,9 @@
+[project]
+name = "enterprise-agent-reference-architectures"
+version = "0.1.0"
+description = "エンタープライズAIエージェント・アーキテクチャ・リファレンス"
+requires-python = ">=3.12"
+dependencies = [
+    "mkdocs-material>=9.5",
+    "pymdown-extensions>=10.7",
+]

@@ -1,150 +1,144 @@
 ---
 title: "リファレンスアーキテクチャ"
-description: "全パターンを層構造として配置した標準構成図を mermaid で示す。"
+description: "7面・45パターンを統合した標準構成図。ユーザーからSystem of Recordまでの全層を示す。"
 status: done
 ---
 
 # リファレンスアーキテクチャ
 
-## 概要
-
-本ページでは、約50のパターンがシステム全体のどの位置に配置されるかを標準構成図として示す。パターンは排他的な選択肢ではなく、層として積み上げて使う。すべてのパターンを同時に導入する必要はなく、[成熟度別ロードマップ](roadmap.md)に沿って段階的に積み上げるのが現実的である。
+7面・45パターンを統合した標準構成図を示す。各層は下位層に依存し、横断軸（組織グラフ・ゼロトラスト/監査）が全層を貫く。
 
 ## 標準構成図
 
 ```mermaid
-flowchart TB
-    subgraph UserLayer["ユーザー / UI 層"]
-        K1["K-1 Agent Workbench"]
-        K2["K-2 Editable Plan"]
+graph TB
+    subgraph Users["ユーザー"]
+        EMP["従業員 / 管理者 / 経営層"]
+        CUST["顧客 / パートナー"]
     end
 
-    subgraph InputLayer["入力処理層"]
-        C1["C-1 NL Boundary Adapter"]
-        F2in["F-2 Guardrail Sidecar（入力）"]
-        G2in["G-2 Data Boundary Firewall"]
+    subgraph EX["面1 体験・ゲートウェイ（EX）"]
+        EX1["EX-1 Enterprise Agent Gateway<br/>認証/分類/リスク/レート/監査入口"]
+        EX2["EX-2 業務埋め込み / 独立ポータル"]
+        EX3["EX-3 チャネル非依存フロントドア"]
     end
 
-    subgraph SessionLayer["セッション管理層"]
-        A1["A-1 Request-to-Job Gateway"]
-        A3["A-3 Streaming Progress"]
+    subgraph ID["面3 アイデンティティ・信頼（ID）★最難関"]
+        ID1["ID-1 二面分離"]
+        ID2["ID-2 OBO / Token Exchange"]
+        ID3["ID-3 Workload ID"]
+        ID4["ID-4 Permission Mirror + 最小合成"]
+        ID5["ID-5 JIT資格情報"]
+        ID6["ID-6 Zero-Trust PDP/PEP"]
+        ID7["ID-7 Policy-as-Code"]
+        ID8["ID-8 Consent"]
     end
 
-    subgraph OrchLayer["オーケストレーション層"]
-        B1["B-1 Deterministic Backbone"]
-        A6["A-6 Agent Saga"]
-        A2["A-2 Durable Session"]
-        A5["A-5 Time-Budget"]
-        A4["A-4 Interruptible"]
+    subgraph GV["面2 制御・ガバナンス（GV）"]
+        GV1["GV-1 Registry"]
+        GV2["GV-2 Catalog"]
+        GV3["GV-3 Factory"]
+        GV4["GV-4 Policy Pack"]
+        GV5["GV-5 Model GW"]
+        GV6["GV-6 Version"]
+        GV7["GV-7 Eval"]
+        GV8["GV-8 Cost"]
+        GV9["GV-9 Incident"]
+        GV10["GV-10 Value"]
     end
 
-    subgraph AgentLayer["エージェント実行層"]
-        J1["J-1 Runtime Abstraction"]
-        J2["J-2 Model Compatibility"]
-        B2["B-2 Planner–Executor–Reviewer"]
-        B3["B-3 Supervisor & Specialist"]
-        B4["B-4 Ensemble & Debate"]
-        B5["B-5 Blackboard"]
-        H1["H-1 Cost-Aware Router"]
-        H2["H-2 Semantic Cache"]
-        H3["H-3 Prompt Cache"]
-        H4["H-4 Fallback"]
-        H5["H-5 Hedged Execution"]
-        F5["F-5 Human Approval"]
-        K3["K-3 Escalation"]
+    subgraph RT["面4 実行・オーケストレーション（RT）"]
+        RT1["RT-1 Hub&Spoke"]
+        RT2["RT-2 RACI"]
+        RT3["RT-3 Risk-Tier"]
+        RT4["RT-4 承認Chain"]
+        RT5["RT-5 Command Envelope"]
+        RT6["RT-6 SoR Write Boundary"]
+        RT7["RT-7 Saga"]
+        RT8["RT-8 Durable WF"]
+        RT9["RT-9 Work Queue"]
+        RT10["RT-10 Event-Driven"]
+        RT11["RT-11 Project Twin"]
     end
 
-    subgraph ToolLayer["ツール実行層"]
-        D1["D-1 Tool Gateway"]
-        D2["D-2 Least-Privilege"]
-        D3["D-3 Dry-Run"]
-        D4["D-4 Sandbox"]
-        D5["D-5 MCP Adapter"]
-        F1["F-1 Evidence-First"]
-        F3["F-3 Verifier Agent"]
+    subgraph KM["面5 知識・メモリ（KM）"]
+        KM1["KM-1 権限認識RAG"]
+        KM2["KM-2 Context Mesh"]
+        KM3["KM-3 正規オブジェクト/KG"]
+        KM4["KM-4 スコープ記憶"]
+        KM5["KM-5 目的限定"]
+        KM6["KM-6 DLP"]
+        KM7["KM-7 揮発セキュアバス"]
     end
 
-    subgraph BackendLayer["バックエンド / 外部サービス層"]
-        L2["L-2 Anti-Corruption Layer"]
-        BizSvc["業務サービス / DB"]
+    subgraph IN["面6 統合・ツール（IN）"]
+        IN1["IN-1 Tool/MCP GW"]
+        IN2["IN-2 SaaS Adapter"]
+        IN3["IN-3 Rate Broker"]
+        IN4["IN-4 iPaaS Reuse"]
     end
 
-    UserLayer --> InputLayer
-    InputLayer --> SessionLayer
-    SessionLayer --> OrchLayer
-    OrchLayer --> AgentLayer
-    AgentLayer --> ToolLayer
-    ToolLayer --> BackendLayer
+    subgraph SoR["System of Record"]
+        SAAS["Salesforce / ServiceNow / Workday / Slack / MS365<br/>Box / Jira / Linear / Asana / Zendesk / Shopify<br/>Sansan / バクラク / Talentio / Notion / AWS / 独自"]
+    end
+
+    subgraph OB["面7 観測・評価・監査（OB）"]
+        OB1["OB-1 Observability Lake"]
+        OB2["OB-2 統一監査・系譜（三者帰責）"]
+    end
+
+    Users --> EX
+    EX --> ID
+    ID --> GV
+    GV --> RT
+    RT --> KM
+    KM --> IN
+    IN --> SoR
+    SoR --> OB
 ```
 
-## 横断レイヤー
+## 横断軸
 
-以下のパターンは特定の層に限定されず、システム全体を横断して機能する。
+上記の層構造を貫く2つの横断軸が存在する。
+
+### 組織グラフ
+
+Workday（組織・職位・レポートライン）/ Okta（グループ）/ プロジェクト管理ツールから名寄せした単一の組織グラフが、全面のスコープ・委譲・承認・共有の根拠となる。
+
+参照パターン：[ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md) / [RT-1](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) / [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md) / [KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) / [KM-3](../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md)
+
+### ゼロトラスト/監査
+
+全呼び出しを「人＋エージェント＋システム」の三者で認可・記録する。
+
+参照パターン：[ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md) / [OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) / [ID-7](../patterns/id-identity/id7-policy-as-code-guardrail.md)
+
+## データフロー
+
+ユーザーの依頼から SoR 更新までの典型的なデータフローを示す。
 
 ```mermaid
-flowchart LR
-    subgraph CrossCutting["横断レイヤー"]
-        direction TB
-        Memory["E-1〜E-4 メモリサービス"]
-        Policy["F-4 Policy-as-Code / L-3 Constitution"]
-        Registry["I-4 Version Pinning / J-3 Capability Registry"]
-        Eval["I-2 Eval CI/CD / I-3 Production Replay"]
-        Trace["I-1 Trace & Observability"]
-        Cost["A-5/H コストメーター"]
-        Tenant["G-3 Tenant Isolation / G-1 Confused-Deputy"]
-    end
+sequenceDiagram
+    participant U as User
+    participant GW as Gateway (EX-1)
+    participant PDP as PDP (ID-6)
+    participant HUB as Hub (RT-1)
+    participant SPOKE as Spoke Agent
+    participant TGW as Tool GW (IN-1)
+    participant SOR as SoR
+    participant OB as 監査 (OB-2)
+
+    U->>GW: 依頼（IDトークン）
+    GW->>PDP: 認可チェック
+    PDP-->>GW: allow
+    GW->>HUB: 意図分類＋OBOトークン
+    HUB->>SPOKE: ドメイン委譲（権限縮退）
+    SPOKE->>TGW: Command Envelope
+    TGW->>PDP: ツール認可チェック
+    PDP-->>TGW: allow
+    TGW->>SOR: SaaS API（本人権限）
+    SOR-->>TGW: 結果
+    TGW-->>OB: 監査記録（三者帰責）
+    TGW-->>SPOKE: 結果
+    SPOKE-->>U: 応答
 ```
-
-| 横断パターン | 対象 | 役割 |
-|---|---|---|
-| [E-1 Layered Memory](../patterns/e-memory/e1-layered-memory.md)〜[E-4 Forgetting](../patterns/e-memory/e4-forgetting-expiration.md) | メモリ | セッション・エージェント間の記憶を管理する |
-| [F-4 Policy-as-Code](../patterns/f-reliability/f4-policy-as-code.md) / [L-3 Constitution](../patterns/l-adoption/l3-agent-constitution.md) | 統治 | ポリシーと行動規範を全層に適用する |
-| [I-4 Version Pinning](../patterns/i-observability/i4-version-pinning.md) / [J-3 Capability Registry](../patterns/j-abstraction/j3-capability-registry.md) | 変更管理 | モデル・プロンプト・ツール・能力を版管理する |
-| [I-2 Evaluation CI/CD](../patterns/i-observability/i2-evaluation-cicd.md) / [I-3 Production Replay](../patterns/i-observability/i3-production-replay.md) | 品質 | 評価パイプラインと再現テストを実行する |
-| [I-1 Agent Trace & Observability](../patterns/i-observability/i1-trace-observability.md) | 可観測性 | 全行動をトレースとして記録する |
-| [A-5 Time-Budget](../patterns/a-execution/a5-time-budgeted-loop.md) / H系 | コスト | 予算制御とコスト最適化を全層に適用する |
-| [G-3 Tenant-Isolated Runtime](../patterns/g-security/g3-tenant-isolated-runtime.md) / [G-1 Confused-Deputy](../patterns/g-security/g1-confused-deputy-limitation.md) | セキュリティ | テナント分離と被害限定を全層に適用する |
-
-## 各層の責務
-
-### ユーザー / UI 層
-
-人間との協調点を設計する。[K-1 Agent Workbench](../patterns/k-human/k1-agent-workbench.md) がエージェントの操作・監視UIを提供し、[K-2 Editable Plan](../patterns/k-human/k2-editable-plan.md) が計画の人間編集を可能にする。
-
-### 入力処理層
-
-自然言語入力を安全な契約へ変換する。[C-1 NL Boundary Adapter](../patterns/c-io-contract/c1-nl-boundary-adapter.md) が意図を構造化し、[F-2 Guardrail Sidecar](../patterns/f-reliability/f2-guardrail-sidecar.md) と [G-2 Data Boundary Firewall](../patterns/g-security/g2-data-boundary-firewall.md) が不正入力を遮断する。
-
-### セッション管理層
-
-[A-1 Request-to-Job Gateway](../patterns/a-execution/a1-request-to-job-gateway.md) がリクエストを非同期ジョブに変換し、[A-3 Streaming Progress](../patterns/a-execution/a3-streaming-progress.md) が進捗をクライアントへ逐次提示する。
-
-### オーケストレーション層
-
-[B-1 Deterministic Backbone](../patterns/b-composition/b1-deterministic-backbone.md) が中核ロジックを決定論的に管理する。[A-2 Durable Session](../patterns/a-execution/a2-durable-session.md) が状態を永続化し、[A-5 Time-Budget](../patterns/a-execution/a5-time-budgeted-loop.md) が暴走を防止し、[A-6 Agent Saga](../patterns/a-execution/a6-agent-saga.md) が副作用の補償を担う。[A-4 Interruptible](../patterns/a-execution/a4-interruptible-agent.md) が中断・再開を可能にする。
-
-### エージェント実行層
-
-LLM呼び出しとエージェント構成の実体がここにある。[J-1 Runtime Abstraction](../patterns/j-abstraction/j1-runtime-abstraction.md) と [J-2 Model Compatibility](../patterns/j-abstraction/j2-model-compatibility-layer.md) がベンダーロックインを防ぎ、[B-2](../patterns/b-composition/b2-planner-executor-reviewer.md)・[B-3](../patterns/b-composition/b3-supervisor-specialist.md)・[B-4](../patterns/b-composition/b4-ensemble-debate.md)・[B-5](../patterns/b-composition/b5-blackboard.md) がエージェント構成パターンを提供する。[H-1](../patterns/h-cost-performance/h1-cost-aware-router.md)〜[H-5](../patterns/h-cost-performance/h5-speculative-hedged.md) がコスト・性能を最適化し、[F-5 Human Approval](../patterns/f-reliability/f5-human-approval.md) と [K-3 Escalation](../patterns/k-human/k3-human-escalation.md) が人間への確認・エスカレーションを担う。
-
-### ツール実行層
-
-[D-1 Tool Gateway](../patterns/d-tools-mcp/d1-tool-gateway.md) がツール呼び出しを集約し、[D-2 Least-Privilege](../patterns/d-tools-mcp/d2-least-privilege-binding.md)・[D-3 Dry-Run](../patterns/d-tools-mcp/d3-dry-run-execution.md)・[D-4 Sandbox](../patterns/d-tools-mcp/d4-sandboxed-runtime.md)・[D-5 MCP Adapter](../patterns/d-tools-mcp/d5-mcp-adapter-isolation.md) が権限・安全性を制御する。[F-1 Evidence-First](../patterns/f-reliability/f1-evidence-first.md) が根拠取得を担い、[F-3 Verifier](../patterns/f-reliability/f3-verifier-agent.md) が出力を検証する。
-
-### バックエンド / 外部サービス層
-
-[L-2 Anti-Corruption Layer](../patterns/l-adoption/l2-anti-corruption-layer.md) がレガシーシステムとの境界を隔離し、エージェント側のモデルが業務サービスの都合に汚染されるのを防ぐ。
-
-## 入出力契約の位置づけ
-
-[C-2 Structured Output Contract](../patterns/c-io-contract/c2-structured-output-contract.md)・[C-3 Inverted Structured Output](../patterns/c-io-contract/c3-inverted-structured-output.md)・[C-4 Ambiguity Negotiation](../patterns/c-io-contract/c4-ambiguity-negotiation.md) は特定の層に限定されず、エージェント実行層とオーケストレーション層の境界で出力を契約化する役割を担う。
-
-## 導入の指針
-
-[L-1 Shadow Mode & Progressive Autonomy](../patterns/l-adoption/l1-shadow-progressive-autonomy.md) を用いれば、本構成図の各層を段階的に導入できる。まずシャドーモードで既存システムと並行稼動し、品質が確認できた層から順次自律度を上げる。
-
-!!! tip "関連ページ"
-    - [パターン間の依存関係](dependencies.md) — 各パターンの前提と依存先
-    - [成熟度別ロードマップ](roadmap.md) — 段階的な導入順序
-    - [選定ガイド](selection-guide.md) — 課題からパターンを逆引きする
-    - [設計原則と組み合わせ方](principles.md) — パターンの組み合わせ指針と設計原則

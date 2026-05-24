@@ -1,91 +1,98 @@
 ---
-title: "パターン間の依存関係"
-description: "約50のアーキテクチャパターンがどのように層として重なり依存し合うかを整理する。"
+title: "依存関係と組み合わせレシピ"
+description: "45パターンの積み上げ依存構造と、セキュリティ基盤→入口→実行→自動化の組み合わせレシピ。"
 status: done
 ---
 
-# パターン間の依存関係
+# 依存関係と組み合わせレシピ
 
-## 概要
+## 依存関係（積み上げ構造）
 
-パターンは排他的な選択肢ではなく、**層として重ねて使う**ものである。あるパターンの効果は、その前提となるパターンが導入されて初めて発揮される。本ページでは代表的な依存関係を整理し、導入順序の判断材料を提供する。
-
-## 依存関係マップ
+45パターンは独立して採用するものではなく、層として重ねて使う。以下に代表的な依存関係を示す。
 
 ```mermaid
-flowchart TD
-    A2[A-2 Durable Session] --> A4[A-4 Interruptible]
-    A2 --> F5[F-5 Human Approval]
-    A2 --> I3[I-3 Production Replay]
+graph TB
+    subgraph Foundation["基盤層"]
+        OB1[OB-1 Observability Lake]
+        OB2[OB-2 Unified Audit]
+        ID2[ID-2 OBO]
+        ID4[ID-4 Permission Mirror]
+        ID6[ID-6 Zero-Trust PDP/PEP]
+        ID7[ID-7 Policy-as-Code]
+        GV1[GV-1 Control Plane]
+        RT8[RT-8 Durable Workflow]
+        ORG[組織グラフ]
+    end
 
-    D1[D-1 Tool Gateway] --> D2[D-2 Least-Privilege]
-    D1 --> D3[D-3 Dry-Run]
-    D1 --> I1[I-1 Trace]
+    subgraph Dependent["依存パターン"]
+        GV7[GV-7 Evaluation]
+        GV9[GV-9 Incident Response]
+        GV6[GV-6 Version Registry]
+        KM1[KM-1 権限認識RAG]
+        KM2[KM-2 Context Mesh]
+        GV4[GV-4 Industry Policy Pack]
+        RT3[RT-3 Risk-Tier]
+        RT4[RT-4 承認Chain]
+        GV2[GV-2 Catalog]
+        GV8[GV-8 Cost]
+        RT7[RT-7 Saga]
+    end
 
-    B2[B-2 Planner–Executor–Reviewer] --> K2[K-2 Editable Plan]
-
-    I1 --> I2[I-2 Evaluation CI/CD]
-    I1 --> I3
-
-    C1[C-1 NL Boundary Adapter] --> B1[B-1 Deterministic Backbone]
-    C2[C-2 Structured Output] --> B1
-
-    F4[F-4 Policy-as-Code] --> D2
-    F4 --> F5
-    F4 --> G1[G-1 Confused-Deputy]
-    L3[L-3 Constitution] --> F4
-
-    A5[A-5 Time-Budget] -.->|上位制約| H1[H-1 Cost Router]
-    A5 -.->|上位制約| H4[H-4 Fallback]
-    A5 -.->|上位制約| B4[B-4 Ensemble]
+    OB1 --> GV7
+    OB1 --> GV9
+    OB1 --> GV6
+    OB2 --> GV9
+    ID2 --> KM1
+    ID4 --> KM1
+    ID2 --> KM2
+    ID6 --> GV4
+    ID7 --> GV4
+    ID7 --> RT3
+    ID7 --> RT4
+    GV1 --> GV2
+    GV1 --> GV8
+    GV1 --> OB2
+    RT8 --> RT4
+    RT8 --> RT7
+    RT8 --> OB2
+    ORG --> ID4
+    ORG --> RT4
+    ORG --> KM1
 ```
 
-## 代表的な依存チェーン
+### 主要な依存チェーン
 
-### A-2 Durable Session が前提となるパターン群
+| 基盤パターン | 依存先 | 理由 |
+|---|---|---|
+| [OB-1](../patterns/ob-observability/ob1-observability-lake.md) / [OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) | [GV-7](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)・[GV-9](../patterns/gv-governance/gv9-incident-response-kill-switch.md)・[GV-6](../patterns/gv-governance/gv6-version-registry.md) | 記録なくして評価・再現・調査なし |
+| [ID-2](../patterns/id-identity/id2-identity-federation-obo.md) / [ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md) | [KM-1](../patterns/km-knowledge/km1-access-controlled-rag.md)・[KM-2](../patterns/km-knowledge/km2-context-mesh.md) | 権限の伝播なくして安全な横断文脈なし |
+| [ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md) / [ID-7](../patterns/id-identity/id7-policy-as-code-guardrail.md) | [GV-4](../patterns/gv-governance/gv4-industry-policy-pack.md)・[RT-3](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md)・[RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md) | PDP/ポリシーが判断基盤 |
+| [GV-1](../patterns/gv-governance/gv1-agent-control-plane.md) | [GV-2](../patterns/gv-governance/gv2-agent-catalog-marketplace.md)・[GV-8](../patterns/gv-governance/gv8-cost-quota-chargeback.md)・[OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) | 実行許可のゲート（統制点） |
+| [RT-8](../patterns/rt-runtime/rt8-durable-workflow.md) | [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md)・[RT-7](../patterns/rt-runtime/rt7-enterprise-saga.md)・[OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) | 状態永続化が前提 |
 
-[A-2 Durable Agent Session](../patterns/a-execution/a2-durable-session.md) は実行状態のチェックポイント永続化を提供する。状態の永続化がなければ、中断も承認待ちもリプレイも実現できない。
+### 横断軸
 
-- [A-4 Interruptible Agent](../patterns/a-execution/a4-interruptible-agent.md) — 中断・方針変更にはチェックポイントからの再開が必要である。
-- [F-5 Human Approval Checkpoint](../patterns/f-reliability/f5-human-approval.md) — 承認待ちの間、セッション状態を保持し続ける必要がある。
-- [I-3 Production Replay](../patterns/i-observability/i3-production-replay.md) — リプレイには永続化された実行状態が素材となる。
+- **組織グラフ**：[ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md) / [RT-1](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) / [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md) / [KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) のスコープ・委譲・承認・共有を一貫させる土台
+- **ゼロトラスト/監査**：全アクションを三者帰責で貫く
 
-### D-1 Tool Gateway が実装点となるパターン群
+## 組み合わせレシピ（基盤→入口→実行→自動化）
 
-[D-1 Tool Gateway](../patterns/d-tools-mcp/d1-tool-gateway.md) はツール呼び出しを一点に集約する。この集約点があるからこそ、権限制御・ドライラン・監査を一貫して適用できる。
+### 1. セキュリティ基盤（最初に敷く）
 
-- [D-2 Least-Privilege Tool Binding](../patterns/d-tools-mcp/d2-least-privilege-binding.md) — ゲートウェイでセッション単位の権限を束縛する。
-- [D-3 Dry-Run First Execution](../patterns/d-tools-mcp/d3-dry-run-execution.md) — ゲートウェイが副作用実行前にドライランを挟む。
-- [I-1 Agent Trace & Observability](../patterns/i-observability/i1-trace-observability.md) — ゲートウェイがツール呼び出しの監査ログを記録する。
+[ID-2 OBO](../patterns/id-identity/id2-identity-federation-obo.md) ＋ [ID-4 権限忠実](../patterns/id-identity/id4-permission-mirror-least-of.md) ＋ [KM-7 揮発セキュアバス](../patterns/km-knowledge/km7-ephemeral-secure-context-bus.md) ＋ [ID-6 ゼロトラスト](../patterns/id-identity/id6-zero-trust-pdp-pep.md)
 
-### I-1 Trace が素材を供給するパターン群
+### 2. 従業員の入口
 
-[I-1 Agent Trace & Observability](../patterns/i-observability/i1-trace-observability.md) はエージェントの全行動を記録する。記録がなければ評価も再現もできない。
+[RT-1 Hub & Spoke](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) を全社ポータルとし、[EX-1 Gateway](../patterns/ex-experience/ex1-enterprise-agent-gateway.md) で統制する。
 
-- [I-2 Evaluation CI/CD](../patterns/i-observability/i2-evaluation-cicd.md) — トレースデータを評価パイプラインの入力に使う。
-- [I-3 Production Replay](../patterns/i-observability/i3-production-replay.md) — トレースから本番シナリオを再現する。
+### 3. 実際の業務遂行
 
-### B-2 Planner が K-2 Editable Plan の前提
+[RT-11 Project Digital Twin](../patterns/rt-runtime/rt11-project-digital-twin.md) をチームの場として展開し、[KM-1](../patterns/km-knowledge/km1-access-controlled-rag.md) / [KM-2](../patterns/km-knowledge/km2-context-mesh.md) で権限付き文脈を供給する。
 
-[B-2 Planner–Executor–Reviewer](../patterns/b-composition/b2-planner-executor-reviewer.md) が計画を構造化アーティファクト（JSON/DSL）として出力するからこそ、[K-2 Editable Plan](../patterns/k-human/k2-editable-plan.md) で人間が計画を編集できる。
+### 4. バックオフィスの抜本自動化（経営価値の本丸）
 
-### C-1/C-2 契約化が B-1 決定論的バックボーンの成立条件
+[RT-10 イベント駆動](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) ＋ [RT-7 Saga](../patterns/rt-runtime/rt7-enterprise-saga.md) ＋ [RT-4 HitL](../patterns/rt-runtime/rt4-human-approval-chain.md)
 
-[C-1 Natural Language Boundary Adapter](../patterns/c-io-contract/c1-nl-boundary-adapter.md) と [C-2 Structured Output Contract](../patterns/c-io-contract/c2-structured-output-contract.md) によって出力が契約化されて初めて、[B-1 Deterministic Backbone](../patterns/b-composition/b1-deterministic-backbone.md) の決定論的な殻でエージェント出力を包める。
+### 5. 統治の背骨（全面に貫く）
 
-### F-4 / L-3 が統治の背骨
-
-[F-4 Policy-as-Code Guardrail](../patterns/f-reliability/f4-policy-as-code.md) と [L-3 Agent Constitution](../patterns/l-adoption/l3-agent-constitution.md) は、[D-2 Least-Privilege](../patterns/d-tools-mcp/d2-least-privilege-binding.md)・[F-5 Human Approval](../patterns/f-reliability/f5-human-approval.md)・[G-1 Confused-Deputy Limitation](../patterns/g-security/g1-confused-deputy-limitation.md)・[G-2 Data Boundary Firewall](../patterns/g-security/g2-data-boundary-firewall.md)・[G-3 Tenant-Isolated Runtime](../patterns/g-security/g3-tenant-isolated-runtime.md) を貫く統治の背骨として機能する。
-
-### A-5 予算がステップ4の上位制約
-
-[A-5 Time-Budgeted Agent Loop](../patterns/a-execution/a5-time-budgeted-loop.md) のセッション予算は、タイムアウト・リトライ・カスケード・アンサンブルなど[「程度」の選定基準](../selection/degree-criteria.md)で定めるすべてのパラメータの上位制約となる。
-
-## 依存関係の読み方
-
-依存関係は「導入順序の制約」と読める。たとえば D-2 最小権限を導入するなら、先に D-1 Tool Gateway を構築するのが前提となる。ただし、すべての依存先を同時に導入する必要はない。[成熟度別ロードマップ](roadmap.md)に沿って段階的に積み上げるのが現実的である。
-
-!!! tip "関連ページ"
-    - [成熟度別ロードマップ](roadmap.md) — 依存関係を踏まえた段階的な導入順序
-    - [選定ガイド](selection-guide.md) — 課題から逆引きでパターンを選ぶ
-    - [リファレンスアーキテクチャ](reference-architecture.md) — 全パターンの標準構成図
+[GV-1 レジストリ](../patterns/gv-governance/gv1-agent-control-plane.md) ・ [GV-5 モデルGW](../patterns/gv-governance/gv5-central-model-gateway.md) ・ [OB-2 監査](../patterns/ob-observability/ob2-unified-audit-lineage.md) ・ [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md)

@@ -1,67 +1,155 @@
 ---
-title: "はじめに：到達目標とエージェント特性"
-description: "本サイトの到達目標と、すべてのパターンを駆動するAIエージェントの設計圧力（force）を整理する。"
+title: "はじめに：中心命題・分類学・組織グラフ・7面"
+description: "エンタープライズAIエージェントの中心命題、エージェント分類学、組織グラフ、7面アーキテクチャ、標準整合を概観する。"
 status: done
 ---
 
-# はじめに：到達目標とエージェント特性
+# はじめに：中心命題・分類学・組織グラフ・7面
 
-## 本書の到達目標
+## 中心命題
 
-AIエージェントは「賢いが信用しきれない・遅く・高コストで・確率的で・騙されうる実行主体」である。本サイトの目的は、この異質なコンポーネントを**決定論的な殻・契約・権限・検証・予算・観測・統治の中に安全に閉じ込め**、その周囲を従来のソフトウェア工学（状態管理・トランザクション・監査・テスト・デプロイ・可観測性）で固める設計知を、再利用可能なパターン集として提供することにある。
+エンタープライズにAIエージェントを組み込む中心課題は「**AIを賢くすること**」ではなく、「**企業の既存のID・権限・責任・業務プロセス・監査・データ境界・組織構造の中に、新しい実行主体を安全に参加させること**」である。
 
-## 統合にあたっての評価と方針
+エンタープライズAIエージェントとは、単なるチャットUIではない。組織の権限構造を忠実に投影し、既存システムの真実（System of Record）を壊さずに束ね、すべての行為を企業横断で監査・統治できる形に閉じ込めた、**管理可能・監査可能・権限制御された「デジタル業務主体」**である。エージェントの知能は前提条件にすぎず、勝負は「誰の権限で・どのデータを・どう守って・誰の責任で」動かすかにある。
 
-本サイトのパターン体系は、複数の独立した調査レポートを統合・再分類したものである。統合に際しての方針は以下のとおり。
+## AIエージェントは「企業内の実行主体」である
 
-- **パターン網羅性**：詳細カタログ版（A〜L、12カテゴリ）が最も粒度が細かく実務的であったため、これを骨格として全面採用した。
-- **独自パターンの補追**：「ブラックボード型協調」「投機/ヘッジ実行」をそれぞれカテゴリB・Hに統合した。「意図ルーティング」はB-3・H-1に内包させた。
-- **手薄だった2領域の強化**：「程度（how much）の決め方」と「相反する選択肢（どちらを採るか）の判断基準」を独立章（ステップ4・5）として厚く再構成した。
-- **重複排除**：同一概念の別名（例：耐久セッション/チェックポイント、補償トランザクション/Saga、ACL/腐敗防止層）は1パターンに正規化した。
+一般的なAIチャットは「回答主体」だが、エンタープライズエージェントは「業務実行主体」であり、企業システム上の**一級オブジェクト**として定義・管理する。
 
-## 全体アジェンダ（本サイトの歩き方）
-
-本サイトは以下の流れで構成される。
-
-1. **ステップ1（本ページ）**：到達目標・統合方針・アジェンダ。
-2. **[ステップ2](schema.md)**：各パターンを記述する共通スキーマと、カテゴリ分類の設計。
-3. **[ステップ3](../patterns/index.md)**：アーキテクチャパターン本体（カテゴリA〜L、計約50パターン）。
-4. **[ステップ4](../selection/degree-criteria.md)**：「程度」の選定基準（タイムアウト・リトライ・予算・ログ粒度・コンテキスト量・温度・ガードレール強度など、連続量の決め方）。
-5. **[ステップ5](../selection/tradeoffs.md)**：「相反する仕組み」の選定基準（同期/非同期、単一/複数エージェント、抽象化/固有最適化など、二者択一の判断軸）。
-6. **[ステップ6](../integration/dependencies.md)**：全体統合（依存関係・成熟度ロードマップ・選定ガイド・リファレンスアーキテクチャ・設計原則・組み合わせ方）。
-
-```mermaid
-flowchart LR
-    S1[ステップ1<br>到達目標] --> S2[ステップ2<br>スキーマ設計]
-    S2 --> S3[ステップ3<br>パターン本体<br>A〜L 50件]
-    S3 --> S4[ステップ4<br>程度の選定基準]
-    S3 --> S5[ステップ5<br>相反の選定基準]
-    S4 --> S6[ステップ6<br>統合・組み合わせ]
-    S5 --> S6
+```text
+EnterpriseAgent
+- agent_id / owner_department / business_purpose
+- allowed_users / allowed_projects / allowed_tools / allowed_data_domains
+- risk_tier / approval_policy / memory_scope
+- audit_policy / cost_budget / incident_owner
+- model_version / prompt_version / policy_version
 ```
 
-## 設計を駆動するAIエージェントの性質（force）
+### エージェント分類学（役割の型）
 
-すべてのパターンは、以下のエージェント特性が生む「設計圧力」への応答である。これらは独立でなく**連鎖**して制約を強める。
-
-| エージェント特性 | アーキテクチャ上の含意 | 主な対応カテゴリ |
+| 分類 | 役割 | 例 |
 |---|---|---|
-| 1リクエストが長い（数秒〜数十分） | 同期RPCでなくJob/Session/Workflowとして扱う | A |
-| 1リクエストが高コストかつ可変 | 予算制御・キャッシュ・モデル選択・早期停止 | H |
-| 非決定論的（同入力でも出力が変わる） | 再現性・評価・ガードレール・監査ログ | C/F/I |
-| ハルシネーション | 根拠確認・検証器・RAG・外部API優先 | F |
-| 自然言語インターフェイス | 意図解析・曖昧性解消・契約化・構造化出力 | C |
-| メモリをセッション/エージェント間で受け渡す | メモリを一級のデータ管理対象にする | E |
-| 可用性が不安定（外部LLM依存） | フォールバック・ルーティング・縮退・再実行 | H |
-| ツール/MCPで副作用を起こす | 権限・サンドボックス・冪等性・補償・監査 | D/G |
-| LLM差し替えで挙動が変わる | モデル抽象化・評価CI・カナリア・版固定 | I/J |
-| プロンプトインジェクション | LLMを「騙されうる代理人」とみなし被害半径を限定 | G |
-| 過剰な自律性（excessive agency） | 権限・機能・自律判断を最小化する | D/F/G |
-| ループ・暴走の可能性 | ステップ/予算/時間の上限とデッドマンスイッチ | A/H |
-| 説明責任（なぜそうしたか） | トレース保存・リプレイ・版記録 | I |
+| Employee Copilot | 従業員個人の業務支援 | メール下書き、資料作成、予定調整 |
+| Department Agent | 部門業務の実行支援 | HR / Sales / Finance Agent |
+| Project Agent | プロジェクト単位の作業支援 | PMO Agent、Issue Triage Agent |
+| Process Agent | 業務プロセスの自動実行 | 稟議、請求、返金、オンボーディング |
+| Customer-facing Agent | 顧客との対話・サポート | CS Agent、EC Agent |
+| Governance Agent | 監査・リスク・品質管理 | Compliance / Security Review Agent |
+| Platform Agent | 社内開発・運用支援 | SRE / Data / Dev Agent |
 
-!!! note "整合する公知の枠組み"
-    MCP（Model Context Protocol）、OWASP Top 10 for LLM Applications（Excessive Agency / Prompt Injection / Insecure Plugin Design 等）、NIST AI RMF（生成AIプロファイル）、LangGraphのdurable execution/checkpoint、OpenAIのStructured Outputs・prompt caching・evals、AWS Bedrock AgentCore。
+## 企業構造をアーキテクチャに反映する（組織グラフ）
 
-!!! tip "読み方のガイド"
-    カテゴリA〜Bは「骨格」、C〜Gは「安全と品質の境界層」、H〜Jは「資源と運用」、K〜Lは「人とプロセス」として位置づけられる。後段の[ステップ6](../integration/dependencies.md)で、これらを積み上げる依存関係と標準構成を示す。
+企業はフラットなユーザー集合ではない。権限・メモリ・ログ・評価・コストは、組織の階層に紐づけて設計する。
+
+```text
+Company > Business Unit > Department > Section/Group > Team > Project > Subproject > Work Item
+                                                                 └ Daily Operations
+```
+
+| スコープ | 対象 | 共有範囲 |
+|---|---|---|
+| User | 個人の嗜好・作業スタイル | 本人のみ |
+| Team | チームルール・定例・タスク | チーム |
+| Project | 決定事項・背景・成果物 | プロジェクト＋上位 |
+| Department | 業務標準・KPI・手順・予算 | 部門 |
+| Company | 全社規程・経営情報・全社ナレッジ | 全社 |
+| Customer | 顧客別契約・問い合わせ・利用履歴 | 担当者・許可者 |
+
+この構造を、Workday（組織・職位・レポートライン）、Okta/Entra ID（グループ）、Linear/Asana/Jira/Notion（プロジェクト）から名寄せした単一の**組織グラフ（Org Graph）**として持ち、すべての面がスコープ・委譲・共有・承認の根拠にする。
+
+## 全体アーキテクチャ：7面と2つの横断軸
+
+```mermaid
+graph TB
+    subgraph Users["ユーザー"]
+        E[従業員 / 管理者 / 経営層]
+        C[顧客 / パートナー]
+    end
+
+    subgraph F1["面1 体験・ゲートウェイ（EX）"]
+        GW[Enterprise Agent Gateway<br/>認証/分類/リスク/レート/監査入口]
+    end
+
+    subgraph F3["面3 アイデンティティ・信頼（ID）★最難関"]
+        IDP[IdP連携 / OBO・トークン交換 / ワークロードID]
+        PDP[PDP/PEP / Permission Mirror / JIT資格情報]
+    end
+
+    subgraph F2["面2 制御・ガバナンス（GV）"]
+        GOV[レジストリ / モデルGW / ポリシー / 評価 / コスト / 事故対応]
+    end
+
+    subgraph F4["面4 実行・オーケストレーション（RT）"]
+        RT[Hub&Spoke / RACI / Risk-Tier / 承認 / Saga / 永続WF]
+    end
+
+    subgraph F5["面5 知識・メモリ（KM）"]
+        KM[権限認識RAG / Context Mesh / 正規オブジェクト / スコープ記憶]
+    end
+
+    subgraph F6["面6 統合・ツール（IN）"]
+        IN[Tool/MCP Gateway / SaaS Adapter / レート調停 / iPaaS]
+    end
+
+    subgraph SoR["System of Record"]
+        S[Salesforce / ServiceNow / Workday / Slack / Box / Jira / Zendesk 等]
+    end
+
+    subgraph F7["面7 観測・評価・監査（OB）"]
+        OB[Observability Lake / 統一監査・系譜（三者帰責）]
+    end
+
+    Users --> F1
+    F1 --> F3
+    F3 --> F2
+    F2 --> F4
+    F4 --> F5
+    F5 --> F6
+    F6 --> SoR
+    SoR --> F7
+```
+
+各面の責務は以下のとおりである。
+
+| 面 | テーマ | 主眼 | パターン数 |
+|---|---|---|---|
+| [面1 体験・ゲートウェイ (EX)](../patterns/ex-experience/index.md) | 入口と提供面 | 仕事のある場所に届け、入口で統制する | 3 |
+| [面2 制御・ガバナンス (GV)](../patterns/gv-governance/index.md) | 統治・統制 | 一元レジストリ・モデル統制・評価・コスト・事故対応 | 10 |
+| [面3 アイデンティティ・信頼 (ID)](../patterns/id-identity/index.md) | 権限の忠実な伝播 ★最難関 | 誰の権限で動くかを保証する | 8 |
+| [面4 実行・オーケストレーション (RT)](../patterns/rt-runtime/index.md) | 分業・実行・自動化 | 責任分担・自律度・副作用・長尺・イベント | 11 |
+| [面5 知識・メモリ・コンテキスト (KM)](../patterns/km-knowledge/index.md) | 漏らさず活かす | 権限を保ったまま横断文脈を供給 | 7 |
+| [面6 統合・ツール (IN)](../patterns/in-integration/index.md) | 既存システム連携 | 作らず束ね、固有差を吸収 | 4 |
+| [面7 観測・評価・監査 (OB)](../patterns/ob-observability/index.md) | 説明責任 | 三者帰責で全行為を再構成可能に | 2 |
+
+!!! tip "読み方"
+    面1〜2が「入口と統治」、面3が「最難関の権限」、面4〜6が「実行と知識と連携」、面7が「説明責任」。これらを積み上げる依存関係は[統合と組み合わせ方](../integration/dependencies.md)で示す。
+
+**横断軸**として以下の2つが全面を貫く。
+
+- **組織グラフ**：全面がスコープ・委譲・承認を組織構造から一貫して導く土台。
+- **ゼロトラスト／監査**：全呼び出しを「人＋エージェント＋システム」の三者で認可・記録する。
+
+## 標準・フレームワークとの整合
+
+エンタープライズでは、これらを「アプリ設計の指針」でなく「**企業アーキテクチャ設計の制約**」として扱う。
+
+| 標準・フレームワーク | 位置づけ |
+|---|---|
+| **NIST AI RMF（Generative AI Profile）** | 生成AI固有リスクの特定と管理アクション設計の枠組み |
+| **OWASP Top 10 for LLM Applications** | Prompt Injection / Sensitive Information Disclosure / Excessive Agency / Unbounded Consumption 等を主要リスクとして整理 |
+| **NIST SP 800-207 Zero Trust Architecture** | 境界でなく主体・資産・リソース中心の保護 |
+| **OIDC / SCIM** | 既存ID標準（認証・プロビジョニング）の上に乗る。独自ID管理を乱立させない |
+| **OAuth 2.0 Token Exchange（RFC 8693）** | 委譲・代理実行（OBO）の標準 |
+| **OPA/Rego・Cedar** | Policy-as-Code による決定論的認可 |
+| **MCP（Model Context Protocol）** | ツール接続の標準（企業ではGateway経由に統制） |
+| **CloudEvents** | SaaS/社内イベントの共通記述 |
+| **OpenTelemetry GenAI semantic conventions** | エージェント・モデル・ツール呼び出しの標準観測 |
+
+## 本書の歩き方
+
+1. **本章**：命題・統合方針・基礎概念・7面アーキテクチャ・標準整合
+2. **[項目設計と面分類](schema.md)**：各パターンの記述スキーマと面（カテゴリ）設計
+3. **[パターンカタログ](../patterns/index.md)**：7面・計45パターンの本体
+4. **[「程度」の選定基準](../selection/degree-criteria.md)**：連続量の決め方
+5. **[「相反する仕組み」の選定基準](../selection/tradeoffs.md)**：二者択一の判断軸
+6. **[統合と組み合わせ方](../integration/dependencies.md)**：依存関係・組み合わせ・部門別適用例・ロードマップ・設計原則

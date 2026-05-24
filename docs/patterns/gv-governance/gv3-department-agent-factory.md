@@ -1,0 +1,90 @@
+---
+title: "GV-3 Department Agent Factory（役割テンプレート工場）"
+description: "部門・役割ごとの標準テンプレート（ポリシー＋コネクタ＋評価パック付き）からエージェントを安全に量産するパターン。"
+status: done
+---
+
+# GV-3 Department Agent Factory（役割テンプレート工場）
+
+## 概要
+
+部門・役割ごとに標準化されたエージェントテンプレートを用意し、ポリシー・コネクタ・評価パックをセットにして安全に量産するパターンである。HR・Sales・CS・Finance・Legal・Engineering・Security それぞれの役割に相応したツール・データアクセス・権限・ポリシーをテンプレートとして既定化することで、数万人規模の組織でも個別設定なしにエージェントを展開できる。
+
+## 設計
+
+テンプレートは「役割（role）」単位で定義される。各テンプレートには許可ツール・データアクセス範囲・適用ポリシー・評価パックが同梱される。従業員の入社・異動・退職により Okta/Workday 上のロールが変更されると、Control Plane（GV-1）が権限付与・剥奪を自動的に追従させる。
+
+```mermaid
+flowchart TD
+    subgraph IdP["ID基盤 (Okta / Workday)"]
+        Role["ロール情報\n入社/異動/退職"]
+    end
+
+    subgraph Factory["Department Agent Factory"]
+        TemplateStore["テンプレートストア\nHR / Sales / CS / Finance /\nLegal / Eng / Security"]
+        Builder["ローコードビルダー"]
+        PolicyPack["ポリシーパック"]
+        ConnectorPack["コネクタパック"]
+        EvalPack["評価パック"]
+    end
+
+    subgraph ControlPlane["GV-1 Control Plane"]
+        Registry["エージェント登録"]
+        PermGrant["権限付与/剥奪"]
+    end
+
+    Role -->|ロール変更イベント| PermGrant
+    TemplateStore --> Builder
+    PolicyPack --> Builder
+    ConnectorPack --> Builder
+    EvalPack --> Builder
+    Builder -->|テンプレート派生| Registry
+    PermGrant --> Registry
+    Registry -->|利用可能エージェント| Employee["従業員"]
+```
+
+テンプレートから派生したエージェントは GV-2 カタログに登録され、申請・利用の窓口を経由して従業員に届く。ローコードビルダーを介することで、AI CoE が管理するガードレール（ポリシーパック・評価パック）の外を逸脱した設定を物理的に作れない構造にする。
+
+## 解決する企業課題
+
+エージェントを部門ごとに都度開発すると、権限設計・ポリシー適用・評価基準がバラバラになる。10 人規模なら許容できる設計ばらつきも、数千・数万人の規模では統制不能になる。また、1 万人の従業員に個別設定を行うことは現実的でない。GV-3 はテンプレートという「型」を導入することで、AI CoE が一度作った安全設計を全社に波及させる仕組みを提供する。入社・異動時の権限変更もロール変更イベントに追従させることで、人的ミスによる権限の取り残しを防ぐ。
+
+## 向き／不向き
+
+**向いている条件**
+
+- AI CoE やプラットフォームチームが存在し、複数部門へ展開する責任を持っている組織。
+- 数千人以上の規模で、部門ごとのエージェントを体系的に管理する必要がある段階。
+- 入社・異動のサイクルが多く、権限の自動追従が運用コスト削減につながる環境。
+
+**向いていない条件**
+
+- 部門固有の要件が非常に薄く、全社共通エージェント 1 本で賄える小規模組織。テンプレート管理のオーバーヘッドが価値を上回る。
+- まだ 1 つの部門・少数チームで試行している PoC 段階。
+
+## 要素技術・既存システム連携
+
+- テンプレートストア：YAML/JSON 形式のテンプレート定義を Git で管理し、変更を GV-6（Version Registry）で追跡する。
+- ローコードビルダー：テンプレートからの派生設定のみを許可し、ガードレール外の設定を遮断する。
+- ポリシーパック：ID-7（Policy-as-Code Guardrail）と連携し、役割に応じた禁止操作・承認要件を自動適用する。
+- コネクタパック：役割ごとに許可する SaaS（Salesforce、Workday、Slack、Jira 等）への接続設定を同梱する。
+- 評価パック：GV-7（評価 CI/CD）で使用するゴールデンデータセット・評価ルーブリックをテンプレートに同梱する。
+- Okta / Workday：ロール変更イベントのソースとして機能し、権限付与・剥奪のトリガーを提供する。
+
+## 落とし穴／選定の勘所
+
+!!! warning "粗いテンプレートによる過剰権限"
+    テンプレートを大雑把に設計すると、その役割に本来不要なツール・データへのアクセスがデフォルトで付与される。「Sales テンプレート」に財務データへのフルアクセスが含まれているようなケースが典型的なアンチパターンである。テンプレート設計時に ID-4（Permission Mirror / Least of）の原則で最小権限を適用し、定期レビューで余剰権限を削ることが必要である。
+
+!!! warning "テンプレートの乱立による管理崩壊"
+    部門からの要望に応じてテンプレートを際限なく追加すると、やがてテンプレートの数が増えすぎて管理コストが逆転する。テンプレート数には上限方針を設け、類似するものは統合する。差分は設定パラメータで吸収し、テンプレート自体の増殖を抑制する。
+
+!!! danger "ロール変更の追従漏れ"
+    異動・退職時にロール変更がエージェント権限に反映されないと、前の部門のデータにアクセスできる状態が続く。IdP（Okta/Workday）のロール変更イベントと Control Plane の権限剥奪を同期させる仕組みを実装し、追従遅延の上限（例：1 時間以内）を運用要件として定めること。
+
+## 関連パターン
+
+- [GV-1 Agent Control Plane（エージェント制御プレーン）](gv1-agent-control-plane.md)
+- [GV-2 Agent Catalog & Marketplace（社内カタログ）](gv2-agent-catalog-marketplace.md)
+- [ID-4 Permission Mirror / Least-of（権限忠実アクセス）](../id-identity/id4-permission-mirror-least-of.md)
+- [GV-4 Industry Policy Pack（業界ポリシーパック）](gv4-industry-policy-pack.md)
