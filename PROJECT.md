@@ -50,8 +50,8 @@
     │   ├── in-integration/     # 面6（IN-1..IN-4）
     │   └── ob-observability/   # 面7（OB-1..OB-2）
     ├── selection/
-    │   ├── degree-criteria.md  # ステップ4：「程度」の選定基準
-    │   └── tradeoffs.md        # ステップ5：「相反する仕組み」の選定基準
+    │   ├── degree/             # ステップ4：「程度」の選定基準（index.md + DC-1..DC-9）
+    │   └── tradeoff/           # ステップ5：「相反する仕組み」の選定基準（index.md + TO-1..TO-12）
     ├── integration/
     │   ├── dependencies.md     # ステップ6.1/6.2：依存関係・組み合わせレシピ
     │   ├── department-examples.md # ステップ6.3：部門別適用例
@@ -127,14 +127,67 @@
 | OB-1 | Observability Lake | patterns/ob-observability/ob1-observability-lake.md |
 | OB-2 | Unified Audit & Lineage | patterns/ob-observability/ob2-unified-audit-lineage.md |
 
-### 4.3 非パターンページ
+### 4.3 選定基準ページ共通スキーマ
+
+#### 「程度」の選定基準（DC-*）ページスキーマ（必須・順序固定）
+
+1. `## 概要` — この連続量パラメータが何を制御するかの一文要約。
+2. `## 過小・過大の害` — 両極端が引き起こす具体的な害。表形式で対比。
+3. `## 判断基準` — どの入力変数（影響度・機密度・職責等）でどう決めるか。
+4. `## 調整の仕組み` — 本番でどう計測・調整するか（OB-1/GV-7 との連携）。
+5. `## 関連パターン` — 対応するパターンへの相対リンク。
+
+フロントマター：`title`（`"DC-<N> <名称>"`）、`description`（1文）、`status`（`draft`→`done`）。
+
+#### 「相反する仕組み」の選定基準（TO-*）ページスキーマ（必須・順序固定）
+
+1. `## 概要` — 何と何が対立するか、なぜ二者択一に見えるか。
+2. `## 比較` — 観点別の比較表。
+3. `## 判断基準` — どの条件でどちらを選ぶか（線引きの軸）。
+4. `## ハイブリッド・段階的アプローチ` — 実務的な併用・段階戦略（該当する場合）。
+5. `## 関連パターン` — 対応するパターンへの相対リンク。
+
+フロントマター：`title`（`"TO-<N> <名称>"`）、`description`（1文）、`status`（`draft`→`done`）。
+
+### 4.4 選定基準ページ一覧
+
+#### 「程度」の選定基準（DC-1〜DC-9）
+
+| ID | 名称 | ファイル |
+|---|---|---|
+| DC-1 | 自律度のティア境界（Risk-Tier の引き方） | selection/degree/dc1-risk-tier-boundary.md |
+| DC-2 | タイムアウト・リトライ・予算（コスト上限） | selection/degree/dc2-timeout-retry-budget.md |
+| DC-3 | プロンプト/トレースのログ粒度（三層分離） | selection/degree/dc3-log-granularity.md |
+| DC-4 | コンテキスト投入量（top-k・トークン予算） | selection/degree/dc4-context-volume.md |
+| DC-5 | メモリ保持・忘却（TTL・スコープ） | selection/degree/dc5-memory-retention.md |
+| DC-6 | ガードレール強度（誤検知 vs 見逃し） | selection/degree/dc6-guardrail-strength.md |
+| DC-7 | キャッシュ積極度・JIT 資格情報 TTL | selection/degree/dc7-cache-jit-ttl.md |
+| DC-8 | モデルの強さ・データ分類別ルーティング | selection/degree/dc8-model-routing.md |
+| DC-9 | カナリア段階・イベント駆動の頻度制限 | selection/degree/dc9-canary-event-throttle.md |
+
+#### 「相反する仕組み」の選定基準（TO-1〜TO-12）
+
+| ID | 名称 | ファイル |
+|---|---|---|
+| TO-1 | OBO委譲 vs サービスアカウント | selection/tradeoff/to1-obo-vs-service-account.md |
+| TO-2 | 中央集権データレイク vs フェデレーテッド Context Mesh | selection/tradeoff/to2-lake-vs-mesh.md |
+| TO-3 | 単一エージェント vs RACI マルチエージェント | selection/tradeoff/to3-single-vs-multi-agent.md |
+| TO-4 | Read-only vs Write-capable（段階的拡張） | selection/tradeoff/to4-readonly-vs-write.md |
+| TO-5 | Copilot vs Autopilot | selection/tradeoff/to5-copilot-vs-autopilot.md |
+| TO-6 | 個人の記憶 vs プロジェクト/チームの記憶 | selection/tradeoff/to6-personal-vs-team-memory.md |
+| TO-7 | 全プロンプトログ vs 選択的トレースログ | selection/tradeoff/to7-full-vs-selective-log.md |
+| TO-8 | 中央集権プラットフォーム vs 部署フェデレーション | selection/tradeoff/to8-central-vs-federation.md |
+| TO-9 | コネクタ自前構築 vs 既存 iPaaS 再利用 | selection/tradeoff/to9-custom-vs-ipaas.md |
+| TO-10 | 内部/オンプレモデル vs 外部 API | selection/tradeoff/to10-onprem-vs-external.md |
+| TO-11 | 同期 vs 非同期 | selection/tradeoff/to11-sync-vs-async.md |
+| TO-12 | プロンプトで守る vs ポリシー/実行基盤で守る | selection/tradeoff/to12-prompt-vs-platform.md |
+
+### 4.5 非パターン・非選定基準ページ
 
 | ページ | 対応ステップ | ソース節 |
 |---|---|---|
 | overview/agenda.md | ステップ1 | ステップ1 全体（命題・分類学・組織グラフ・7面・標準整合） |
 | overview/schema.md | ステップ2 | ステップ2 |
-| selection/degree-criteria.md | ステップ4 | ステップ4（全9項目） |
-| selection/tradeoffs.md | ステップ5 | ステップ5（全12軸） |
 | integration/dependencies.md | ステップ6.1/6.2 | 6.1 依存関係・6.2 組み合わせレシピ |
 | integration/department-examples.md | ステップ6.3 | 6.3 部門別適用例 |
 | integration/roadmap.md | ステップ6.4 | 6.4 成熟度ロードマップ |
@@ -148,7 +201,7 @@
 - **Phase 0：足場確認** — `mkdocs serve` で全スタブ表示・`mkdocs build --strict` 通過を確認。
 - **Phase 1：セキュリティ基盤** — overview 2ページ ＋ ID-2, ID-4, ID-1, ID-6, ID-7（権限の忠実な伝播を先に固める）＋ KM-7。
 - **Phase 2：統治の骨格** — GV-1, GV-5, OB-1, OB-2, GV-9, EX-1。
-- **Phase 3：知識と連携** — KM-1, KM-2, KM-3, KM-4, IN-1, IN-2 ＋ selection 2ページ。
+- **Phase 3：知識と連携** — KM-1, KM-2, KM-3, KM-4, IN-1, IN-2 ＋ selection（DC-1〜DC-9, TO-1〜TO-12）。
 - **Phase 4：実行と自動化** — RT-1〜RT-11、残りの GV/EX/KM/IN/ID。
 - **Phase 5：統合章の仕上げ** — integration 5ページ（全パターンへの相互リンクを張る）。
 
