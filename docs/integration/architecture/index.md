@@ -1,14 +1,18 @@
 ---
 title: "リファレンスアーキテクチャ"
-description: "7面・45パターンを統合した標準構成図。ユーザーからSystem of Recordまでの全層を示す。"
+description: "エンタープライズシステムの全体像と、全社・部署・プロジェクト・個人の4軸でのAIエージェント配置を示す。"
 status: done
 ---
 
 # リファレンスアーキテクチャ
 
-7面・45パターンを統合した標準構成図を示す。各層は下位層に依存し、横断軸（組織グラフ・ゼロトラスト/監査）が全層を貫く。
+## 概要
 
-## 標準構成図
+エンタープライズ AI エージェントは、社内のどこか1箇所に配置して終わりではない。全社共通の基盤、部署ごとの業務エージェント、プロジェクト単位の共有メンバー、個人ごとのコパイロット——企業の組織構造に沿った4つの軸で配置を設計する必要がある。本章では、まず7面の層構造を全体像として示し、次に各軸でのエージェント配置を具体的に解説する。
+
+## エンタープライズシステム全体像
+
+7面・45パターンを統合した標準構成図を示す。各層は下位層に依存し、横断軸（組織グラフ・ゼロトラスト/監査）が全層を貫く。
 
 ```mermaid
 graph TB
@@ -97,21 +101,13 @@ graph TB
     SoR --> OB
 ```
 
-## 横断軸
+### 横断軸
 
 上記の層構造を貫く2つの横断軸が存在する。
 
-### 組織グラフ
+**組織グラフ**：Workday（組織・職位・レポートライン）/ Okta（グループ）/ プロジェクト管理ツールから名寄せした単一の組織グラフが、全面のスコープ・委譲・承認・共有の根拠となる。参照パターン：[ID-4](../../patterns/id-identity/id4-permission-mirror-least-of.md) / [RT-1](../../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) / [RT-4](../../patterns/rt-runtime/rt4-human-approval-chain.md) / [KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) / [KM-3](../../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md)
 
-Workday（組織・職位・レポートライン）/ Okta（グループ）/ プロジェクト管理ツールから名寄せした単一の組織グラフが、全面のスコープ・委譲・承認・共有の根拠となる。
-
-参照パターン：[ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md) / [RT-1](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) / [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md) / [KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) / [KM-3](../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md)
-
-### ゼロトラスト/監査
-
-全呼び出しを「人＋エージェント＋システム」の三者で認可・記録する。
-
-参照パターン：[ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md) / [OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) / [ID-7](../patterns/id-identity/id7-policy-as-code-guardrail.md)
+**ゼロトラスト/監査**：全呼び出しを「人＋エージェント＋システム」の三者で認可・記録する。参照パターン：[ID-6](../../patterns/id-identity/id6-zero-trust-pdp-pep.md) / [OB-2](../../patterns/ob-observability/ob2-unified-audit-lineage.md) / [ID-7](../../patterns/id-identity/id7-policy-as-code-guardrail.md)
 
 ## データフロー
 
@@ -142,3 +138,16 @@ sequenceDiagram
     TGW-->>SPOKE: 結果
     SPOKE-->>U: 応答
 ```
+
+## 4つの配置軸
+
+7面の層構造はシステム的な分類だが、実際の組織への配置は「誰が使うか」という軸で整理する。エンタープライズには4つの配置軸がある。
+
+| 軸 | 説明 | 主な担当 |
+|---|---|---|
+| [全社横断軸](company-wide.md) | 全従業員・全部門が共通で利用する基盤レイヤー。Gateway・IdP連携・モデルゲートウェイ・観測基盤など。 | 中央プラットフォームチーム |
+| [部署軸](department.md) | HR・Sales・CS など部門の業務ロジック・ツール接続・ドメイン知識を部署ごとに展開。 | 各部門 + プラットフォームチーム |
+| [プロジェクト軸](project.md) | プロジェクト・チーム単位でのエージェント配置。ライフサイクルに連動した共有メモリ・動的権限を設計。 | プロジェクトチーム |
+| [メンバー個別軸](individual.md) | 個人ごとのコパイロット。パーソナルメモリ・権限委譲・コンテキストを個人スコープで管理。 | 個人 |
+
+4軸は独立ではなく、個人軸は部署軸の上に乗り、部署軸は全社横断基盤の上に乗る。プロジェクト軸は部署をまたいで横断的に形成されることもある。この階層関係を前提に設計することで、権限の重複・競合を防ぎ、監査証跡を一本化できる。

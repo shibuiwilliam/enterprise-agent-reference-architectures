@@ -75,6 +75,7 @@ nav:
   - はじめに:
       - 中心命題・分類学・組織グラフ・7面: overview/agenda.md
       - 項目設計と面分類: overview/schema.md
+      - 設計原則: overview/principles.md
   - パターンカタログ:
       - 概要: patterns/index.md
       - 面1 体験・ゲートウェイ:
@@ -163,8 +164,19 @@ nav:
           - "TO-11 同期 vs 非同期": selection/tradeoff/to11-sync-vs-async.md
           - "TO-12 プロンプトで守る vs ポリシー/実行基盤で守る": selection/tradeoff/to12-prompt-vs-platform.md
   - 統合と組み合わせ方:
-      - 依存関係と組み合わせレシピ: integration/dependencies.md
-      - 部門別 適用例: integration/department-examples.md
-      - 成熟度ロードマップ: integration/roadmap.md
-      - リファレンスアーキテクチャ: integration/reference-architecture.md
-      - 設計原則: integration/principles.md
+      - 依存関係と依存チェーン: integration/dependency-chain.md
+      - 横断軸: integration/cross-cutting-axes.md
+      - 組み合わせレシピ: integration/recipe.md
+      - 部門別適用例:
+          - integration/departments/index.md
+          - Sales Agent: integration/departments/sales.md
+          - HR Agent: integration/departments/hr.md
+          - Customer Support Agent: integration/departments/customer-support.md
+          - Engineering Agent: integration/departments/engineering.md
+          - Executive Agent: integration/departments/executive.md
+      - リファレンスアーキテクチャ:
+          - integration/architecture/index.md
+          - 全社横断軸: integration/architecture/company-wide.md
+          - 部署軸: integration/architecture/department.md
+          - プロジェクト軸: integration/architecture/project.md
+          - メンバー個別軸: integration/architecture/individual.md
