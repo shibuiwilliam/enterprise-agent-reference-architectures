@@ -44,6 +44,56 @@ status: done
 
 経営層の操作は高リスク分類に当たるため、最も厳格な監査記録が必要だ。「経営エージェントが財務データを参照して報告書を生成した」という行為は、証券取引法・会社法の観点から完全な来歴（どのクエリを・どのデータで・誰の権限で実行したか）が追跡可能でなければならない。OB-2 は全エージェント操作の来歴を不変ログとして記録し、監査人が任意の時点に遡って「このレポートの根拠データはなにか」を確認できるようにする。ログ改ざん防止・長期保存・外部監査ツールとの連携も OB-2 が担う。
 
+## システム構成
+
+Executive Agent は全部門のデータを横断するが、各データソースへのアクセスは Context Mesh（KM-2）によるフェデレーションで権限を維持する。DLP が出力とログの両方を監視し、MNPI（重要な未公開情報）の不適切な流出を防ぐ。
+
+```mermaid
+graph TB
+    subgraph User["経営幹部"]
+        WEB[経営ダッシュボード]
+        SL[Slack]
+    end
+
+    subgraph Gateway["全社基盤"]
+        GW[Enterprise Agent Gateway<br/>EX-1]
+        PDP[PDP / PEP<br/>ID-6]
+    end
+
+    subgraph ExecAgent["Executive Agent"]
+        KG[Knowledge Graph<br/>KM-3<br/>正規オブジェクトモデル]
+        MESH[Context Mesh<br/>KM-2<br/>権限付きフェデレーション]
+        DLP[DLP & Redaction<br/>KM-6<br/>MNPI/未公開情報マスキング]
+        COST[Cost Quota<br/>GV-8<br/>全社コスト可視化]
+        EVAL[Eval Pipeline<br/>GV-7<br/>回答品質の継続計測]
+    end
+
+    subgraph DataSources["データソース（権限付きアクセス）"]
+        DWH[DWH<br/>財務/KPI集計]
+        SF[Salesforce<br/>売上/商談]
+        HR[Workday<br/>人員/人件費]
+        FIN[会計システム<br/>財務諸表]
+        PORT[Portfolio管理<br/>事業計画]
+    end
+
+    subgraph Audit["厳格監査"]
+        OB2[OB-2 Unified Audit<br/>不変ログ・来歴管理<br/>高リスク分類]
+    end
+
+    User --> GW
+    GW --> PDP
+    PDP --> ExecAgent
+    KG -->|エンティティ解決| MESH
+    MESH -->|OBOトークン| DWH
+    MESH -->|OBOトークン| SF
+    MESH -->|OBOトークン| HR
+    MESH -->|OBOトークン| FIN
+    MESH -->|OBOトークン| PORT
+    MESH --> DLP
+    DLP -->|マスキング済み出力| User
+    ExecAgent --> OB2
+```
+
 ## 典型的なフロー
 
 以下は経営幹部が「今期の各部門 KPI と人件費のサマリーを教えて」と依頼したときの処理フローだ。

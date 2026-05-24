@@ -40,6 +40,59 @@ status: done
 
 Workday は HR における System of Record（記録システム）であり、エージェントが直接 API を叩いて書き込むのではなく、正規の変更申請フロー（ワークフローエンジン経由）を通す必要がある。RT-6 はエージェントから SoR への書き込みを「申請の起案」として扱い、直接更新を禁止する。これにより、Workday 側の内部整合性チェック・承認ログ・変更履歴がすべて正規フローで記録され、監査対応時にエージェント経由の変更を追跡できる。
 
+## システム構成
+
+HR Agent の構成要素と、各パターンの配置を示す。人事データの極めて高い機密性を反映し、DLP・ポリシーチェック・二段階承認が多層的に組み込まれている。
+
+```mermaid
+graph TB
+    subgraph User["人事担当 / 部門マネージャー"]
+        SL[Slack]
+        WEB[HR ワークベンチ]
+    end
+
+    subgraph Gateway["全社基盤"]
+        GW[Enterprise Agent Gateway<br/>EX-1]
+        PDP[PDP / PEP<br/>ID-6]
+    end
+
+    subgraph HRAgent["HR Agent（Spoke）"]
+        DLP[DLP & Redaction<br/>KM-6]
+        MEM[Scoped Memory<br/>KM-4<br/>個人/部門/全社スコープ]
+        POL[Industry Policy Pack<br/>GV-4<br/>労働法/個人情報保護法]
+        APPROVE[二段階承認<br/>RT-4<br/>マネージャー→人事部長]
+        SOR_B[SoR Write Boundary<br/>RT-6]
+    end
+
+    subgraph SaaS["SaaS / System of Record"]
+        WD[Workday<br/>給与/勤怠/雇用契約]
+        TL[Talentio<br/>採用/候補者]
+        GWS[Google Workspace<br/>ドキュメント]
+        HR_INT[社内HRシステム<br/>評価/懲戒]
+    end
+
+    subgraph SecureZone["極秘処理"]
+        EPH[Ephemeral Context Bus<br/>KM-7<br/>評価/給与の揮発処理]
+    end
+
+    subgraph Audit["監査"]
+        OB[OB-1 / OB-2<br/>トレース・監査]
+    end
+
+    User --> GW
+    GW --> PDP
+    PDP --> HRAgent
+    DLP -->|マスキング済み| MEM
+    MEM --> POL
+    POL -->|ポリシー通過| APPROVE
+    APPROVE -->|承認後| SOR_B
+    SOR_B -->|正規手続き| WD
+    SOR_B --> TL
+    SOR_B --> HR_INT
+    HRAgent --> EPH
+    HRAgent --> Audit
+```
+
 ## 典型的なフロー
 
 以下は「山田さんの給与を5%引き上げる申請を起案して」という依頼が入ったときの処理フローだ。
