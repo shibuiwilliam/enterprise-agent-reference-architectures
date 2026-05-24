@@ -150,6 +150,6 @@ graph TB
 1. **本章**：命題・統合方針・基礎概念・7面アーキテクチャ・標準整合
 2. **[項目設計と面分類](schema.md)**：各パターンの記述スキーマと面（カテゴリ）設計
 3. **[パターンカタログ](../patterns/index.md)**：7面・計45パターンの本体
-4. **[「程度」の選定基準](../selection/degree-criteria.md)**：連続量の決め方
-5. **[「相反する仕組み」の選定基準](../selection/tradeoffs.md)**：二者択一の判断軸
+4. **[「程度」の選定基準](../selection/degree/index.md)**：連続量の決め方
+5. **[「相反する仕組み」の選定基準](../selection/tradeoff/index.md)**：二者択一の判断軸
 6. **[統合と組み合わせ方](../integration/dependencies.md)**：依存関係・組み合わせ・部門別適用例・ロードマップ・設計原則

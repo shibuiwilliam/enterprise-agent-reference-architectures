@@ -137,8 +137,31 @@ nav:
           - "OB-1 Enterprise Agent Observability Lake": patterns/ob-observability/ob1-observability-lake.md
           - "OB-2 Unified Audit & Lineage（三者帰責）": patterns/ob-observability/ob2-unified-audit-lineage.md
   - 選定基準:
-      - 「程度」の選定基準: selection/degree-criteria.md
-      - 「相反する仕組み」の選定基準: selection/tradeoffs.md
+      - 「程度」の選定基準:
+          - selection/degree/index.md
+          - "DC-1 自律度のティア境界（Risk-Tier の引き方）": selection/degree/dc1-risk-tier-boundary.md
+          - "DC-2 タイムアウト・リトライ・予算（コスト上限）": selection/degree/dc2-timeout-retry-budget.md
+          - "DC-3 プロンプト/トレースのログ粒度（三層分離）": selection/degree/dc3-log-granularity.md
+          - "DC-4 コンテキスト投入量（top-k・トークン予算）": selection/degree/dc4-context-volume.md
+          - "DC-5 メモリ保持・忘却（TTL・スコープ）": selection/degree/dc5-memory-retention.md
+          - "DC-6 ガードレール強度（誤検知 vs 見逃し）": selection/degree/dc6-guardrail-strength.md
+          - "DC-7 キャッシュ積極度・JIT 資格情報 TTL": selection/degree/dc7-cache-jit-ttl.md
+          - "DC-8 モデルの強さ・データ分類別ルーティング": selection/degree/dc8-model-routing.md
+          - "DC-9 カナリア段階・イベント駆動の頻度制限": selection/degree/dc9-canary-event-throttle.md
+      - 「相反する仕組み」の選定基準:
+          - selection/tradeoff/index.md
+          - "TO-1 OBO委譲 vs サービスアカウント": selection/tradeoff/to1-obo-vs-service-account.md
+          - "TO-2 中央集権データレイク vs フェデレーテッド Context Mesh": selection/tradeoff/to2-lake-vs-mesh.md
+          - "TO-3 単一エージェント vs RACI マルチエージェント": selection/tradeoff/to3-single-vs-multi-agent.md
+          - "TO-4 Read-only vs Write-capable（段階的拡張）": selection/tradeoff/to4-readonly-vs-write.md
+          - "TO-5 Copilot vs Autopilot": selection/tradeoff/to5-copilot-vs-autopilot.md
+          - "TO-6 個人の記憶 vs プロジェクト/チームの記憶": selection/tradeoff/to6-personal-vs-team-memory.md
+          - "TO-7 全プロンプトログ vs 選択的トレースログ": selection/tradeoff/to7-full-vs-selective-log.md
+          - "TO-8 中央集権プラットフォーム vs 部署フェデレーション": selection/tradeoff/to8-central-vs-federation.md
+          - "TO-9 コネクタ自前構築 vs 既存 iPaaS 再利用": selection/tradeoff/to9-custom-vs-ipaas.md
+          - "TO-10 内部/オンプレモデル vs 外部 API": selection/tradeoff/to10-onprem-vs-external.md
+          - "TO-11 同期 vs 非同期": selection/tradeoff/to11-sync-vs-async.md
+          - "TO-12 プロンプトで守る vs ポリシー/実行基盤で守る": selection/tradeoff/to12-prompt-vs-platform.md
   - 統合と組み合わせ方:
       - 依存関係と組み合わせレシピ: integration/dependencies.md
       - 部門別 適用例: integration/department-examples.md

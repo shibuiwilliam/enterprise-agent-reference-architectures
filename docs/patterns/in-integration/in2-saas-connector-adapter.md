@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-各 SaaS の独自 API 仕様・認証・データモデル・レート・エラー形式を、エージェントが扱う共通インターフェイス（業務語彙）に変換する。SaaS 固有差をアダプタに閉じ込め上流に漏らさない腐敗防止層（Anti-Corruption Layer）である。
+Salesforce の REST API・Workday の SOAP・ServiceNow の Table API——SaaS ごとに異なる認証方式・データモデル・エラー形式・レート制限を、エージェントが扱う業務語彙（`get_customer`、`create_ticket` など）の共通インターフェイスに変換する腐敗防止層（Anti-Corruption Layer）である。SaaS 固有差をアダプタ内部に閉じ込めることで、SaaS の API 変更や差し替え（例：ServiceNow → Jira Service Management）の影響がプロンプトやオーケストレーションロジックに波及しない。
 
 ## 解決する企業課題
 

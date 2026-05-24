@@ -1,0 +1,48 @@
+---
+title: "TO-1 OBO委譲 vs サービスアカウント"
+description: "権限忠実性・監査帰責・実装コストの三軸でUser OBO、Service Account、Agent Identity、Hybridの使い分けを決める判断基準。"
+status: done
+---
+
+# TO-1 OBO委譲 vs サービスアカウント
+
+## 概要
+
+エージェントが外部SaaSやAPIを呼び出す際、「誰の権限で呼ぶか」は設計の根幹である。選択肢はUser OBO（On-Behalf-Of委譲）、Service Account（サービスアカウント）、Agent Identity（エージェント固有ID）、そしてこれらを組み合わせたHybridの四種に大別される。どれを選ぶかはシステムの簡便さではなく、権限忠実性・監査帰責・実装コストの三軸で決定する。
+
+## 比較
+
+| 観点 | User OBO（[ID-2](../../patterns/id-identity/id2-identity-federation-obo.md)） | Service Account | Agent Identity（[ID-3](../../patterns/id-identity/id3-workload-agent-identity.md)） | Hybrid |
+|---|---|---|---|---|
+| 権限忠実性 | 高（委譲者の権限上限に縮退） | 低（判定バグ＝権限漏洩） | 中（エージェント固有ポリシーで制御） | 高（UserをceilingにAgentが実行） |
+| 対応範囲 | 委譲対応SaaSのみ | どのAPIでも利用可 | 自律ジョブ・バッチ | 広い |
+| 監査帰責 | 本人に明確 | 曖昧になりがち | エージェントIDに明確 | 明確（UserとAgentの両方を記録） |
+| 実装 | 複雑（Token Exchange・RFC 8693が必要） | 容易 | 中程度 | 複雑 |
+
+## 判断基準
+
+業務種別ごとに推奨パターンが異なる。
+
+- **個人業務支援**：User OBOを選ぶ。担当者本人の権限でSaaSを操作し、権限の忠実な伝播と明確な帰責を保証する。
+- **部門代表業務**：Agent Identity＋部門ポリシーを選ぶ。複数名が関与する業務でも、エージェントIDに部門スコープを付与して権限を制御する。
+- **全社バッチ・定常処理**：Service Account＋厳格な監査＋高リスクデータ分類を組み合わせる。Service Accountは権限が広がりやすいため、操作スコープと監査証跡を別途強化する。
+- **高リスク操作**：User OBO＋人間承認チェーン（[RT-4](../../patterns/rt-runtime/rt4-human-approval-chain.md)）を組み合わせる。不可逆な操作や高額トランザクションは、委譲者本人の確認を経てから実行する。
+
+最も実務的なアーキテクチャは「**実行主体はAgent、権限上限はUser**」のHybridである。エージェントが作業を代行しつつ、Userが持つ権限の上限を超えられない制約を実行基盤で保証する。
+
+## ハイブリッド・段階的アプローチ
+
+まずService Accountで動く既存ツールをそのまま活用し、高リスク操作に限りUser OBOを導入するという移行経路が現実的である。Hybridは実装が複雑になるため、以下の順序で段階的に整備する。
+
+1. 既存Service AccountにSPIFFE/SVIDなどのWorkload Identity（[ID-3](../../patterns/id-identity/id3-workload-agent-identity.md)）を付与して監査帰責を明確化する。
+2. 高リスク操作のみToken Exchange（RFC 8693）経由のUser OBOに切り替える。
+3. 全操作をUser OBOに対応させ、Service Accountを廃止する方向で進める。
+
+Service Account一本化は「万能サービスアカウント1個で全SaaSを叩く」アンチパターンに直結するため、運用が定着した段階で必ずスコープ分割か廃止を図る。
+
+## 関連パターン
+
+- [ID-2 Identity Federation & On-Behalf-Of](../../patterns/id-identity/id2-identity-federation-obo.md)
+- [ID-3 Workload / Agent Identity](../../patterns/id-identity/id3-workload-agent-identity.md)
+- [ID-4 Permission Mirror / Least-of](../../patterns/id-identity/id4-permission-mirror-least-of.md)
+- [RT-4 Human Approval Chain](../../patterns/rt-runtime/rt4-human-approval-chain.md)

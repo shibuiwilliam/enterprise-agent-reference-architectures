@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エージェントは System of Record（SoR：Workday、Salesforce、バクラク、Shopify など）に対して直接書き込み権限を持たない。エージェントは Command Envelope（RT-5）を提案し、ドメインサービスがバリデーション・認可・ビジネスルール適用・トランザクション管理を行った上で SoR に反映する。下書き・提案段階のデータは System of Engagement（SoE：Slack、Notion、メール）に留め、人間の確認後にのみ SoR へ昇格する。
+エージェントが Workday・Salesforce・バクラク・Shopify などの基幹システム（System of Record）に直接書き込むことを禁止し、ドメインサービスを介した正規手続きでのみ更新を行うパターンである。エージェントは Command Envelope で「何をしたいか」を提案し、ドメインサービスがバリデーション・認可・ビジネスルール適用・トランザクション管理を行ってから SoR に反映する。下書きや提案は Slack・Notion・メールなどの SoE（System of Engagement）に留め、人間の確認後にのみ SoR へ昇格する。
 
 ## 解決する企業課題
 

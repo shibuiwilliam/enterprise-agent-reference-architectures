@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エージェントが SaaS / 内部 API / MCP / DB / RPA を直接呼ばず、企業管理の Gateway 経由で呼ぶ。AI 時代の Enterprise Service Bus に近い役割を担い、ツール呼び出しの認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性・ドライランを一元適用する。
+エージェントが Salesforce API・社内 REST API・MCP サーバ・データベース・RPA を直接呼び出すことを禁止し、企業管理の Tool Gateway を唯一の通路とするパターンである。Gateway で認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性チェック・ドライランを一元適用する。ツールカタログでスキーマ・権限・コストを管理し、有効化/無効化/版管理を運用制御する。AI 時代の Enterprise Service Bus に相当する役割を担う。
 
 ## 解決する企業課題
 

@@ -80,7 +80,7 @@ no-copy・JIT・ACL 同梱を既定にし、集約は目的が明確なときだ
 
 自律度・ログ・予算・キャッシュ等の連続量を、トレースと eval で継続調整する。
 
-参照：[「程度」の選定基準](../selection/degree-criteria.md) / [GV-7 Eval Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)
+参照：[「程度」の選定基準](../selection/degree/index.md) / [GV-7 Eval Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)
 
 ---
 
