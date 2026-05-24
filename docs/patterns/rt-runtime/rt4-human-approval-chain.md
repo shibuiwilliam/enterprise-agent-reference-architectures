@@ -10,7 +10,17 @@ status: done
 
 エージェントは操作を提案するにとどまり、実行は人間の承認を経る。承認者は組織図（org graph）から動的に解決する。権限委譲、エスカレーション、SLA タイマー、否決理由の学習を備え、Slack・ServiceNow・Workday などの既存ワークフローツールに統合することで、承認体験を従業員の日常業務に埋め込む。
 
-## 設計
+## 解決する企業課題
+
+不可逆操作（大量メール送信・資金移動・権限変更）をエージェントが直接実行すると、誤判断時の損害が大きい。エンタープライズでは取り返しのつかない操作の誤実行が重大な問題になる。承認チェーンは実行前の人間介在を構造として保証し、エージェントの自律度を「提案まで」に限定する。
+
+「誰が承認者か」が属人的知識に依存している企業では、担当者の異動・休暇時に承認フローが止まる。承認者がハードコードされていると、組織変更のたびに設定変更が必要になり、変更漏れが発生する。組織図からの動的解決はこの問題を排除し、常に適切な権限を持つ承認者を特定する。
+
+監査の観点では、承認行為の記録（誰がいつどの理由で承認・否決したか）は内部統制・規制対応に不可欠である。否決理由は同種リクエストの再提案品質を改善するフィードバックシグナルとして活用できる。
+
+## 解決策と設計
+
+解決策の核心は「承認者を静的定義でなく組織図から動的に解決すること」と「承認体験を既存ツールに埋め込むこと」の2点である。従業員が新規システムを学習する必要をなくし、採用障壁を下げる。
 
 承認フローは4つのフェーズで構成される。
 
@@ -50,14 +60,6 @@ sequenceDiagram
 
 承認者の解決ロジックは組織構造の変化（異動・昇格・退職）に追従するため、ハードコードは禁忌である。組織図APIをリアルタイムで参照し、承認者を導出する。
 
-## 解決する企業課題
-
-不可逆操作（大量メール送信・資金移動・権限変更）をエージェントが直接実行すると、誤判断時の損害が大きい。承認チェーンは実行前の人間介在を構造として保証する。
-
-「誰が承認者か」が属人的知識に依存している企業では、担当者の異動・休暇時に承認フローが止まる。組織図からの動的解決はこの問題を排除し、常に適切な権限を持つ承認者を特定する。
-
-承認行為を既存ツール（Slack 等）に統合することで、承認者が新規システムを学習する必要がなく、採用障壁を下げる。承認の記録は自動的に監査証跡となり、事後の内部統制レビューに活用できる。
-
 ## 向き／不向き
 
 **向いている条件**
@@ -94,8 +96,8 @@ sequenceDiagram
 
 ## 関連パターン
 
-- [RT-3 Risk-Tiered Autonomy](rt3-risk-tiered-autonomy.md)
-- [RT-5 Intent-to-Enterprise Command Envelope](rt5-command-envelope.md)
-- [RT-7 Enterprise Saga](rt7-enterprise-saga.md)
-- [ID-7 Policy-as-Code Guardrail](../id-identity/id7-policy-as-code-guardrail.md)
-- [OB-2 Unified Audit & Lineage](../ob-observability/ob2-unified-audit-lineage.md)
+- [RT-3 Risk-Tiered Autonomy](rt3-risk-tiered-autonomy.md)：補完関係。Tier 3〜4 の操作に対して本パターンの承認フローを起動する。Tier 判定がトリガーとなる。
+- [RT-5 Intent-to-Enterprise Command Envelope](rt5-command-envelope.md)：補完関係。Command Envelope の `requires_approval` フラグが true の場合に本パターンの承認チェーンを起動する。
+- [RT-7 Enterprise Saga](rt7-enterprise-saga.md)：補完関係。補償不可能な Saga ステップ（顧客メール送信など）の手前に承認チェーンを挟む。
+- [ID-7 Policy-as-Code Guardrail](../id-identity/id7-policy-as-code-guardrail.md)：補完関係。承認が必要かどうかの判定をポリシーとして実装し、実行基盤側で強制する。
+- [OB-2 Unified Audit & Lineage](../ob-observability/ob2-unified-audit-lineage.md)：補完関係。承認者・理由・タイムスタンプを監査ログに記録し、内部統制の証跡を確保する。

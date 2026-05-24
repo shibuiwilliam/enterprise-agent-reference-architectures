@@ -10,7 +10,21 @@ status: done
 
 エージェントは万能特権IDを持たず、依頼者本人の権限（または明示委譲）に縮退したトークンを下流ごとに取得して動く。権限の忠実な伝播を実現する中核パターンである。
 
-## 設計
+## 解決する企業課題
+
+エンタープライズ環境でエージェントを複数SaaSにまたがって使うとき、最も安易な実装は「エージェント専用の広権限サービスアカウントを1つ作り、全SaaSへのアクセスをそのアカウントで行う」方法である。この設計は短期には機能するが、企業の監査・コンプライアンス・セキュリティ要件と正面から衝突する。
+
+問題の第一は「権限集約」である。万能サービスアカウントはエージェントが動く間、すべてのユーザーのすべてのSaaSへのアクセス権を持ち続ける。このアカウントが侵害されると、全ユーザー・全SaaSのデータが一度に危険にさらされる。
+
+第二は「混乱代理（Confused Deputy）」である。エージェントがユーザーAの代理として動いているのに、サービスアカウントの権限ではユーザーBのデータも参照できてしまう。アプリ層のフィルタリングに頼るアーキテクチャでは、判定バグが即座に情報漏洩になる。
+
+第三は「監査追跡不能」である。各SaaSの監査ログには「サービスアカウントがアクセスした」としか記録されず、誰がエージェント経由で操作したかが追跡できない。インシデント調査・コンプライアンス監査で致命的な欠欠陥になる。
+
+このパターンは、OBO（On-Behalf-Of）委譲によってこれら3つの問題を構造的に解消する。
+
+## 解決策と設計
+
+OBO 委譲の核心は「エージェントが依頼者本人の権限に縮退したトークンを下流SaaSごとに動的に取得する」点にある。エージェントは広権限を持たず、「今この依頼者がこのSaaSで持っている権限の範囲内」でのみ動作する。
 
 ユーザーが IdP で認証した後、Gateway が OAuth 2.0 Token Exchange（RFC 8693）を用いて、下流 SaaS ごとに本人権限に縮退した OBO トークンを発行する。委譲チェーン（user → agent → tool）はトークンに刻まれ、各 SaaS の監査ログで本人に帰責できる。
 
@@ -39,10 +53,6 @@ sequenceDiagram
 
 サービスアカウント利用時も、実行主体（actor）と依頼者（subject）を分離記録する。これにより、どのSaaSの監査ログでも「誰がエージェント経由で操作したか」が追跡可能になる。
 
-## 解決する企業課題
-
-複数SaaSを横断するとき、エージェントに広い権限を与えると権限が集約し、混乱代理（confused deputy）が発生する。OBO委譲はこの問題を構造的に解決する。SaaS監査ログでの「誰がエージェント経由で触れたか」の追跡不能も解消する。
-
 ## 向き／不向き
 
 | 向き | 不向き |
@@ -66,13 +76,13 @@ sequenceDiagram
 
 - 委譲非対応SaaSでは [ID-4 Permission Mirror](id4-permission-mirror-least-of.md) でエンタイトルメントを再現し、高リスクに分類して運用する。
 - トークンの有効期限は短く保つ。「遅い」とキャッシュを広げ結局長命化するのは [ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md) の原則に反する。
-- 委譲チェーンが長くなるマルチエージェント構成では、各段での権限縮退を検証する仕組みが必要である。
+- 委譲チェーンが長くなるマルチエージェント構成では、各段での権限縮退を検証する仕組みが必要である。末端エージェントが元のユーザー権限を超えていないかを必ず確認する。
 
 ## 関連パターン
 
-- [ID-1 Workforce/Customer 二面分離](id1-workforce-customer-split.md) — 従業員面と顧客面で委譲の信頼境界を分ける前提
-- [ID-4 Permission Mirror & Least-of](id4-permission-mirror-least-of.md) — OBO非対応SaaSの権限再現
-- [ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md) — トークンの短命化・用途限定
-- [ID-6 Zero-Trust PDP/PEP](id6-zero-trust-pdp-pep.md) — OBOトークンの検証を含むゼロトラスト認可
-- [OB-2 統一監査・系譜](../ob-observability/ob2-unified-audit-lineage.md) — 委譲チェーンを監査証跡に記録
-- [EX-1 Enterprise Agent Gateway](../ex-experience/ex1-enterprise-agent-gateway.md) — Token Exchange を実行する統一入口
+- [ID-1 Workforce/Customer 二面分離](id1-workforce-customer-split.md) — 従業員面と顧客面で委譲の信頼境界を分ける前提（**補完**：二面分離の前提のもとで OBO を実装する）
+- [ID-4 Permission Mirror & Least-of](id4-permission-mirror-least-of.md) — OBO非対応SaaSの権限再現（**補完**：委譲が使えない系に対して Permission Mirror で代替する）
+- [ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md) — トークンの短命化・用途限定（**補完**：OBO トークン自体を JIT で発行し長命化を防ぐ）
+- [ID-6 Zero-Trust PDP/PEP](id6-zero-trust-pdp-pep.md) — OBOトークンの検証を含むゼロトラスト認可（**補完**：発行された OBO トークンを PEP で毎回検証する）
+- [OB-2 統一監査・系譜](../ob-observability/ob2-unified-audit-lineage.md) — 委譲チェーンを監査証跡に記録（**補完**：actor/subject の二重記録を監査基盤で収集・保管する）
+- [EX-1 Enterprise Agent Gateway](../ex-experience/ex1-enterprise-agent-gateway.md) — Token Exchange を実行する統一入口（**補完**：ゲートウェイが OBO トークン交換の実行点になる）

@@ -10,7 +10,13 @@ status: done
 
 実行ログ・トレース・コスト・ツール呼び出し・取得文脈・承認・評価結果を統合する観測基盤。「なぜその判断をしたか」を後から再構成可能にし、コスト発生源の特定・障害調査・品質改善を支える。
 
-## 設計
+## 解決する企業課題
+
+エージェントが本番環境で問題を起こしたとき、「なぜその判断をしたか」を追跡できない状況は企業にとって深刻なリスクである。どのプロンプトが使われたか、どのデータが検索で取得されたか、どのツールが呼ばれたか——これらが記録されていなければ、インシデントの原因究明も規制当局への説明も不可能になる。
+
+コスト面でも観測基盤は不可欠である。LLM の API 利用料・SaaS API 呼び出し数・ベクトル DB のクエリ数が部門・プロジェクト・エージェント単位で把握できなければ、チャージバックも予算計画も成立しない。品質改善の観点では、どのプロンプトバージョンで回答精度が上がったか、どのユーザーセグメントで評価が低いかを計測する手段がなければ、継続的な改善が行き当たりばったりになる。観測基盤の不在はこれらすべての問題の根本原因である。
+
+## 解決策と設計
 
 各実行に以下の属性を記録する。
 
@@ -49,11 +55,7 @@ flowchart LR
     TRACE --> DWH
 ```
 
-OpenTelemetry GenAI semantic conventions に準拠し、エージェント・モデル・ツール呼び出しの標準的な計測を行う。極秘処理（[KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)）は本文を一切ログに残さずメタのみ送信する。
-
-## 解決する企業課題
-
-なぜその判断をしたか不明、コスト発生源が不明、障害調査・監査・品質改善ができない。これらすべてが観測基盤の不在から生じる。
+OpenTelemetry GenAI semantic conventions に準拠し、エージェント・モデル・ツール呼び出しの標準的な計測を行う。第1層（メタデータ）は高速クエリ用の Trace DB に格納し、run_id や相関 ID での横断検索を可能にする。第2層（本文）は PII マスキング済みで暗号化オブジェクトストレージに保存し、参照リンクで第1層と結合する。第3層（集計）は DWH で品質スコアや ROI 指標を集計する。極秘処理（[KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)）は本文を一切ログに残さずメタのみ送信する。
 
 ## 向き／不向き
 
@@ -74,16 +76,16 @@ OpenTelemetry GenAI semantic conventions に準拠し、エージェント・モ
 ## 落とし穴／選定の勘所
 
 !!! warning "全プロンプトのログ直接投入"
-    全プロンプトをログ基盤に直接入れると巨大・高コスト・PIIリスクになる。三層分離（メタ→Trace DB、本文→暗号化ストレージ、集計→DWH）を徹底する。
+    全プロンプトをログ基盤に直接入れると巨大・高コスト・PII リスクになる。三層分離（メタ→Trace DB、本文→暗号化ストレージ、集計→DWH）を徹底する。メタデータと本文を混在させると、メタ検索のコストと機密管理コストが同時に上昇する。
 
 - エラー時・低評価時・ランダム N% のみフル保存というサンプリングも併用し、コストと網羅性のバランスを取る。
-- 極秘処理（[KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)）ではメタのみに限定する。
-- 相関 ID（run_id/session_id）で各 SaaS の監査ログと横断追跡を可能にする。
+- 極秘処理（[KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)）ではメタのみに限定する。本文層を廃止してメタ層のみ残すことで、機密保持と観測性を両立する。
+- 相関 ID（run_id/session_id）で各 SaaS の監査ログと横断追跡を可能にする。エージェント内の trace と SaaS 側の audit log を同一 ID で突合できる設計が、障害調査の効率を決定的に変える。
 
 ## 関連パターン
 
-- [OB-2 Unified Audit & Lineage](ob2-unified-audit-lineage.md) — 観測データを監査証跡に活用
-- [GV-7 Evaluation & Governance Pipeline](../gv-governance/gv7-evaluation-governance-pipeline.md) — 観測データを評価の入力にする
-- [GV-9 Incident Response & Kill Switch](../gv-governance/gv9-incident-response-kill-switch.md) — 障害調査時のトレース保全
-- [GV-8 Cost Quota & Chargeback](../gv-governance/gv8-cost-quota-chargeback.md) — コスト計測データの供給元
-- [KM-7 Ephemeral Secure Context Bus](../km-knowledge/km7-ephemeral-secure-context-bus.md) — 極秘処理のメタのみ記録
+- [OB-2 Unified Audit & Lineage](ob2-unified-audit-lineage.md) — 補完：観測データを監査証跡として規制報告・説明責任に活用する
+- [GV-7 Evaluation & Governance Pipeline](../gv-governance/gv7-evaluation-governance-pipeline.md) — 補完：観測データを品質評価・ガバナンスパイプラインの入力にする
+- [GV-9 Incident Response & Kill Switch](../gv-governance/gv9-incident-response-kill-switch.md) — 補完：障害調査時のトレース保全とリプレイ
+- [GV-8 Cost Quota & Chargeback](../gv-governance/gv8-cost-quota-chargeback.md) — 補完：コスト計測データの供給元として部門別チャージバックを支える
+- [KM-7 Ephemeral Secure Context Bus](../km-knowledge/km7-ephemeral-secure-context-bus.md) — 対比：極秘処理でメタのみ記録するパターン（本文層を廃した究極形）

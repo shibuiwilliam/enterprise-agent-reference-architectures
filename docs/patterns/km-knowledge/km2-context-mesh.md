@@ -8,11 +8,17 @@ status: done
 
 ## 概要
 
-各データ源を一箇所に集約せず、権限制御を維持したまま分散問い合わせ（フェデレーション）で文脈を供給する。機密データは本人トークンで JIT 取得し、コピーを最小化する。
+各データ源を一箇所に集約せず、権限制御を維持したまま分散問い合わせ（フェデレーション）で文脈を供給する。機密データは本人トークンで JIT（Just-in-Time）取得し、コピーを最小化する。
 
-## 設計
+## 解決する企業課題
 
-Context Router がクエリを各 Context Provider に分散し、ACL-aware retrieval で権限を維持したまま結果を収集する。機密データは集約せず、本人トークンで都度取得する。
+全社データレイクや統一ベクトル DB に機密データを集約すると、複数の問題が同時に発生する。まず、データをコピーした時点で元の権限モデルが失われる（[KM-1](km1-access-controlled-rag.md) の ACL 問題）。次に、Salesforce の案件情報・Workday の人事データ・社内 HR データが一つのインデックスに混在すると、ユーザーの所属や役職に関係なく全データが参照対象になりうる。さらに、コピーが増えるほど監査・データカタログ・変更追跡が複雑になる。
+
+データ所在地規制（GDPR、個人情報保護法）の観点でも、データを本国外のインフラにコピーすることが制約となるケースがある。フェデレーション型は「集約しない」ことを設計原則とし、権限・規制・監査の三課題を一度に解決する。KM-1 との使い分けは、ACL を確実に同梱できる文書系は KM-1 でインデックス化し、機密 SaaS データは本パターンで JIT 取得するハイブリッドが実務的な解である。
+
+## 解決策と設計
+
+Context Router がクエリを各 Context Provider に分散し、各プロバイダが ACL-aware retrieval で権限を維持したまま結果を収集する。機密データは集約せず、本人の OBO トークンで都度取得する。
 
 ```mermaid
 flowchart LR
@@ -33,11 +39,7 @@ flowchart LR
     PKG --> LLM[LLM処理]
 ```
 
-各 Context Provider は本人の OBO トークン（[ID-2](../id-identity/id2-identity-federation-obo.md)）で SaaS を呼び、見てよいデータのみを返す。
-
-## 解決する企業課題
-
-全社データレイクに集めると権限が壊れる、RAG 索引に機密が混入する、最新権限を反映できない、コピー増で監査が困難になる——これらを「集約しない」設計で解決する。
+各 Context Provider は本人の OBO トークン（[ID-2](../id-identity/id2-identity-federation-obo.md)）で SaaS を呼び、見てよいデータのみを返す。OBO 非対応の SaaS では [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) で権限フィルタを適用する。Context Router は各プロバイダへの問い合わせを並列実行し、タイムアウト（各プロバイダ独立）で応答を待つ。取得した結果は Context Package にまとめ、[KM-5](km5-purpose-bound-context.md) の目的ポリシーで最終フィルタリングしてから LLM に渡す。
 
 ## 向き／不向き
 
@@ -58,16 +60,16 @@ flowchart LR
 ## 落とし穴／選定の勘所
 
 !!! warning "レイテンシを嫌い集約に戻る罠"
-    レイテンシを嫌い結局コピーに戻り ACL 同梱を怠ると、権限保証が崩れる。レイテンシ改善はキャッシュ（短 TTL）・並列取得・プリフェッチで対処し、コピーは最終手段とする。
+    レイテンシを嫌い結局コピーに戻り ACL 同梱を怠ると、権限保証が崩れる。レイテンシ改善はキャッシュ（短 TTL）・並列取得・プリフェッチで対処し、コピーは最終手段とする。コピーする場合は必ず ACL を同梱し（[KM-1](km1-access-controlled-rag.md)）、検索時の再評価を実装する。
 
-- 公開社内規程は中央ベクトル DB へ、機密 SaaS データは本人トークンでの JIT 取得へ——ハイブリッドが実務的な解である。
+- 公開社内規程は中央ベクトル DB へ、機密 SaaS データは本人トークンでの JIT 取得へ——ハイブリッドが実務的な解である。設計初期に「各データ源をどちらに分類するか」を整理しておく。
 - 「速いから機密も索引化」は禁忌。索引化する場合も ACL 同梱（[KM-1](km1-access-controlled-rag.md)）を必須にする。
-- Context Provider の数が増えるとレイテンシが線形に伸びる。並列取得とタイムアウトを設計する。
+- Context Provider の数が増えるとレイテンシが線形に伸びる可能性がある。並列取得とプロバイダごとの独立タイムアウトを設計し、一部プロバイダの遅延が全体をブロックしないようにする。
 
 ## 関連パターン
 
-- [KM-1 Access-Controlled RAG](km1-access-controlled-rag.md) — 索引化する場合の ACL 同梱
-- [ID-2 Identity Federation & OBO](../id-identity/id2-identity-federation-obo.md) — 本人トークンでの JIT 取得
-- [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) — OBO 非対応 SaaS での権限フィルタ
-- [KM-5 Purpose-Bound Context](km5-purpose-bound-context.md) — 取得結果を目的に限定
-- [IN-2 SaaS Connector Adapter](../in-integration/in2-saas-connector-adapter.md) — Context Provider の SaaS 差吸収
+- [KM-1 Access-Controlled RAG](km1-access-controlled-rag.md) — 対比：索引化する場合の ACL 同梱アプローチ（集約型 vs. フェデレーション型の使い分け）
+- [ID-2 Identity Federation & OBO](../id-identity/id2-identity-federation-obo.md) — 補完：本人トークンでの JIT 取得を支える委譲トークン発行
+- [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) — 補完：OBO 非対応 SaaS での権限フィルタ適用
+- [KM-5 Purpose-Bound Context](km5-purpose-bound-context.md) — 補完：フェデレーション取得結果を業務目的に限定する
+- [IN-2 SaaS Connector Adapter](../in-integration/in2-saas-connector-adapter.md) — 補完：各 Context Provider の SaaS 固有差を吸収するアダプタ層

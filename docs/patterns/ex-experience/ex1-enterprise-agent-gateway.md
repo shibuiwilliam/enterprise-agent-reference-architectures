@@ -10,7 +10,13 @@ status: done
 
 すべてのエージェント要求が通る単一の入口。テナント/ユーザー認証、要求分類、リスク分類、レート制御、監査エントリを一元適用する。
 
-## 設計
+## 解決する企業課題
+
+エンタープライズ AI が複数チャネル（Slack/Web/SaaS埋め込み/API）から呼ばれるようになると、入口が分散し統制・監査・容量管理が崩れる。チャネルごとに認証方式が異なると権限チェックの網羅性が保証できず、監査ログが分断して事後調査に支障をきたす。数万人規模のバースト（業務時間帯の全社一斉利用）を個々のエージェントが吸収しようとすると、バックエンドに過負荷がかかる。さらに、チャネルごとに個別の統制ロジックを実装すると保守コストが乗数的に増加し、ガバナンスの穴が生じやすい。単一入口を置くことで、これらの問題を構造的かつ一括して封じる。
+
+## 解決策と設計
+
+Gateway を「実行面への唯一の通路」として位置づけ、すべての統制をここで一括実施する。個別エージェントは認証・リスク判定・監査エントリを持たず、Gateway が保証した本人 ID と相関 ID を受け取るだけでよい。これにより、新しいエージェントや新チャネルが追加されても統制ロジックを再実装する必要がなくなる。
 
 チャネル（Slack/Web/SaaS埋め込み）を吸収し、本人 ID と相関 ID を後段へ伝播する。Gateway は統制点であり、認証・分類・リスク判定・レート制御・監査を実行する最初の PEP（[ID-6](../id-identity/id6-zero-trust-pdp-pep.md)）でもある。
 
@@ -40,10 +46,6 @@ flowchart TB
     AUD -->|本人ID＋相関ID| RT
 ```
 
-## 解決する企業課題
-
-入口が分散すると統制・監査・容量管理が崩れる。数万人規模のバースト吸収、チャネルごとの認証差、監査の欠落——これらを単一入口で構造的に防ぐ。
-
 ## 向き／不向き
 
 | 向き | 不向き |
@@ -71,9 +73,9 @@ flowchart TB
 
 ## 関連パターン
 
-- [EX-2 業務埋め込み vs 独立ポータル](ex2-embedded-vs-portal.md) — Gateway 配下のUI提供形態
-- [EX-3 チャネル非依存フロントドア](ex3-channel-agnostic-frontdoor.md) — チャネル差を吸収する設計
-- [ID-1 Workforce/Customer 二面分離](../id-identity/id1-workforce-customer-split.md) — 入口での信頼境界分離
-- [ID-2 Identity Federation & OBO](../id-identity/id2-identity-federation-obo.md) — Gateway での Token Exchange
-- [ID-6 Zero-Trust PDP/PEP](../id-identity/id6-zero-trust-pdp-pep.md) — Gateway が最初の PEP
-- [OB-1 Observability Lake](../ob-observability/ob1-observability-lake.md) — 監査エントリの送信先
+- [EX-2 業務埋め込み vs 独立ポータル](ex2-embedded-vs-portal.md) — 補完：Gateway 配下のUI提供形態を決定するパターン
+- [EX-3 チャネル非依存フロントドア](ex3-channel-agnostic-frontdoor.md) — 補完：Gateway に到達する前のチャネル差吸収を担う
+- [ID-1 Workforce/Customer 二面分離](../id-identity/id1-workforce-customer-split.md) — 補完：入口での信頼境界を分離する前提条件
+- [ID-2 Identity Federation & OBO](../id-identity/id2-identity-federation-obo.md) — 補完：Gateway での Token Exchange の実装
+- [ID-6 Zero-Trust PDP/PEP](../id-identity/id6-zero-trust-pdp-pep.md) — 類似：Gateway が最初の PEP として機能する
+- [OB-1 Observability Lake](../ob-observability/ob1-observability-lake.md) — 補完：監査エントリの送信先

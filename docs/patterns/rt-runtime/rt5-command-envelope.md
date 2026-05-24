@@ -10,7 +10,17 @@ status: done
 
 自然言語はユーザインターフェースであり、エージェントの内部プロトコルではない。このパターンは、エージェントが受け取った自然言語の意図を Command Envelope（構造化コマンド）に変換し、ポリシーチェック・承認フロー・SaaS アダプタへ一貫したインターフェースで渡す。自然言語を直接 API に渡す危険を排除し、すべての操作を監査可能な構造体として記録する。
 
-## 設計
+## 解決する企業課題
+
+自然言語を直接 API に渡す設計では、LLM の出力がそのまま SaaS の書き込み操作になる。曖昧な指示・誤解釈・プロンプトインジェクションが実害を引き起こすリスクが高い。「顧客に連絡して」という一文から生成されたテキストが、そのまま CRM の送信 API に渡る構造は、エンタープライズのガバナンス観点から許容できない。
+
+業務操作の監査要件も深刻な問題である。自然言語のログでは「誰が・どのエージェントを通じて・何を・なぜ実行したか」を正確に再現できない。規制対応や内部統制審査で、操作の意図と実行内容の対応を証明できないと法的リスクになる。
+
+SaaS の API 仕様変更も継続的な課題である。Salesforce・Workday のバージョンアップのたびにエージェントのプロンプトやコードを修正する設計は、維持コストが高い。エージェントと SaaS の間に安定した契約を置くことで、変更の影響を局所化できる。
+
+## 解決策と設計
+
+解決策の核心は「自然言語 UI とエンタープライズプロトコルを明示的に分離すること」である。LLM は意図を解釈してエンティティを抽出する役割を担い、その結果を検証済みの構造体（Command Envelope）に変換してから後続処理に渡す。エージェントの不確定性を Command Envelope というバリアで止める。
 
 Command Envelope は以下のフィールドを持つ JSON オブジェクトである。
 
@@ -46,15 +56,7 @@ flowchart LR
     REJECT --> AUDIT
 ```
 
-意図解析は LLM が担うが、その出力を Command Envelope スキーマでバリデーションする。スキーマ不適合の Envelope は後続処理に進まない。ポリシーエンジン（ID-7）は Envelope を入力として、actor の権限・risk_tier・target_system の組み合わせを評価する。
-
-## 解決する企業課題
-
-自然言語を直接 API に渡す設計では、LLM の出力がそのまま SaaS の書き込み操作になる。曖昧な指示・誤解釈・プロンプトインジェクションが実害を引き起こすリスクが高い。Command Envelope を経由させることで、操作の意図・対象・リスクレベルが明示的に構造化され、実行前にポリシーと照合できる。
-
-SaaS の API 仕様が変更されても、アダプタ層（IN-2）のみを修正すれば済む。Command Envelope のスキーマはエージェントと SaaS の間の安定した契約として機能する。
-
-すべての操作が Envelope として記録されるため、監査時に「誰が・どのエージェントを通じて・何を・なぜ実行したか」を正確に再現できる。自然言語のログでは達成できない監査精度が得られる。
+意図解析は LLM が担うが、その出力を Command Envelope スキーマでバリデーションする。スキーマ不適合の Envelope は後続処理に進まない。ポリシーエンジン（ID-7）は Envelope を入力として、actor の権限・risk_tier・target_system の組み合わせを評価する。risk_tier はエージェントが自己申告するのではなく、ポリシーエンジンが Envelope の他フィールドから独立して計算する。
 
 ## 向き／不向き
 
@@ -91,8 +93,8 @@ SaaS の API 仕様が変更されても、アダプタ層（IN-2）のみを修
 
 ## 関連パターン
 
-- [RT-4 Human Approval Chain](rt4-human-approval-chain.md)
-- [RT-6 System-of-Record Write Boundary](rt6-sor-write-boundary.md)
-- [ID-7 Policy-as-Code Guardrail](../id-identity/id7-policy-as-code-guardrail.md)
-- [IN-2 SaaS Adapter & Connector](../in-integration/in2-saas-connector-adapter.md)
-- [OB-2 Unified Audit & Lineage](../ob-observability/ob2-unified-audit-lineage.md)
+- [RT-4 Human Approval Chain](rt4-human-approval-chain.md)：補完関係。Envelope の `requires_approval` フラグを受けて、承認フローを起動する上位パターン。
+- [RT-6 System-of-Record Write Boundary](rt6-sor-write-boundary.md)：補完関係。Envelope がドメインサービスに渡り、SoR への書き込み境界を経由する設計と組み合わせる。
+- [ID-7 Policy-as-Code Guardrail](../id-identity/id7-policy-as-code-guardrail.md)：補完関係。Envelope のポリシーチェックを実行基盤側のガードレールとして実装する。
+- [IN-2 SaaS Adapter & Connector](../in-integration/in2-saas-connector-adapter.md)：補完関係。Envelope を受け取って各 SaaS の API を呼び出すアダプタ層。Envelope はアダプタとエージェントの安定した契約となる。
+- [OB-2 Unified Audit & Lineage](../ob-observability/ob2-unified-audit-lineage.md)：補完関係。Envelope とその実行結果を監査ログに記録し、操作の完全なトレーサビリティを確保する。

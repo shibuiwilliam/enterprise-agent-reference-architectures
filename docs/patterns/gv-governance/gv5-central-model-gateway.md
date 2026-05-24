@@ -10,7 +10,11 @@ status: done
 
 全 LLM 呼び出しを単一 Gateway 経由にし、ベンダー承認・データ所在地・PII 検出・コスト計測・監査を集中制御する。未承認モデルへのアクセスを遮断し、データ分類に応じた経路分離を強制する。
 
-## 設計
+## 解決する企業課題
+
+各チームが独自に外部 LLM API を直接呼び出す運用が定着すると、機密データが承認なしに外部に送信される事故が起きる。どのチームがどのモデルを使っているかが把握できず、ベンダーが乱立してコストが不可視になる。データ所在地（リージョン）要件や DPA（データ処理契約）が守られているかの確認手段がなくなる。プロバイダが無告知でモデルを更新すると挙動変化を検知できない。また、LLM 呼び出しのコストが部門別に集計できなければ、コスト配賦（GV-8）も ROI 計測（GV-10）も成立しない。これらをすべて個別管理しようとすると統制コストが爆発する——Gateway を唯一の通路にすることで一括して解決する。
+
+## 解決策と設計
 
 承認済みモデルのみ許可し、データ分類に応じてルーティングする。極秘データは VPC 内/社内推論基盤へ、一般データは外部 API へ。DPA・リージョン・保持ポリシーを強制する。本文はストレージ退避し、メタデータのみ監査に送る。
 
@@ -47,10 +51,6 @@ flowchart TB
     METER --> LOG
 ```
 
-## 解決する企業課題
-
-各チームが勝手に外部 LLM へ機密を送信する、ベンダーが乱立しコストが不可視になる、データ所在地やリージョン要件が守られない——これらを Gateway で一元的に防ぐ。
-
 ## 向き／不向き
 
 | 向き | 不向き |
@@ -78,8 +78,8 @@ flowchart TB
 
 ## 関連パターン
 
-- [GV-1 Agent Control Plane](gv1-agent-control-plane.md) — 登録済みエージェントのみ Gateway 利用を許可
-- [GV-6 Version Registry](gv6-version-registry.md) — モデル版の記録と管理
-- [GV-8 Cost Quota & Chargeback](gv8-cost-quota-chargeback.md) — Gateway で計測したコストを配賦
-- [KM-6 DLP & Redaction Boundary](../km-knowledge/km6-dlp-redaction-boundary.md) — 入力前の機密検出
-- [KM-7 Ephemeral Secure Context Bus](../km-knowledge/km7-ephemeral-secure-context-bus.md) — 極秘処理の VPC 内ルーティング
+- [GV-1 Agent Control Plane](gv1-agent-control-plane.md) — 補完：登録済みエージェントのみ Gateway 利用を許可する前提条件
+- [GV-6 Version Registry](gv6-version-registry.md) — 補完：Gateway で記録したモデル版を版管理に連携する
+- [GV-8 Cost Quota & Chargeback](gv8-cost-quota-chargeback.md) — 補完：Gateway で計測したコストを部門別配賦に供給する
+- [KM-6 DLP & Redaction Boundary](../km-knowledge/km6-dlp-redaction-boundary.md) — 補完：Gateway 到達前の入力における機密検出と削除
+- [KM-7 Ephemeral Secure Context Bus](../km-knowledge/km7-ephemeral-secure-context-bus.md) — 補完：極秘処理を VPC 内に閉じるための安全なコンテキスト転送

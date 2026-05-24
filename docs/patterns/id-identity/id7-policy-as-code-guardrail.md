@@ -10,7 +10,24 @@ status: done
 
 行動可否を自然言語プロンプトでなく Policy-as-Code で判定する。LLM は判断材料を整理し、Policy Engine が許可/拒否/承認要求/マスキングを決定論的に返す。安全保証は実行基盤側に置くという根本原則を具現化するパターンである。
 
-## 設計
+## 解決する企業課題
+
+エージェントの安全性をプロンプトで確保しようとする設計は、エンタープライズ環境で繰り返し失敗する。「機密情報を出力しないこと」「財務データへのアクセスは禁止」といった指示をシステムプロンプトに書いても、それはセキュリティ境界にならない。
+
+理由は明確である。プロンプトはプロンプトインジェクションで書き換えられる。ユーザーが入力した内容、外部ツールが返した内容、他エージェントが生成したメッセージのいずれも、悪意ある指示を含み得る。LLM はそれを文脈として処理し、元の安全指示を「上書き」した判断を出力することがある。
+
+さらに、大企業では規制・社内ルール・コンプライアンス要件が複雑に絡み合う。金融機関ならば顧客情報の取り扱いに関する規則、医療機関ならば PHI のアクセス制限、上場企業ならばインサイダー情報の管理規定——これらが各エージェントのプロンプトに散在すると、承認基準が属人化し、変更管理も不可能になる。「なぜそのアクションを許可したか」を監査者に説明できなくなる。
+
+このパターンが解決する企業課題は次の4点である。
+
+- プロンプトインジェクションで突破されない、実行基盤側の決定論的ガードレール
+- 規制・社内ルールをコードとして一元管理し、属人化を排除する
+- 「なぜ許可/拒否したか」を監査証跡で説明可能にする
+- 許可/拒否/承認要求/マスキングの4種類の判定を一貫したポリシーで統制する
+
+## 解決策と設計
+
+解決策はシンプルである。LLM の判断ループの外側に決定論的な Policy Engine を置き、エージェントのアクション提案をポリシー入力として渡し、Engine が判定結果を返す。LLM は「何をしようとしているか」を構造化し、実際の「やっていいか」の判断はポリシーに委ねる。
 
 エージェントの提案（アクション）を構造化した入力として Policy Engine に渡し、決定論的に判定する。Industry Policy Pack（[GV-4](../gv-governance/gv4-industry-policy-pack.md)）やエージェント憲法をポリシーとして展開する。
 
@@ -63,10 +80,6 @@ flowchart LR
 | purpose | 利用目的 |
 | project | プロジェクトスコープ |
 
-## 解決する企業課題
-
-プロンプトはセキュリティ境界にならない。自然言語による安全指示は、プロンプトインジェクションで容易に突破される。規制・社内ルールが各エージェントのプロンプトに散在し、承認基準が属人化し、「なぜ許可したか」を説明できない——これらの問題を決定論的ポリシーで解決する。
-
 ## 向き／不向き
 
 | 向き | 不向き |
@@ -74,6 +87,7 @@ flowchart LR
 | 規程・権限・ルールが複雑な大企業 | 単純な文章生成のみのユースケース |
 | 規制産業（金融/医療/法務/公共） | 権限制御が不要な社内FAQ |
 | 複数エージェントが共通ルールに従う必要がある環境 | 個人の実験用途 |
+| ポリシーの変更履歴・監査証跡が求められる場合 | PoC でポリシーエンジンの導入コストが正当化できない段階 |
 
 ## 要素技術・既存システム連携
 
@@ -95,8 +109,8 @@ flowchart LR
 
 ## 関連パターン
 
-- [ID-6 Zero-Trust PDP/PEP](id6-zero-trust-pdp-pep.md) — Policy-as-Code が PDP 上で動作する
-- [GV-4 Industry Policy Pack](../gv-governance/gv4-industry-policy-pack.md) — 業界別ポリシーの具体的な記述
-- [RT-3 Risk-Tiered Autonomy](../rt-runtime/rt3-risk-tiered-autonomy.md) — リスク階層に応じた自律度をポリシーで制御
-- [RT-4 Human Approval Chain](../rt-runtime/rt4-human-approval-chain.md) — require_approval 判定後の承認フロー
-- [RT-5 Command Envelope](../rt-runtime/rt5-command-envelope.md) — 構造化コマンドがポリシー入力になる
+- [ID-6 Zero-Trust PDP/PEP](id6-zero-trust-pdp-pep.md) — Policy-as-Code が PDP 上で動作する（**補完**：Policy-as-Code で記述されたルールが PDP のポリシーエンジンとして実行される）
+- [GV-4 Industry Policy Pack](../gv-governance/gv4-industry-policy-pack.md) — 業界別ポリシーの具体的な記述（**補完**：金融・医療等の業界規制が Policy-as-Code として展開される具体的なポリシー集）
+- [RT-3 Risk-Tiered Autonomy](../rt-runtime/rt3-risk-tiered-autonomy.md) — リスク階層に応じた自律度をポリシーで制御（**補完**：risk_tier 属性がエージェントの自律実行を許可する範囲をポリシーで定める）
+- [RT-4 Human Approval Chain](../rt-runtime/rt4-human-approval-chain.md) — require_approval 判定後の承認フロー（**補完**：ポリシーが require_approval を返したとき、Human Approval Chain が後続の承認フローを担う）
+- [RT-5 Command Envelope](../rt-runtime/rt5-command-envelope.md) — 構造化コマンドがポリシー入力になる（**補完**：Command Envelope が生成する構造化コマンドがそのままポリシーの入力属性として使われる）
