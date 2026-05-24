@@ -1,0 +1,31 @@
+name: Deploy docs to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # mkdocs gh-deploy が gh-pages ブランチへ push するため
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          key: pip-${{ hashFiles('requirements.txt') }}
+          path: ~/.cache/pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Build (strict)
+        run: mkdocs build --strict
+      - name: Deploy
+        run: mkdocs gh-deploy --force --no-history
