@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-「全従業員が共通で使う基盤」は何か——Gateway・IdP連携・モデルゲートウェイ・レジストリ・観測基盤・監査がこの軸に該当する。個別の部署がそれぞれ構築するのではなく、中央のプラットフォームチームが「舗装路とガードレール」として全社に提供する。部署エージェントや個人コパイロットは、この基盤の上に乗ることで、認証・認可・コスト管理・監査を自前で実装せずに済む。基盤が整っていれば、部署は業務ロジックの構築に集中できる。
+「全従業員が共通で使う基盤」として、Gateway・IdP連携・モデルゲートウェイ・レジストリ・観測基盤・監査がこの軸に該当する。個別の部署がそれぞれ構築するのではなく、中央のプラットフォームチームが「舗装路とガードレール」として全社に提供する。部署エージェントや個人コパイロットはこの基盤の上に乗ることで、認証・認可・コスト管理・監査を自前で実装せずに済む。基盤が整っていれば、部署は業務ロジックの構築に集中できる。
 
 ## この軸に配置するパターン
 
@@ -18,7 +18,7 @@ status: done
 
 ### アイデンティティ・信頼（ID）
 
-[ID-1 二面分離](../../patterns/id-identity/id1-workforce-customer-split.md)は従業員面と顧客面のIdPを物理的に分ける原則であり、全社設計として最初に確立すべき基盤である。[ID-2 OBO委譲](../../patterns/id-identity/id2-identity-federation-obo.md)のToken Exchange基盤も中央で構築し、すべての部署エージェントが本人権限縮退トークンを取得できるよう提供する。[ID-6 Zero-Trust PDP/PEP](../../patterns/id-identity/id6-zero-trust-pdp-pep.md)はポリシー決定ポイントを中央に集約し、全エージェントへのアクセス判定を統一的に処理する。[ID-7 Policy-as-Code](../../patterns/id-identity/id7-policy-as-code-guardrail.md)はOPA等のポリシーエンジンを全社共通基盤として運用する。
+[ID-1 二面分離](../../patterns/id-identity/id1-workforce-customer-split.md)は従業員面と顧客面のIdPを物理的に分ける原則であり、全社設計として最初に確立すべき基盤である。[ID-2 OBO委譲](../../patterns/id-identity/id2-identity-federation-obo.md)のToken Exchange基盤も中央で構築し、すべての部署エージェントが本人権限縮退トークンを取得できるよう整備する。[ID-6 Zero-Trust PDP/PEP](../../patterns/id-identity/id6-zero-trust-pdp-pep.md)はポリシー決定ポイントを中央に集約し、全エージェントへのアクセス判定を統一的に処理する。[ID-7 Policy-as-Code](../../patterns/id-identity/id7-policy-as-code-guardrail.md)はOPA等のポリシーエンジンを全社共通基盤として運用する。
 
 ### 制御・ガバナンス（GV）
 

@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-RAG で社内文書を 50 件取得できたとして、それを全部プロンプトに詰め込めば精度が上がるわけではない。トークンの大量消費、レイテンシ悪化に加え、中盤の情報が無視される「lost in the middle」現象で、むしろ回答品質が下がることもある。「使えるデータ」ではなく「このタスクに必要な最小のデータ」で絞る（[KM-5 Purpose-Bound Context](../../patterns/km-knowledge/km5-purpose-bound-context.md)）ために、top-k やトークン予算をどう設定するかを扱う。
+RAG で社内文書を 50 件取得できたとして、すべてをプロンプトに詰め込めば精度が上がるわけではない。トークンの大量消費とレイテンシ悪化に加え、中盤の情報が無視される「lost in the middle」現象でむしろ回答品質が下がることもある。「使えるデータ」ではなく「このタスクに必要な最小のデータ」に絞る（[KM-5 Purpose-Bound Context](../../patterns/km-knowledge/km5-purpose-bound-context.md)）ために、top-k やトークン予算をどう設定するかを扱う。
 
 ## 過小・過大の害
 

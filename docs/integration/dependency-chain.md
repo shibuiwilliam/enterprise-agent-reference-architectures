@@ -8,9 +8,9 @@ status: done
 
 ## 概要
 
-45のパターンはメニューから好きなものを選ぶのではなく、建物の基礎→構造→内装のように積み上げて使う。あるパターンが機能するには別のパターンが先に敷かれている必要がある——この依存関係を理解することが、導入順序と優先度の決定に直結する。
+45のパターンはメニューから好きなものを選ぶのではなく、建物の基礎→構造→内装のように積み上げて使う。あるパターンが機能するには別のパターンが先に整っている必要がある——この依存関係を理解することが、導入順序と優先度の決定に直結する。
 
-基盤パターンが整っていない状態で上位パターンを入れようとすると、「動くには動くが権限が漏れる」「ログが取れていないため事故時に原因特定できない」「ポリシー変更をコードで管理できないため現場が独自ルールを作る」といった事態が起きる。依存関係マップはその順序の設計図である。
+基盤パターンが整っていない状態で上位パターンを入れようとすると、「動くには動くが権限が漏れる」「ログが取れていないため事故時に原因特定できない」「ポリシー変更をコードで管理できないため現場が独自ルールを作る」といった事態が起きる。依存関係マップは、その導入順序の設計図である。
 
 ## 依存関係マップ
 
@@ -87,7 +87,7 @@ graph TB
 | [ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md) | [KM-1 権限認識RAG](../patterns/km-knowledge/km1-access-controlled-rag.md) | 最小権限合成がドキュメントアクセスの上限になる |
 | [ID-2 OBO](../patterns/id-identity/id2-identity-federation-obo.md) | [KM-2 Context Mesh](../patterns/km-knowledge/km2-context-mesh.md) | 複数SaaSをまたぐ横断文脈の取得には権限伝播が必須 |
 
-このチェーンのポイントは「権限の伝播なくして安全な横断文脈なし」である。[ID-2](../patterns/id-identity/id2-identity-federation-obo.md) のOBO（On-Behalf-Of）委譲が整っていなければ、エージェントはサービスアカウントの過剰権限でRAGを叩くことになる。依頼者が本来見えないはずのドキュメントが検索結果に混入するリスクは、このチェーンが断ち切る。
+このチェーンのポイントは「権限の伝播なくして安全な横断文脈なし」という一点に尽きる。[ID-2](../patterns/id-identity/id2-identity-federation-obo.md) のOBO（On-Behalf-Of）委譲が整っていなければ、エージェントはサービスアカウントの過剰権限でRAGを叩くことになる。依頼者が本来見えないはずのドキュメントが検索結果に混入するリスクを、このチェーンが断ち切る。
 
 ### ID（アイデンティティ）→ RT（ランタイム）チェーン
 
@@ -107,7 +107,7 @@ graph TB
 | [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md) | [GV-8 Cost Quota](../patterns/gv-governance/gv8-cost-quota-chargeback.md) | コスト割り当てには実行単位の識別と承認が必要 |
 | [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md) | [OB-2 Unified Audit](../patterns/ob-observability/ob2-unified-audit-lineage.md) | 実行許可の判断記録は統一監査台帳に書き込まれる |
 
-[GV-1](../patterns/gv-governance/gv1-agent-control-plane.md) は実行許可のゲートである。すべてのエージェントはコントロールプレーンを通じて存在を登録し、実行を許可される。このゲートがなければカタログは形骸化し、コスト管理は不能になり、どのエージェントがいつ動いたかの証跡も残らない。
+[GV-1](../patterns/gv-governance/gv1-agent-control-plane.md) は実行許可のゲートである。すべてのエージェントはコントロールプレーンを通じて存在を登録し、実行を許可される。このゲートがなければカタログは形骸化し、コスト管理は不能になり、どのエージェントがいつ動いたかの証跡も残らなくなる。
 
 ### RT-8（Durable Workflow）→ RT チェーン
 
@@ -129,7 +129,7 @@ graph TB
 | 組織グラフ | [KM-4 Scoped Memory Hierarchy](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) | メモリのスコープ（個人/チーム/部門/全社）は組織構造に対応する |
 | 組織グラフ | [KM-3 Canonical Object Knowledge Graph](../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md) | ナレッジグラフのエンティティ名寄せに組織マスターを参照する |
 
-組織グラフはシステムではなくデータである。Workday・Okta・プロジェクト管理ツールなど複数ソースから名寄せした単一の権威ある組織マスターが存在しなければ、「このエージェントが動かせる範囲はどこか」「誰が承認者か」という問いに一貫した答えが出せない。
+組織グラフはシステムではなくデータである。Workday・Okta・プロジェクト管理ツールなど複数ソースから名寄せした単一の権威ある組織マスターが存在しなければ、「このエージェントが動かせる範囲はどこか」「誰が承認者か」という問いに一貫した答えを出せない。
 
 ## 依存の読み方
 

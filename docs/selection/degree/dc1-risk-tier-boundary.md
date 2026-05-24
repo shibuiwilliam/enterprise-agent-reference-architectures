@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-「社内 FAQ の検索」と「100万円の発注承認」を同じ自律度で扱うわけにはいかない。エージェントにどこまで自動でやらせ、どこから人間の承認を求めるか――この境界線の引き方がビジネス価値とリスクの両方を左右する。[RT-3 Risk-Tiered Autonomy](../../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) の Tier 0–5 を実際にどう区切るかを扱う。
+「社内 FAQ の検索」と「100万円の発注承認」を同じ自律度で扱うわけにはいかない。エージェントにどこまで自動でやらせ、どこから人間の承認を求めるか——この境界線の引き方がビジネス価値とリスクの両方を左右する。[RT-3 Risk-Tiered Autonomy](../../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) の Tier 0–5 を実際にどう区切るかを扱う。
 
 ## 過小・過大の害
 

@@ -8,13 +8,13 @@ status: done
 
 ## 概要
 
-Salesforce は REST、Workday は SOAP、ServiceNow は Table API——SaaS ごとに API 仕様がバラバラで、その差がプロンプトやロジックに染み出すと保守が地獄になる。このパターンは、SaaS 固有の差をアダプタに閉じ込め、エージェントには `get_customer`・`create_ticket` のような業務語彙だけを見せる腐敗防止層（Anti-Corruption Layer）である。SaaS を差し替えても影響はアダプタ内部で完結する。
+Salesforce は REST、Workday は SOAP、ServiceNow は Table API——SaaS ごとに API 仕様がバラバラで、その差がプロンプトやロジックに染み出すと保守が地獄になる。このパターンは、SaaS 固有の差をアダプタに閉じ込め、エージェントには `get_customer`・`create_ticket` のような業務語彙だけを見せる腐敗防止層（Anti-Corruption Layer）だ。SaaS を差し替えても影響はアダプタ内部で完結する。
 
 ## 解決する企業課題
 
 複数の SaaS を横断するエージェントシステムを構築すると、各 SaaS の独自仕様がプロンプトやオーケストレーションロジックに染み出す「保守地獄」が発生する。Salesforce の REST API、Workday の SOAP、ServiceNow の Table API——それぞれ認証方式・レート制限・エラーコード・ページネーション仕様が異なる。これらの差異が上流に露出すると、SaaS 仕様変更のたびにプロンプトやロジックの修正が波及する。
 
-SaaS の差し替えや追加（例：ServiceNow から Jira Service Management への移行）が必要になったとき、アダプタ層がなければ影響範囲が全エージェント・全プロンプトに及ぶ。腐敗防止層はこの変更の影響を「アダプタ内部だけ」に閉じ込める。また、認証方式の差異（OAuth 2.0 / API Key / SAML）も吸収することで、上流はビジネスロジックに集中できる。
+SaaS の差し替えや追加（例：ServiceNow から Jira Service Management への移行）が必要になったとき、アダプタ層がなければ影響範囲が全エージェント・全プロンプトに及ぶ。腐敗防止層はこの変更の影響をアダプタ内部に閉じ込める。認証方式の差異（OAuth 2.0 / API Key / SAML）も吸収することで、上流はビジネスロジックに集中できる。
 
 ## 解決策と設計
 
@@ -37,7 +37,7 @@ flowchart LR
     AD5 --> CS[独自 API]
 ```
 
-各アダプタは対象 SaaS の認証・ページネーション・レート制限・エラー形式をカプセル化する。共通インターフェイスは業務語彙（例：`get_customer`、`create_ticket`、`update_opportunity`）で定義し、SaaS の内部概念（例：Salesforce の Account ID と Workday の Worker ID）の違いをアダプタが解決する。エラー正規化（各 SaaS のエラーコードを共通エラー型に変換）もアダプタが担う。
+各アダプタは対象 SaaS の認証・ページネーション・レート制限・エラー形式をカプセル化する。共通インターフェイスは業務語彙（例：`get_customer`、`create_ticket`、`update_opportunity`）で定義し、SaaS の内部概念（例：Salesforce の Account ID と Workday の Worker ID）の差異をアダプタが解決する。エラー正規化（各 SaaS のエラーコードを共通エラー型に変換）もアダプタが担う。
 
 ## 向き／不向き
 

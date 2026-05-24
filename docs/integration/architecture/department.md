@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-全社基盤が「舗装路」なら、部署軸は「その上を走る車」にあたる。HR Agent・Sales Agent・CS Agent など、部門の業務ロジック・ツール接続・ドメイン知識は部署ごとに異なる。この軸では、[GV-3 部署エージェント工場](../../patterns/gv-governance/gv3-department-agent-factory.md)で標準化しつつ部門固有のカスタマイズを許容する設計を示す。標準化によって中央基盤との接続・監査・権限管理を統一しながら、各部門がドメイン特化の能力を持つエージェントを展開できる。
+全社基盤が「舗装路」なら、部署軸は「その上を走る車」にあたる。HR Agent・Sales Agent・CS Agent など、部門の業務ロジック・ツール接続・ドメイン知識は部署ごとに異なる。この軸では、[GV-3 部署エージェント工場](../../patterns/gv-governance/gv3-department-agent-factory.md)で標準化しつつ部門固有のカスタマイズを許容する設計を示す。標準化によって中央基盤との接続・監査・権限管理を統一しながら、各部門はドメイン特化の能力を持つエージェントを展開できる。
 
 ## この軸に配置するパターン
 
@@ -18,7 +18,7 @@ status: done
 
 [GV-2 Agent Catalog & Marketplace](../../patterns/gv-governance/gv2-agent-catalog-marketplace.md)は全社で承認済みのエージェントを一覧化する。部署は既に別部門で構築されたエージェントを探して再利用できる。重複開発を防ぎ、実績あるエージェントを横展開する仕組みである。
 
-[GV-4 Industry Policy Pack](../../patterns/gv-governance/gv4-industry-policy-pack.md)は業界規制・コンプライアンス要件をポリシーパックとして部署に配布する。金融コンプライアンス・個人情報保護・医療規制など、部門ごとに適用される規制が異なる場合に有効である。
+[GV-4 Industry Policy Pack](../../patterns/gv-governance/gv4-industry-policy-pack.md)は業界規制・コンプライアンス要件をポリシーパックとして部署に配布する。金融コンプライアンス・個人情報保護・医療規制など、部門ごとに適用される規制が異なる場合に特に有効である。
 
 ### 実行・オーケストレーション（RT）
 
