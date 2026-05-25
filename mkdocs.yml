@@ -25,7 +25,6 @@ theme:
         icon: material/weather-sunny
         name: ライトモードへ
   features:
-    - navigation.instant
     - navigation.tracking
     - navigation.tabs
     - navigation.sections
@@ -62,7 +61,52 @@ markdown_extensions:
 
 plugins:
   - search:
-      lang: ja
+      lang:
+        - ja
+        - en
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: ja
+          default: true
+          name: 日本語
+          build: true
+        - locale: en
+          name: English
+          build: true
+          nav_translations:
+            ホーム: Home
+            はじめに: Introduction
+            中心命題・分類学・組織グラフ・7面: Core Thesis, Taxonomy, Org Graph & 7 Facets
+            項目設計と面分類: Schema Design & Facet Classification
+            設計原則: Design Principles
+            パターンカタログ: Pattern Catalog
+            概要: Overview
+            面1 体験・ゲートウェイ: "Facet 1: Experience & Gateway"
+            面2 制御・ガバナンス: "Facet 2: Control & Governance"
+            面3 アイデンティティ・信頼: "Facet 3: Identity & Trust"
+            面4 実行・オーケストレーション: "Facet 4: Runtime & Orchestration"
+            面5 知識・メモリ: "Facet 5: Knowledge & Memory"
+            面6 統合・ツール: "Facet 6: Integration & Tools"
+            面7 観測・評価・監査: "Facet 7: Observability & Audit"
+            選定基準: Selection Criteria
+            「程度」の選定基準: Degree Criteria
+            「相反する仕組み」の選定基準: Tradeoff Criteria
+            用語集: Glossary
+            統合と組み合わせ方: Integration & Composition
+            依存関係と依存チェーン: Dependencies & Chains
+            横断軸: Cross-Cutting Axes
+            組み合わせレシピ: Composition Recipes
+            価値成熟度ロードマップ: Value Maturity Roadmap
+            価値ユースケース選定ガイド: Use-Case Selection Guide
+            定着・アダプション: Adoption & Change Management
+            AI投資ポートフォリオ管理: AI Investment Portfolio
+            部門別適用例: Department Examples
+            リファレンスアーキテクチャ: Reference Architecture
+            全社横断軸: Company-Wide Axis
+            部署軸: Department Axis
+            プロジェクト軸: Project Axis
+            メンバー個別軸: Individual Axis
 
 extra:
   social:

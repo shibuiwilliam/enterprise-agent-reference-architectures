@@ -1,33 +1,33 @@
-# エンタープライズAIエージェント・アーキテクチャ・リファレンス
+# Enterprise AI Agent Architecture Reference
 
-数万人規模・多様な既存SaaS・厳格な権限管理・階層的組織を前提に、AIエージェントをエンタープライズへ安全に組み込むためのアーキテクチャパターン集（7面・45パターン）。MkDocs（Material）で生成し GitHub Pages で公開する。
+A collection of architecture patterns (7 facets, 45 patterns) for safely integrating AI agents into enterprises with tens of thousands of employees, diverse existing SaaS, strict permission management, and hierarchical organizations. Built with MkDocs (Material theme) and published on GitHub Pages.
 
-## クイックスタート
+## Quick Start
 
 ```bash
-uv sync               # 依存関係のインストール
-uv run mkdocs serve   # http://127.0.0.1:8000
-uv run mkdocs build --strict # 本番同等ビルド（警告ゼロが品質ゲート）
+uv sync                          # Install dependencies
+uv run mkdocs serve              # http://127.0.0.1:8000
+uv run mkdocs build --strict     # Production-equivalent build (zero warnings = quality gate)
 ```
 
-## ドキュメントの役割
+## Documentation Roles
 
-- **[PROJECT.md](PROJECT.md)** … 何を・なぜ・どの順で作るか（仕様・計画・全45パターン一覧・完了の定義）。
-- **[CLAUDE.md](CLAUDE.md)** … Claude Code 向けの作業マニュアル（コマンド・執筆規約・禁止事項）。
-- **`reference/source-unified-enterprise.md`** … 全ページの一次ソース（非公開素材）。
+- **[PROJECT.md](PROJECT.md)** — What to build, why, and in what order (specification, plan, full 45-pattern list, Definition of Done).
+- **[CLAUDE.md](CLAUDE.md)** — Operational manual for Claude Code (commands, writing conventions, prohibitions).
+- **`reference/source-unified-enterprise.md`** — Primary source for all pages (unpublished material).
 
-## 公開（GitHub Pages）
+## Publishing (GitHub Pages)
 
-1. GitHub にリポジトリを作成し push（デフォルトブランチ `main`）。
-2. `mkdocs.yml` の `site_url` / `repo_url` / `repo_name` の `USERNAME` を実値に変更。
-3. `main` への push で `.github/workflows/deploy.yml` が `gh-pages` ブランチへ自動公開。
-4. リポジトリ設定 → Pages → Source を **`gh-pages` ブランチ**に設定。
+1. Create a GitHub repository and push (default branch `main`).
+2. Update `site_url` / `repo_url` / `repo_name` in `mkdocs.yml` to match your repository.
+3. Pushing to `main` triggers `.github/workflows/deploy.yml`, which auto-deploys to GitHub Pages.
+4. In repository Settings → Pages → Source, select **GitHub Actions**.
 
-## 構成（7面）
+## Structure (7 Facets)
 
 ```text
-面1 EX 体験・ゲートウェイ / 面2 GV 制御・ガバナンス / 面3 ID アイデンティティ・信頼(最難関)
-面4 RT 実行・オーケストレーション / 面5 KM 知識・メモリ / 面6 IN 統合・ツール / 面7 OB 観測・評価・監査
+Facet 1 EX Experience & Gateway / Facet 2 GV Control & Governance / Facet 3 ID Identity & Trust (hardest)
+Facet 4 RT Runtime & Orchestration / Facet 5 KM Knowledge & Memory / Facet 6 IN Integration & Tools / Facet 7 OB Observability & Audit
 ```
 
-詳細なディレクトリ構成・パターン一覧は [PROJECT.md](PROJECT.md) を参照。
+See [PROJECT.md](PROJECT.md) for the full directory structure and pattern list.

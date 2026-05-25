@@ -1,91 +1,95 @@
-# PROJECT.md — プロジェクト仕様・計画
+# PROJECT.md — Project Specification & Plan
 
-本書はプロジェクトの**仕様と計画（何を・なぜ・どの順で作るか）**を定義する。日々の作業手順・コマンド・執筆規約は `CLAUDE.md` を参照すること。
+This document defines the project's **specification and plan (what to build, why, and in what order)**. For day-to-day procedures, commands, and writing conventions, see `CLAUDE.md`.
 
 ---
 
-## 1. 概要
+## 1. Overview
 
-- **プロジェクト名**：エンタープライズAIエージェント・アーキテクチャ・リファレンス
-- **成果物**：MkDocs（Material テーマ）で生成し、GitHub Pages で公開する技術ドキュメントサイト。
-- **目的**：数万人規模・多様な既存SaaS・厳格な権限管理・階層的組織を前提に、AIエージェントをエンタープライズへ安全に組み込むための再利用可能なアーキテクチャパターンを、横並び比較・選定可能な形で提供する。
-- **中心命題**：AIを賢くすることではなく、企業のID・権限・責任・業務プロセス・監査・データ境界・組織構造の中に、新しい実行主体を安全に参加させること。
-- **想定読者**：エンタープライズアーキテクト、プラットフォーム/基盤エンジニア、セキュリティ/IAM担当、AI CoE、テックリード、SRE。
-- **執筆主体**：Claude Code。本書と `CLAUDE.md` を契約として各ページを段階的に執筆する。
+- **Project name**: Enterprise AI Agent Architecture Reference
+- **Deliverable**: A technical documentation site generated with MkDocs (Material theme) and published on GitHub Pages.
+- **Purpose**: Provide reusable architecture patterns for safely integrating AI agents into enterprises—assuming tens of thousands of employees, diverse existing SaaS, strict permission management, and hierarchical organizations—in a form that enables side-by-side comparison and selection.
+- **Core thesis**: The central challenge is not making AI smarter, but safely onboarding a new execution entity into the enterprise's existing ID, permissions, responsibilities, business processes, auditing, data boundaries, and organizational structure.
+- **Target audience**: Enterprise architects, platform/infrastructure engineers, security/IAM teams, AI CoE, tech leads, SRE.
 
-## 2. 一次ソース（source of truth）
+## 2. Primary Source (Source of Truth)
 
-- すべての内容の出典は **`reference/source-unified-enterprise.md`**（3レポートの統合済みリファレンス、7面・45パターン）。
-- 各ページは「該当節を Web ドキュメントとして読みやすい粒度に再構成する」作業。内容を勝手に創作・水増ししない。
-- 標準・固有名（NIST AI RMF / OWASP LLM Top 10 / OIDC / SCIM / RFC 8693 / NIST SP 800-207 / OPA / Cedar / MCP / CloudEvents / OpenTelemetry、および Salesforce / Workday / Okta 等のSaaS）はソースの範囲に従う。ソース外の最新情報を足す場合は出典を明記し過度な断定を避ける。
+- The source for all content is **`reference/source-unified-enterprise.md`** (a consolidated reference from 3 reports: 7 facets, 45 patterns).
+- Each page restructures the relevant section into a web-document-friendly format. Do not fabricate or pad content.
+- Standards and proper nouns (NIST AI RMF / OWASP LLM Top 10 / OIDC / SCIM / RFC 8693 / NIST SP 800-207 / OPA / Cedar / MCP / CloudEvents / OpenTelemetry, and SaaS such as Salesforce / Workday / Okta) follow the scope of the source. When adding information beyond the source, cite explicitly and avoid definitive assertions.
 
-## 3. 情報設計（IA）とディレクトリ構成
+## 3. Information Architecture & Directory Structure
 
-公開対象は `docs/` 配下のみ。`reference/` は執筆用素材で公開しない。
+Only `docs/` is published. `reference/` is writing material and is not published.
 
 ```text
 .
-├── PROJECT.md                  # 本書（仕様・計画）
-├── CLAUDE.md                   # Claude Code 向け作業マニュアル
-├── README.md                   # 人間向けクイックスタート
-├── mkdocs.yml                  # サイト設定・ナビゲーション
-├── pyproject.toml              # uv で管理する依存関係（mkdocs-material, pymdown-extensions）
-├── uv.lock                     # uv のロックファイル
-├── .github/workflows/deploy.yml# GitHub Pages 自動デプロイ
-├── scripts/build_nav.sh        # nav を docs ツリーから再生成
+├── PROJECT.md                  # This document (specification & plan)
+├── CLAUDE.md                   # Operational manual for Claude Code
+├── README.md                   # Quick start for humans
+├── mkdocs.yml                  # Site configuration & navigation
+├── pyproject.toml              # Dependencies managed by uv (mkdocs-material, pymdown-extensions)
+├── uv.lock                     # uv lock file
+├── .github/workflows/deploy.yml# GitHub Pages auto-deploy
+├── scripts/build_nav.sh        # Regenerate nav from docs tree
 ├── reference/
-│   └── source-unified-enterprise.md   # 一次ソース（非公開）
+│   └── source-unified-enterprise.md   # Primary source (unpublished)
 └── docs/
-    ├── index.md                # ホーム
+    ├── index.md                # Home
     ├── overview/
-    │   ├── agenda.md           # ステップ1：中心命題・分類学・組織グラフ・7面
-    │   └── schema.md           # ステップ2：項目設計と面分類
+    │   ├── agenda.md           # Step 1: Core thesis, taxonomy, org graph, 7 facets
+    │   ├── schema.md           # Step 2: Schema design & facet classification
+    │   └── principles.md       # Design principles
     ├── patterns/
-    │   ├── index.md            # 7面一覧
-    │   ├── ex-experience/      # 面1（index.md + EX-1..EX-3）
-    │   ├── gv-governance/      # 面2（GV-1..GV-10）
-    │   ├── id-identity/        # 面3（ID-1..ID-8）★最難関
-    │   ├── rt-runtime/         # 面4（RT-1..RT-11）
-    │   ├── km-knowledge/       # 面5（KM-1..KM-7）
-    │   ├── in-integration/     # 面6（IN-1..IN-4）
-    │   └── ob-observability/   # 面7（OB-1..OB-2）
+    │   ├── index.md            # 7-facet overview
+    │   ├── ex-experience/      # Facet 1 (index.md + EX-1..EX-4)
+    │   ├── gv-governance/      # Facet 2 (GV-1..GV-10)
+    │   ├── id-identity/        # Facet 3 (ID-1..ID-8) ★ Hardest
+    │   ├── rt-runtime/         # Facet 4 (RT-1..RT-11)
+    │   ├── km-knowledge/       # Facet 5 (KM-1..KM-7)
+    │   ├── in-integration/     # Facet 6 (IN-1..IN-4)
+    │   └── ob-observability/   # Facet 7 (OB-1..OB-2)
     ├── selection/
-    │   ├── degree/             # ステップ4：「程度」の選定基準（index.md + DC-1..DC-9）
-    │   └── tradeoff/           # ステップ5：「相反する仕組み」の選定基準（index.md + TO-1..TO-12）
+    │   ├── degree/             # Step 4: Degree criteria (index.md + DC-1..DC-9)
+    │   └── tradeoff/           # Step 5: Tradeoff criteria (index.md + TO-1..TO-12)
     ├── integration/
-    │   ├── dependencies.md     # ステップ6.1/6.2：依存関係・組み合わせレシピ
-    │   ├── department-examples.md # ステップ6.3：部門別適用例
-    │   ├── roadmap.md          # ステップ6.4：成熟度ロードマップ
-    │   ├── reference-architecture.md # ステップ6.5：標準構成図
-    │   └── principles.md       # ステップ6.6：設計原則
-    └── assets/                 # 画像等（必要時）
+    │   ├── dependency-chain.md # Step 6.1/6.2: Dependencies & composition recipes
+    │   ├── cross-cutting-axes.md # Cross-cutting axes
+    │   ├── recipe.md           # Composition recipes
+    │   ├── value-maturity-roadmap.md # Value maturity roadmap
+    │   ├── usecase-selection-guide.md # Use-case selection guide
+    │   ├── adoption.md         # Adoption & change management
+    │   ├── portfolio.md        # AI investment portfolio
+    │   ├── departments/        # Department examples (index + 5 departments)
+    │   └── architecture/       # Reference architecture (index + 4 axes)
+    └── assets/                 # Images etc. (as needed)
 ```
 
-## 4. ページ仕様
+## 4. Page Specifications
 
-### 4.1 パターンページ共通スキーマ（必須・順序固定）
+### 4.1 Pattern Page Common Schema (Required, Fixed Order)
 
-各パターンページは以下の見出しをこの順序で持つ。空節を残さない。
+Each pattern page has the following headings in this order. No section may be left empty.
 
-1. `## 概要` — 何であ���かの一文要約。
-2. `## 解決する企業課題` — ど���いう課題を解決するために、どのエンタープライズ固有の力（漏洩・サイロ・動的文脈・監査・コスト）に応えるか。
-3. `## 価値仮説` — このパターンがどの企業価値KPI（売上・利益／業務自動化／プロジェクト生産性／従業員効率／経営判断速度）に、どの経路で効くか。1〜3行で記載。
-4. `## 解決策と設計` — 課題の解決策と、それを実現する設計としての構造・データフロー・状態遷移・実装上の要点。図は mermaid。
-5. `## 向き／不向き` — 採用が効く条件と、害・過剰になる条件を対で。
-6. `## 要素技術・既��システム連携` — 代表技術・標準・対象SaaS。
-7. `## 落とし穴／選定の勘所` — 典型的な失敗と回避の指針。
-8. `## 関連パターン` — 類似・補完・対比される他のパターンへの相対リンク。
+1. `## Overview` — One-sentence summary of what the pattern is.
+2. `## Enterprise Problem` — What problem it solves and which enterprise-specific forces (leakage / silos / dynamic context / audit / cost) it addresses.
+3. `## Value Hypothesis` — Which enterprise value KPIs (revenue & profit / process automation / project productivity / employee efficiency / executive decision speed) this pattern impacts, and through what causal path. 1–3 lines.
+4. `## Solution & Design` — The solution approach and its technical design: structure, data flow, state transitions, key implementation points. Diagrams in mermaid.
+5. `## When to Use / When Not to Use` — Conditions where adoption is effective vs. harmful or excessive, presented as pairs.
+6. `## Technology & System Integration` — Representative technologies, standards, and target SaaS.
+7. `## Pitfalls & Selection Tips` — Typical anti-patterns and guidance for avoidance.
+8. `## Related Patterns` — Relative links to similar, complementary, or contrasting patterns.
 
-フロントマター：`title`（`"<ID> <名称>"`）、`description`（1文）、`status`（`draft`→`done`）。
+Frontmatter: `title` (`"<ID> <Name>"`), `description` (one sentence), `status` (`draft` → `done`).
 
-### 4.2 パターン一覧（全45・執筆対象）
+### 4.2 Pattern List (All 45)
 
-| ID | 名称 | ファイル |
+| ID | Name | File |
 |---|---|---|
 | EX-1 | Enterprise Agent Gateway | patterns/ex-experience/ex1-enterprise-agent-gateway.md |
-| EX-2 | 業務埋め込み vs 独立ポータル | patterns/ex-experience/ex2-embedded-vs-portal.md |
-| EX-3 | チャネル非依存フロントドア | patterns/ex-experience/ex3-channel-agnostic-frontdoor.md |
-| EX-4 | 信頼と価値実感のUX（定着を支える体験設計） | patterns/ex-experience/ex4-trust-value-ux.md |
+| EX-2 | Embedded + Standalone Workbench | patterns/ex-experience/ex2-embedded-vs-portal.md |
+| EX-3 | Channel-Agnostic Front Door | patterns/ex-experience/ex3-channel-agnostic-frontdoor.md |
+| EX-4 | Trust & Value UX | patterns/ex-experience/ex4-trust-value-ux.md |
 | GV-1 | Enterprise Agent Control Plane | patterns/gv-governance/gv1-agent-control-plane.md |
 | GV-2 | Agent Catalog & Marketplace | patterns/gv-governance/gv2-agent-catalog-marketplace.md |
 | GV-3 | Department Agent Factory | patterns/gv-governance/gv3-department-agent-factory.md |
@@ -95,8 +99,8 @@
 | GV-7 | Evaluation & Governance Pipeline | patterns/gv-governance/gv7-evaluation-governance-pipeline.md |
 | GV-8 | Cost Quota & Chargeback | patterns/gv-governance/gv8-cost-quota-chargeback.md |
 | GV-9 | Incident Response & Kill Switch | patterns/gv-governance/gv9-incident-response-kill-switch.md |
-| GV-10 | Two-Layer Value Measurement | patterns/gv-governance/gv10-two-layer-value-measurement.md |
-| ID-1 | Workforce/Customer 二面分離 | patterns/id-identity/id1-workforce-customer-split.md |
+| GV-10 | Three-Layer Value Measurement | patterns/gv-governance/gv10-two-layer-value-measurement.md |
+| ID-1 | Workforce/Customer Identity Split | patterns/id-identity/id1-workforce-customer-split.md |
 | ID-2 | Identity Federation & OBO | patterns/id-identity/id2-identity-federation-obo.md |
 | ID-3 | Workload / Agent Identity | patterns/id-identity/id3-workload-agent-identity.md |
 | ID-4 | Permission Mirror & Least-of | patterns/id-identity/id4-permission-mirror-least-of.md |
@@ -129,99 +133,102 @@
 | OB-1 | Observability Lake | patterns/ob-observability/ob1-observability-lake.md |
 | OB-2 | Unified Audit & Lineage | patterns/ob-observability/ob2-unified-audit-lineage.md |
 
-### 4.3 選定基準ページ共通スキーマ
+### 4.3 Selection Criteria Page Schemas
 
-#### 「程度」の選定基準（DC-*）ページスキーマ（必須・順序固定）
+#### Degree Criteria (DC-*) Page Schema (Required, Fixed Order)
 
-1. `## 概要` — この連続量パラメータが何を制御するかの一文要約。
-2. `## 過小・過大の害` — 両極端が引き起こす具体的な害。表形式で対比。
-3. `## 判断基準` — どの入力変数（影響度・機密度・職責等）でどう決めるか。
-4. `## 調整の仕組み` — 本番でどう計測・調整するか（OB-1/GV-7 との連携）。
-5. `## 関連パターン` — 対応するパターンへの相対リンク。
+1. `## Overview` — One-sentence summary of what this continuous parameter controls.
+2. `## Harm from Too Little / Too Much` — Concrete harms from both extremes. Table format.
+3. `## Decision Criteria` — Which input variables (impact, classification, job responsibility, etc.) determine the setting.
+4. `## Tuning Mechanisms` — How to measure and adjust in production (integration with OB-1 / GV-7).
+5. `## Related Patterns` — Relative links to corresponding patterns.
 
-フロントマター：`title`（`"DC-<N> <名称>"`）、`description`（1文）、`status`（`draft`→`done`）。
+Frontmatter: `title` (`"DC-<N> <Name>"`), `description` (one sentence), `status` (`draft` → `done`).
 
-#### 「相反する仕組み」の選定基準（TO-*）ページスキーマ（必須・順序固定）
+#### Tradeoff Criteria (TO-*) Page Schema (Required, Fixed Order)
 
-1. `## 概要` — 何と何が対立するか、なぜ二者択一に見えるか。
-2. `## 比較` — 観点別の比較表。
-3. `## 判断基準` — どの条件でどちらを選ぶか（線引きの軸）。
-4. `## ハイブリッド・段階的アプローチ` — 実務的な併用・段階戦略（該当する場合）。
-5. `## 関連パターン` — 対応するパターンへの相対リンク。
+1. `## Overview` — What is in tension and why it appears to be a binary choice.
+2. `## Comparison` — Aspect-by-aspect comparison table.
+3. `## Decision Criteria` — Under which conditions to choose which side (the axis for drawing the line).
+4. `## Hybrid & Staged Approaches` — Practical combined or staged strategies (where applicable).
+5. `## Related Patterns` — Relative links to corresponding patterns.
 
-フロントマター：`title`（`"TO-<N> <名称>"`）、`description`（1文）、`status`（`draft`→`done`）。
+Frontmatter: `title` (`"TO-<N> <Name>"`), `description` (one sentence), `status` (`draft` → `done`).
 
-### 4.4 選定基準ページ一覧
+### 4.4 Selection Criteria Page List
 
-#### 「程度」の選定基準（DC-1〜DC-9）
+#### Degree Criteria (DC-1 to DC-9)
 
-| ID | 名称 | ファイル |
+| ID | Name | File |
 |---|---|---|
-| DC-1 | 自律度のティア境界（Risk-Tier の引き方） | selection/degree/dc1-risk-tier-boundary.md |
-| DC-2 | タイムアウト・リトライ・予算（コスト上限） | selection/degree/dc2-timeout-retry-budget.md |
-| DC-3 | プロンプト/トレースのログ粒度（三層分離） | selection/degree/dc3-log-granularity.md |
-| DC-4 | コンテキスト投入量（top-k・トークン予算） | selection/degree/dc4-context-volume.md |
-| DC-5 | メモリ保持・忘却（TTL・スコープ） | selection/degree/dc5-memory-retention.md |
-| DC-6 | ガードレール強度（誤検知 vs 見逃し） | selection/degree/dc6-guardrail-strength.md |
-| DC-7 | キャッシュ積極度・JIT 資格情報 TTL | selection/degree/dc7-cache-jit-ttl.md |
-| DC-8 | モデルの強さ・データ分類別ルーティング | selection/degree/dc8-model-routing.md |
-| DC-9 | カナリア段階・イベント駆動の頻度制限 | selection/degree/dc9-canary-event-throttle.md |
+| DC-1 | Autonomy Tier Boundaries (Risk-Tier Calibration) | selection/degree/dc1-risk-tier-boundary.md |
+| DC-2 | Timeout, Retry & Budget (Cost Caps) | selection/degree/dc2-timeout-retry-budget.md |
+| DC-3 | Prompt/Trace Log Granularity (Three-Layer Split) | selection/degree/dc3-log-granularity.md |
+| DC-4 | Context Volume (top-k & Token Budget) | selection/degree/dc4-context-volume.md |
+| DC-5 | Memory Retention & Forgetting (TTL & Scope) | selection/degree/dc5-memory-retention.md |
+| DC-6 | Guardrail Strength (False Positives vs. Misses) | selection/degree/dc6-guardrail-strength.md |
+| DC-7 | Cache Aggressiveness & JIT Credential TTL | selection/degree/dc7-cache-jit-ttl.md |
+| DC-8 | Model Strength & Data-Classification Routing | selection/degree/dc8-model-routing.md |
+| DC-9 | Canary Stages & Event-Driven Rate Limits | selection/degree/dc9-canary-event-throttle.md |
 
-#### 「相反する仕組み」の選定基準（TO-1〜TO-12）
+#### Tradeoff Criteria (TO-1 to TO-12)
 
-| ID | 名称 | ファイル |
+| ID | Name | File |
 |---|---|---|
-| TO-1 | OBO委譲 vs サービスアカウント | selection/tradeoff/to1-obo-vs-service-account.md |
-| TO-2 | 中央集権データレイク vs フェデレーテッド Context Mesh | selection/tradeoff/to2-lake-vs-mesh.md |
-| TO-3 | 単一エージェント vs RACI マルチエージェント | selection/tradeoff/to3-single-vs-multi-agent.md |
-| TO-4 | Read-only vs Write-capable（段階的拡張） | selection/tradeoff/to4-readonly-vs-write.md |
-| TO-5 | Copilot vs Autopilot | selection/tradeoff/to5-copilot-vs-autopilot.md |
-| TO-6 | 個人の記憶 vs プロジェクト/チームの記憶 | selection/tradeoff/to6-personal-vs-team-memory.md |
-| TO-7 | 全プロンプトログ vs 選択的トレースログ | selection/tradeoff/to7-full-vs-selective-log.md |
-| TO-8 | 中央集権プラットフォーム vs 部署フェデレーション | selection/tradeoff/to8-central-vs-federation.md |
-| TO-9 | コネクタ自前構築 vs 既存 iPaaS 再利用 | selection/tradeoff/to9-custom-vs-ipaas.md |
-| TO-10 | 内部/オンプレモデル vs 外部 API | selection/tradeoff/to10-onprem-vs-external.md |
-| TO-11 | 同期 vs 非同期 | selection/tradeoff/to11-sync-vs-async.md |
-| TO-12 | プロンプトで守る vs ポリシー/実行基盤で守る | selection/tradeoff/to12-prompt-vs-platform.md |
+| TO-1 | OBO Delegation vs. Service Account | selection/tradeoff/to1-obo-vs-service-account.md |
+| TO-2 | Central Data Lake vs. Federated Context Mesh | selection/tradeoff/to2-lake-vs-mesh.md |
+| TO-3 | Single Agent vs. RACI Multi-Agent | selection/tradeoff/to3-single-vs-multi-agent.md |
+| TO-4 | Read-only vs. Write-capable (Staged Expansion) | selection/tradeoff/to4-readonly-vs-write.md |
+| TO-5 | Copilot vs. Autopilot | selection/tradeoff/to5-copilot-vs-autopilot.md |
+| TO-6 | Personal Memory vs. Project/Team Memory | selection/tradeoff/to6-personal-vs-team-memory.md |
+| TO-7 | Full Prompt Logs vs. Selective Trace Logs | selection/tradeoff/to7-full-vs-selective-log.md |
+| TO-8 | Central Platform vs. Department Federation | selection/tradeoff/to8-central-vs-federation.md |
+| TO-9 | Custom Connectors vs. Existing iPaaS Reuse | selection/tradeoff/to9-custom-vs-ipaas.md |
+| TO-10 | Internal/On-prem Model vs. External API | selection/tradeoff/to10-onprem-vs-external.md |
+| TO-11 | Synchronous vs. Asynchronous | selection/tradeoff/to11-sync-vs-async.md |
+| TO-12 | Guard with Prompts vs. Policy/Platform | selection/tradeoff/to12-prompt-vs-platform.md |
 
-### 4.5 非パターン・非選定基準ページ
+### 4.5 Non-Pattern, Non-Selection-Criteria Pages
 
-| ページ | 対応ステップ | ソース節 |
+| Page | Corresponding Step | Source Section |
 |---|---|---|
-| overview/agenda.md | ステップ1 | ステップ1 全体（命題・分類学・組織グラフ・7面・標準整合） |
-| overview/schema.md | ステップ2 | ステップ2 |
-| integration/dependencies.md | ステップ6.1/6.2 | 6.1 依存関係・6.2 組み合わせレシピ |
-| integration/department-examples.md | ステップ6.3 | 6.3 部門別適用例 |
-| integration/roadmap.md | ステップ6.4 | 6.4 成熟度ロードマップ |
-| integration/reference-architecture.md | ステップ6.5 | 6.5（mermaidで作図） |
-| integration/principles.md | ステップ6.6 | 6.6 設計原則 |
-| integration/adoption.md | 定着・アダプション | レビュー指摘2-1に基づく新設（チェンジマネジメント・信頼獲得UX・定着指標） |
-| integration/portfolio.md | AI投資ポートフォリオ管理 | レビュー指摘4-2に基づく新設（価値×コスト×リスクの投資配分） |
+| overview/agenda.md | Step 1 | Step 1 (thesis, taxonomy, org graph, 7 facets, standard alignment) |
+| overview/schema.md | Step 2 | Step 2 |
+| overview/principles.md | Design Principles | Step 6.6 |
+| integration/dependency-chain.md | Step 6.1/6.2 | 6.1 Dependencies, 6.2 Composition recipes |
+| integration/cross-cutting-axes.md | Cross-cutting axes | Org Graph & Zero Trust/Audit |
+| integration/recipe.md | Composition recipes | 6.2 Composition recipes |
+| integration/departments/*.md | Step 6.3 | 6.3 Department examples |
+| integration/architecture/*.md | Step 6.5 | 6.5 Reference architecture |
+| integration/value-maturity-roadmap.md | Value maturity roadmap | Step 6.4 |
+| integration/usecase-selection-guide.md | Use-case selection guide | New (based on review) |
+| integration/adoption.md | Adoption & change management | New (based on review) |
+| integration/portfolio.md | AI investment portfolio | New (based on review) |
 
-## 5. 執筆計画（フェーズと優先順位）
+## 5. Writing Plan (Phases & Priorities)
 
-ソースの成熟度ロードマップに沿い、本番で最初に効く面から着手する。**面3（アイデンティティ）が最難関かつ最重要のため、骨格を早期に固める。**
+Follow the maturity roadmap order, starting with the facets that deliver value in production first. **Facet 3 (Identity) is the hardest and most critical; solidify its skeleton early.**
 
-- **Phase 0：足場確認** — `mkdocs serve` で全スタブ表示・`mkdocs build --strict` 通過を確認。
-- **Phase 1：セキュリティ基盤** — overview 2ページ ＋ ID-2, ID-4, ID-1, ID-6, ID-7（権限の忠実な伝播を先に固める）＋ KM-7。
-- **Phase 2：統治の骨格** — GV-1, GV-5, OB-1, OB-2, GV-9, EX-1。
-- **Phase 3：知識と連携** — KM-1, KM-2, KM-3, KM-4, IN-1, IN-2 ＋ selection（DC-1〜DC-9, TO-1〜TO-12）。
-- **Phase 4：実行と自動化** — RT-1〜RT-11、残りの GV/EX/KM/IN/ID。
-- **Phase 5：統合章の仕上げ** — integration 5ページ（全パターンへの相互リンクを張る）。
+- **Phase 0: Scaffold check** — Verify all stubs render in `mkdocs serve` and `mkdocs build --strict` passes.
+- **Phase 1: Security foundation** — 2 overview pages + ID-2, ID-4, ID-1, ID-6, ID-7 (establish faithful permission propagation first) + KM-7.
+- **Phase 2: Governance skeleton** — GV-1, GV-5, OB-1, OB-2, GV-9, EX-1.
+- **Phase 3: Knowledge & integration** — KM-1, KM-2, KM-3, KM-4, IN-1, IN-2 + selection (DC-1–DC-9, TO-1–TO-12).
+- **Phase 4: Runtime & automation** — RT-1–RT-11, remaining GV/EX/KM/IN/ID.
+- **Phase 5: Integration chapter finalization** — integration pages (cross-link all patterns).
 
-## 6. 完了の定義（Definition of Done）
+## 6. Definition of Done
 
-各ページは以下をすべて満たして `status: done`。
+Each page meets `status: done` when all of the following are satisfied:
 
-- 共通スキーマの全節が、空・TODO なしで埋まっている（パターンページ）。
-- フロントマター `title` が nav と一致、`description` が1文で記入済み。
-- 内部リンクが有効（`mkdocs build --strict` が警告なしで通る）。
-- 図が必要な箇所は mermaid で描かれている（特に ID-2 OBO、RT-7 Saga、RT-10 イベント駆動はシーケンス/フロー図を推奨）。
-- 一次ソースの該当節の主旨を逸脱していない。
+- All sections of the common schema are filled with content (no empty sections, no TODOs) — for pattern pages.
+- Frontmatter `title` matches nav, `description` is a single sentence.
+- Internal links are valid (`mkdocs build --strict` passes with zero warnings).
+- Diagrams are provided where needed (especially ID-2 OBO, RT-7 Saga, RT-10 Event-Driven — sequence/flow diagrams recommended).
+- The page does not deviate from the intent of the corresponding primary source section.
 
-## 7. 非目標（やらないこと）
+## 7. Non-Goals
 
-- ソースに無い新パターンの追加（提案は Issue として別途）。
-- 実装コードの完全提供（要素技術名と最小擬似コード／設定例に留める）。
-- 特定ベンダー製品の宣伝・優劣の断定。
-- 顧客面と従業員面の境界をまたぐ設計例の安易な提示（ID-1 の原則に反する）。
+- Adding new patterns not in the source (propose via Issues separately).
+- Providing complete implementation code (limit to technology names and minimal pseudo-code / config examples).
+- Promoting or ranking specific vendor products.
+- Casually presenting design examples that cross the workforce/customer boundary (violates the ID-1 principle).
