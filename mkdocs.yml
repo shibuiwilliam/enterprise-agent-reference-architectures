@@ -83,6 +83,7 @@ nav:
           - "EX-1 Enterprise Agent Gateway（統一フロントドア）": patterns/ex-experience/ex1-enterprise-agent-gateway.md
           - "EX-2 業務埋め込み＋独立ワークベンチ（チャネル配置）": patterns/ex-experience/ex2-embedded-vs-portal.md
           - "EX-3 チャネル非依存フロントドア": patterns/ex-experience/ex3-channel-agnostic-frontdoor.md
+          - "EX-4 信頼と価値実感のUX（定着を支える体験設計）": patterns/ex-experience/ex4-trust-value-ux.md
       - 面2 制御・ガバナンス:
           - patterns/gv-governance/index.md
           - "GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）": patterns/gv-governance/gv1-agent-control-plane.md
@@ -168,6 +169,8 @@ nav:
       - 依存関係と依存チェーン: integration/dependency-chain.md
       - 横断軸: integration/cross-cutting-axes.md
       - 組み合わせレシピ: integration/recipe.md
+      - 定着・アダプション: integration/adoption.md
+      - AI投資ポートフォリオ管理: integration/portfolio.md
       - 部門別適用例:
           - integration/departments/index.md
           - Sales Agent: integration/departments/sales.md

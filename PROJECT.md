@@ -67,13 +67,14 @@
 
 各パターンページは以下の見出しをこの順序で持つ。空節を残さない。
 
-1. `## 概要` — 何であるかの一文要約。
-2. `## 解決する企業課題` — どういう課題を解決するために、どのエンタープライズ固有の力（漏洩・サイロ・動的文脈・監査・コスト）に応えるか。
-3. `## 解決策と設計` — 課題の解決策と、それを実現する設計としての構造・データフロー・状態遷移・実装上の要点。図は mermaid。
-4. `## 向き／不向き` — 採用が効く条件と、害・過剰になる条件を対で。
-5. `## 要素技術・既存システム連携` — 代表技術・標準・対象SaaS。
-6. `## 落とし穴／選定の勘所` — 典型的な失敗と回避の指針。
-7. `## 関連パターン` — 類似・補完・対比される他のパターンへの相対リンク。
+1. `## 概要` — 何であ���かの一文要約。
+2. `## 解決する企業課題` — ど���いう課題を解決するために、どのエンタープライズ固有の力（漏洩・サイロ・動的文脈・監査・コスト）に応えるか。
+3. `## 価値仮説` — このパターンがどの企業価値KPI（売上・利益／業務自動化／プロジェクト生産性／従業員効率／経営判断速度）に、どの経路で効くか。1〜3行で記載。
+4. `## 解決策と設計` — 課題の解決策と、それを実現する設計としての構造・データフロー・状態遷移・実装上の要点。図は mermaid。
+5. `## 向き／不向き` — 採用が効く条件と、害・過剰になる条件を対で。
+6. `## 要素技術・既��システム連携` — 代表技術・標準・対象SaaS。
+7. `## 落とし穴／選定の勘所` — 典型的な失敗と回避の指針。
+8. `## 関連パターン` — 類似・補完・対比される他のパターンへの相対リンク。
 
 フロントマター：`title`（`"<ID> <名称>"`）、`description`（1文）、`status`（`draft`→`done`）。
 
@@ -84,6 +85,7 @@
 | EX-1 | Enterprise Agent Gateway | patterns/ex-experience/ex1-enterprise-agent-gateway.md |
 | EX-2 | 業務埋め込み vs 独立ポータル | patterns/ex-experience/ex2-embedded-vs-portal.md |
 | EX-3 | チャネル非依存フロントドア | patterns/ex-experience/ex3-channel-agnostic-frontdoor.md |
+| EX-4 | 信頼と価値実感のUX（定着を支える体験設計） | patterns/ex-experience/ex4-trust-value-ux.md |
 | GV-1 | Enterprise Agent Control Plane | patterns/gv-governance/gv1-agent-control-plane.md |
 | GV-2 | Agent Catalog & Marketplace | patterns/gv-governance/gv2-agent-catalog-marketplace.md |
 | GV-3 | Department Agent Factory | patterns/gv-governance/gv3-department-agent-factory.md |
@@ -193,6 +195,8 @@
 | integration/roadmap.md | ステップ6.4 | 6.4 成熟度ロードマップ |
 | integration/reference-architecture.md | ステップ6.5 | 6.5（mermaidで作図） |
 | integration/principles.md | ステップ6.6 | 6.6 設計原則 |
+| integration/adoption.md | 定着・アダプション | レビュー指摘2-1に基づく新設（チェンジマネジメント・信頼獲得UX・定着指標） |
+| integration/portfolio.md | AI投資ポートフォリオ管理 | レビュー指摘4-2に基づく新設（価値×コスト×リスクの投資配分） |
 
 ## 5. 執筆計画（フェーズと優先順位）
 
