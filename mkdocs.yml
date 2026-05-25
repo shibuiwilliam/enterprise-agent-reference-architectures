@@ -183,6 +183,9 @@ plugins:
             # Department examples
             部門別適用例: Department Examples
 
+extra_css:
+  - stylesheets/nav.css
+
 extra:
   social:
     - icon: fontawesome/brands/github
