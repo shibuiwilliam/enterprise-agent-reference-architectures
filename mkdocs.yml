@@ -74,6 +74,7 @@ plugins:
         - locale: en
           name: English
           build: true
+          site_name: Enterprise AI Agent Architecture Reference
           nav_translations:
             ホーム: Home
             はじめに: Introduction
@@ -107,6 +108,80 @@ plugins:
             部署軸: Department Axis
             プロジェクト軸: Project Axis
             メンバー個別軸: Individual Axis
+            # EX patterns
+            "EX-1 Enterprise Agent Gateway（統一フロントドア）": EX-1 Enterprise Agent Gateway (Unified Front Door)
+            "EX-2 業務埋め込み＋独立ワークベンチ（チャネル配置）": EX-2 Embedded + Standalone Workbench (Channel Placement)
+            "EX-3 チャネル非依存フロントドア": EX-3 Channel-Agnostic Front Door
+            "EX-4 信頼と価値実感のUX（定着を支える体験設計）": EX-4 Trust & Value UX (Experience Design for Adoption)
+            # GV patterns
+            "GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）": GV-1 Enterprise Agent Control Plane (Registry / Lifecycle)
+            "GV-2 Agent Catalog & Marketplace（社内カタログ）": GV-2 Agent Catalog & Marketplace
+            "GV-3 Department Agent Factory（役割テンプレート工場）": GV-3 Department Agent Factory (Role Template Factory)
+            "GV-4 Industry Policy Pack（業界ポリシーパック）": GV-4 Industry Policy Pack
+            "GV-5 Central Model Gateway（モデル・ベンダー統制）": GV-5 Central Model Gateway (Model & Vendor Control)
+            "GV-6 Version Registry（モデル/プロンプト/ツール/ポリシー/索引の版管理）": GV-6 Version Registry (Model / Prompt / Tool / Policy / Index)
+            "GV-7 Evaluation & Governance Pipeline（評価CI/CD）": GV-7 Evaluation & Governance Pipeline (Eval CI/CD)
+            "GV-8 Cost Quota & Chargeback（コスト配賦）": GV-8 Cost Quota & Chargeback
+            "GV-9 Incident Response & Kill Switch（事故対応・停止）": GV-9 Incident Response & Kill Switch
+            "GV-10 Three-Layer Value Measurement（採用定着×生産性×経営KPI）": GV-10 Three-Layer Value Measurement (Adoption × Productivity × Business KPI)
+            # ID patterns
+            "ID-1 Workforce/Customer 二面分離": ID-1 Workforce/Customer Identity Split
+            "ID-2 Identity Federation & On-Behalf-Of（OBO委譲）": ID-2 Identity Federation & On-Behalf-Of (OBO Delegation)
+            "ID-3 Workload / Agent Identity（エージェント自身のID）": ID-3 Workload / Agent Identity
+            "ID-4 Permission Mirror & Least-of Faithful Access（権限忠実アクセス）": ID-4 Permission Mirror & Least-of Faithful Access
+            "ID-5 JIT Scoped Credentials（最小・短命・用途限定）": ID-5 JIT Scoped Credentials (Minimal, Short-Lived, Purpose-Scoped)
+            "ID-6 Zero-Trust Runtime + 中央PDP/分散PEP（ABAC/ReBAC）": ID-6 Zero-Trust Runtime + Central PDP / Distributed PEP (ABAC/ReBAC)
+            "ID-7 Policy-as-Code Guardrail（決定論的行動可否）": ID-7 Policy-as-Code Guardrail (Deterministic Authorization)
+            "ID-8 Consent & Access Transparency（同意・透明化）": ID-8 Consent & Access Transparency
+            # RT patterns
+            "RT-1 Org-Hierarchical Hub & Spoke（意図ルーティング＋ドメインスポーク）": RT-1 Org-Hierarchical Hub & Spoke (Intent Routing + Domain Spokes)
+            "RT-3 Risk-Tiered Autonomy（自律度の階層）": RT-3 Risk-Tiered Autonomy
+            "RT-4 Human Approval Chain（組織解決型承認）": RT-4 Human Approval Chain (Org-Resolved Approval)
+            "RT-5 Intent-to-Enterprise Command Envelope（構造化コマンド封筒）": RT-5 Intent-to-Enterprise Command Envelope
+            "RT-6 System-of-Record Write Boundary（書き込み境界）": RT-6 System-of-Record Write Boundary
+            "RT-7 Enterprise Saga Agent（補償トランザクション）": RT-7 Enterprise Saga Agent (Compensating Transactions)
+            "RT-8 Durable Enterprise Agent Workflow（永続ワークフロー）": RT-8 Durable Enterprise Agent Workflow
+            "RT-9 Enterprise Work Queue Agent（業務キュー参加）": RT-9 Enterprise Work Queue Agent
+            "RT-10 Event-Driven Enterprise Orchestrator（イベント駆動）": RT-10 Event-Driven Enterprise Orchestrator
+            "RT-11 Project Workspace / Digital Twin Agent（プロジェクト・デジタルツイン）": RT-11 Project Workspace / Digital Twin Agent
+            # KM patterns
+            "KM-1 Access-Controlled Enterprise RAG（権限認識RAG）": KM-1 Access-Controlled Enterprise RAG
+            "KM-2 Access-Controlled Context Mesh（フェデレーテッド文脈）": KM-2 Access-Controlled Context Mesh (Federated Context)
+            "KM-3 Canonical Enterprise Object Model & Knowledge Graph（正規オブジェクト／知識グラフ）": KM-3 Canonical Enterprise Object Model & Knowledge Graph
+            "KM-4 Scoped Memory Hierarchy（スコープ記憶階層）": KM-4 Scoped Memory Hierarchy
+            "KM-5 Purpose-Bound Context Package（目的限定コンテキスト）": KM-5 Purpose-Bound Context Package
+            "KM-6 DLP & Redaction Boundary（DLP・マスキング）": KM-6 DLP & Redaction Boundary
+            "KM-7 Ephemeral Secure Context Bus（揮発・機密計算）": KM-7 Ephemeral Secure Context Bus (Volatile Confidential Computing)
+            # IN patterns
+            "IN-2 SaaS Connector Adapter（腐敗防止）": IN-2 SaaS Connector Adapter (Anti-Corruption Layer)
+            "IN-3 Rate / Quota Broker（レート/クォータ調停）": IN-3 Rate / Quota Broker
+            "IN-4 Existing iPaaS Reuse（既存統合資産の再利用）": IN-4 Existing iPaaS Reuse
+            # OB patterns
+            "OB-2 Unified Audit & Lineage（三者帰責）": OB-2 Unified Audit & Lineage (Three-Party Attribution)
+            # DC selection criteria
+            "DC-1 自律度のティア境界（Risk-Tier の引き方）": DC-1 Autonomy Tier Boundaries (Risk-Tier Calibration)
+            "DC-2 タイムアウト・リトライ・予算（コスト上限）": DC-2 Timeout, Retry & Budget (Cost Caps)
+            "DC-3 プロンプト/トレースのログ粒度（三層分離）": DC-3 Prompt/Trace Log Granularity (Three-Layer Split)
+            "DC-4 コンテキスト投入量（top-k・トークン予算）": DC-4 Context Volume (top-k & Token Budget)
+            "DC-5 メモリ保持・忘却（TTL・スコープ）": DC-5 Memory Retention & Forgetting (TTL & Scope)
+            "DC-6 ガードレール強度（誤検知 vs 見逃し）": DC-6 Guardrail Strength (False Positives vs. Misses)
+            "DC-7 キャッシュ積極度・JIT 資格情報 TTL": DC-7 Cache Aggressiveness & JIT Credential TTL
+            "DC-8 モデルの強さ・データ分類別ルーティング": DC-8 Model Strength & Data-Classification Routing
+            "DC-9 カナリア段階・イベント駆動の頻度制限": DC-9 Canary Stages & Event-Driven Rate Limits
+            # TO selection criteria
+            "TO-1 OBO委譲 vs サービスアカウント": TO-1 OBO Delegation vs. Service Account
+            "TO-2 中央集権データレイク vs フェデレーテッド Context Mesh": TO-2 Central Data Lake vs. Federated Context Mesh
+            "TO-3 単一エージェント vs RACI マルチエージェント": TO-3 Single Agent vs. RACI Multi-Agent
+            "TO-4 Read-only vs Write-capable（段階的拡張）": TO-4 Read-only vs. Write-capable (Staged Expansion)
+            "TO-6 個人の記憶 vs プロジェクト/チームの記憶": TO-6 Personal Memory vs. Project/Team Memory
+            "TO-7 全プロンプトログ vs 選択的トレースログ": TO-7 Full Prompt Logs vs. Selective Trace Logs
+            "TO-8 中央集権プラットフォーム vs 部署フェデレーション": TO-8 Central Platform vs. Department Federation
+            "TO-9 コネクタ自前構築 vs 既存 iPaaS 再利用": TO-9 Custom Connectors vs. Existing iPaaS Reuse
+            "TO-10 内部/オンプレモデル vs 外部 API": TO-10 Internal/On-prem Model vs. External API
+            "TO-11 同期 vs 非同期": TO-11 Synchronous vs. Asynchronous
+            "TO-12 プロンプトで守る vs ポリシー/実行基盤で守る": TO-12 Guard with Prompts vs. Policy/Platform
+            # Department examples
+            部門別適用例: Department Examples
 
 extra:
   social:
