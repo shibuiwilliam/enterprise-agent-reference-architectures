@@ -10,11 +10,11 @@ status: done
 
 エンタープライズAIの失敗で最も多いのは技術的失敗ではなく「**作ったが使われない**」定着の失敗である。技術的に安全なエージェントを構築できても、従業員に使われなければ企業価値は生まれない。本章は「安全に動かす」（必要条件）の先にある「**使われ・信頼され・定着する**」（十分条件）を扱う。
 
-GV-10（Two-Layer Value Measurement）が計測する経営KPIは、利用率と定着率が前提となって初めて動く。利用されないエージェントのROIはゼロである。
+GV-10（Three-Layer Value Measurement）の第2層（経営KPI）は、第0層（採用・定着）と第1層（生産性）が前提となって初めて動く。利用されないエージェントのROIはゼロである。
 
 ## 定着の指標体系
 
-GV-10 の二層（個人/チーム層・経営層）に加え、第3の指標群として**採用・定着指標**を計測する。
+[GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) の3層構造のうち、**第0層（採用・定着）** の計測と引き上げが本章の中心テーマである。第0層の指標を以下に示す。
 
 | 指標 | 定義 | 計測方法 |
 |---|---|---|
@@ -26,18 +26,18 @@ GV-10 の二層（個人/チーム層・経営層）に加え、第3の指標群
 
 ```mermaid
 flowchart LR
-    subgraph Adoption["採用・定着指標（第3層）"]
+    subgraph Layer0["GV-10 第0層：採用・定着"]
         AR["採用率"]
         RR["継続利用率"]
         ST["定着率 DAU/MAU"]
     end
 
-    subgraph GV10_L1["GV-10 個人/チーム層"]
+    subgraph Layer1["GV-10 第1層：生産性"]
         TIME["処理時間短縮"]
         SAT["満足度"]
     end
 
-    subgraph GV10_L2["GV-10 経営層"]
+    subgraph Layer2["GV-10 第2層：経営KPI"]
         REV["売上影響"]
         COST["コスト削減"]
     end
@@ -51,7 +51,7 @@ flowchart LR
 ```
 
 !!! warning "利用率なきROIは幻想"
-    GV-10 の経営KPI（売上影響・コスト削減）は、利用率×効果量で決まる。効果量が高くても利用率が低ければ全社インパクトは小さい。定着指標はROIの「分母」を可視化する。
+    第2層の経営KPI（売上影響・コスト削減）は、第0層の利用率×第1層の効果量で決まる。効果量が高くても利用率が低ければ全社インパクトは小さい。第0層の計測はROIの「分母」を可視化する。本章は第0層を引き上げるための運用施策を担い、計測の正本は[GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md)が統合管理する。
 
 ## 信頼獲得のUX設計
 
@@ -77,6 +77,9 @@ flowchart LR
 - **時間削減の可視化**：「この作業で推定○分を節約しました」を操作完了時に表示する
 - **累積効果の表示**：週次・月次で「エージェント利用による累積節約時間」を提示する
 - **Before/After比較**：導入前の処理時間とエージェント利用後の処理時間を比較表示する
+
+!!! warning "推定値の根拠をGV-10ベースラインに紐づける"
+    即時フィードバックに表示する「推定○分節約」は、[GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) のベースライン（導入前実測値またはコントロールグループの計測値）に基づいて算出する。根拠のない「盛った数字」は短期的に利用を促進しても、実績との乖離が発覚した時点で信頼を大きく損なう。UX上の即時フィードバックと経営向け計測の数字は、同じベースラインから算出することで整合性を保つ。
 
 ## チェンジマネジメント・ロードマップ
 
@@ -130,7 +133,7 @@ gantt
 
 ## 関連パターン
 
-- [GV-10 Two-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — 定着指標は GV-10 の第3の指標群として計測する
+- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — 第0層（採用・定着）の計測正本。本章はその運用施策を担う
 - [GV-7 Evaluation & Governance Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) — フィードバックの品質評価への還流
 - [GV-2 Agent Catalog & Marketplace](../patterns/gv-governance/gv2-agent-catalog-marketplace.md) — 利用者要望のカタログ化
 - [EX-2 業務埋め込み vs 独立ポータル](../patterns/ex-experience/ex2-embedded-vs-portal.md) — 業務プロセスへの組み込みを支えるチャネル配置

@@ -82,7 +82,7 @@ flowchart TD
 ## 落とし穴／選定の勘所
 
 !!! warning "コストをインフラ費として扱い業務成果に紐づけない"
-    LLM コストをサーバー費と同じ変動コストとして管理するだけでは、「高いコストをかけているが業務成果が出ていない」エージェントを見逃す。コストは GV-10（Two-Layer Value Measurement）と対にして使い、単位コストあたりの業務成果（処理件数削減・売上貢献）を把握することが重要である。
+    LLM コストをサーバー費と同じ変動コストとして管理するだけでは、「高いコストをかけているが業務成果が出ていない」エージェントを見逃す。コストは GV-10（Three-Layer Value Measurement）と対にして使い、単位コストあたりの業務成果（処理件数削減・売上貢献）を把握することが重要である。
 
 !!! danger "マルチエージェントの推論爆発を見落とす"
     単純な API 呼び出しコストしか監視していないと、マルチエージェントの再帰呼び出しによる数百倍のコスト爆発を検知できない。エージェント単位・実行セッション単位のコスト上限を設け、深度制限と組み合わせることが必須である。
@@ -93,6 +93,6 @@ flowchart TD
 ## 関連パターン
 
 - [GV-5 Central Model Gateway（モデル・ベンダー統制）](gv5-central-model-gateway.md) — 補完：Gateway がコスト計測の計上点として機能する
-- [GV-10 Two-Layer Value Measurement（生産性×経営KPI）](gv10-two-layer-value-measurement.md) — 対比：コストの分母と業務成果の分子を組み合わせてROIを示す
+- [GV-10 Three-Layer Value Measurement（生産性×経営KPI）](gv10-two-layer-value-measurement.md) — 対比：コストの分母と業務成果の分子を組み合わせてROIを示す
 - [OB-1 Observability Lake（オブザーバビリティ基盤）](../ob-observability/ob1-observability-lake.md) — 補完：コスト計測データをオブザーバビリティ基盤に集約する
 - [GV-1 Agent Control Plane（エージェント制御プレーン）](gv1-agent-control-plane.md) — 補完：エージェント単位のコスト予算をControl Planeの属性として管理する

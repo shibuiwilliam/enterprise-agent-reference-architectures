@@ -93,6 +93,6 @@ flowchart TD
 - [GV-2 Agent Catalog & Marketplace](../patterns/gv-governance/gv2-agent-catalog-marketplace.md) — ユースケース候補の一覧管理
 - [GV-7 Evaluation & Governance Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) — 品質の継続計測と改善トリガー
 - [GV-8 Cost Quota & Chargeback](../patterns/gv-governance/gv8-cost-quota-chargeback.md) — コストの計測と配賦
-- [GV-10 Two-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — 価値の計測とROI算出
+- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — 価値の計測とROI算出
 - [Executive Agent](departments/executive.md) — ポートフォリオ判断を支援する経営エージェント
 - [組み合わせレシピ](recipe.md) — 価値早期実現トラックとの整合

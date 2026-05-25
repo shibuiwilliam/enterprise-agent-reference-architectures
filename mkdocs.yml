@@ -95,7 +95,7 @@ nav:
           - "GV-7 Evaluation & Governance Pipeline（評価CI/CD）": patterns/gv-governance/gv7-evaluation-governance-pipeline.md
           - "GV-8 Cost Quota & Chargeback（コスト配賦）": patterns/gv-governance/gv8-cost-quota-chargeback.md
           - "GV-9 Incident Response & Kill Switch（事故対応・停止）": patterns/gv-governance/gv9-incident-response-kill-switch.md
-          - "GV-10 Two-Layer Value Measurement（生産性×経営KPI）": patterns/gv-governance/gv10-two-layer-value-measurement.md
+          - "GV-10 Three-Layer Value Measurement（採用定着×生産性×経営KPI）": patterns/gv-governance/gv10-two-layer-value-measurement.md
       - 面3 アイデンティティ・信頼:
           - patterns/id-identity/index.md
           - "ID-1 Workforce/Customer 二面分離": patterns/id-identity/id1-workforce-customer-split.md
@@ -169,6 +169,8 @@ nav:
       - 依存関係と依存チェーン: integration/dependency-chain.md
       - 横断軸: integration/cross-cutting-axes.md
       - 組み合わせレシピ: integration/recipe.md
+      - 価値成熟度ロードマップ: integration/value-maturity-roadmap.md
+      - 価値ユースケース選定ガイド: integration/usecase-selection-guide.md
       - 定着・アダプション: integration/adoption.md
       - AI投資ポートフォリオ管理: integration/portfolio.md
       - 部門別適用例:

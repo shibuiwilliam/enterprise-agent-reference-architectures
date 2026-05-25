@@ -9,7 +9,7 @@ title: "面2 制御・ガバナンス（GV）"
 ## この面のパターン
 
 - [GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）](gv1-agent-control-plane.md)
-- [GV-10 Two-Layer Value Measurement（生産性×経営KPI）](gv10-two-layer-value-measurement.md)
+- [GV-10 Three-Layer Value Measurement（採用定着×生産性×経営KPI）](gv10-two-layer-value-measurement.md)
 - [GV-2 Agent Catalog & Marketplace（社内カタログ）](gv2-agent-catalog-marketplace.md)
 - [GV-3 Department Agent Factory（役割テンプレート工場）](gv3-department-agent-factory.md)
 - [GV-4 Industry Policy Pack（業界ポリシーパック）](gv4-industry-policy-pack.md)
