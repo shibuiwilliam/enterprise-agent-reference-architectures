@@ -24,13 +24,13 @@ status: done
 
 ```mermaid
 graph LR
-    ORG[/"組織グラフ\n（権威ある単一ソース）"/]
+    ORG[/"組織グラフ<br/>（権威ある単一ソース）"/]
 
-    ORG --> ID4["ID-4 Permission Mirror\n権限スコープの定義元"]
-    ORG --> RT1["RT-1 Org Hub & Spoke\nHub/Spoke委譲構造"]
-    ORG --> RT4["RT-4 Human Approval Chain\n承認者の動的解決"]
-    ORG --> KM4["KM-4 Scoped Memory\nメモリ共有スコープ"]
-    ORG --> KM3["KM-3 Knowledge Graph\nエンティティ名寄せ"]
+    ORG --> ID4["ID-4 Permission Mirror<br/>権限スコープの定義元"]
+    ORG --> RT1["RT-1 Org Hub & Spoke<br/>Hub/Spoke委譲構造"]
+    ORG --> RT4["RT-4 Human Approval Chain<br/>承認者の動的解決"]
+    ORG --> KM4["KM-4 Scoped Memory<br/>メモリ共有スコープ"]
+    ORG --> KM3["KM-3 Knowledge Graph<br/>エンティティ名寄せ"]
 
     style ORG fill:#f5f5f5,stroke:#333,stroke-width:2px
 ```

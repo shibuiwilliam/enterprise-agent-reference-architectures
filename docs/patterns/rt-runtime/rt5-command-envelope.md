@@ -18,6 +18,9 @@ status: done
 
 SaaS の API 仕様変更も継続的な課題である。Salesforce・Workday のバージョンアップのたびにエージェントのプロンプトやコードを修正する設計は維持コストが高い。エージェントと SaaS の間に安定した契約を置くことで、変更の影響を局所化できる。
 
+!!! tip "最小成立条件（MVP）"
+    actor・target_system・action・params の4フィールドを持つ JSON スキーマを定義し、LLM 出力を必ずこのスキーマでバリデーションしてから後続処理に渡す構成。risk_tier や承認連携は後から追加できる。
+
 ## 解決策と設計
 
 解決策の核心は「自然言語 UI とエンタープライズプロトコルを明示的に分離すること」である。LLM は意図を解釈してエンティティを抽出する役割を担い、その結果を検証済みの構造体（Command Envelope）に変換してから後続処理に渡す。エージェントの不確定性を Command Envelope というバリアで止める。
@@ -42,16 +45,16 @@ Command Envelope は以下のフィールドを持つ JSON オブジェクトで
 
 ```mermaid
 flowchart LR
-    NL[自然言語リクエスト] --> PARSE[意図解析\n＋エンティティ抽出]
-    PARSE --> ENV[Command Envelope\n生成]
-    ENV --> POLICY[ポリシーチェック\nID-7]
+    NL[自然言語リクエスト] --> PARSE["意図解析<br/>＋エンティティ抽出"]
+    PARSE --> ENV["Command Envelope<br/>生成"]
+    ENV --> POLICY["ポリシーチェック<br/>ID-7"]
     POLICY -->|許可| APPR{requires_approval?}
     POLICY -->|拒否| REJECT[拒否＋理由記録]
-    APPR -->|Yes| RT4[承認フロー\nRT-4]
-    APPR -->|No| ADAPTER[SaaS アダプタ\nIN-2]
+    APPR -->|Yes| RT4["承認フロー<br/>RT-4"]
+    APPR -->|No| ADAPTER["SaaS アダプタ<br/>IN-2"]
     RT4 -->|承認済み| ADAPTER
     RT4 -->|否決| REJECT
-    ADAPTER --> SaaS[対象 SaaS\nSalesforce / Workday 等]
+    ADAPTER --> SaaS["対象 SaaS<br/>Salesforce / Workday 等"]
     ADAPTER --> AUDIT[監査ログ]
     REJECT --> AUDIT
 ```
@@ -60,16 +63,11 @@ flowchart LR
 
 ## 向き／不向き
 
-**向いている条件**
-
-- 複数の SaaS への書き込み操作を伴う自動化業務。
-- ポリシーチェック・承認フロー・監査要件が厳しいエンタープライズ環境。
-- 多様なエージェントが同一 SaaS を操作する環境（Envelope によりアダプタを共通化できる）。
-
-**向いていない条件**
-
-- 読み取り専用のクエリエージェント（書き込みリスクがなく Envelope の恩恵が薄い）。
-- プロトタイプ段階で Envelope スキーマ設計のコストが高すぎる場合（後から導入も可能だが、初期に設計しておく方がよい）。
+| 向き | 不向き |
+|---|---|
+| 複数の SaaS への書き込み操作を伴う自動化業務 | 読み取り専用のクエリエージェント（書き込みリスクがなく Envelope の恩恵が薄い） |
+| ポリシーチェック・承認フロー・監査要件が厳しいエンタープライズ環境 | プロトタイプ段階で Envelope スキーマ設計のコストが高すぎる場合（後から導入も可能だが、初期に設計しておく方がよい） |
+| 多様なエージェントが同一 SaaS を操作する環境（Envelope によりアダプタを共通化できる） | — |
 
 ## 要素技術・既存システム連携
 

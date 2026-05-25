@@ -163,6 +163,7 @@ nav:
           - "TO-10 内部/オンプレモデル vs 外部 API": selection/tradeoff/to10-onprem-vs-external.md
           - "TO-11 同期 vs 非同期": selection/tradeoff/to11-sync-vs-async.md
           - "TO-12 プロンプトで守る vs ポリシー/実行基盤で守る": selection/tradeoff/to12-prompt-vs-platform.md
+  - 用語集: glossary.md
   - 統合と組み合わせ方:
       - 依存関係と依存チェーン: integration/dependency-chain.md
       - 横断軸: integration/cross-cutting-axes.md

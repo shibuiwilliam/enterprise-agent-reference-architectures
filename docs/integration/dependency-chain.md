@@ -89,15 +89,16 @@ graph TB
 
 このチェーンのポイントは「権限の伝播なくして安全な横断文脈なし」という一点に尽きる。[ID-2](../patterns/id-identity/id2-identity-federation-obo.md) のOBO（On-Behalf-Of）委譲が整っていなければ、エージェントはサービスアカウントの過剰権限でRAGを叩くことになる。依頼者が本来見えないはずのドキュメントが検索結果に混入するリスクを、このチェーンが断ち切る。
 
-### ID（アイデンティティ）→ RT（ランタイム）チェーン
+### ID（アイデンティティ）→ RT/GV チェーン
 
-| 基盤パターン | 依存先 | 理由 |
-|---|---|---|
-| [ID-6 Zero-Trust PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md) | [GV-4 Industry Policy Pack](../patterns/gv-governance/gv4-industry-policy-pack.md) | PDPが判断基盤となって業界規制ポリシーを評価する |
-| [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) | [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) | リスク階層の判定ロジックはポリシーコードに記述される |
-| [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) | [RT-4 Human Approval Chain](../patterns/rt-runtime/rt4-human-approval-chain.md) | いつ人間承認が必要かの基準はポリシーで定義する |
+| 基盤パターン | 依存先 | 分類 | 理由 |
+|---|---|---|---|
+| [ID-6 Zero-Trust PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md) | [GV-4 Industry Policy Pack](../patterns/gv-governance/gv4-industry-policy-pack.md) | ID→GV | PDP が判断基盤となって業界規制ポリシーを評価する |
+| [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) | [GV-4 Industry Policy Pack](../patterns/gv-governance/gv4-industry-policy-pack.md) | ID→GV | 業界ポリシーパックはポリシーコードとして管理・適用される |
+| [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) | [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) | ID→RT | リスク階層の判定ロジックはポリシーコードに記述される |
+| [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) | [RT-4 Human Approval Chain](../patterns/rt-runtime/rt4-human-approval-chain.md) | ID→RT | いつ人間承認が必要かの基準はポリシーで定義する |
 
-[ID-7](../patterns/id-identity/id7-policy-as-code-guardrail.md) が整っていない状態で [RT-3](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) や [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md) を導入しようとすると、「高リスク操作かどうかの判定」が設定ファイルや担当者の判断に依存し、組織全体でのポリシー一貫性が失われる。ポリシーをコードとして管理することで、変更履歴・テスト・デプロイが統制される。
+このチェーンは RT（ランタイム）と GV（ガバナンス）の両方にまたがる。[ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md)/[ID-7](../patterns/id-identity/id7-policy-as-code-guardrail.md) が整っていない状態で [RT-3](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) や [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md) を導入すると、「高リスク操作かどうかの判定」が設定ファイルや担当者の判断に依存し、組織全体でのポリシー一貫性が失われる。同様に [GV-4](../patterns/gv-governance/gv4-industry-policy-pack.md) の業界ポリシーも、PDP とポリシーコード基盤なしには評価・適用できない。ポリシーをコードとして管理することで、変更履歴・テスト・デプロイが統制される。
 
 ### GV-1（コントロールプレーン）→ GV チェーン
 

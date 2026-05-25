@@ -24,6 +24,9 @@ SaaS 統合でありがちな問題は、開発時に作った広スコープの
 
 このパターンは、クレデンシャルを「持たない・使い捨てる・最小に絞る」という設計原則でこれらを解消する。
 
+!!! tip "最小成立条件（MVP）"
+    Vault または AWS STS でツール呼び出し直前に短命トークン（TTL 数分）を1つの SaaS 向けに動的発行し、コネクタにクレデンシャルをハードコードしない構成を作る。
+
 ## 解決策と設計
 
 解決策はクレデンシャルの発行モデルを根本から変えることである。コネクターやランタイムはクレデンシャルを事前に保持せず、ツール呼び出しの直前にクレデンシャルブローカーへ動的リクエストを送り、その呼び出し専用のスコープ・TTL を持つクレデンシャルを取得する。
@@ -37,10 +40,10 @@ sequenceDiagram
     participant PDP as PDP（認可判定）
     participant SaaS as 対象 SaaS / API
 
-    AGENT->>BROKER: クレデンシャル要求\n（用途・対象・要求スコープ）
+    AGENT->>BROKER: クレデンシャル要求<br/>（用途・対象・要求スコープ）
     BROKER->>PDP: 要求妥当性の確認
     PDP-->>BROKER: 許可・許可スコープ（最小）
-    BROKER-->>AGENT: JIT クレデンシャル\n（TTL 5分・read-only・対象1レコード）
+    BROKER-->>AGENT: JIT クレデンシャル<br/>（TTL 5分・read-only・対象1レコード）
     AGENT->>SaaS: API 呼び出し（JIT クレデンシャル）
     SaaS-->>AGENT: 結果
     note over AGENT,SaaS: TTL 経過後は自動失効

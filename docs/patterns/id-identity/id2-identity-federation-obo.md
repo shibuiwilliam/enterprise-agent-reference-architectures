@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エージェントが「何でもできる管理者アカウント」で SaaS を操作するのは、便利だが最も危険な設計である。このパターンでは、エージェントは依頼者本人の権限に縮退した委譲トークンを SaaS ごとに取得して動く。たとえば営業担当が「この商談を更新して」と頼むと、エージェントはその担当者の Salesforce 権限だけで操作し、監査ログにも「誰がエージェント経由で操作したか」が残る。OAuth 2.0 Token Exchange（RFC 8693）によるこの仕組みが、権限の集約と混乱代理を構造的に防ぐ。
+エージェントが「何でもできる管理者アカウント」で SaaS を操作するのは、便利だが最も危険な設計である。このパターンでは、エージェントは依頼者本人の権限に縮退した委譲トークンを SaaS ごとに取得して動く。たとえば営業担当が「この商談を更新して」と頼むと、エージェントはその担当者の Salesforce 権限だけで操作し、監査ログにも「誰がエージェント経由で操作したか」が残る。ただし SaaS ごとに認可サーバーは独立しており、トークン取得の経路は直接フェデレーション・OBO 委譲（RFC 8693 等）・委譲非対応系での ID-4 代替と分かれる。この経路選択と SaaS 側ネイティブ認可の二段構えが、権限の集約と混乱代理を構造的に防ぐ。
 
 ## 解決する企業課題
 
@@ -22,14 +22,33 @@ status: done
 
 このパターンは、OBO（On-Behalf-Of）委譲によってこれら3つの問題を構造的に解消する。
 
+!!! tip "最小成立条件（MVP）"
+    まず主要 2〜3 SaaS（フェデレーション対応済みのもの）のみ経路 (a)/(b) で OBO 化し、残りは [ID-4 Permission Mirror](id4-permission-mirror-least-of.md) で近似する。全 SaaS を一度に OBO 化する必要はない。
+
+!!! note "導入コスト・運用負荷の相対感"
+    SaaS 1系統あたりの OBO 化は、Connected App / OAuth 設定・トークンブローカー実装・テストを含め数週間規模の作業である。全 SaaS 一括化は数か月に及ぶため、MVP で主要系を先行し段階的に拡大するのが現実的である。運用面では、トークン失効管理（退職・異動時の SCIM 連動）と同意取得フローの維持が継続コストとなる。
+
 ## 解決策と設計
 
 OBO 委譲の核心は「エージェントが依頼者の名のもとに scope と audience を限定したトークンを下流 SaaS ごとに動的に取得する」点にある。権限の制約は二段構えで実現される。
 
-1. **Token Exchange（IdP/STS 側）**：Gateway が OAuth 2.0 Token Exchange（RFC 8693）を用いて、対象 SaaS の audience に限定された OBO トークンを発行する。このトークンには依頼者の subject と、要求する scope（権限範囲）が記録される。ただし、**トークン自体が権限を「縮退」させるわけではない**。トークンは「この人がこの SaaS に対して認証済みである」という事実と scope を伝えるだけである。
+1. **トークン取得（IdP/STS またはSaaS認可サーバー側）**：Gateway が依頼者の ID トークンを起点に、対象 SaaS が受理できる形式のアクセストークンを取得する。ただし、SaaS ごとにトークン取得の経路は異なる（後述）。
 2. **SaaS 側ネイティブ認可（RP 側）**：実際の権限制約は、トークンを受け取った SaaS（Relying Party）側のネイティブ認可エンジンが行う。Salesforce であればプロファイル・権限セット、ServiceNow であれば ACL が、トークンの subject に基づいて本人の権限を適用する。
 
 この二段構えにより、「トークンの scope で API の呼び出し範囲を制御し、SaaS 側のネイティブ認可でデータレベルの権限を制約する」という分離が成立する。
+
+### SaaS ごとのトークン取得経路
+
+SaaS はそれぞれ独立した OAuth 認可サーバーを持つため、IdP が万能に全 SaaS 向けのアクセストークンを発行できるわけではない。トークン取得は SaaS の対応状況に応じて3つの経路に分かれる。
+
+| 経路 | 条件 | フロー | 例 |
+|---|---|---|---|
+| **(a) 直接フェデレーション** | SaaS が IdP と OIDC/SAML フェデレーションを構成済み | IdP の ID トークンをSaaS の認可サーバーに提示し、SaaS 側がアクセストークンを発行 | Salesforce Connected App、Google Workspace ドメイン全体委任 |
+| **(b) SaaS 認可サーバーへの OBO 委譲** | SaaS が OAuth 2.0 Token Exchange（RFC 8693）または独自の OBO フローに対応 | Gateway が IdP 発行トークンを subject_token として SaaS の認可エンドポイントへ送り、SaaS 側が OBO トークンを発行 | Microsoft 365（Entra ID OBO フロー）、ServiceNow（OAuth Token Exchange 対応） |
+| **(c) 委譲非対応 → ID-4 で代替** | SaaS が委譲フローに非対応、または旧式 API のみ | サービスアカウントで接続し、[ID-4 Permission Mirror](id4-permission-mirror-least-of.md) で本人権限に絞り込む。高リスクに分類して運用 | レガシー社内システム、一部の旧式 SaaS |
+
+!!! warning "経路 (c) はあくまで補完手段"
+    委譲非対応 SaaS にサービスアカウントで接続する場合、Permission Mirror は**近似であり権威ソースではない**。可能な限り (a) または (b) の委譲経路を優先し、(c) は委譲が技術的に不可能な系に限定する。
 
 ```mermaid
 sequenceDiagram
@@ -37,23 +56,27 @@ sequenceDiagram
     participant IdP as IdP/STS（Okta/Entra ID）
     participant GW as Agent Gateway
     participant RT as Runtime
-    participant SF as Salesforce（RP）
-    participant SW as ServiceNow（RP）
+    participant SF as SaaS-A（直接フェデレーション）
+    participant SW as SaaS-B（OBO対応）
 
     U->>IdP: 認証
     IdP-->>U: IDトークン
     U->>GW: 依頼（IDトークン）
-    GW->>IdP: Token Exchange（RFC 8693）<br/>audience=Salesforce, scope限定
-    IdP-->>GW: OBOトークン（subject=User, aud=SF）
-    GW->>RT: 実行指示＋OBOトークン
-    RT->>SF: API呼び出し（OBOトークン提示）
-    note over SF: SFネイティブ認可で<br/>Userの権限を適用
+
+    note over GW: 経路(a): 直接フェデレーション
+    GW->>SF: IDトークン提示→SaaS-A認可サーバー
+    SF-->>GW: アクセストークン（subject=User）
+    GW->>RT: 実行指示＋アクセストークン
+    RT->>SF: API呼び出し（本人権限）
+    note over SF: SaaS-Aネイティブ認可で<br/>Userの権限を適用
     SF-->>RT: 結果（監査ログにUser帰責）
-    GW->>IdP: Token Exchange（RFC 8693）<br/>audience=ServiceNow, scope限定
-    IdP-->>GW: OBOトークン（subject=User, aud=SN）
+
+    note over GW: 経路(b): SaaS認可サーバーへのOBO委譲
+    GW->>SW: Token Exchange（RFC 8693）<br/>subject_token=IDトークン
+    SW-->>GW: OBOトークン（subject=User）
     RT->>SW: API呼び出し（OBOトークン提示）
-    note over SW: SNネイティブACLで<br/>Userの権限を適用
-    SW-->>RT: 結果
+    note over SW: SaaS-Bネイティブ認可で<br/>Userの権限を適用
+    SW-->>RT: 結果（監査ログにUser帰責）
 ```
 
 委譲チェーン（user → agent → tool）はトークンの actor / subject クレームに記録され、各 SaaS の監査ログで本人に帰責できる。サービスアカウントを利用する場合も、実行主体（actor）と依頼者（subject）を分離して記録する。
@@ -78,9 +101,9 @@ sequenceDiagram
 ## 落とし穴／選定の勘所
 
 !!! danger "万能サービスアカウントの罠"
-    万能サービスアカウント1個で全SaaSを叩き、アプリ層だけで「見せない」と判定するのは最も危険なアンチパターンである。判定バグ＝漏洩になる。権限判定はSaaS側のネイティブ認可に委ねるべきである。
+    万能サービスアカウント1個で全SaaSを叩き、アプリ層だけで「見せない」と判定するのは最も危険なアンチパターンである。判定バグ＝漏洩になる。可能な限り権限判定は SaaS 側のネイティブ認可（経路 a/b）に委ね、委譲非対応系でのみ ID-4 Permission Mirror で補完する。
 
-- 委譲非対応SaaSでは [ID-4 Permission Mirror](id4-permission-mirror-least-of.md) でエンタイトルメントを再現し、高リスクに分類して運用する。
+- 委譲非対応SaaSでは [ID-4 Permission Mirror](id4-permission-mirror-least-of.md) でエンタイトルメントを再現し、高リスクに分類して運用する。Permission Mirror はあくまで近似であり、権威ソースではないことを前提とする。
 - トークンの有効期限は短く保つ。「遅い」という理由でキャッシュを広げて長命化するのは [ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md) の原則に反する。
 - 委譲チェーンが長くなるマルチエージェント構成では、各段で scope が縮小していることを検証する仕組みが必要である。末端エージェントが元のユーザー権限を超えていないかを必ず確認する。
 - 数万人×多数 SaaS の環境では、OBO の前提となるユーザー同意の取得（初回の OAuth フロー）と、トークン失効管理（退職・異動・権限変更時）の運用コストが無視できない。IdP の自動プロビジョニング（SCIM）と連携し、ライフサイクル管理を自動化する設計が必要である。
