@@ -14,11 +14,15 @@ status: done
 
 実効権限は「能力 ∩ 本人権限 ∩ ポリシー」の最小。便利さのための全権化を禁ずる。
 
+エージェントが万能サービスアカウントで動く設計は、侵害時に全ユーザー・全 SaaS のデータを一度に危険にさらす。OBO 委譲により依頼者本人の権限に縮退したトークンを SaaS ごとに取得し、SaaS 側のネイティブ認可で実データアクセスを制約する二段構えが基本形である。委譲非対応の系では Permission Mirror で権限を近似するが、これはキャッシュであり権威ソースではない点を常に意識する。
+
 参照：[ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md) / [ID-2 OBO](../patterns/id-identity/id2-identity-federation-obo.md)
 
 ### 2. 従業員面と顧客面を物理的に分ける
 
 最重大の事故クラス——顧客向けが社内データに到達する（逆も）——を構造的に排除する。
+
+従業員向けエージェントと顧客向けエージェントが同一の IdP・データストア・ネットワークセグメントを共有すると、一方の脆弱性が他方の面に波及する。IdP とデータストアの物理分離、面間のネットワーク到達性ゼロを初日から確立することで、設計レビューやペネトレーションテストで「面をまたぐ経路が存在しない」ことを証明可能な状態にする。
 
 参照：[ID-1 二面分離](../patterns/id-identity/id1-workforce-customer-split.md)
 
@@ -26,11 +30,15 @@ status: done
 
 SoR を置き換えず、読み、正規手続きで書く。既存統合資産を再利用する。
 
+Salesforce・Workday・ServiceNow などの SoR は企業の業務データの真実を保持する。エージェントがこれらを迂回して独自にデータを持つと、整合性の崩壊と二重管理が発生する。エージェントは SoR の API を正規手続きで呼び出し、書き込みは検証済みのドメインサービス経由に限定する。既存の iPaaS フロー（MuleSoft・Workato 等）がある場合は、新たにコネクタを自作せず MCP アダプターでラップして再利用する。
+
 参照：[RT-6 SoR Write Boundary](../patterns/rt-runtime/rt6-sor-write-boundary.md) / [IN-4 iPaaS Reuse](../patterns/in-integration/in4-existing-ipaas-reuse.md)
 
 ### 4. データはコピーする前に疑う
 
 no-copy・JIT・ACL 同梱を既定にし、集約は目的が明確なときだけ。
+
+全社文書を1つのベクトル DB にコピーして索引化すると、コピーした瞬間に源の ACL が切り離され、権限変更の反映遅延が漏洩に直結する。既定は「コピーしない」（JIT 取得・フェデレーション）であり、コピーが必要な場合は ACL メタデータを同梱し、検索時に本人権限でフィルタする。データの集約はモザイク効果（単体では非機密のデータの組み合わせが機密を生成するリスク）も考慮し、目的と範囲を限定して行う。
 
 参照：[KM-2 Context Mesh](../patterns/km-knowledge/km2-context-mesh.md) / [KM-1 Access-Controlled RAG](../patterns/km-knowledge/km1-access-controlled-rag.md)
 
@@ -38,11 +46,15 @@ no-copy・JIT・ACL 同梱を既定にし、集約は目的が明確なときだ
 
 スコープ・共有・承認・委譲を組織構造から一貫して導く。
 
+「このエージェントが動かせる範囲はどこか」「誰が承認者か」「メモリのスコープはどこまでか」——これらの問いに一貫した答えを出すには、Workday・Okta・プロジェクト管理ツール等から名寄せした単一の組織マスターが必要である。組織グラフが権威であることにより、異動・昇格・退職といったライフサイクルイベントが自動的にエージェントの権限スコープ・承認チェーン・メモリ階層に反映される。
+
 参照：[KM-3 Canonical Object & KG](../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md) / [KM-4 Scoped Memory](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md)
 
 ### 6. プロンプトでなく、アイデンティティとポリシーで守る
 
 安全保証は実行基盤側に置く。プロンプトはセキュリティ境界にならない。
+
+「機密情報を出力するな」とプロンプトに書いてもプロンプトインジェクションで容易に突破される。安全の保証は LLM の外側——PDP/PEP によるゼロトラスト認可、OPA/Cedar 等のポリシーコード、DLP によるマスキング——に置く。ポリシーをコードとして管理することで、変更履歴・テスト・CI/CD による自動検証が可能になり、組織全体でのポリシー一貫性を担保できる。
 
 参照：[ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) / [ID-6 Zero-Trust](../patterns/id-identity/id6-zero-trust-pdp-pep.md)
 
@@ -50,11 +62,15 @@ no-copy・JIT・ACL 同梱を既定にし、集約は目的が明確なときだ
 
 人＋エージェント＋システムを相関 ID で貫き企業横断で監査する。
 
+エージェントの操作が「サービスアカウントが実行した」としか記録されなければ、インシデント調査で誰が依頼し何が起きたかを追跡できない。すべての行為に「依頼者（人間）・実行主体（エージェント/ワークロード）・対象システム」の三者を相関 ID で紐付けて記録する。この三者帰責の監査証跡は、コンプライアンス監査・インシデント対応・責任追跡の基盤であり、後付けでの導入は極めて困難である。
+
 参照：[OB-2 Unified Audit](../patterns/ob-observability/ob2-unified-audit-lineage.md) / [OB-1 Observability Lake](../patterns/ob-observability/ob1-observability-lake.md)
 
 ### 8. 中央はガードレールと舗装路を、部署は業務ロジックを
 
 集権と分権の二層統治。中央がインフラ・認可・監査・評価を、部署がドメイン知識・ユースケースを持つ。
+
+中央プラットフォームチームが Gateway・IdP 連携・モデル Gateway・監査基盤・評価パイプラインを整備し、部署はその上にドメイン固有のエージェントテンプレート・業務ロジック・ユースケースを構築する。中央が全業務ロジックを抱えると部署の機動性が失われ、逆に部署が独自にインフラを立てるとガバナンスが崩壊する。テンプレート工場パターンにより、中央が安全なひな形を提供し、部署がパラメータを埋める分業が成立する。
 
 参照：[GV-3 Department Factory](../patterns/gv-governance/gv3-department-agent-factory.md) / [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md)
 
@@ -62,11 +78,15 @@ no-copy・JIT・ACL 同梱を既定にし、集約は目的が明確なときだ
 
 作用は必ず構造化コマンドへ変換する。自然言語のまま API に渡さない。
 
+LLM が生成した自然言語をそのまま下流システムに渡すと、意図の曖昧さ・インジェクション・再現不能という三重の問題が生じる。ユーザーの自然言語入力は Gateway で受け取り、LLM が意図を解釈した後は、actor・target_system・action・params を持つ構造化コマンド（Command Envelope）に変換する。構造化されたコマンドはポリシー評価・監査記録・冪等性保証の対象にできるため、企業システムとの統合に必要な決定論性が確保される。
+
 参照：[RT-5 Command Envelope](../patterns/rt-runtime/rt5-command-envelope.md) / [IN-2 SaaS Adapter](../patterns/in-integration/in2-saas-connector-adapter.md)
 
 ### 10. エージェントは「業務キューを処理する管理されたデジタル業務主体」
 
 チャットボットではなく、登録・監査・権限制御・評価され続ける実行主体として設計する。
+
+エージェントは agent_id・owner_department・risk_tier・allowed_tools・cost_budget 等の属性を持つ企業内の一級オブジェクトである。コントロールプレーンに登録されていないエージェントは実行を許可されず、登録済みのエージェントは継続的に評価・監査・コスト管理の対象となる。この設計により、エージェントの増殖を統制し、「誰が・いつ・どのエージェントを・どの権限で動かしたか」を企業横断で把握できる。
 
 参照：[RT-9 Work Queue](../patterns/rt-runtime/rt9-work-queue-agent.md) / [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md)
 
@@ -74,11 +94,15 @@ no-copy・JIT・ACL 同梱を既定にし、集約は目的が明確なときだ
 
 知能は前提、勝負は権限・統合・統治。
 
+LLM の能力向上はモデルベンダーが担う。エンタープライズアーキテクトが設計すべきは、その知能を企業の ID・権限・監査・組織構造の中にどう閉じ込めるかである。Gateway による統一入口、ゼロトラスト認可による都度検証、ポリシーコードによる決定論的な行動制御——これらの「檻」が整って初めて、確率的な知能を数万人規模の本番に投入できる。
+
 参照：[EX-1 Gateway](../patterns/ex-experience/ex1-enterprise-agent-gateway.md) / [ID-6 Zero-Trust](../patterns/id-identity/id6-zero-trust-pdp-pep.md)
 
 ### 12. やるか/やらないかでなく、どの程度かを設計する
 
 自律度・ログ・予算・キャッシュ等の連続量を、トレースと eval で継続調整する。
+
+エージェントの導入は「全自動か手動か」の二択ではない。自律度のティア境界、ログの三層分離（メタ/本文/集計）、コスト予算、キャッシュ TTL、ガードレール強度——いずれも連続量であり、業務リスク・データ機密度・組織の成熟度に応じて段階的に調整する。この調整はリリース時に一度決めて終わるものではなく、Observability Lake のトレースと評価パイプラインの出力を継続的にフィードバックして更新する。
 
 参照：[「程度」の選定基準](../selection/degree/index.md) / [GV-7 Eval Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)
 
