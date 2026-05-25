@@ -35,6 +35,9 @@ graph LR
     ID6 --> |全アクション前評価| KM7
 ```
 
+!!! tip "この段階で計測する価値と定着施策"
+    [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) のベースライン計測（導入前の処理時間・手作業回数）を開始する。定着施策はまだ不要だが、ログ基盤（OB-1）を同時に動かすことで後続の計測を可能にする。
+
 ## レシピ2：従業員の入口
 
 **パターンの束**: [RT-1 Org Hub & Spoke](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) ＋ [EX-1 Enterprise Agent Gateway](../patterns/ex-experience/ex1-enterprise-agent-gateway.md)
@@ -48,6 +51,9 @@ graph LR
 **[EX-1 Enterprise Agent Gateway](../patterns/ex-experience/ex1-enterprise-agent-gateway.md)** は、エージェントへのアクセスを一本の統制されたゲートウェイ経由に集約するパターンである。認証・レート制限・ポリシー適用・ログ収集がゲートウェイで一括して処理されるため、個々のエージェントにこれらの仕組みを重複実装する必要がなくなる。
 
 このパターンがない場合、各エージェントが独自の認証を実装し、ログフォーマットが統一されず、一部のエージェントがポリシー未適用のまま動き続ける。コスト管理・利用状況の把握も困難になる可能性がある。
+
+!!! tip "この段階で計測する価値と定着施策"
+    [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) 第0層（採用率・継続利用率）の計測を開始する。[定着・アダプション](adoption.md)のフェーズ1（ガイド付き初回体験・ユースケース限定展開）をこの段階で実施し、利用率を引き上げる。
 
 ## レシピ3：実際の業務遂行
 
@@ -65,11 +71,19 @@ graph LR
 
 **[KM-2 Context Mesh](../patterns/km-knowledge/km2-context-mesh.md)** は、複数のSaaSや社内システムにまたがる横断的な文脈を、権限を保ちながら組み立てるパターンである。「Salesforceの顧客情報＋Confluenceの提案書＋Jiraのタスク状況」を組み合わせた回答を作るには、それぞれのシステムへのアクセス権限を持ちながら横断的に文脈を収集する必要がある。
 
-## レシピ4：バックオフィスの抜本自動化
+!!! tip "この段階で計測する価値と定着施策"
+    [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) 第1層（処理時間短縮・情報検索時間削減）の改善を確認する。[定着・アダプション](adoption.md)のフェーズ2（チャンピオン制度・業務プロセスへの組み込み）で習慣化を促進する。
+
+## レシピ4：価値実現（コスト削減型＋売上型の自動化）
 
 **パターンの束**: [RT-10 イベント駆動オーケストレータ](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) ＋ [RT-7 Enterprise Saga](../patterns/rt-runtime/rt7-enterprise-saga.md) ＋ [RT-4 Human Approval Chain](../patterns/rt-runtime/rt4-human-approval-chain.md)
 
-バックオフィスの自動化——調達・経費精算・契約更新・人事申請・会計処理——は、企業がエージェントから最も大きな経営価値を得られる領域である。単なる「回答を返すアシスタント」を超え、実際にシステムを動かす「実行主体」としてエージェントが機能する。この領域は、エージェントの経営価値が最も直接的に現れる。
+エージェントの経営価値が最も直接的に現れるレシピである。価値の源泉は2種類ある。
+
+- **コスト削減型（バックオフィス自動化）**：調達・経費精算・契約更新・人事申請・会計処理の端到端自動化により、処理工数と人件費を削減する。
+- **売上型（トップライン貢献）**：営業のネクストベストアクション提案・失注予兆検知（[Sales Agent](departments/sales.md)）、カスタマーサポートの自己解決率向上・解約予兆検知（[CS Agent](departments/customer-support.md)）により、受注率・CSAT・LTVを改善する。
+
+いずれも単なる「回答を返すアシスタント」を超え、実際にシステムを動かす「実行主体」としてエージェントが機能する。
 
 **[RT-10 イベント駆動オーケストレータ](../patterns/rt-runtime/rt10-event-driven-orchestrator.md)** は、業務トリガー（請求書受領・承認完了・期日到達）をイベントとして検知し、適切なエージェントワークフローを起動するパターンである。人間が手動で「次はこのシステムに入力する」という作業を省略し、イベントに反応した自律的な処理の連鎖を実現する。
 
@@ -82,6 +96,9 @@ graph LR
 **[RT-4 Human Approval Chain](../patterns/rt-runtime/rt4-human-approval-chain.md)** は、リスクの高い操作（大口支払い・人事変更・契約締結）について人間承認を段階的に挟むパターンである。完全自動化はすべての操作に適用するわけではない。「一定金額以上は上長承認」「個人情報変更はHR確認」というルールをポリシーとして定義し、エージェントはそのルールに従って人間にエスカレーションする。
 
 このレシピを機能させるには、レシピ1のセキュリティ基盤（特に ID-7 Policy-as-Code）と、[RT-8](../patterns/rt-runtime/rt8-durable-workflow.md) の状態永続化が先に整っている必要がある。
+
+!!! tip "この段階で計測する価値と定着施策"
+    [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) 第1層→第2層の因果連鎖（処理時間短縮→人件費削減、受注率向上→売上改善）を追跡する。[定着・アダプション](adoption.md)の価値実現アンチパターン（壊れた業務の自動化・空き時間の未回収等）を回避する。[AI投資ポートフォリオ](portfolio.md)で価値ポテンシャルの高いユースケースを優先する。
 
 ```mermaid
 sequenceDiagram
@@ -119,6 +136,9 @@ sequenceDiagram
 
 !!! note "統治の背骨は最初から整備する"
     統治の背骨は「後から追加するガバナンス層」ではない。GV-1 と GV-5 はレシピ1と同時期に整備を始め、エージェントが1つでも動き始めた段階から登録・記録が機能していることが理想である。後から追加しようとすると、既存エージェントの棚卸しと登録作業が大きなコストになる。
+
+!!! tip "この段階で計測する価値と定着施策"
+    [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) 第2層（経営KPI：売上影響・コスト削減・意思決定速度）の改善を経営に報告する。[定着・アダプション](adoption.md)のフェーズ3（ユースケース拡大・成果共有・横展開）で全社への拡大を推進する。[AI投資ポートフォリオ](portfolio.md)の四半期レビューで拡大・改善・撤退を判断し、再投資先を決定する。
 
 ---
 
@@ -225,3 +245,6 @@ quadrantChart
 - **自動化拡大フェーズ**：レシピ4（RT-10 イベント駆動 + RT-7 Saga）が整った段階で、書き込み操作を含む自動化に進出
 
 この設計により、「安全性基盤が整ったタイミングで価値のユースケースも準備完了している」状態を作り、基盤整備と価値実現のギャップを最小化する。
+
+!!! note "価値ループとの接続"
+    クイックウィンで創出した価値は、[GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) で計測し、[定着・アダプション](adoption.md)で利用率を引き上げ、[AI投資ポートフォリオ](portfolio.md)で再投資判断する。この**価値ループ（創出→計測→定着→再投資）**を90日以内に1回転させることが、エージェント投資が持続する条件である。詳細は[価値成熟度ロードマップ](value-maturity-roadmap.md)を参照。

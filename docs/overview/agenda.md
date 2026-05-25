@@ -14,6 +14,38 @@ status: done
 
 安全に動かすことは前提条件であり、目的は企業価値の向上にある。「誰の権限で・どのデータを・どう守って・誰の責任で」動かすかという統制設計（本書の7面・45パターン）と、「何の成果KPIを・どの経路で・いつまでに」動かすかという価値設計（[部門別適用例](../integration/departments/index.md)・[定着・アダプション](../integration/adoption.md)・[AI投資ポートフォリオ](../integration/portfolio.md)）は車の両輪である。
 
+### 価値ループ：創出→計測→定着→再投資
+
+統制設計（7面・45パターン）は安全な実行基盤を提供し、その上で価値が以下の4ステップを循環する。このループを回し続けることが企業価値向上の実体である。
+
+```mermaid
+flowchart LR
+    subgraph ValueLoop["価値ループ"]
+        CREATE["① 価値創出<br/>部門別ユースケース実行<br/>（Sales・CS・HR・Eng・Exec）"]
+        MEASURE["② 計測<br/>GV-10 三層価値計測<br/>（定着→生産性→経営KPI）"]
+        ADOPT["③ 定着<br/>チェンジマネジメント<br/>（採用→習慣化→拡大）"]
+        REINVEST["④ 再投資<br/>AI投資ポートフォリオ<br/>（拡大・改善・撤退判断）"]
+    end
+
+    CREATE --> MEASURE
+    MEASURE --> ADOPT
+    ADOPT --> REINVEST
+    REINVEST --> CREATE
+
+    subgraph Foundation["統制基盤（7面・45パターン）"]
+        CTRL["ID・権限・監査・ガバナンス"]
+    end
+
+    Foundation -.->|安全な実行基盤| ValueLoop
+```
+
+| ステップ | 担い手 | 主要ページ |
+|---|---|---|
+| ① 価値創出 | 部門別エージェントが成果KPIを動かす | [部門別適用例](../integration/departments/index.md)・[組み合わせレシピ](../integration/recipe.md) |
+| ② 計測 | 定着率→生産性→経営KPIの3層で因果を追跡 | [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) |
+| ③ 定着 | 利用率を引き上げ、ROIの分母を確保する | [定着・アダプション](../integration/adoption.md) |
+| ④ 再投資 | 計測結果に基づき拡大・改善・撤退を判断 | [AI投資ポートフォリオ](../integration/portfolio.md)・[ユースケース選定ガイド](../integration/usecase-selection-guide.md) |
+
 ## AIエージェントは「企業内の実行主体」である
 
 一般的なAIチャットは「回答主体」だが、エンタープライズエージェントは「業務実行主体」であり、企業システム上の**一級オブジェクト**として定義・管理する。
