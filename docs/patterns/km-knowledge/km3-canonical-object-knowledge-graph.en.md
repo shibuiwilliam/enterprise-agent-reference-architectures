@@ -2,6 +2,14 @@
 title: "KM-3 Canonical Enterprise Object Model & Knowledge Graph (Canonical Objects / Knowledge Graph)"
 description: "A pattern that normalizes diverse SaaS data into common business objects, resolves entities to deduplicate records, and establishes relationships."
 status: done
+pattern_id: KM-3
+facet: knowledge
+requires: []
+required_by: []
+applies_when: [many_systems_with_scattered_data_for_cross_department_ai, customer_person_entity_deduplication_needed, org_graph_used_as_cross_cutting_axis]
+not_applicable_when: [single_saas_workflow_with_no_cross_system_need, roi_insufficient_for_small_scale_data_integration, saas_proprietary_vocabulary_sufficient]
+risk_tiers: [2, 3]
+key_technologies: [Canonical Data Model, GraphRAG, Neo4j, "Master Data Management (MDM)", Entity Resolution, Sansan]
 ---
 
 # KM-3 Canonical Enterprise Object Model & Knowledge Graph (Canonical Objects / Knowledge Graph)
@@ -85,6 +93,50 @@ The graph holds only reference links and metadata, with actual data remaining in
 - Over-engineering the common model leads to divergence from reality. Normalize thinly and only as needed, retaining ID mappings for each system. Start with just the primary entities (Customer / Employee / Project).
 - Low deduplication accuracy causes incorrect relationships to form, with agents combining information from wrong entities. Regularly measure accuracy and prepare manual correction workflows.
 - Changes to canonical objects affect all agents, so apply version management ([GV-6](../gv-governance/gv6-version-registry.md)). When making changes, either maintain backward compatibility or provide a migration period.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Entity Resolution Engine
+    description: "Matches cross-SaaS entities (e.g., Salesforce Account == Workday Organization) using fuzzy matching and ID mapping tables; flags low-confidence matches for manual review."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Entity Resolution Engine processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Knowledge Graph (Neo4j)
+    description: "Stores reference links and relationship metadata (member-of, owned-by, referenced-by) plus entitlement edges; actual data stays in source SaaS."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Knowledge Graph (Neo4j) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Graph Traversal API
+    description: "Enables agents to navigate related entities and then use KM-2 Context Providers to JIT-fetch actual data from source systems."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Graph Traversal API processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

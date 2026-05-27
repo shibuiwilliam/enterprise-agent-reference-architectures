@@ -2,6 +2,14 @@
 title: "ID-6 Zero-Trust Runtime + 中央PDP/分散PEP（ABAC/ReBAC）"
 description: "社内起動でも信頼せず、すべての行為を毎回検証するゼロトラスト認可を中央PDP/分散PEPで実現するパターン。"
 status: done
+pattern_id: ID-6
+facet: identity
+requires: []
+required_by: ["GV-4", "RT-3", "ID-5", "IN-1"]
+applies_when: [multi_saas_environments_handling_confidential_data, multi_cloud_multi_tenant_configurations, regulated_industries_requiring_financial_or_healthcare_compliance]
+not_applicable_when: [completely_isolated_experimental_environment, single_user_personal_poc, public_information_only_processing_without_authorization_needs]
+risk_tiers: [2, 3, 4, 5]
+key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, mTLS, "Workload Identity (ID-3)", "Short-lived Token (ID-5)", Network Policy, Runtime Sandbox]
 ---
 
 # ID-6 Zero-Trust Runtime + 中央PDP/分散PEP（ABAC/ReBAC）
@@ -14,13 +22,13 @@ status: done
 
 従来のアクセス制御は「一度認証を通過したら信頼する」モデルに基づいていた。VPN 接続中なら社内リソースにアクセスできる、認証済みユーザーのセッションは継続的に信頼する——これが標準的な設計だった。エージェントがこのモデルの上で動くと深刻な問題が発生する。
 
-第一は「内部権限の横展開」である。一度認可を受けたエージェントが、その後のツール呼び出しや下流 API アクセスを検証なしに実行できると、プロンプトインジェクションで攻撃者がエージェントを乗っ取ったとき、認可済みセッションを悪用して本来アクセスできないデータに到達できる。
+第一は「内部権限の横展開」だ。一度認可を受けたエージェントが、その後のツール呼び出しや下流 API アクセスを検証なしに実行できると、プロンプトインジェクションで攻撃者がエージェントを乗っ取ったとき、認可済みセッションを悪用して本来アクセスできないデータに到達できてしまう。
 
-第二は「コンテキスト変化への対応不能」である。「朝に認可を受けたから夕方の操作も許可」という設計では、異動・退職・権限変更が実行中のエージェントに反映されない。ゼロトラストは毎回の検証によってこのギャップを塞ぐ。
+第二は「コンテキスト変化への対応不能」だ。「朝に認可を受けたから夕方の操作も許可」という設計では、異動・退職・権限変更が実行中のエージェントに反映されない。ゼロトラストは毎回の検証でこのギャップを塞ぐ。
 
-第三は「分散実行環境での制御難」である。マルチクラウド・マルチ SaaS 構成でエージェントが動く場合、各実行点がそれぞれ独自の認可判断を持つと一貫性が失われる。中央 PDP に判断を集約し、各点が PEP として強制するアーキテクチャが必要になる。
+第三は「分散実行環境での制御難」だ。マルチクラウド・マルチ SaaS 構成でエージェントが動く場合、各実行点がそれぞれ独自の認可判断を持つと一貫性が失われる。中央 PDP に判断を集約し、各点が PEP として強制するアーキテクチャが必要になる。
 
-このパターンは、ABAC/ReBAC によるコンテキスト評価と組織グラフを属性源とする構成で、エンタープライズ AI エージェントのゼロトラスト認可を実現する。
+ABAC/ReBAC によるコンテキスト評価と組織グラフを属性源とする構成で、エンタープライズ AI エージェントのゼロトラスト認可を実現するのが本パターンだ。
 
 !!! tip "最小成立条件（MVP）"
     OPA を1台立て、Gateway に PEP を1か所配置し、全エージェントリクエストを「主体×アクション×リソース」で都度認可判定する。fail-closed（不明なら拒否）を既定とする。
@@ -88,10 +96,54 @@ PEP の配置は以下の複数箇所に分散する。
 !!! warning "PDP の単一障害点化"
     PDP を単一障害点/ボトルネックにしないこと。判断キャッシュ（短TTL）と**フェイルセーフ（不明なら拒否）**を設計する。
 
-- PDP の判断キャッシュは短TTLで運用する。キャッシュが長いと権限剥奪が反映されない。
+- PDP の判断キャッシュは短 TTL で運用する。キャッシュが長いと権限剥奪が反映されない。
 - 「不明なら許可」ではなく「不明なら拒否」を既定にする（fail-closed）。
-- 認可判断のレイテンシが業務に影響する場合は、PDP のレプリカ配置やエッジキャッシュで対処する。PDP を省略してはならない。
-- 組織グラフの鮮度は PDP の判断精度に直結する。異動・退職の反映遅延を監視する。
+- 認可判断のレイテンシが業務に影響する場合は、PDP のレプリカ配置やエッジキャッシュで対処する。PDP を省略するのは論外だ。
+- 組織グラフの鮮度は PDP の判断精度に直結する。異動・退職の反映遅延は定期的に監視する。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Central PDP (OPA/Cedar)
+    description: "Evaluates every authorization request with ABAC/ReBAC against attributes from the org graph; returns allow/deny/require_approval and logs the decision."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Central PDP (OPA/Cedar) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Distributed PEP
+    description: "PEPs at Gateway (EX-1), runtime, and connector enforce PDP decisions; no enforcement point bypasses the PDP."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Distributed PEP の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Org Graph Attribute Feed
+    description: "Supplies department, role, and project attributes to the PDP for contextual evaluation; attribute staleness is monitored."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Org Graph Attribute Feed の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

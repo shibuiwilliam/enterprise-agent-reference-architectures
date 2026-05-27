@@ -2,21 +2,29 @@
 title: "RT-4 Human Approval Chain（組織解決型承認）"
 description: "エージェントが提案した操作を組織図から動的に解決した承認者が審査し、委譲・エスカレーション・SLA 管理を伴う既存ワークフローツールで承認チェーンを完結させるパターン。"
 status: done
+pattern_id: RT-4
+facet: runtime
+requires: ["RT-8", "ID-7"]
+required_by: []
+applies_when: [irreversible_high_risk_operations_like_fund_transfer_or_permission_grant, org_chart_is_maintained_and_approvers_can_be_resolved_by_role, existing_approval_workflow_tools_already_deployed]
+not_applicable_when: [strict_real_time_latency_requirements, low_risk_tier_0_1_operations, org_chart_not_maintained]
+risk_tiers: [3, 4]
+key_technologies: [Temporal, AWS Step Functions, Workday HCM, Microsoft Entra, Slack Block Kit, ServiceNow, OpenTelemetry]
 ---
 
 # RT-4 Human Approval Chain（組織解決型承認）
 
 ## 概要
 
-エージェントは「この契約を更新しますか？」と提案するまでが仕事。実行は人間の承認後である。このパターンでは、組織グラフ（Workday の組織図）から上長・所管責任者・コスト所有者を動的に解決して承認を求める。承認者をコードに直書きすると異動で宛先不明になる。常に組織グラフから都度解決する設計が必要だ。Slack や ServiceNow での承認体験、不在時の代理委譲、SLA タイマー、却下理由のフィードバックまで含めて設計する。
+エージェントは「この契約を更新しますか？」と提案するまでが仕事だ。実行は人間の承認後に始まる。このパターンでは、組織グラフ（Workday の組織図）から上長・所管責任者・コスト所有者を動的に解決して承認を求める。承認者をコードに直書きすると異動で宛先不明になるため、常に組織グラフから都度解決する設計が必要だ。Slack や ServiceNow での承認体験、不在時の代理委譲、SLA タイマー、却下理由のフィードバックまで含めて設計する。
 
 ## 解決する企業課題
 
-不可逆操作（大量メール送信・資金移動・権限変更）をエージェントが直接実行すると、誤判断時の損害が大きい。エンタープライズでは取り返しのつかない操作の誤実行が重大な問題になる。承認チェーンは実行前の人間介在を構造として保証し、エージェントの自律度を「提案まで」に限定する。
+不可逆操作（大量メール送信・資金移動・権限変更）をエージェントが直接実行すると、誤判断時の損害が大きい。承認チェーンは実行前の人間介在を構造として保証し、エージェントの自律度を「提案まで」に限定する仕組みだ。
 
-「誰が承認者か」が属人的知識に依存している企業では、担当者の異動・休暇時に承認フローが止まる。承認者がハードコードされていると、組織変更のたびに設定変更が必要になり、変更漏れが発生する。組織図からの動的解決はこの問題を排除し、常に適切な権限を持つ承認者を特定する。
+「誰が承認者か」が属人的知識に依存している企業では、担当者の異動・休暇時に承認フローが止まる。承認者がハードコードされていると、組織変更のたびに設定変更が必要になり、変更漏れが続く。組織図からの動的解決はこの問題を構造的に排除し、常に適切な権限を持つ承認者を特定できる。
 
-監査の観点では、承認行為の記録（誰がいつどの理由で承認・否決したか）は内部統制・規制対応に不可欠である。否決理由は同種リクエストの再提案品質を改善するフィードバックシグナルとして活用できる。
+監査の観点でも重要な役割がある。承認行為の記録（誰がいつどの理由で承認・否決したか）は内部統制・規制対応に不可欠であり、否決理由は同種リクエストの再提案品質を改善するフィードバックシグナルにもなる。
 
 !!! tip "最小成立条件（MVP）"
     Slack ボタンによる単一承認者フロー。組織図 API から承認者を1名解決し、承認 or 否決の結果をログに記録する最小構成。委譲・エスカレーション・SLA タイマーは後続フェーズで追加する。
@@ -27,7 +35,7 @@ status: done
 
 ## 解決策と設計
 
-解決策の核心は、承認者を静的定義でなく組織図から動的に解決すること、そして承認体験を既存ツールに埋め込むことの2点である。従業員が新規システムを学習する必要をなくし、採用障壁を下げる。
+解決策の核心は2点だ。まず承認者を静的定義でなく組織図から動的に解決すること。そして承認体験を既存ツールに埋め込むこと。従業員が新規システムを学習する手間をなくし、採用の障壁を下げる。
 
 承認フローは4つのフェーズで構成される。
 
@@ -65,7 +73,7 @@ sequenceDiagram
     AE->>AUDIT: 判断記録
 ```
 
-承認者の解決ロジックは組織構造の変化（異動・昇格・退職）に追従させる必要がある。ハードコードは組織変更のたびに障害を引き起こすため、組織図 API をリアルタイムで参照し承認者を動的に導出する設計が望ましい。
+承認者の解決ロジックは組織構造の変化（異動・昇格・退職）に追従させる必要がある。ハードコードは組織変更のたびに障害を引き起こす。組織図 API をリアルタイムで参照して承認者を動的に導出する設計が望ましい。
 
 ## 向き／不向き
 
@@ -87,13 +95,57 @@ sequenceDiagram
 
 ## 落とし穴／選定の勘所
 
-**承認者のハードコード**。「このリクエストは山田部長が承認する」とコードに直接記述するパターンは、組織変更のたびに設定変更が必要になり、変更漏れが発生する。承認者は常に組織図から動的に解決する。退職・異動後も正しい承認者にルーティングされる設計が必須である。
+**承認者のハードコード**。「このリクエストは山田部長が承認する」とコードに直接記述すると、組織変更のたびに設定変更が必要になり変更漏れが生じる。承認者は常に組織図から動的に解決し、退職・異動後も正しい承認者にルーティングされる設計を維持すること。
 
-**エスカレーション設計の欠如**。SLA を設定しても上位承認者への自動エスカレーションがないと、承認がサイレントに滞留する。エスカレーション先の定義と通知経路を必ず設計する。
+**エスカレーション設計の欠如**。SLA を設定しても上位承認者への自動エスカレーションがないと、承認がサイレントに滞留する。エスカレーション先の定義と通知経路は必ず設計に含めること。
 
-**否決理由の捨て置き**。否決理由はエージェントが同種のリクエストを適切に修正するための最も価値ある学習シグナルである。理由を監査ログに埋めるだけでなく、エージェントの提案生成に反映するフィードバックループを構築する。
+**否決理由の捨て置き**。否決理由は、エージェントが同種のリクエストを適切に修正するための最も価値ある学習シグナルだ。理由を監査ログに埋めるだけでなく、エージェントの提案生成に反映するフィードバックループを構築する。
 
-**委譲の無制限連鎖**。承認者が別の承認者に委譲し、さらに委譲される連鎖は責任の所在を不透明にする。委譲は1ホップに制限し、委譲先の資格要件を組織図から検証する。
+**委譲の無制限連鎖**。承認者が別の承認者に委譲し、さらに委譲される連鎖は責任の所在を不透明にする。委譲は1ホップに制限し、委譲先の資格要件を組織図から検証すること。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Approver Resolution Engine
+    description: "Queries the org chart API to dynamically identify the correct approver (line manager, cost owner, data owner) per request type and risk tier."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Approver Resolution Engine の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Workflow Tool Notification
+    description: "Sends approval requests with action buttons to Slack or ServiceNow tasks so approvers can act within familiar tools."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Workflow Tool Notification の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Decision Log
+    description: "Records the approver identity, decision (approve/deny/delegate), reason, and timestamp for internal control evidence."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Decision Log の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

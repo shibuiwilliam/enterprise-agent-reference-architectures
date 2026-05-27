@@ -2,6 +2,14 @@
 title: "KM-6 DLP & Redaction Boundary (DLP & Masking)"
 description: "A pattern that applies DLP detection, masking, and tokenization at all input/output boundaries — LLM, RAG, tool execution, and logs — preventing PII, secrets, and contract information from being sent externally or mixing into logs."
 status: done
+pattern_id: KM-6
+facet: knowledge
+requires: []
+required_by: []
+applies_when: [any_enterprise_use_case_with_possible_pii_secrets_or_contract_data, external_llm_api_in_use, gdpr_appi_or_similar_pii_processing_control_audit_required]
+not_applicable_when: [public_information_only_internal_tool_no_pii, completely_air_gapped_on_premise_no_external_transmission_possible, extremely_strict_real_time_latency_requirements_dlp_scan_bottleneck]
+risk_tiers: [2, 3, 4, 5]
+key_technologies: [Microsoft Purview, Google Cloud DLP / Sensitive Data Protection, "Presidio (Microsoft OSS)", GitGuardian, truffleHog, HashiCorp Vault Transit Secrets Engine, "Format-Preserving Encryption (FPE)", Fluentd / Logstash masking plugins]
 ---
 
 # KM-6 DLP & Redaction Boundary (DLP & Masking)
@@ -89,6 +97,50 @@ There are two masking approaches. One is irreversible masking (replacing PII wit
 
 - If access controls for restoring masked tokens are absent, masking is meaningless. Require a separate authorization check for restoration.
 - When DLP scan latency is a problem, choose between async scanning (returning the response first then post-scanning and recording later) and sync scanning (blocking) by use case. However, do not make high-risk operations that require synchronous scanning asynchronous.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Input DLP Gate
+    description: "Scans user input and RAG chunks for PII and secrets before sending to the LLM; applies masking or tokenization and routes highest-classification data to an internal inference path."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Input DLP Gate processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Output DLP Gate
+    description: "Post-scans LLM output and tool results for residual sensitive data before returning to the user or writing to logs."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Output DLP Gate processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Log Filter
+    description: "Strips PII from log collection pipeline (Fluentd/Logstash) so that audit logs do not contain plaintext sensitive data."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Log Filter processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

@@ -2,19 +2,27 @@
 title: "KM-7 Ephemeral Secure Context Bus（揮発・機密計算）"
 description: "コンテキストを揮発・暗号化し、隔離領域で処理してセッション終了と同時にメモリを解放・ゼロ化する極秘処理向けパターン。"
 status: done
+pattern_id: KM-7
+facet: knowledge
+requires: []
+required_by: []
+applies_when: [highest_classification_data_hr_evaluation_ma_insider_information, regulatory_data_requiring_no_plaintext_in_logs_or_cache, ma_or_insider_related_information_processing]
+not_applicable_when: [low_classification_bulk_processing_over_isolation_cost, development_phase_requiring_plaintext_logs_for_debugging, continuous_context_accumulation_use_cases]
+risk_tiers: [4, 5]
+key_technologies: ["Azure OpenAI (VNet integration / private endpoint)", "AWS Bedrock (VPC endpoint)", Azure Confidential VM, "NVIDIA H100 Confidential Computing (Confidential GPU)", "AMD SEV-SNP", "Redis No-Persistence", Presidio, "DPA (Data Processing Agreement)"]
 ---
 
 # KM-7 Ephemeral Secure Context Bus（揮発・機密計算）
 
 ## 概要
 
-人事評価・M&A 検討・インサイダー情報——これらは「ログにも残さない」レベルの機密性が求められる。このパターンは、コンテキストを隔離された推論環境で処理し、セッション終了と同時にメモリを解放・ゼロ化（zeroization）する。DLP（KM-6）が「機密を見つけて消す」アプローチなら、こちらは「最初から何も残さない」揮発アプローチだ。ログ基盤にはレイテンシやトークン数などのメタデータだけを送る。ただし、適用は最高機密に限定する。大半の機密処理は [KM-6](km6-dlp-redaction-boundary.md)＋[GV-5](../gv-governance/gv5-central-model-gateway.md)（VPC 内ルーティング＋DLP）で十分であり、本パターンはそれでも不足する極端なケースのための設計である。
+人事評価・M&A 検討・インサイダー情報——これらは「ログにも残さない」レベルの機密性が求められる。このパターンはコンテキストを隔離された推論環境で処理し、セッション終了と同時にメモリを解放・ゼロ化（zeroization）する。DLP（KM-6）が「機密を見つけて消す」アプローチなら、こちらは「最初から何も残さない」揮発アプローチだ。ログ基盤にはレイテンシやトークン数などのメタデータだけを送る。ただし適用は最高機密に限定すること。大半の機密処理は [KM-6](km6-dlp-redaction-boundary.md)＋[GV-5](../gv-governance/gv5-central-model-gateway.md)（VPC 内ルーティング＋DLP）で十分であり、本パターンはそれでも不足する極端なケース向けの設計である。
 
 ## 解決する企業課題
 
-人事評価・M&A 検討・インサイダー情報に関わる処理では、通常の DLP マスキング（[KM-6](km6-dlp-redaction-boundary.md)）では不十分なケースがある。複数の SaaS を横断して文脈を結合すると、単体では非機密のデータが組み合わさって機密情報を生成するリスクがある（モザイク効果／mosaic effect）。たとえば、社内座席表＋出張記録＋外部の登記情報を突き合わせると、未公開の M&A 接触先を推測できてしまう。
+人事評価・M&A 検討・インサイダー情報に関わる処理では、通常の DLP マスキング（[KM-6](km6-dlp-redaction-boundary.md)）では不十分なケースがある。複数の SaaS を横断して文脈を結合すると、単体では非機密のデータが組み合わさって機密情報を生成するリスクがある（モザイク効果／mosaic effect）。例えば、社内座席表＋出張記録＋外部の登記情報を突き合わせると、未公開の M&A 接触先を推測できてしまう。
 
-外部 LLM ベンダーへのデータ送信、ログ基盤への平文残存、キャッシュからの漏洩——これらを構造的に排除したい場合、「処理後に消す」ではなく「最初から残さない」設計が必要になる。本パターンは KM-6 が「汚染除去」アプローチをとるのに対し、「揮発」アプローチをとる。処理が終わった時点でコンテキストのメモリが解放・ゼロ化（zeroization）され、痕跡が残らないことを保証する。ログ基盤に対してはメタデータのみ送信することで、観測性（[OB-1](../ob-observability/ob1-observability-lake.md)）の要件と機密保持の要件を両立する。
+外部 LLM ベンダーへのデータ送信、ログ基盤への平文残存、キャッシュからの漏洩——これらを構造的に排除したい場合、「処理後に消す」ではなく「最初から残さない」設計が必要になる。本パターンは KM-6 の「汚染除去」アプローチに対し「揮発」アプローチをとる。処理が終わった時点でコンテキストのメモリが解放・ゼロ化（zeroization）され、痕跡が残らないことを保証する。ログ基盤にはメタデータのみ送信することで、観測性（[OB-1](../ob-observability/ob1-observability-lake.md)）の要件と機密保持の要件を両立する。
 
 !!! note "監査要件との両立（封緘された判断証跡）"
     「本文を一切残さない」設計は [OB-2](../ob-observability/ob2-unified-audit-lineage.md) の「全行為を再構成可能にする」要件と一見矛盾する。両立策として、**封緘（sealed）された判断証跡**を別系統で保持する。具体的には、プロンプト/レスポンスの本文は残さないが、「誰が・いつ・どの分類のデータを・どのポリシー判断で処理したか」のメタデータと入出力ハッシュは改ざん不能ストレージに記録する。この封緘証跡の開示は二者承認（例：CISO ＋ 法務責任者）を要件とし、通常運用ではアクセスできない。人事評価や内部通報など、後日の証跡保持が法的に要件化されうる領域では、この封緘メタデータの保持期間を規制要件に合わせて設計する。
@@ -25,7 +33,7 @@ status: done
 
 ## 解決策と設計
 
-各 SaaS から収集したデータを DLP Proxy でマスキングし、隔離された推論環境で LLM 処理を行い、応答後にコンテキストのメモリを解放・ゼロ化する。プロンプト/レスポンス本文はログ基盤に一切送らず、レイテンシ・トークン数等のメタデータと入出力ハッシュ（封緘証跡）のみ送信する。
+各 SaaS から収集したデータを DLP Proxy でマスキングし、隔離された推論環境で LLM 処理を行い、応答後にコンテキストのメモリを解放・ゼロ化する。プロンプト/レスポンス本文はログ基盤に一切送らず、レイテンシ・トークン数等のメタデータと入出力ハッシュ（封緘証跡）のみを送信する。
 
 ```mermaid
 flowchart LR
@@ -106,6 +114,50 @@ flowchart LR
 - 機密計算はレイテンシとコストが高い。全処理をこのパターンに通すのではなく、データ分類に基づき極秘処理のみに適用する。適用範囲をデータ分類で自動決定する仕組みを作る。
 - LLM ベンダーの学習オプトアウト設定を確認し、契約（DPA: Data Processing Agreement）でも保証を取る。設定の確認だけでは不十分で、契約上の義務として文書化する。
 - このパターンでは過去の文脈を参照できないため、継続的な対話が必要な業務には不向きである。必要であれば、機密計算の外で暗号化された外部メモリを使う設計を検討する（ただし保証は弱まる）。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: DLP Proxy
+    description: "Masks and classifies data collected from source SaaS systems before it enters the isolated inference environment."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "DLP Proxy の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Isolated Inference Environment
+    description: "VPC-hosted LLM (or Confidential GPU) with learning opt-out; context lives in-memory only and is zeroed immediately after the session completes."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Isolated Inference Environment の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Sealed Audit Metadata Sink
+    description: "Sends only metadata (latency, token count, cost) and hashed input/output to the observability lake; full content is never persisted."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Sealed Audit Metadata Sink の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

@@ -2,6 +2,14 @@
 title: "ID-8 Consent & Access Transparency（同意・透明化）"
 description: "ユーザー自身がエージェントに付与したアクセス権を確認・同意・取り消せるダッシュボードを提供し、「自分の権限でエージェントが何をしているか分からない」不信とコンプライアンス上の同意要件を解消するパターン。"
 status: done
+pattern_id: ID-8
+facet: identity
+requires: ["ID-2", "ID-4", "ID-5"]
+required_by: []
+applies_when: [agents_accessing_personal_data_email_calendar_documents, privacy_regulations_gdpr_appi_requiring_user_consent_and_revocation, trust_building_needed_through_scope_visibility]
+not_applicable_when: [agent_handles_only_system_data_with_no_personal_data, fully_autonomous_batch_processing_with_no_human_operation_origin_id3_is_appropriate, poc_where_consent_flow_implementation_cost_cannot_be_justified]
+risk_tiers: [2, 3, 4]
+key_technologies: [Okta Consent, Microsoft Entra ID Admin/User Consent, OAuth 2.0 Scope Management, RFC 7009 Token Revocation, "Consent Registry (DB / Policy Store)", Internal Consent Portal]
 ---
 
 # ID-8 Consent & Access Transparency（同意・透明化）
@@ -14,17 +22,17 @@ status: done
 
 エージェントが自分の ID で動いているとき、ユーザーは「エージェントが自分の権限でいつ・何に・どの範囲でアクセスしているか」を知らないのが標準状態である。この不透明さは、エージェント採用の障壁になると同時に、コンプライアンス上の問題を生む。
 
-不信の問題から述べる。「エージェントが自分の ID で勝手に何でもできる状態になっている」という感覚は現実に生まれる。初回の業務依頼時に付与した委譲スコープが何ヶ月も有効なまま残り、エージェントがいつでもメール・カレンダー・ドライブにアクセスできる——ユーザーはこれを把握できていない。委譲スコープが目に見えない場合、ユーザーはエージェントの使用を控えるか、IT 部門が全エージェントを停止する判断をすることになる。
+まず不信の問題から述べる。「エージェントが自分の ID で勝手に何でもできる状態になっている」という感覚は現実に生まれる。初回の業務依頼時に付与した委譲スコープが何ヶ月も有効なまま残り、エージェントがいつでもメール・カレンダー・ドライブにアクセスできる——ユーザーはこれを把握できていない。委譲スコープが目に見えなければ、ユーザーはエージェントの使用を控えるか、IT 部門が全エージェントを停止する判断を下すことになる。
 
 動的文脈の問題もある。業務の内容が変わったとき、当初の委譲スコープが過剰になることがある。「契約書レビューのために Docusign にアクセスさせた」という同意が、そのプロジェクト終了後も有効なまま残るのは、ユーザーの意図とかけ離れている。
 
-コンプライアンスの問題もある。GDPR・各国プライバシー法では、個人データへのアクセスに対するユーザー同意と取り消し権を要求するケースがある。金融・医療等の規制産業では、代理アクセスの同意取得と記録が監査要件になる場合もある。
+コンプライアンスの問題も見逃せない。GDPR・各国プライバシー法では、個人データへのアクセスに対するユーザー同意と取り消し権を要求するケースがある。金融・医療等の規制産業では、代理アクセスの同意取得と記録が監査要件になる場合もある。
 
-このパターンが解決する企業課題は次の3点である。
+解決すべき企業課題は次の3点にまとめられる。
 
 - 「エージェントが自分の権限で何をしているか分からない」不信の解消と信頼醸成
 - スコープの目的限定・期限管理による「なし崩しのスコープ拡大」の防止
-- GDPR等のプライバシー規制が要求する同意取得・取り消し権の実装
+- GDPR 等のプライバシー規制が要求する同意取得・取り消し権の実装
 
 !!! tip "最小成立条件（MVP）"
     初回の OBO トークン発行時に IdP の同意画面でスコープと目的を明示し、ユーザーが承認した記録をコンセントレジストリに保存する。取り消し操作でトークンを即時失効させる。
@@ -71,7 +79,7 @@ flowchart TB
     GW -- トークン失効 --> TOOLS
 ```
 
-同意は一度取れば永続ではなく、目的ごと・スコープごとに個別管理する。「契約書レビュー業務のための Box 読み取り」と「顧客フォローアップのための Salesforce 書き込み」は別個の同意エントリとして記録する。
+同意は一度取れば永続ではなく、目的ごと・スコープごとに個別管理する。「契約書レビュー業務のための Box 読み取り」と「顧客フォローアップのための Salesforce 書き込み」は、別個の同意エントリとして記録することになる。
 
 ## 向き／不向き
 
@@ -96,10 +104,54 @@ flowchart TB
     初回同意時に「将来の業務拡張のため広めに取っておく」設計は、時間とともにエージェントが必要以上の権限を持ち続ける原因になる。同意は目的・期間を限定し、期限切れ後は再同意を要求する。
 
 !!! warning "取り消しが即時に反映されない実装"
-    ユーザーがダッシュボードで取り消しを操作しても、キャッシュされたトークンが有効期限まで使い続けられる実装は同意制御として機能しない。取り消しはトークン失効（Revocation）と結合し、Gateway・ツール呼び出し時に同意状態を再検証する。
+    ユーザーがダッシュボードで取り消しを操作しても、キャッシュされたトークンが有効期限まで使い続けられる実装は同意制御として機能しない。取り消しはトークン失効（Revocation）と結びつけ、Gateway・ツール呼び出し時に同意状態を再検証する。
 
-- 同意画面を「全部許可」の確認ボタン1つにすると意味をなさない。スコープを個別に選択できるようにし、各スコープにユーザーが理解できる説明文を添える。
-- 同意ログ自体も改ざん不能な形で保管し、監査・コンプライアンス調査に利用できるようにする。
+- 同意画面を「全部許可」の確認ボタン1つにすると意味をなさない。スコープを個別に選択できるようにし、各スコープにユーザーが理解できる説明文を添えること。
+- 同意ログ自体も改ざん不能な形で保管し、監査・コンプライアンス調査に利用できるようにしておく。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Consent Screen (IdP / Internal Portal)
+    description: "At first OBO token issuance or for high-risk operations, presents scope, purpose, and expiry to the user; records approval in Consent Registry."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Consent Screen (IdP / Internal Portal) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Consent Registry
+    description: "Stores per-purpose consent entries (subject, scope, purpose, expiry); PDP checks registry before any delegated action proceeds."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Consent Registry の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Revocation & Instant Token Invalidation
+    description: "User revocation in the dashboard immediately invalidates cached tokens via RFC 7009; Gateway re-checks consent state on each subsequent call."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Revocation & Instant Token Invalidation の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

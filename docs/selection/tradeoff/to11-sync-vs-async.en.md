@@ -10,6 +10,27 @@ status: done
 
 "Tell me today's schedule" should return in 2 seconds, but "analyze all contracts from the past 3 years" can take a few minutes. For business processes that require supervisor approval in between, users cannot be expected to keep their browser open waiting for approval. This covers how to distinguish between synchronous, asynchronous, and hybrid approaches based on processing time and the presence of approval steps.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-11
+decision_rules:
+  - condition: "expected_duration_seconds <= 5 AND human_approval_step == false AND operation_type == 'qa_or_search'"
+    recommendation: synchronous
+    reason: "Simple Q&A, search, and document summarization that complete in seconds are suitable for synchronous processing"
+  - condition: "expected_duration_seconds > 10 OR steps_include_human_approval == true OR external_api_calls_multiple == true"
+    recommendation: asynchronous
+    reason: "Processing exceeding 10 seconds, multi-step workflows with human approvals, or multiple sequential/parallel API calls require durable async workflow"
+  - condition: "multi_system_transaction == true AND compensation_on_failure_required == true"
+    recommendation: saga_transactional
+    reason: "Cross-system operations requiring transactional consistency and rollback compensation on partial failure need Saga pattern"
+  - condition: "duration_5s_to_30s == true AND ux_responsiveness_important == true"
+    recommendation: streaming_sync
+    reason: "Stream LLM generation token-by-token; users read as they wait, improving perceived responsiveness for 5-30 second tasks"
+  - condition: "sync_started_but_exceeded_timeout == true"
+    recommendation: hybrid_timeout_escalation
+    reason: "Auto-escalate from sync to async when processing exceeds expected time; deliver completion via webhook or email notification"
+```
+
 ## Comparison
 
 | Perspective | Synchronous Processing | Asynchronous Processing ([RT-8](../../patterns/rt-runtime/rt8-durable-workflow.md)) |

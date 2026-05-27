@@ -2,6 +2,14 @@
 title: "RT-1 Org-Hierarchical Hub & Spoke (Intent Routing + Domain Spokes)"
 description: "A pattern where a hub agent routes intent to domain spokes, attenuating permissions from parent to child and distributing processing along the organizational hierarchy."
 status: done
+pattern_id: RT-1
+facet: runtime
+requires: ["ID-4"]
+required_by: []
+applies_when: [large_org_with_department_permission_boundaries, cross_domain_requests_are_frequent, teams_develop_spokes_independently]
+not_applicable_when: [only_one_or_two_domains, nearly_all_requests_span_all_spokes, tightly_coupled_inter_spoke_shared_state]
+risk_tiers: [2, 3, 4]
+key_technologies: [Semantic Router, LangGraph, AutoGen, CrewAI, Pinecone, Weaviate, pgvector, Capability Registry]
 ---
 
 # RT-1 Org-Hierarchical Hub & Spoke (Intent Routing + Domain Spokes)
@@ -81,6 +89,50 @@ Because spokes return summaries, raw data from all domains does not accumulate i
 **Abandoning the capability registry.** As spokes multiply, tracking which spoke holds which tools becomes scattered. Centrally manage the registry and integrate with GV-2 Agent Catalog.
 
 **Mixing workforce and customer-facing concerns.** Designs where spokes handle both employee and customer requests violate [ID-1 Workforce/Customer Split](../id-identity/id1-workforce-customer-split.md). Separate workforce and customer-facing concerns at the hub stage; each spoke should handle only one side.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Hub Agent (Semantic Router)
+    description: "Classifies the intent of incoming user requests and routes to the appropriate spoke with an attenuated OBO token."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Hub Agent (Semantic Router) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Domain Spoke Agent
+    description: "Handles domain-specific tools and vector DB; returns a summary to the hub rather than raw data."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Domain Spoke Agent processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Capability Registry
+    description: "Central catalog that manages the list of tools each spoke exposes, integrated with GV-2 Agent Catalog."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Capability Registry processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

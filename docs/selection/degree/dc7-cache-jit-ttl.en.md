@@ -10,6 +10,32 @@ status: done
 
 When ten people ask the same question in a row, running full inference every time wastes cost. But immediately after an HR transfer, returning "this person's list of direct reports" from cache would return results based on an outdated org chart. Similarly, extending the validity of JIT-issued temporary authentication tokens ([ID-5](../../patterns/id-identity/id5-jit-scoped-credentials.md)) reduces re-authentication burden, but creates the risk that access persists after permissions are revoked. This covers how to adjust cache aggressiveness and credential TTL based on the risk of each use case.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-7
+parameter: cache_jit_ttl
+rules:
+  - condition: "data_freshness_requirement == 'tolerate_stale' AND operation_risk == 'low' AND personalized == false"
+    cache_strategy: aggressive
+    cache_ttl: long
+    jit_credential_ttl: hours
+    reason: "Stable, non-personalized, low-risk data can be cached aggressively to reduce latency and cost"
+  - condition: "data_freshness_requirement == 'real_time' OR personalized == true OR data_classification IN ['confidential', 'top_secret']"
+    cache_strategy: disabled
+    jit_credential_ttl: minutes
+    reason: "Real-time data, personalized responses, and confidential data must bypass cache; always fetch fresh with user credentials"
+  - condition: "operation_has_side_effects == true OR confidential_data_in_result == true"
+    cache_strategy: disabled
+    similarity_threshold: high
+    reason: "Side-effect operations and confidential results must not be cached; set high similarity threshold for semantic cache if used"
+  - condition: "permission_change_event_received == true OR employee_departure == true OR session_ended == true"
+    action: force_expire_jit_credentials
+    reason: "Permission changes, departures, and session end must immediately revoke JIT credentials regardless of remaining TTL"
+  - condition: "cache_holding_stale_permissions == true"
+    action: invalidate_cache_on_permission_event
+    reason: "Stale cache invalidates permission fidelity achieved by ID-4 Permission Mirror; link cache invalidation to permission change events"
+```
+
 ## Harms of Too Little or Too Much
 
 | Extreme | State | Harm |

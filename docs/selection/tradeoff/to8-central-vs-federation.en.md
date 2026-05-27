@@ -10,6 +10,27 @@ status: done
 
 If a central AI CoE tries to build every agent, it cannot keep up with front-line needs — and departments end up launching "rogue agents" on their own. Conversely, if departments are given complete autonomy, security configurations become inconsistent and auditing becomes impossible. Both extremes fail. Two-layer governance — where the center controls authentication, auditing, and cost, while departments own business logic and domain knowledge — is the only practical solution.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-8
+decision_rules:
+  - condition: "concern == 'authentication_or_audit_or_model_control_or_cost'"
+    recommendation: two_layer_governance
+    reason: "Auth, audit, model approval, cost tracking, and policy-as-code must always be centrally controlled regardless of federation level"
+  - condition: "concern == 'domain_knowledge_or_use_case_or_agent_content'"
+    recommendation: two_layer_governance
+    reason: "Business domain logic, use case definitions, and prompts should be delegated to departments via template-constrained self-service"
+  - condition: "central_builds_all_agents == true"
+    recommendation: two_layer_governance
+    reason: "Anti-pattern: central team cannot scale to all departmental needs, causing departments to spin up ungoverned shadow agents"
+  - condition: "departments_fully_autonomous == true"
+    recommendation: two_layer_governance
+    reason: "Anti-pattern: uncontrolled department autonomy leads to inconsistent security policies, information leaks, and compliance violations"
+  - condition: "setup_phase == 'initial'"
+    recommendation: two_layer_governance
+    reason: "Establish central platform (GV-1 Control Plane + ID-7 Policy-as-Code) first, then provide GV-3 department templates"
+```
+
 ## Comparison
 
 | Perspective | Centralized | Department Federation |

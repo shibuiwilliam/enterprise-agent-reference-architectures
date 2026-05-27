@@ -2,6 +2,14 @@
 title: "GV-7 Evaluation & Governance Pipeline (Evaluation CI/CD)"
 description: "An agent evaluation pipeline pattern that continuously measures quality, safety, and business fitness as ongoing evaluation in both CI and production."
 status: done
+pattern_id: GV-7
+facet: governance
+requires: ["OB-1"]
+required_by: []
+applies_when: [all_production_agent_deployments, continuously_operated_environments_with_regular_model_or_prompt_updates, regulated_industries_requiring_continuous_gv4_policy_compliance_verification]
+not_applicable_when: [temporary_poc_or_experimental_phase, extremely_simple_tasks_where_rubric_design_is_not_warranted]
+risk_tiers: [1, 2, 3, 4]
+key_technologies: [Golden Dataset, "LLM-as-a-judge", promptfoo, DeepEval, Braintrust, GitHub Actions / GitLab CI, "OB-1 Observability Lake"]
 ---
 
 # GV-7 Evaluation & Governance Pipeline (Evaluation CI/CD)
@@ -90,6 +98,50 @@ Evaluation methods are composed in multiple layers. Pre-evaluation using golden 
 
 !!! warning "Shadow Deployment Cost Overlooked"
     Shadow deployment processes production traffic through both old and new models, doubling costs during the evaluation period. Integrate with GV-8 (Cost Chargeback) to explicitly track the shadow period, and configure alerts to detect cost spikes.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Offline Evaluation Gate (CI)
+    description: "Runs golden dataset evaluation, LLM-as-judge scoring, and characteristic assertions on every PR; blocks merge on failure."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Offline Evaluation Gate (CI) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Security Evaluation (Red-Teaming)
+    description: "Searches for prompt injection, jailbreak, and data leakage paths in the security evaluation phase; results fed back to the change request."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Security Evaluation (Red-Teaming) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Production Drift Monitor
+    description: "Continuously detects quality drift, cost anomalies, and error rate increases in production; triggers GV-6 rollback on threshold breach."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Production Drift Monitor processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

@@ -10,6 +10,24 @@ status: done
 
 Indexing all internal documents in a central vector DB gives fast search. However, indexing data where viewing permissions vary per person — like Salesforce deal records — means permission changes cannot keep up, leading to incidents where "data that should not be visible is visible." Whether to choose a centralized lake or a federated Context Mesh ([KM-2](../../patterns/km-knowledge/km2-context-mesh.md)) — in practice a hybrid of "public information in the lake, confidential in the Mesh" is essential, and this covers how to draw that line.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-2
+decision_rules:
+  - condition: "data_sensitivity == 'public' AND permission_change_frequency == 'low'"
+    recommendation: central_lake
+    reason: "Public/open internal data (policies, public knowledge bases) can be indexed centrally for fast retrieval"
+  - condition: "data_sensitivity == 'confidential' OR data_type == 'personal_saas_records'"
+    recommendation: federated_mesh
+    reason: "Confidential SaaS data (Salesforce records, Workday) must be JIT-fetched with user token to avoid stale permission leaks"
+  - condition: "pre_indexed == true AND acl_required == true"
+    recommendation: central_lake
+    reason: "Pre-indexed data is acceptable if ACL is embedded with every chunk (KM-1 Access-Controlled RAG)"
+  - condition: "mix_of_public_and_confidential == true"
+    recommendation: hybrid
+    reason: "Public data via central lake for speed; confidential data via federated Mesh for permission fidelity; route via Knowledge Graph"
+```
+
 ## Comparison
 
 | Perspective | Central Vector DB / Lake | Federated Context Mesh ([KM-2](../../patterns/km-knowledge/km2-context-mesh.md)) |

@@ -2,19 +2,27 @@
 title: "KM-6 DLP & Redaction Boundary（DLP・マスキング）"
 description: "LLM・RAG・ツール実行・ログの入出力すべての境界でDLP検出・マスキング・トークナイゼーションを適用し、PII/シークレット/契約情報の外部送信とログへの機密データ混入を防ぐパターン。"
 status: done
+pattern_id: KM-6
+facet: knowledge
+requires: []
+required_by: []
+applies_when: [any_enterprise_use_case_with_possible_pii_secrets_or_contract_data, external_llm_api_in_use, gdpr_appi_or_similar_pii_processing_control_audit_required]
+not_applicable_when: [public_information_only_internal_tool_no_pii, completely_air_gapped_on_premise_no_external_transmission_possible, extremely_strict_real_time_latency_requirements_dlp_scan_bottleneck]
+risk_tiers: [2, 3, 4, 5]
+key_technologies: [Microsoft Purview, Google Cloud DLP / Sensitive Data Protection, "Presidio (Microsoft OSS)", GitGuardian, truffleHog, HashiCorp Vault Transit Secrets Engine, "Format-Preserving Encryption (FPE)", Fluentd / Logstash masking plugins]
 ---
 
 # KM-6 DLP & Redaction Boundary（DLP・マスキング）
 
 ## 概要
 
-エージェントの機密漏洩経路は「LLM への入力」だけではない。LLM の出力・RAG 結果・ツール実行結果・ログ保存——5つの境界すべてにマスキングを配置しなければ穴が残る。このパターンは、PII・秘密鍵・契約金額などを DLP で検出し、マスキングまたはトークナイゼーションで除去する。最高機密データは外部 LLM への送信自体を禁止し、社内推論基盤へルーティングする。
+エージェントの機密漏洩経路は「LLM への入力」だけではない。LLM の出力・RAG 結果・ツール実行結果・ログ保存——5つの境界すべてにマスキングを配置しなければ穴が残る。このパターンは PII・秘密鍵・契約金額などを DLP で検出し、マスキングまたはトークナイゼーションで除去する。最高機密データは外部 LLM への送信自体を禁止し、社内推論基盤へルーティングする。
 
 ## 解決する企業課題
 
 RAG で取得した顧客の個人情報や契約情報が外部 LLM に送信される事故、エージェントの出力にシークレットキーが含まれてしまう事故、詳細なデバッグログに個人情報が平文で記録される事故——これらはエンタープライズエージェントで実際に起きうる漏洩経路だ。
 
-「入力だけチェックすればよい」という思い込みが最大のリスクである。RAG で取得したドキュメントには元の文書から機密情報が含まれている可能性があり、ツール実行結果（データベースのレスポンス等）にも同様のリスクがある。LLM の出力には入力の機密情報が形を変えて出現することがあり、デバッグのためにログ基盤に送ったプロンプトとレスポンスに機密情報が平文で残留することもある。5境界すべてに制御を置く構造が必要だ。
+「入力だけチェックすればよい」という思い込みが最大のリスクだ。RAG で取得したドキュメントには元の文書の機密情報が含まれている可能性があり、ツール実行結果（データベースのレスポンス等）にも同様のリスクがある。LLM の出力には入力の機密情報が形を変えて出現することもあり、デバッグのためにログ基盤に送ったプロンプトとレスポンスに機密情報が平文で残留することもある。5境界すべてに制御を置く構造が必要だ。
 
 !!! tip "最小成立条件（MVP）"
     LLM への入力境界と出力境界の2点に正規表現ベースの PII 検出・マスキングを配置する。ツール結果・ログの境界は次フェーズで追加し、まず入出力の2境界で漏洩リスクを大幅に低減する。
@@ -58,7 +66,7 @@ flowchart LR
     LLM --> TOOL_RES --> DLP_OUT --> LOG_FILTER --> RESP
 ```
 
-マスキングには二種類のアプローチがある。一つは不可逆マスキング（PII を `[REDACTED]` に置換し、ログには元に戻らない形で保存）。もう一つはトークナイゼーション（PII を代替トークンに置換し、必要時に復元できるようボールトに保管）。後者は集計・検索が必要なユースケース向けで、復元には別途権限チェックを要する。
+マスキングには二種類のアプローチがある。まず不可逆マスキング（PII を `[REDACTED]` に置換し、ログには元に戻らない形で保存）。もう一つはトークナイゼーション（PII を代替トークンに置換し、必要時に復元できるようボールトに保管）。後者は集計・検索が必要なユースケース向けで、復元には別途権限チェックを要する。
 
 ## 向き／不向き
 
@@ -89,6 +97,50 @@ flowchart LR
 
 - マスキングしたトークンの復元ロジックにアクセス制御がないと、意味がない。復元には別途認可チェックを必須とする。
 - DLP スキャンのレイテンシが問題になる場合、非同期スキャン（先にレスポンスを返しつつ後でポストスキャンで記録する）と同期スキャン（ブロッキング）を用途で使い分ける。ただし同期が必要な高リスク操作では非同期化しない。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Input DLP Gate
+    description: "Scans user input and RAG chunks for PII and secrets before sending to the LLM; applies masking or tokenization and routes highest-classification data to an internal inference path."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Input DLP Gate の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Output DLP Gate
+    description: "Post-scans LLM output and tool results for residual sensitive data before returning to the user or writing to logs."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Output DLP Gate の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Log Filter
+    description: "Strips PII from log collection pipeline (Fluentd/Logstash) so that audit logs do not contain plaintext sensitive data."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Log Filter の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

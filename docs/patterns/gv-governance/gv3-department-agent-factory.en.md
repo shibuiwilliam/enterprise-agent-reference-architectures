@@ -2,6 +2,14 @@
 title: "GV-3 Department Agent Factory (Role Template Factory)"
 description: "A pattern for safely mass-producing agents from standard per-department, per-role templates that include policy, connector, and evaluation packs."
 status: done
+pattern_id: GV-3
+facet: governance
+requires: ["GV-1", "GV-2", "ID-4", "GV-4"]
+required_by: []
+applies_when: [ai_coe_or_platform_team_responsible_for_multi_department_deployment, thousands_of_users_requiring_systematic_per_department_agent_management, frequent_joiner_mover_leaver_cycles_where_auto_permission_tracking_reduces_ops_cost]
+not_applicable_when: [small_org_where_single_shared_agent_suffices, single_team_poc_phase]
+risk_tiers: [2, 3, 4]
+key_technologies: [YAML/JSON Template Store, "Git (GV-6)", "Low-Code Builder", "Policy Pack (ID-7)", Connector Pack, "Evaluation Pack (GV-7)", Okta, Workday]
 ---
 
 # GV-3 Department Agent Factory (Role Template Factory)
@@ -83,6 +91,50 @@ Agents derived from templates are registered in the GV-2 catalog and delivered t
 
 !!! danger "Permission Revocation Not Following Role Changes"
     When role changes for transfers or departures are not reflected in agent permissions, access to the previous department's data persists. Implement synchronization between IdP (Okta/Workday) role change events and Control Plane permission revocation, and define a maximum follow-through delay (e.g., within one hour) as an operational requirement.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Role-Based Template Store
+    description: "Git-managed YAML/JSON templates per department role (HR, Sales, CS, Finance) with bundled policy, connector, and evaluation packs."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Role-Based Template Store processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Low-Code Builder
+    description: "Allows only derivative configuration from templates; blocks any settings outside the AI CoE-defined guardrails."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Low-Code Builder processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: IdP Role Change Listener
+    description: "Receives Okta/Workday role-change events and triggers automatic permission grant/revoke in GV-1 Control Plane within a defined SLA."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during IdP Role Change Listener processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

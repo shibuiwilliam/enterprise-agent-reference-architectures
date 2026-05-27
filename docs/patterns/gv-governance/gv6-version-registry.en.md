@@ -2,6 +2,14 @@
 title: "GV-6 Version Registry (Model / Prompt / Tool / Policy / Index Versioning)"
 description: "A pattern that version-controls models, prompts, tools, policies, RAG indexes, and schemas, making every change subject to PR review, evaluation, canary release, and rollback."
 status: done
+pattern_id: GV-6
+facet: governance
+requires: ["OB-1"]
+required_by: []
+applies_when: [continuously_operated_agents_with_regular_model_updates_and_prompt_improvements, regulated_compliance_work_requiring_reproduction_of_past_behavior, multi_agent_configurations_requiring_version_combination_management]
+not_applicable_when: [short_term_throwaway_experimental_poc, completely_stateless_simple_tasks_with_no_quality_management_needed]
+risk_tiers: [2, 3, 4]
+key_technologies: [Git, MLflow Model Registry, "LaunchDarkly (Feature Flag)", Canary Deploy Infrastructure, Eval Dataset, "GV-7 Evaluation Pipeline"]
 ---
 
 # GV-6 Version Registry (Model / Prompt / Tool / Policy / Index Versioning)
@@ -86,6 +94,50 @@ Combined with feature flags, new versions can be rolled out exclusively to speci
 
 !!! warning "Rollback Granularity Too Coarse"
     Designing an all-at-once rollback causes components without problems to revert as well, cascading regressions. Design the system so that model, prompt, tool, policy, and index can each be rolled back independently.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Version Tag per Execution
+    description: "Records model@version, prompt@commit_hash, tool@version, policy@version, index@version, and schema@version in every execution log for full reproduction."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Version Tag per Execution processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: PR-Gated Change Flow
+    description: "All changes to model/prompt/tool/policy/index must pass automated GV-7 evaluation before merge; failed evaluations block the PR."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during PR-Gated Change Flow processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Canary + Auto-Rollback
+    description: "Staged rollout (1%→5%→25%→100%) with continuous quality/cost/error monitoring; auto-rollback to previous version on threshold breach."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Canary + Auto-Rollback processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

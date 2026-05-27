@@ -2,6 +2,14 @@
 title: "GV-5 Central Model Gateway (Model & Vendor Control)"
 description: "A pattern that routes all LLM calls through a single gateway to centrally control vendor approval, data residency, PII detection, cost metering, and auditing."
 status: done
+pattern_id: GV-5
+facet: governance
+requires: ["GV-1"]
+required_by: []
+applies_when: [multiple_vendors_and_models_used_in_combination, data_classification_based_routing_required, enterprise_wide_ai_platform_requiring_cost_visibility_and_compliance]
+not_applicable_when: [single_application_with_lightweight_configuration, completely_offline_air_gapped_environment, single_model_poc]
+risk_tiers: [1, 2, 3, 4, 5]
+key_technologies: [LiteLLM, Portkey Proxy, Amazon Bedrock, "Azure OpenAI (VNet integration)", vLLM, "TGI (Text Generation Inference)", "KM-6 DLP & Redaction Boundary"]
 ---
 
 # GV-5 Central Model Gateway (Model & Vendor Control)
@@ -82,6 +90,50 @@ flowchart TB
 - Putting message bodies directly into the logging platform creates huge volumes, high cost, and PII risk. Offload bodies to storage and send only metadata to audit (three-layer separation).
 - To handle silent model updates by vendors, integrate with [GV-6 Version Registry](gv6-version-registry.md) to record model versions.
 - Design connection pooling, caching, and asynchronous processing appropriately so Gateway latency does not impact business operations.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Model Approval Check
+    description: "Validates that the requested model is on the approved allowlist; blocks calls to unapproved or deprecated models."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Model Approval Check processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Data Classification Router
+    description: "Routes top-secret classified requests to VPC/on-premises inference and general data requests to external API providers."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Data Classification Router processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Token & Cost Meter
+    description: "Records per-request token counts and cost with cost_center tag; feeds GV-8 Cost Quota & Chargeback for department-level aggregation."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Token & Cost Meter processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

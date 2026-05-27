@@ -10,6 +10,27 @@ status: done
 
 If you've already built a Salesforce integration with MuleSoft or Workato, rewriting it from scratch is wasteful. However, be cautious about whether existing connectors are designed to "hit all APIs with a single admin-privileged service account." If per-user permission isolation is not possible, data beyond the user's permissions can be accessed through the agent. The decision to reuse existing assets can only be made after verifying authorization granularity.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-9
+decision_rules:
+  - condition: "existing_ipaas_connector == true AND authorization_granularity_verified == true AND audit_trail_linkable == true"
+    recommendation: ipaas_reuse
+    reason: "Reuse existing iPaaS assets where authorization granularity and audit trail requirements are verified as met"
+  - condition: "existing_ipaas_connector == true AND uses_admin_service_account == true"
+    recommendation: custom_build
+    reason: "iPaaS connectors embedding admin-level service accounts cannot enforce user-level permission fidelity; reuse is disqualified"
+  - condition: "new_integration_point == true"
+    recommendation: mcp_gateway
+    reason: "New integration points should be MCP-standardized (IN-1) to enable future swap and extension with unified tool definitions"
+  - condition: "ipaas_obo_support == false AND obo_required == true"
+    recommendation: hybrid_validated_ipaas
+    reason: "If iPaaS lacks User OBO (RFC 8693) support, restrict reuse scope and add MCP Gateway for permission-controlled operations"
+  - condition: "authorization_granularity_not_verified == true"
+    recommendation: hybrid_validated_ipaas
+    reason: "Never skip authorization granularity verification; unverified adoption preserves admin service account anti-pattern"
+```
+
 ## Comparison
 
 | Perspective | Custom Connector | Existing iPaaS Reuse ([IN-4](../../patterns/in-integration/in4-existing-ipaas-reuse.md)) |

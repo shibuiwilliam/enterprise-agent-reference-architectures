@@ -2,6 +2,14 @@
 title: "RT-8 Durable Enterprise Agent Workflow (Durable Workflow)"
 description: "A pattern for designing long-running agent processes — from minutes to hours — as durable workflows that continue without interruption across worker failures, approval waits, and restarts."
 status: done
+pattern_id: RT-8
+facet: runtime
+requires: ["OB-1"]
+required_by: ["RT-4", "RT-7", "OB-2"]
+applies_when: [processes_taking_minutes_to_hours_including_human_approval_wait, high_availability_requirements_where_worker_failures_must_not_lose_work, strict_idempotency_and_audit_trail_requirements_in_regulated_industries]
+not_applicable_when: [real_time_responses_required_within_one_to_three_seconds, small_projects_where_workflow_engine_infrastructure_cost_not_justified]
+risk_tiers: [2, 3, 4]
+key_technologies: [Temporal, AWS Step Functions, Azure Durable Functions, LangGraph Persistence, SQS, Azure Service Bus, RabbitMQ]
 ---
 
 # RT-8 Durable Enterprise Agent Workflow (Durable Workflow)
@@ -83,6 +91,50 @@ Budget, time, and step count limits are built into the workflow definition. When
 
 !!! warning "Workflow history bloat"
     Long-duration, many-step workflows can reach history sizes of several MB to several GB. Understand engine-specific constraints in advance — Temporal's ContinueAsNew, Step Functions' Map state parallelism limits — and plan history partitioning and archiving at the design stage.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Workflow Definition (State Machine)
+    description: "Explicitly defined state transitions where each state is triggered by events; activity boundary results are persisted to the durable store."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Workflow Definition (State Machine) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Activity Function
+    description: "Wraps LLM calls and external API calls; implements idempotent execution and stores results in workflow history to avoid re-invocation on replay."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Activity Function processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Budget / Step Limit Guard
+    description: "Enforces maximum step count, execution time, and cost limits in the workflow definition; triggers safe termination on breach."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Budget / Step Limit Guard processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

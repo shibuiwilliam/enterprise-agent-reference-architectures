@@ -2,6 +2,14 @@
 title: "ID-4 Permission Mirror & Least-of Faithful Access"
 description: "A pattern that replicates each SaaS's permissions on the agent platform and always reduces the effective permission to the minimum of agent capability ∩ user entitlement ∩ policy."
 status: done
+pattern_id: ID-4
+facet: identity
+requires: []
+required_by: ["KM-1"]
+applies_when: [enterprise_rag_or_cross_system_search_agents, frequent_permission_changes_from_departures_or_transfers, obo_delegation_unsupported_legacy_saas_or_custom_systems_in_mix]
+not_applicable_when: [extremely_simple_permission_small_environment, public_information_only_use_cases, single_saas_completable_with_obo_obo_is_preferred]
+risk_tiers: [2, 3, 4]
+key_technologies: [ACL Sync, SCIM Group Sync, SaaS Admin API, "Zanzibar-based ReBAC", ABAC, "PDP (ID-6)"]
 ---
 
 # ID-4 Permission Mirror & Least-of Faithful Access
@@ -101,6 +109,50 @@ If the intersection of all three is empty, access is denied. Recording which ele
 - Permission Mirror is **a cache, not an authoritative source**. Treat the SaaS-side permissions as ground truth and have a mechanism to detect and correct divergences.
 - Set synchronization frequency according to risk. HR transfers warrant daily sync; changes to confidential document sharing should approach real time.
 - Placing all company data into a single vector database for fast search is prohibited. Always baseline on ACL-aware indexing ([KM-1](../km-knowledge/km1-access-controlled-rag.md)) or federation ([KM-2](../km-knowledge/km2-context-mesh.md)).
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: ACL Sync Pipeline
+    description: "Synchronizes SaaS ACLs (Salesforce, Box, Google Drive) into the Permission Mirror; near-real-time for sensitive documents, daily for org-wide role changes."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during ACL Sync Pipeline processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Effective Permission Calculator
+    description: "Computes agent_capability ∩ user_entitlement ∩ policy_constraint before each RAG query or tool call; records which factor was the limiting constraint in audit."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Effective Permission Calculator processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Stale-Access Monitor
+    description: "Detects and alerts when Mirror-to-source divergence exceeds threshold; triggers forced re-sync on departure/transfer events."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Stale-Access Monitor processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

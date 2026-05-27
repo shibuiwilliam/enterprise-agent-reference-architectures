@@ -6,7 +6,7 @@ status: done
 
 # 「程度」の選定基準
 
-連続量パラメータは、過小・過大の両極が害になる。本番トレース（[OB-1](../../patterns/ob-observability/ob1-observability-lake.md)）と評価（[GV-7](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)）で継続調整する前提で、出発点と判断軸を示す。
+連続量パラメータは、絞りすぎても緩めすぎても問題が起きる。本番トレース（[OB-1](../../patterns/ob-observability/ob1-observability-lake.md)）と評価（[GV-7](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)）で継続的に調整することを前提に、各パラメータの出発点と判断軸を示す。
 
 | ID | 名称 | 概要 |
 |---|---|---|

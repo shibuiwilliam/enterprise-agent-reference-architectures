@@ -8,25 +8,25 @@ status: done
 
 ## 概要
 
-「全従業員が共通で使う基盤」として、Gateway・IdP連携・モデルゲートウェイ・レジストリ・観測基盤・監査がこの軸に該当する。個別の部署がそれぞれ構築するのではなく、中央のプラットフォームチームが「舗装路とガードレール」として全社に提供する。部署エージェントや個人コパイロットはこの基盤の上に乗ることで、認証・認可・コスト管理・監査を自前で実装せずに済む。基盤が整っていれば、部署は業務ロジックの構築に集中できる。
+「全従業員が共通で使う基盤」として、Gateway・IdP連携・モデルゲートウェイ・レジストリ・観測基盤・監査がこの軸に該当する。個別の部署がそれぞれ構築するのではなく、中央のプラットフォームチームが「舗装路とガードレール」として全社に提供する。部署エージェントや個人コパイロットはこの基盤の上に乗ることで、認証・認可・コスト管理・監査を自前で実装せずに済む。基盤が整っていれば部署は業務ロジックの構築に専念できる。
 
 ## この軸に配置するパターン
 
 ### 体験・ゲートウェイ（EX）
 
-[EX-1 Enterprise Agent Gateway](../../patterns/ex-experience/ex1-enterprise-agent-gateway.md)はすべてのエージェントリクエストの統一入口である。認証・意図分類・リスクスコアリング・レートリミット・監査入口をここで一括処理する。全社で1つ（または冗長化した複数）のGatewayを運用することで、部署ごとに別々のフロントドアを作る手間と漏れを防ぐ。
+[EX-1 Enterprise Agent Gateway](../../patterns/ex-experience/ex1-enterprise-agent-gateway.md)はすべてのエージェントリクエストの統一入口だ。認証・意図分類・リスクスコアリング・レートリミット・監査入口をここで一括処理する。全社で1つ（または冗長化した複数）のGatewayを運用することで、部署ごとに別々のフロントドアを作る手間と漏れを防げる。
 
 ### アイデンティティ・信頼（ID）
 
-[ID-1 二面分離](../../patterns/id-identity/id1-workforce-customer-split.md)は従業員面と顧客面のIdPを物理的に分ける原則であり、全社設計として最初に確立すべき基盤である。[ID-2 OBO委譲](../../patterns/id-identity/id2-identity-federation-obo.md)のToken Exchange基盤も中央で構築し、すべての部署エージェントが本人権限縮退トークンを取得できるよう整備する。[ID-6 Zero-Trust PDP/PEP](../../patterns/id-identity/id6-zero-trust-pdp-pep.md)はポリシー決定ポイントを中央に集約し、全エージェントへのアクセス判定を統一的に処理する。[ID-7 Policy-as-Code](../../patterns/id-identity/id7-policy-as-code-guardrail.md)はOPA等のポリシーエンジンを全社共通基盤として運用する。
+[ID-1 二面分離](../../patterns/id-identity/id1-workforce-customer-split.md)は従業員面と顧客面の IdP を物理的に分ける原則であり、全社設計として最初に確立すべき基盤だ。[ID-2 OBO委譲](../../patterns/id-identity/id2-identity-federation-obo.md)のToken Exchange基盤も中央で構築し、すべての部署エージェントが本人権限縮退トークンを取得できるよう整備する。[ID-6 Zero-Trust PDP/PEP](../../patterns/id-identity/id6-zero-trust-pdp-pep.md)はポリシー決定ポイントを中央に集約し、全エージェントへのアクセス判定を統一的に処理する。[ID-7 Policy-as-Code](../../patterns/id-identity/id7-policy-as-code-guardrail.md)は OPA 等のポリシーエンジンを全社共通基盤として運用する。
 
 ### 制御・ガバナンス（GV）
 
-[GV-1 Registry](../../patterns/gv-governance/gv1-agent-control-plane.md)はエージェントのライフサイクル（登録・有効化・無効化・バージョン管理）を管理する中央台帳である。全社で稼働するエージェントを一覧把握できなければ、ガバナンスは成立しない。[GV-5 Central Model Gateway](../../patterns/gv-governance/gv5-central-model-gateway.md)はモデル・ベンダー選択とコスト統制を全社で一元化する。[GV-6 Version Registry](../../patterns/gv-governance/gv6-version-registry.md)はモデル・プロンプト・ポリシーの版管理を全社共通で行う。[GV-7 Eval Pipeline](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)は評価CI/CDを共通基盤として提供し、部署ごとの評価コストを削減する。[GV-9 Incident Response](../../patterns/gv-governance/gv9-incident-response-kill-switch.md)は全社規模のエージェント停止・緊急対応を中央で担う。
+[GV-1 Registry](../../patterns/gv-governance/gv1-agent-control-plane.md)はエージェントのライフサイクル（登録・有効化・無効化・バージョン管理）を管理する中央台帳だ。全社で稼働するエージェントを一覧把握できなければガバナンスは成立しない。[GV-5 Central Model Gateway](../../patterns/gv-governance/gv5-central-model-gateway.md)はモデル・ベンダー選択とコスト統制を全社で一元化する。[GV-6 Version Registry](../../patterns/gv-governance/gv6-version-registry.md)はモデル・プロンプト・ポリシーの版管理を全社共通で行う。[GV-7 Eval Pipeline](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)は評価CI/CDを共通基盤として提供し、部署ごとの評価コストを削減する。[GV-9 Incident Response](../../patterns/gv-governance/gv9-incident-response-kill-switch.md)は全社規模のエージェント停止・緊急対応を中央で担う。
 
 ### 観測・評価・監査（OB）
 
-[OB-1 Observability Lake](../../patterns/ob-observability/ob1-observability-lake.md)はトレース・メトリクス・ログを一元集約する。部署ごとに分散させると横断的な障害診断ができなくなる。[OB-2 統一監査・系譜](../../patterns/ob-observability/ob2-unified-audit-lineage.md)は「人＋エージェント＋システム」の三者帰責を全社共通フォーマットで記録し、コンプライアンス要件を充足する。
+[OB-1 Observability Lake](../../patterns/ob-observability/ob1-observability-lake.md)はトレース・メトリクス・ログを一元集約する。部署ごとに分散させると横断的な障害診断が難しくなる。[OB-2 統一監査・系譜](../../patterns/ob-observability/ob2-unified-audit-lineage.md)は「人＋エージェント＋システム」の三者帰責を全社共通フォーマットで記録し、コンプライアンス要件を充足する。
 
 ### 統合・ツール（IN）
 

@@ -1,0 +1,2472 @@
+# patterns-index.yaml — Machine-readable index of all 45 architecture patterns
+# This file is the structured entry point for coding agents.
+
+patterns:
+- id: EX-1
+  name: Enterprise Agent Gateway
+  name_ja: Enterprise Agent Gateway（統一フロントドア）
+  facet: experience
+  file: patterns/ex-experience/ex1-enterprise-agent-gateway.md
+  summary: 'A single entry point through which all agent requests pass, applying authentication, intent classification, risk
+    assessment, rate control, and audit entry in one place regardless of channel (Slack, Web, SaaS embedded, API), ensuring
+    consistent governance quality even as channels increase.
+
+    '
+  summary_ja: 'すべてのエージェント要求が通る単一入口で認証・分類・リスク判定・レート制御・監査エントリを 一元適用する。チャネル（Slack/Web/SaaS埋め込み/API）が増えてもセキュリティと統制品質が下がらず、バースト吸収も担う。
+
+    '
+  requires:
+  - ID-1
+  - ID-2
+  - ID-6
+  required_by: []
+  applies_when:
+  - multiple_channels_and_large_scale_enterprise_deployment
+  - governance_and_audit_requirements_exist
+  - workforce_and_customer_channel_separation_required
+  not_applicable_when:
+  - single_poc_with_one_channel_only
+  - completely_isolated_experimental_environment
+  - single_channel_small_scale_usage
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Kong
+  - Apigee
+  - AWS API Gateway
+  - OIDC
+  - SAML 2.0
+  - Risk Scoring
+  - OpenTelemetry Trace ID
+  - Token Bucket
+  saas_targets:
+  - Slack
+  - Salesforce
+  - ServiceNow
+  interfaces:
+  - name: Authentication & Risk Classification
+    description: Validates OIDC/SAML identity tokens, classifies request intent and risk tier, and assigns a correlation ID
+      before forwarding to the backend runtime.
+  - name: Rate Control & Burst Absorption
+    description: Token-bucket rate limiter that absorbs enterprise-wide peak bursts and coordinates with IN-3 Rate/Quota Broker
+      for SaaS-side quota limits.
+  - name: Audit Entry Point
+    description: Emits a structured audit record per request (actor ID, channel, intent, risk tier, correlation ID) to OB-1
+      Observability Lake.
+  value_kpis:
+  - shadow_ai_incident_count
+  - channel_governance_gap_count
+  - peak_burst_sla_breach_count
+- id: EX-2
+  name: Embedded Workbench Channel Placement
+  name_ja: 業務埋め込み＋独立ワークベンチ（チャネル配置）
+  facet: experience
+  file: patterns/ex-experience/ex2-embedded-vs-portal.md
+  summary: 'Short daily tasks are served through embeddings in existing business tools (Slack, Teams, Salesforce), while cross-system
+    investigation, long-running jobs, and approval flows are served through a standalone workbench that shows plan, progress,
+    evidence, approval, and diff on a single screen; both share the same EX-1 Gateway and backend runtime.
+
+    '
+  summary_ja: '日常の短い問い合わせは業務ツール（Slack・Teams・Salesforce）に埋め込み、横断調査・長時間タスク・承認フローは計画・根拠・承認・差分を一画面で確認できる独立ワークベンチで提供する。両者は同一の EX-1
+    Gateway とバックエンドを共有する。
+
+    '
+  requires:
+  - EX-1
+  - EX-3
+  required_by: []
+  applies_when:
+  - slack_teams_salesforce_are_the_central_daily_tools
+  - cross_system_long_running_or_approval_workflows_are_common
+  - incremental_ui_expansion_starting_with_embedded_then_adding_workbench
+  not_applicable_when:
+  - business_tools_are_fragmented_with_too_many_embedding_targets
+  - all_tasks_are_short_and_single_system_no_standalone_portal_needed
+  - poc_stage_where_ui_shape_should_not_be_fixed
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  key_technologies:
+  - Slack Bolt SDK
+  - Block Kit
+  - Microsoft Bot Framework
+  - Adaptive Cards
+  - Lightning Web Components (LWC)
+  - Salesforce Embedded Service
+  - ServiceNow Service Portal Widget
+  - React/Vue SPA
+  - Server-Sent Events (SSE)
+  saas_targets:
+  - Slack
+  - Microsoft Teams
+  - Salesforce
+  - ServiceNow
+  interfaces:
+  - name: Embedded UI (Business Tool)
+    description: Lightweight widget injected into Slack, Teams, or Salesforce that inherits the current business context and
+      submits requests to EX-1 Gateway.
+  - name: Standalone Workbench
+    description: React/Vue SPA providing streaming progress, approval actions, and diff view for long-running or cross-system
+      tasks.
+  - name: Channel Adapter
+    description: Normalizes each platform's event format and forwards to EX-1 Gateway; absorbs UI differences so the backend
+      remains channel-agnostic.
+  value_kpis:
+  - agent_adoption_rate_pct
+  - daily_active_user_retention_rate_pct
+  - context_switch_overhead_reduction_minutes
+- id: EX-3
+  name: Channel-Agnostic Frontdoor
+  name_ja: チャネル非依存フロントドア
+  facet: experience
+  file: patterns/ex-experience/ex3-channel-agnostic-frontdoor.md
+  summary: 'Channel adapters normalize input differences from Slack, Teams, Web, and Mobile so that the backend execution
+    path, permission checks, and audit logs are identical for every channel; sessions can continue across channels (e.g.,
+    start on Slack, resume on Web).
+
+    '
+  summary_ja: 'チャネルアダプターが Slack・Teams・Web・モバイルの入力差を吸収し、その先はどのチャネルでも 同一の実行パス・権限チェック・監査ログを通る。セッションはチャネルをまたいで継続でき、チャネル追加の限界コストを下げる。
+
+    '
+  requires:
+  - EX-1
+  - ID-2
+  required_by: []
+  applies_when:
+  - incrementally_adding_channels_to_an_existing_agent
+  - cross_channel_session_continuity_required
+  - unified_permission_history_and_audit_management_needed
+  not_applicable_when:
+  - permanently_using_single_channel_only
+  - channels_are_completely_independent_services_with_no_session_sharing
+  - cross_channel_session_sharing_not_needed_for_independent_tasks
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  key_technologies:
+  - Slack Bolt SDK
+  - Bot Framework (Teams)
+  - REST/gRPC Adapter
+  - Redis Session Store
+  - JWT Session Claims
+  - OIDC Federation
+  saas_targets:
+  - Slack
+  - Microsoft Teams
+  interfaces:
+  - name: Channel Adapter
+    description: Converts channel-specific authentication tokens to a unified identity, normalizes input format, and forwards
+      with a unified session ID to EX-1 Gateway.
+  - name: Unified Session Store
+    description: Redis-backed session store that enables cross-channel session continuity; session handoff requires re-authentication
+      or signature verification.
+  - name: Unified Audit Logger
+    description: Ensures cross-channel operations appear in a single audit trail (OB-2), preventing session fragmentation
+      from hiding activity.
+  value_kpis:
+  - new_channel_backend_modification_time_hours
+  - cross_channel_session_continuity_rate_pct
+  - security_gap_per_channel_count
+- id: EX-4
+  name: Trust & Value UX
+  name_ja: 信頼と価値実感のUX（定着を支える体験設計）
+  facet: experience
+  file: patterns/ex-experience/ex4-trust-value-ux.md
+  summary: 'Agent output is accompanied by source citations, confidence labels, and freshness timestamps; high-risk operations
+    require staged confirmation; progress is displayed in real time; and completed tasks show estimated time savings to build
+    user trust and sustain adoption.
+
+    '
+  summary_ja: 'エージェントの出力に根拠と確信度を付与し、高リスク操作は段階的確認を求め、リアルタイム進捗を表示し、節約時間を即座にフィードバックすることで利用者の信頼を獲得し定着率を高める体験パターン。
+
+    '
+  requires:
+  - EX-1
+  - KM-1
+  - RT-3
+  required_by: []
+  applies_when:
+  - enterprise_wide_rollout_phase_where_adoption_rate_is_a_challenge
+  - agent_output_used_as_basis_for_business_decisions
+  - initial_deployment_requiring_employee_trust_building
+  not_applicable_when:
+  - poc_stage_with_only_a_few_power_users
+  - fully_automated_backend_processing_with_no_human_review_of_results
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  key_technologies:
+  - RAG Source Tracking (KM-1)
+  - LLM Log Probabilities
+  - Source Consistency Check
+  - WebSocket Streaming
+  - Usage Metrics Collection (OB-1)
+  - A/B Testing Infrastructure
+  saas_targets: []
+  interfaces:
+  - name: Citation & Confidence Layer
+    description: Attaches source document links, confidence labels (high/estimated/insufficient), and freshness timestamps
+      to agent responses using KM-1 retrieval metadata.
+  - name: Progressive Confirmation UI
+    description: For RT-3 Tier-2+ operations, presents operation details before execution and requests user modification or
+      approval.
+  - name: Value Feedback Dashboard
+    description: Displays estimated time saved per completed task and cumulative weekly/monthly savings, tied to GV-10 measurement
+      data.
+  value_kpis:
+  - agent_adoption_rate_pct
+  - agent_retention_dau_mau_ratio
+  - user_trust_score_nps
+- id: GV-1
+  name: Enterprise Agent Control Plane
+  name_ja: Enterprise Agent Control Plane（レジストリ／ライフサイクル）
+  facet: governance
+  file: patterns/gv-governance/gv1-agent-control-plane.md
+  summary: 'All agents are registered with owner, purpose, data scope, risk tier, and approval policy; lifecycle from application
+    through review, publication, versioning, and retirement is centrally managed; unregistered agents are blocked at the gateway
+    so shadow AI cannot run.
+
+    '
+  summary_ja: '社内の全エージェントを所有者・目的・データ範囲・リスク階層とともに登録し、審査・版管理・廃止まで 一元管理する制御プレーン。未登録エージェントはゲートウェイで遮断し野良エージェントの増殖を止める。
+
+    '
+  requires:
+  - ID-7
+  required_by:
+  - GV-2
+  - GV-8
+  - OB-2
+  applies_when:
+  - agents_exceed_three_and_multiple_teams_are_using_them
+  - enterprise_wide_deployment_as_common_platform
+  - audit_and_compliance_requirements_exist
+  not_applicable_when:
+  - individual_poc_or_experimental_phase
+  - single_department_with_only_one_or_two_agents
+  - isolated_research_environment
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Agent Registry
+  - ServiceNow CMDB Extension
+  - Policy-as-Code (ID-7)
+  - Model Gateway (GV-5)
+  saas_targets:
+  - ServiceNow
+  interfaces:
+  - name: Agent Registry
+    description: Stores per-agent attributes (owner, business_purpose, allowed_tools, data_domains, risk_tier, approval_policy,
+      cost_budget) with versioning and lifecycle state.
+  - name: Lifecycle Review Gate
+    description: Routes new and changed agent registrations through security, legal, and data protection review; adjusts review
+      depth by risk tier.
+  - name: Execution Enforcement
+    description: Connects to Model Gateway (GV-5) and Agent Gateway (EX-1) so unregistered agents are physically blocked from
+      executing.
+  value_kpis:
+  - shadow_ai_agent_count
+  - agent_owner_identification_time_minutes
+  - duplicate_agent_development_reduction_pct
+- id: GV-2
+  name: Agent Catalog & Marketplace
+  name_ja: Agent Catalog & Marketplace（社内カタログ）
+  facet: governance
+  file: patterns/gv-governance/gv2-agent-catalog-marketplace.md
+  summary: 'Reviewed agents, skills, and tools are listed in an internal app-store-style catalog with purpose, owner, risk
+    tier, estimated cost, quality score, and version so employees can discover, request access, and clone templates from a
+    single window, eliminating duplicate development and unreviewed usage.
+
+    '
+  summary_ja: '審査済みエージェント・スキル・ツールを社内アプリストアとして一覧し、目的・所有者・リスク・コスト・品質スコアを確認してから利用申請できる社内カタログ。重複開発排除と審査済みエージェントへの誘導を単一窓口で実現する。
+
+    '
+  requires:
+  - GV-1
+  required_by: []
+  applies_when:
+  - agents_deployed_across_multiple_departments
+  - discovery_duplication_and_unreviewed_usage_are_problematic
+  - platform_team_exists_for_centralized_access_request_approval_and_permission_management
+  not_applicable_when:
+  - single_team_single_purpose_internal_operation_only
+  - poc_stage_with_only_a_few_agents_gv1_registry_alone_is_sufficient
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Backstage (Internal Developer Portal)
+  - ServiceNow
+  - Jira Service Management
+  - Usage Analytics
+  - Quality Rating
+  saas_targets:
+  - ServiceNow
+  - Jira Service Management
+  interfaces:
+  - name: Catalog UI/API
+    description: Search and detail view exposing purpose, owner, risk tier, cost estimate, quality score, version, and approval
+      status for each agent.
+  - name: Access Request Workflow
+    description: Structured access request requiring purpose, expiry, and data access scope; integrates with existing approval
+      systems (ServiceNow, Jira SM).
+  - name: Usage Analytics & Quality Score
+    description: Aggregates execution logs, token consumption, and error rates into a quality score updated on each GV-7 evaluation
+      run.
+  value_kpis:
+  - duplicate_agent_development_reduction_pct
+  - time_to_discover_existing_agent_minutes
+  - unreviewed_agent_usage_incident_count
+- id: GV-3
+  name: Department Agent Factory
+  name_ja: Department Agent Factory（役割テンプレート工場）
+  facet: governance
+  file: patterns/gv-governance/gv3-department-agent-factory.md
+  summary: 'Per-department and per-role standard templates bundled with policy packs, connector packs, and evaluation packs
+    are used to mass-produce safe agents; when an employee joins, transfers, or leaves, tool and data permissions automatically
+    follow IdP role changes with no manual steps.
+
+    '
+  summary_ja: '部門・役割ごとにポリシー・コネクタ・評価パックをセットにした標準テンプレートから安全なエージェントを量産する。Okta/Workday のロール変更に連動して権限付与・剥奪を自動追従させ、取り残しを防ぐ。
+
+    '
+  requires:
+  - GV-1
+  - GV-2
+  - ID-4
+  - GV-4
+  required_by: []
+  applies_when:
+  - ai_coe_or_platform_team_responsible_for_multi_department_deployment
+  - thousands_of_users_requiring_systematic_per_department_agent_management
+  - frequent_joiner_mover_leaver_cycles_where_auto_permission_tracking_reduces_ops_cost
+  not_applicable_when:
+  - small_org_where_single_shared_agent_suffices
+  - single_team_poc_phase
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - YAML/JSON Template Store
+  - Git (GV-6)
+  - Low-Code Builder
+  - Policy Pack (ID-7)
+  - Connector Pack
+  - Evaluation Pack (GV-7)
+  - Okta
+  - Workday
+  saas_targets:
+  - Okta
+  - Workday
+  - Salesforce
+  - Jira
+  interfaces:
+  - name: Role-Based Template Store
+    description: Git-managed YAML/JSON templates per department role (HR, Sales, CS, Finance) with bundled policy, connector,
+      and evaluation packs.
+  - name: Low-Code Builder
+    description: Allows only derivative configuration from templates; blocks any settings outside the AI CoE-defined guardrails.
+  - name: IdP Role Change Listener
+    description: Receives Okta/Workday role-change events and triggers automatic permission grant/revoke in GV-1 Control Plane
+      within a defined SLA.
+  value_kpis:
+  - new_department_agent_deployment_lead_time_days
+  - permission_residual_after_departure_incident_count
+  - template_reuse_rate_pct
+- id: GV-4
+  name: Industry Policy Pack
+  name_ja: Industry Policy Pack（業界ポリシーパック）
+  facet: governance
+  file: patterns/gv-governance/gv4-industry-policy-pack.md
+  summary: 'Industry-specific regulations, customs, and audit requirements are coded as reusable policy packs that are deployed
+    simultaneously to the Policy-as-Code engine, evaluation CI, data classification rules, and approval workflow conditions;
+    a pack update propagates regulation changes to all agents without touching individual prompts.
+
+    '
+  summary_ja: '業界特有の規制・慣習・監査要件を再利用可能なポリシーパックとしてコード化し、Policy-as-Code・評価CI・データ分類・承認ルールへ同時展開する。パック更新だけで規制改正が全エージェントに伝播し、プロンプト依存の脆弱な対応を排除する。
+
+    '
+  requires:
+  - ID-6
+  - ID-7
+  required_by: []
+  applies_when:
+  - strictly_regulated_industries_with_regular_external_audits
+  - global_enterprises_requiring_simultaneous_multi_regulation_compliance
+  - many_use_cases_requiring_consistent_regulatory_compliance
+  not_applicable_when:
+  - internal_support_ai_only_with_minimal_regulatory_impact
+  - single_team_limited_use_case_where_manual_check_is_more_practical
+  risk_tiers:
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - OPA (Open Policy Agent) / Rego
+  - YAML Policy Definition
+  - Git
+  - GV-7 Evaluation Pipeline
+  - ServiceNow GRC
+  - OneTrust
+  - GV-6 Version Registry
+  saas_targets:
+  - ServiceNow
+  interfaces:
+  - name: Policy Pack Definition
+    description: YAML/OPA-format package per industry/regulation containing prohibited operations, data classification rules,
+      retention periods, approval requirements, and audit evidence requirements.
+  - name: Policy Engine Deployment (ID-7)
+    description: Deploys pack rules to the ID-7 Policy Engine so they are enforced at runtime independently of agent prompts.
+  - name: Evaluation Rubric (GV-7)
+    description: Pack-bundled evaluation rubrics and red-team scenarios loaded into the GV-7 CI pipeline to continuously measure
+      regulatory compliance.
+  value_kpis:
+  - compliance_violation_incident_count
+  - regulatory_audit_preparation_time_hours
+  - policy_update_propagation_time_hours
+- id: GV-5
+  name: Central Model Gateway
+  name_ja: Central Model Gateway（モデル・ベンダー統制）
+  facet: governance
+  file: patterns/gv-governance/gv5-central-model-gateway.md
+  summary: 'All LLM calls are routed through a single model gateway that enforces an approved-model allowlist, routes top-secret
+    data to on-premises/VPC inference and general data to external APIs, detects PII, measures token and cost per request,
+    and records model version and data classification in audit metadata.
+
+    '
+  summary_ja: '全LLM呼び出しを単一ゲートウェイ経由にし、承認済みモデルのみ許可、極秘データはVPC内推論・一般データは外部APIへルーティング。PII検出・コスト計測・モデル版記録・監査を一箇所で集中制御する。
+
+    '
+  requires:
+  - GV-1
+  required_by: []
+  applies_when:
+  - multiple_vendors_and_models_used_in_combination
+  - data_classification_based_routing_required
+  - enterprise_wide_ai_platform_requiring_cost_visibility_and_compliance
+  not_applicable_when:
+  - single_application_with_lightweight_configuration
+  - completely_offline_air_gapped_environment
+  - single_model_poc
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - LiteLLM
+  - Portkey Proxy
+  - Amazon Bedrock
+  - Azure OpenAI (VNet integration)
+  - vLLM
+  - TGI (Text Generation Inference)
+  - KM-6 DLP & Redaction Boundary
+  saas_targets: []
+  interfaces:
+  - name: Model Approval Check
+    description: Validates that the requested model is on the approved allowlist; blocks calls to unapproved or deprecated
+      models.
+  - name: Data Classification Router
+    description: Routes top-secret classified requests to VPC/on-premises inference and general data requests to external
+      API providers.
+  - name: Token & Cost Meter
+    description: Records per-request token counts and cost with cost_center tag; feeds GV-8 Cost Quota & Chargeback for department-level
+      aggregation.
+  value_kpis:
+  - unauthorized_external_llm_transmission_incident_count
+  - llm_cost_visibility_rate_pct
+  - model_version_audit_coverage_pct
+- id: GV-6
+  name: Version Registry
+  name_ja: Version Registry（モデル/プロンプト/ツール/ポリシー/索引の版管理）
+  facet: governance
+  file: patterns/gv-governance/gv6-version-registry.md
+  summary: 'Model, prompt, tool, policy, RAG index, and schema versions are each tagged per execution log; changes go through
+    PR review and automated evaluation (GV-7) before merge; production rollout uses canary with auto-rollback on quality/cost/error
+    threshold breach, enabling full reproduction of past behavior from a run ID.
+
+    '
+  summary_ja: 'モデル・プロンプト・ツール・ポリシー・RAG索引・スキーマをバージョン管理し、PR・eval・カナリア・ロールバックの対象にする。実行IDからバージョンセット全体を取得して過去挙動を再現できる。
+
+    '
+  requires:
+  - OB-1
+  required_by: []
+  applies_when:
+  - continuously_operated_agents_with_regular_model_updates_and_prompt_improvements
+  - regulated_compliance_work_requiring_reproduction_of_past_behavior
+  - multi_agent_configurations_requiring_version_combination_management
+  not_applicable_when:
+  - short_term_throwaway_experimental_poc
+  - completely_stateless_simple_tasks_with_no_quality_management_needed
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Git
+  - MLflow Model Registry
+  - LaunchDarkly (Feature Flag)
+  - Canary Deploy Infrastructure
+  - Eval Dataset
+  - GV-7 Evaluation Pipeline
+  saas_targets: []
+  interfaces:
+  - name: Version Tag per Execution
+    description: Records model@version, prompt@commit_hash, tool@version, policy@version, index@version, and schema@version
+      in every execution log for full reproduction.
+  - name: PR-Gated Change Flow
+    description: All changes to model/prompt/tool/policy/index must pass automated GV-7 evaluation before merge; failed evaluations
+      block the PR.
+  - name: Canary + Auto-Rollback
+    description: Staged rollout (1%→5%→25%→100%) with continuous quality/cost/error monitoring; auto-rollback to previous
+      version on threshold breach.
+  value_kpis:
+  - silent_quality_degradation_detection_time_hours
+  - mean_time_to_rollback_minutes
+  - audit_behavior_reproduction_success_rate_pct
+- id: GV-7
+  name: Evaluation & Governance Pipeline
+  name_ja: Evaluation & Governance Pipeline（評価CI/CD）
+  facet: governance
+  file: patterns/gv-governance/gv7-evaluation-governance-pipeline.md
+  summary: 'A multi-stage pipeline from change request through offline evaluation (golden dataset, LLM-as-judge, rubric),
+    security evaluation (red-teaming, injection testing), policy evaluation (GV-4), shadow deploy, canary, production monitoring,
+    and feedback loop provides continuous quality, safety, and compliance measurement for all agents.
+
+    '
+  summary_ja: '変更要求からオフライン評価・セキュリティ評価・シャドーデプロイ・カナリア・本番監視・フィードバックループまでをパイプラインとして設計し、ルーブリック・LLM-as-judge・レッドチーミング・人手レビューで品質を継続計測する。
+
+    '
+  requires:
+  - OB-1
+  required_by: []
+  applies_when:
+  - all_production_agent_deployments
+  - continuously_operated_environments_with_regular_model_or_prompt_updates
+  - regulated_industries_requiring_continuous_gv4_policy_compliance_verification
+  not_applicable_when:
+  - temporary_poc_or_experimental_phase
+  - extremely_simple_tasks_where_rubric_design_is_not_warranted
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Golden Dataset
+  - LLM-as-a-judge
+  - promptfoo
+  - DeepEval
+  - Braintrust
+  - GitHub Actions / GitLab CI
+  - OB-1 Observability Lake
+  saas_targets: []
+  interfaces:
+  - name: Offline Evaluation Gate (CI)
+    description: Runs golden dataset evaluation, LLM-as-judge scoring, and characteristic assertions on every PR; blocks merge
+      on failure.
+  - name: Security Evaluation (Red-Teaming)
+    description: Searches for prompt injection, jailbreak, and data leakage paths in the security evaluation phase; results
+      fed back to the change request.
+  - name: Production Drift Monitor
+    description: Continuously detects quality drift, cost anomalies, and error rate increases in production; triggers GV-6
+      rollback on threshold breach.
+  value_kpis:
+  - quality_regression_detection_lead_time_hours
+  - security_vulnerability_pre_deployment_detection_rate_pct
+  - policy_compliance_continuous_measurement_coverage_pct
+- id: GV-8
+  name: Cost Quota & Chargeback
+  name_ja: Cost Quota & Chargeback（コスト配賦）
+  facet: governance
+  file: patterns/gv-governance/gv8-cost-quota-chargeback.md
+  summary: 'Token consumption, tool call costs, and execution costs are measured per tenant, department, project, user, agent,
+    and model via the Central Model Gateway; budget limits trigger degradation to cheaper models or cache-first mode to prevent
+    cost explosion; ROI dashboards pair cost with business outcomes.
+
+    '
+  summary_ja: 'トークン・ツール・実行コストをテナント/部門/プロジェクト/ユーザー/エージェント/モデル単位で計測し、予算上限設定・縮退戦略・按分・ROIダッシュボードでコスト可視化と暴走防止を実現する。
+
+    '
+  requires:
+  - GV-1
+  - GV-5
+  required_by: []
+  applies_when:
+  - thousands_of_users_operating_agents_where_cost_allocation_is_a_management_issue
+  - enterprises_providing_ai_features_commercially_requiring_per_customer_profitability
+  - multi_agent_configurations_with_high_inference_cost_explosion_risk
+  not_applicable_when:
+  - small_poc_or_single_team_where_cost_measurement_overhead_exceeds_value
+  - monthly_costs_are_negligible_and_department_allocation_unnecessary
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Token Meter
+  - Cost Attribution Pipeline
+  - Budget/Quota Manager
+  - FinOps Tools (CloudCost, Apptio)
+  - Looker
+  - Tableau
+  - Power BI
+  saas_targets: []
+  interfaces:
+  - name: cost_center Tag Attribution
+    description: All LLM calls carry a cost_center tag (department code, project ID, tenant ID) enabling per-dimension aggregation.
+  - name: Budget Alert & Degradation
+    description: Alerts at 80% budget; at 100% switches to cheaper model, cache-first mode, or queues requests; prevents runaway
+      inference chains.
+  - name: ROI Dashboard
+    description: Pairs cost data (denominator) with GV-10 business outcome data (numerator) to compute unit-cost-per-business-outcome
+      per agent and department.
+  value_kpis:
+  - ai_cost_per_department_visibility_pct
+  - inference_cost_overrun_incident_count
+  - roi_calculation_coverage_pct
+- id: GV-9
+  name: Incident Response & Kill Switch
+  name_ja: Incident Response & Kill Switch（事故対応・停止）
+  facet: governance
+  file: patterns/gv-governance/gv9-incident-response-kill-switch.md
+  summary: 'Granular kill switches at model, agent, tool, and tenant scope enable immediate targeted stopping without halting
+    all AI; a pre-defined incident response flow (detect, contain, preserve traces, assess impact, notify, remediate, postmortem)
+    ensures incidents can be investigated and root-caused without loss of evidence.
+
+    '
+  summary_ja: 'モデル・エージェント・ツール・テナントの粒度で即座に停止できる Kill Switch と、検知→封じ込め→トレース保全→影響評価→通知→是正→ポストモーテムの対応フローを事前整備する。全体停止か放置かの二択を排除する。
+
+    '
+  requires:
+  - OB-1
+  - OB-2
+  - GV-1
+  - GV-5
+  required_by: []
+  applies_when:
+  - all_production_ai_deployments
+  not_applicable_when:
+  - no_practical_cases_kill_switch_design_cost_is_negligible_vs_operational_risk
+  risk_tiers:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - Kill Switch (Feature Flag / Gateway Blocklist)
+  - Circuit Breaker
+  - Runbook
+  - Audit Snapshot
+  - Event Store
+  - Replay Tool
+  - Access Revocation
+  - PagerDuty
+  - Splunk
+  - Microsoft Sentinel
+  saas_targets: []
+  interfaces:
+  - name: Granular Kill Switch
+    description: Feature flag or gateway blocklist enabling immediate stop at model, agent, tool, or tenant scope without
+      affecting other dimensions.
+  - name: Trace Preservation
+    description: Automatically snapshots relevant audit and trace data at incident detection time before any remediation changes
+      the evidence state.
+  - name: Incident Response Runbook
+    description: Pre-defined automation-ready runbook covering detect→contain→preserve→assess→notify→fix→postmortem; postmortem
+      outputs feed back to ID-7 and GV-7.
+  value_kpis:
+  - mean_time_to_contain_incident_minutes
+  - partial_stop_vs_full_stop_ratio_pct
+  - postmortem_action_implementation_rate_pct
+- id: GV-10
+  name: Three-Layer Value Measurement
+  name_ja: Three-Layer Value Measurement（採用定着×生産性×経営KPI）
+  facet: governance
+  file: patterns/gv-governance/gv10-two-layer-value-measurement.md
+  summary: 'AI investment value is measured across three layers: Layer 0 (adoption and retention: adoption rate, DAU/MAU),
+    Layer 1 (individual/team: task time reduction, self-resolution rate, satisfaction), and Layer 2 (executive: lead time,
+    revenue impact, support KPI); agent usage logs are joined with Salesforce/Zendesk/Workday data to produce ROI dashboards
+    for management decisions.
+
+    '
+  summary_ja: '第0層（採用・定着）・第1層（個人/チーム効率）・第2層（経営KPI）の三層で計測し、利用ログと業務システム（Salesforce・Zendesk・Workday）データを結合してROIダッシュボードを構築する。「トークン数」ではなく真の事業価値を示す。
+
+    '
+  requires:
+  - GV-8
+  - OB-1
+  required_by: []
+  applies_when:
+  - enterprise_wide_rollout_phase_requiring_management_approval
+  - enterprises_needing_to_justify_ai_investment_to_business_units
+  - multiple_agents_running_in_parallel_requiring_investment_prioritization
+  not_applicable_when:
+  - initial_poc_or_validation_phase
+  - use_cases_where_linking_to_business_outcomes_is_structurally_difficult
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Looker
+  - Tableau
+  - Power BI
+  - OB-1 Observability Lake
+  - GV-8 Cost Attribution
+  - Salesforce
+  - Zendesk
+  - Workday
+  saas_targets:
+  - Salesforce
+  - Zendesk
+  - Workday
+  interfaces:
+  - name: Layer 0 Adoption Metrics
+    description: Tracks adoption rate, monthly cohort retention, and DAU/MAU stickiness from agent usage logs; feeds change
+      management decisions.
+  - name: Layer 1 & 2 Business KPI Joiner
+    description: Time-series joins agent usage logs with Salesforce lead time, Zendesk CSAT/AHT, and Workday HR KPIs to compute
+      business impact.
+  - name: ROI Dashboard
+    description: Executive-facing report combining cost (GV-8) as denominator and business outcomes as numerator; supports
+      investment expand/improve/retire decisions.
+  value_kpis:
+  - ai_investment_roi_by_use_case
+  - executive_dashboard_adoption_pct
+  - value_measurement_coverage_pct
+- id: ID-1
+  name: Workforce/Customer Split
+  name_ja: Workforce/Customer 二面分離
+  facet: identity
+  file: patterns/id-identity/id1-workforce-customer-split.md
+  summary: 'Workforce-facing and customer-facing agents are physically and logically separated in IdP, data stores, execution
+    environment, and audit paths; cross-boundary data movement defaults to zero and is only allowed through an explicit gate
+    with classification, approval, and masking to eliminate the most critical class of data leakage.
+
+    '
+  summary_ja: '従業員向けと顧客向けでIdP・データ・エージェント・実行環境・監査を物理的・論理的に完全分離し、面間のデータ移動は原則ゼロ・例外は明示ゲート経由のみとすることで社内データ漏洩を構造的に排除する。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - all_enterprises_with_customer_touchpoints
+  - b2b_b2c_requiring_strict_separation_of_customer_and_internal_data
+  - multi_tenant_b2b_saas_where_cross_customer_data_mixing_is_fatal
+  not_applicable_when:
+  - internal_only_no_customer_facing_surface
+  - completely_closed_internal_tool_operations
+  - poc_phase_where_dual_separation_design_is_cost_prohibitive
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - Okta
+  - Microsoft Entra ID
+  - Google Workspace
+  - Auth0
+  - Okta Customer Identity (CIAM)
+  - Tenant Isolation
+  - Namespace Isolation
+  - Output Guardrail
+  - PII Filter
+  - Human Handoff
+  saas_targets:
+  - Shopify
+  - Zendesk
+  - Salesforce Service Cloud
+  interfaces:
+  - name: Dual IdP Boundary
+    description: Workforce uses Okta/Entra ID/Google Workspace; customer-facing uses Auth0/Okta CIAM; no identity tokens cross
+      the boundary.
+  - name: Explicit Cross-Boundary Gate
+    description: The only permitted path for data to move from workforce to customer side; enforces classification, approval,
+      and KM-6 DLP masking.
+  - name: Tenant Isolation
+    description: In multi-tenant B2B SaaS, prevents one customer's session context from mixing into another customer's agent
+      execution.
+  value_kpis:
+  - internal_data_leakage_to_customer_channel_incident_count
+  - tenant_contamination_incident_count
+  - workforce_customer_boundary_audit_coverage_pct
+- id: ID-2
+  name: Identity Federation & OBO
+  name_ja: Identity Federation & On-Behalf-Of（OBO委譲）
+  facet: identity
+  file: patterns/id-identity/id2-identity-federation-obo.md
+  summary: 'Agents obtain per-SaaS delegation tokens scoped to the requester''s own permissions (via direct federation, RFC
+    8693 Token Exchange, or ID-4 Permission Mirror for legacy systems), so SaaS native authorization enforces data-level access,
+    audit logs record the human principal, and the confused-deputy and omnipotent service-account problems are structurally
+    eliminated.
+
+    '
+  summary_ja: '依頼者本人の権限に縮退した委譲トークンをSaaSごとに動的取得し、SaaSネイティブ認可でデータレベルを制御する。監査ログに本人を帰責でき、権限集約と混乱代理問題を構造的に解消する。
+
+    '
+  requires: []
+  required_by:
+  - KM-1
+  - KM-2
+  applies_when:
+  - cross_saas_operations_with_strict_audit_requirements
+  - personal_business_support_employee_copilot_requiring_own_permissions
+  - high_risk_workflows_including_write_operations
+  not_applicable_when:
+  - completely_public_information_only
+  - delegation_unsupported_legacy_saas_use_id4_permission_mirror
+  - autonomous_batch_processing_id3_workload_identity_is_more_appropriate
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - OIDC
+  - SAML 2.0
+  - SCIM
+  - OAuth 2.0 Token Exchange (RFC 8693)
+  - Okta
+  - Auth0
+  - Microsoft Entra ID
+  - Google Workspace
+  saas_targets:
+  - Salesforce
+  - ServiceNow
+  - Slack
+  - Box
+  - Google Workspace
+  - Microsoft 365
+  interfaces:
+  - name: Token Broker (Gateway)
+    description: At EX-1 Gateway, exchanges the requester's ID token for a per-SaaS OBO token using direct federation (path
+      a) or RFC 8693 Token Exchange (path b).
+  - name: SaaS Native Authorization (RP)
+    description: The target SaaS (Relying Party) applies its own native authorization (Salesforce profiles, ServiceNow ACLs)
+      based on the token subject, enforcing data-level permissions.
+  - name: Audit Delegation Chain
+    description: Records actor (agent) and subject (human) separately in audit logs so each SaaS audit (Salesforce Shield,
+      Okta System Log) shows the human principal.
+  value_kpis:
+  - write_operation_automation_expansion_rate_pct
+  - cross_saas_audit_human_attribution_rate_pct
+  - confused_deputy_incident_count
+- id: ID-3
+  name: Workload Agent Identity
+  name_ja: Workload / Agent Identity（エージェント自身のID）
+  facet: identity
+  file: patterns/id-identity/id3-workload-agent-identity.md
+  summary: 'Autonomous agents (scheduled batch, webhook-triggered) receive short-lived machine identities (SPIFFE/SVID or
+    cloud managed identity) separate from human IDs; all calls are recorded as a dual representation (workload ID + human
+    context if present), enabling clear separation of autonomous execution from human-delegated execution in audit logs.
+
+    '
+  summary_ja: 'スケジュールバッチやイベントトリガーで自律動作するエージェントに短命のワークロードIDを付与し、人間代理と監査上で分離する。全呼び出しをworkload ID＋人間IDコンテキストの二重表現で記録する。
+
+    '
+  requires:
+  - ID-5
+  - ID-6
+  required_by: []
+  applies_when:
+  - scheduled_batch_or_system_triggered_autonomous_execution_exists
+  - audit_separation_of_autonomous_and_human_delegated_agent_operations_required
+  - workloads_dynamically_scale_on_kubernetes_or_cloud
+  not_applicable_when:
+  - all_agent_operations_originate_from_explicit_human_requests_id2_sufficient
+  - poc_with_immature_id_infrastructure
+  - small_single_fixed_server_batch_certificate_rotation_overhead_not_justified
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - SPIFFE/SPIRE
+  - SVID (Short-lived Certificate)
+  - AWS IAM Roles Anywhere / IRSA
+  - Microsoft Entra Workload Identity
+  - Google Workload Identity Federation
+  - mTLS
+  saas_targets: []
+  interfaces:
+  - name: Workload Certificate Issuer (SPIRE / Cloud IAM)
+    description: Issues short-lived SVID certificates or cloud managed identity tokens to agents at startup; auto-rotates
+      within TTL.
+  - name: Dual Representation Audit Record
+    description: Records workload_id as actor and human_id as subject (if present) per call; purely autonomous batches record
+      only workload_id with policy/schedule reference.
+  - name: Least-Privilege Workload Scope
+    description: Each autonomous agent's workload identity carries only the minimum permissions needed for its specific job;
+      broader permissions are never inherited.
+  value_kpis:
+  - autonomous_batch_automation_coverage_pct
+  - workload_vs_human_operation_audit_separation_rate_pct
+  - unused_workload_identity_count
+- id: ID-4
+  name: Permission Mirror & Least-of Faithful Access
+  name_ja: Permission Mirror & Least-of Faithful Access（権限忠実アクセス）
+  facet: identity
+  file: patterns/id-identity/id4-permission-mirror-least-of.md
+  summary: 'SaaS ACLs are synchronized into an agent-side Permission Mirror; effective permissions are always computed as
+    the intersection (agent capability ∩ user entitlement ∩ policy); revocations propagate in near-real time to prevent stale-access
+    after departure or transfer; primarily used as pre-filter for RAG and as fallback for OBO-unsupported systems.
+
+    '
+  summary_ja: '各SaaSのACLをエージェント基盤側に同期したPermission Mirrorを持ち、実効権限を「エージェント能力∩本人権限∩ポリシー」の最小に縮退させる。RAGの事前フィルタとOBO委譲非対応系の補完が主な役割。
+
+    '
+  requires: []
+  required_by:
+  - KM-1
+  applies_when:
+  - enterprise_rag_or_cross_system_search_agents
+  - frequent_permission_changes_from_departures_or_transfers
+  - obo_delegation_unsupported_legacy_saas_or_custom_systems_in_mix
+  not_applicable_when:
+  - extremely_simple_permission_small_environment
+  - public_information_only_use_cases
+  - single_saas_completable_with_obo_obo_is_preferred
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - ACL Sync
+  - SCIM Group Sync
+  - SaaS Admin API
+  - Zanzibar-based ReBAC
+  - ABAC
+  - PDP (ID-6)
+  saas_targets:
+  - Salesforce
+  - Box
+  - Google Drive
+  - Confluence
+  - Notion
+  - Slack
+  - ServiceNow
+  interfaces:
+  - name: ACL Sync Pipeline
+    description: Synchronizes SaaS ACLs (Salesforce, Box, Google Drive) into the Permission Mirror; near-real-time for sensitive
+      documents, daily for org-wide role changes.
+  - name: Effective Permission Calculator
+    description: Computes agent_capability ∩ user_entitlement ∩ policy_constraint before each RAG query or tool call; records
+      which factor was the limiting constraint in audit.
+  - name: Stale-Access Monitor
+    description: Detects and alerts when Mirror-to-source divergence exceeds threshold; triggers forced re-sync on departure/transfer
+      events.
+  value_kpis:
+  - unauthorized_document_exposure_via_rag_incident_count
+  - stale_access_after_departure_incident_count
+  - permission_mirror_sync_lag_seconds
+- id: ID-5
+  name: JIT Scoped Credentials
+  name_ja: JIT Scoped Credentials（最小・短命・用途限定）
+  facet: identity
+  file: patterns/id-identity/id5-jit-scoped-credentials.md
+  summary: 'Long-lived broad-scope API keys are eliminated; immediately before each tool call the agent runtime requests a
+    credential from a broker (Vault, AWS STS) specifying purpose, target, and required scope; the returned credential is short-lived
+    (minutes), single-use, and tagged with agent ID and purpose for full auditability.
+
+    '
+  summary_ja: '長命で広スコープなAPIキーを廃止し、ツール呼び出し直前にVault/STS等のブローカーから用途・対象・有効期間を限定したJITクレデンシャルを都度取得する。漏洩時の被害を数分間・単一リソースに限定する。
+
+    '
+  requires:
+  - ID-6
+  required_by: []
+  applies_when:
+  - agents_spanning_multiple_saas_systems
+  - high_risk_operations_including_writes_deletes_or_pii_access
+  - existing_vault_or_sts_secret_management_infrastructure
+  not_applicable_when:
+  - single_system_internal_api_only_poc
+  - broker_introduction_cost_not_justified_at_small_scale
+  - legacy_saas_with_external_idp_jit_unsupported_combine_with_id4
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - HashiCorp Vault (Dynamic Secrets)
+  - AWS STS (AssumeRole / GetSessionToken)
+  - Azure Managed Identity / Entra Workload Identity
+  - Google Workload Identity Federation
+  - OAuth 2.0 Token Exchange (RFC 8693)
+  saas_targets:
+  - Salesforce
+  - ServiceNow
+  interfaces:
+  - name: Credential Broker
+    description: Vault/STS endpoint that issues JIT credentials with explicit scope, TTL, target resource, and agent ID tag;
+      validates request against PDP before issuing.
+  - name: PDP Pre-Issuance Check
+    description: Broker consults ID-6 PDP to confirm the requesting agent is authorized before issuing the credential; sets
+      minimum permitted scope.
+  - name: Credential Audit Trail
+    description: Each issued credential record includes agent_id, purpose, scope, TTL, and target_resource for full forensic
+      traceability.
+  value_kpis:
+  - credential_exposure_window_minutes
+  - hardcoded_api_key_incident_count
+  - credential_blast_radius_single_resource_pct
+- id: ID-6
+  name: Zero-Trust PDP/PEP
+  name_ja: Zero-Trust Runtime + 中央PDP/分散PEP（ABAC/ReBAC）
+  facet: identity
+  file: patterns/id-identity/id6-zero-trust-pdp-pep.md
+  summary: 'Every agent action is evaluated by a central PDP (OPA/Cedar) with ABAC/ReBAC against subject, resource, context,
+    and action attributes drawn from the org graph; distributed PEPs at Gateway, runtime, and connector enforce the decision;
+    unknown requests default to deny (fail-closed) per NIST SP 800-207.
+
+    '
+  summary_ja: 'すべての行為を毎回中央PDP（OPA/Cedar）でABAC/ReBAC評価し、Gateway・ランタイム・コネクタの分散PEPが結果を強制する。不明はdeny（fail-closed）。組織グラフを属性源とするNIST
+    SP 800-207準拠ゼロトラスト認可基盤。
+
+    '
+  requires: []
+  required_by:
+  - GV-4
+  - RT-3
+  - ID-5
+  - IN-1
+  applies_when:
+  - multi_saas_environments_handling_confidential_data
+  - multi_cloud_multi_tenant_configurations
+  - regulated_industries_requiring_financial_or_healthcare_compliance
+  not_applicable_when:
+  - completely_isolated_experimental_environment
+  - single_user_personal_poc
+  - public_information_only_processing_without_authorization_needs
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - OPA (Open Policy Agent) / Rego
+  - Cedar
+  - mTLS
+  - Workload Identity (ID-3)
+  - Short-lived Token (ID-5)
+  - Network Policy
+  - Runtime Sandbox
+  saas_targets: []
+  interfaces:
+  - name: Central PDP (OPA/Cedar)
+    description: Evaluates every authorization request with ABAC/ReBAC against attributes from the org graph; returns allow/deny/require_approval
+      and logs the decision.
+  - name: Distributed PEP
+    description: PEPs at Gateway (EX-1), runtime, and connector enforce PDP decisions; no enforcement point bypasses the PDP.
+  - name: Org Graph Attribute Feed
+    description: Supplies department, role, and project attributes to the PDP for contextual evaluation; attribute staleness
+      is monitored.
+  value_kpis:
+  - unauthorized_access_attempt_block_rate_pct
+  - pdp_evaluation_latency_ms
+  - permission_change_reflection_lag_seconds
+- id: ID-7
+  name: Policy-as-Code Guardrail
+  name_ja: Policy-as-Code Guardrail（決定論的行動可否）
+  facet: identity
+  file: patterns/id-identity/id7-policy-as-code-guardrail.md
+  summary: 'Agent action proposals are passed as structured input to a Policy Engine (OPA/Cedar) that deterministically returns
+    allow/deny/require_approval/redact; policies for prohibitions, approval thresholds, and data classification are versioned
+    in Git, eliminating prompt-based security that can be bypassed by prompt injection.
+
+    '
+  summary_ja: 'エージェントのアクション提案をPolicy Engine（OPA/Cedar）に入力し、allow/deny/require_approval/redactを決定論的に返す。ポリシーはGitで版管理され、プロンプトインジェクションで突破できない実行基盤側のガードレールを実現する。
+
+    '
+  requires:
+  - ID-6
+  required_by:
+  - RT-3
+  - RT-4
+  - GV-4
+  applies_when:
+  - complex_regulatory_and_internal_rules_in_large_enterprises
+  - regulated_industries_finance_healthcare_legal_public
+  - multiple_agents_required_to_follow_common_rules
+  not_applicable_when:
+  - simple_text_generation_only_use_cases
+  - internal_faq_without_permission_control
+  - personal_experimental_use
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - OPA (Open Policy Agent) / Rego
+  - Cedar
+  - PDP/PEP (ID-6)
+  - Policy Versioning (GV-6)
+  - Git
+  - Approval Workflow (RT-4)
+  - Industry Policy Pack (GV-4)
+  saas_targets: []
+  interfaces:
+  - name: Structured Policy Input
+    description: Agent action proposals are structured into actor, agent, action, resource, data_classification, risk_tier,
+      purpose, and project attributes before policy evaluation.
+  - name: Policy Engine (OPA/Cedar)
+    description: Deterministically evaluates inputs against versioned policy rules; returns allow, deny, require_approval,
+      or redact with reason.
+  - name: Policy Version & Test Gate
+    description: Policy changes are managed in Git with PR review, automated test, and canary before production deployment;
+      conflicts between policies are surfaced automatically.
+  value_kpis:
+  - prompt_injection_bypass_incident_count
+  - policy_change_deployment_lead_time_hours
+  - deny_reason_audit_coverage_pct
+- id: ID-8
+  name: Consent & Access Transparency
+  name_ja: Consent & Access Transparency（同意・透明化）
+  facet: identity
+  file: patterns/id-identity/id8-consent-access-transparency.md
+  summary: 'Users can view, manage, and immediately revoke the SaaS scopes they have delegated to agents via a consent dashboard;
+    explicit delegation consent is obtained at first use or for high-risk operations; consent entries are purpose-bound and
+    time-limited, and revocation instantly invalidates tokens to satisfy GDPR consent and right-to-revoke requirements.
+
+    '
+  summary_ja: 'ユーザーがエージェントに付与したSaaSアクセススコープを確認・同意・即時取り消しできるダッシュボードを提供する。同意は目的・期限を限定し、取り消しはトークン失効と結合する。GDPR等の同意・取り消し権要件に対応する。
+
+    '
+  requires:
+  - ID-2
+  - ID-4
+  - ID-5
+  required_by: []
+  applies_when:
+  - agents_accessing_personal_data_email_calendar_documents
+  - privacy_regulations_gdpr_appi_requiring_user_consent_and_revocation
+  - trust_building_needed_through_scope_visibility
+  not_applicable_when:
+  - agent_handles_only_system_data_with_no_personal_data
+  - fully_autonomous_batch_processing_with_no_human_operation_origin_id3_is_appropriate
+  - poc_where_consent_flow_implementation_cost_cannot_be_justified
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Okta Consent
+  - Microsoft Entra ID Admin/User Consent
+  - OAuth 2.0 Scope Management
+  - RFC 7009 Token Revocation
+  - Consent Registry (DB / Policy Store)
+  - Internal Consent Portal
+  saas_targets: []
+  interfaces:
+  - name: Consent Screen (IdP / Internal Portal)
+    description: At first OBO token issuance or for high-risk operations, presents scope, purpose, and expiry to the user;
+      records approval in Consent Registry.
+  - name: Consent Registry
+    description: Stores per-purpose consent entries (subject, scope, purpose, expiry); PDP checks registry before any delegated
+      action proceeds.
+  - name: Revocation & Instant Token Invalidation
+    description: User revocation in the dashboard immediately invalidates cached tokens via RFC 7009; Gateway re-checks consent
+      state on each subsequent call.
+  value_kpis:
+  - agent_trust_score_user_survey
+  - scope_creep_incident_count
+  - consent_revocation_propagation_time_seconds
+- id: RT-1
+  name: Org-Hierarchical Hub & Spoke
+  name_ja: 組織階層型ハブ＆スポーク（意図ルーティング＋ドメインスポーク）
+  facet: runtime
+  file: patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md
+  summary: 'A hub agent routes user intents to domain-specific spoke agents, propagating permissions in an attenuated form
+    from hub to spoke so each spoke can only access its own domain''s SaaS resources.
+
+    '
+  summary_ja: 'ハブエージェントが意図をドメインスポークへルーティングし、権限を親から子へ 縮退させながら組織階層に沿って処理を分散する。コンテキスト分割・権限縮退・ 変更局所化を一つの設計で解決する。
+
+    '
+  requires:
+  - ID-4
+  required_by: []
+  applies_when:
+  - large_org_with_department_permission_boundaries
+  - cross_domain_requests_are_frequent
+  - teams_develop_spokes_independently
+  not_applicable_when:
+  - only_one_or_two_domains
+  - nearly_all_requests_span_all_spokes
+  - tightly_coupled_inter_spoke_shared_state
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Semantic Router
+  - LangGraph
+  - AutoGen
+  - CrewAI
+  - Pinecone
+  - Weaviate
+  - pgvector
+  - Capability Registry
+  saas_targets:
+  - Workday
+  - Salesforce
+  - GitHub
+  - Jira
+  interfaces:
+  - name: Hub Agent (Semantic Router)
+    description: Classifies the intent of incoming user requests and routes to the appropriate spoke with an attenuated OBO
+      token.
+  - name: Domain Spoke Agent
+    description: Handles domain-specific tools and vector DB; returns a summary to the hub rather than raw data.
+  - name: Capability Registry
+    description: Central catalog that manages the list of tools each spoke exposes, integrated with GV-2 Agent Catalog.
+  value_kpis:
+  - employee_time_to_correct_agent_seconds
+  - agent_adoption_rate_pct
+  - cross_domain_request_latency_ms
+- id: RT-2
+  name: RACI-based Multi-Agent Orchestration
+  name_ja: RACI型マルチエージェント・オーケストレーション
+  facet: runtime
+  file: patterns/rt-runtime/rt2-raci-multi-agent.md
+  summary: 'Multi-agent topology is designed by mapping RACI responsibility assignments (Responsible, Accountable, Consulted,
+    Informed) directly to agent roles, ensuring Accountable always remains with a human.
+
+    '
+  summary_ja: 'マルチエージェント構成をRACIの責任割り当て構造に基づいて設計し、責任境界を 明確にする。Accountableは常に人間が担い、監査証跡でR/A/C/Iの記録を残す。
+
+    '
+  requires:
+  - OB-2
+  required_by: []
+  applies_when:
+  - cross_department_decision_flows_with_multiple_accountable_parties
+  - high_risk_tasks_requiring_approval_and_escalation
+  - compliance_domains_requiring_raci_audit_trail
+  not_applicable_when:
+  - simple_tasks_contained_in_single_department
+  - real_time_interactive_low_latency_required
+  - raci_matrix_does_not_exist_for_the_process
+  risk_tiers:
+  - 3
+  - 4
+  key_technologies:
+  - LangGraph
+  - AutoGen
+  - Semantic Kernel
+  - YAML/JSON RACI definition
+  - OpenTelemetry
+  saas_targets:
+  - ServiceNow
+  - Slack
+  - Workday
+  - Microsoft Entra
+  interfaces:
+  - name: Orchestrator
+    description: Drives the workflow according to the RACI matrix, recording each phase start/end in the decision log in real
+      time.
+  - name: Decision Log
+    description: Structured log (OpenTelemetry) that records which role (R/A/C/I) performed which action and when.
+  - name: Approval Gate
+    description: Prevents progression to the next phase until the Accountable human provides approval.
+  value_kpis:
+  - cross_department_workflow_lead_time_hours
+  - decision_accountability_rate_pct
+  - compliance_audit_preparation_time_hours
+- id: RT-3
+  name: Risk-Tiered Autonomy
+  name_ja: リスク段階型自律度（自律度の階層）
+  facet: runtime
+  file: patterns/rt-runtime/rt3-risk-tiered-autonomy.md
+  summary: 'Operations are classified into Tier 0–5 risk levels; each tier enforces a corresponding autonomy level from fully
+    automatic execution to prohibited operations requiring dual authorization.
+
+    '
+  summary_ja: '操作のリスクをTier 0（読み取り専用・完全自動）からTier 5（禁止）まで段階化し、 ポリシーエンジン側で自律度を強制する。低リスクを自動化しつつ高リスクに人間判断を残す。
+
+    '
+  requires:
+  - ID-7
+  required_by: []
+  applies_when:
+  - diverse_operation_types_from_read_only_to_financial_transactions
+  - enterprise_systems_involving_money_hr_customer_data
+  - org_with_varying_risk_tolerance_per_department
+  not_applicable_when:
+  - all_operations_are_simple_read_only
+  - no_resources_to_design_tier_boundary_policies
+  - deterministic_rpa_sufficient
+  risk_tiers:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - OPA (Open Policy Agent)
+  - Cedar
+  - Risk Scoring Engine
+  - Microsoft Purview
+  - Varonis
+  saas_targets:
+  - Salesforce
+  - Workday
+  interfaces:
+  - name: Risk Scoring Engine
+    description: Calculates the risk tier dynamically from operation attributes, data classification, irreversibility, and
+      affected scope.
+  - name: Policy Engine (ID-7)
+    description: Enforces the tier decision at the execution infrastructure level, preventing agents from self-reporting their
+      own tier.
+  - name: Approval Workflow (RT-4)
+    description: Triggered for Tier 3–4 operations to route to human approval before execution proceeds.
+  value_kpis:
+  - automation_rate_by_tier_pct
+  - high_risk_operation_approval_latency_hours
+  - tier5_block_incident_count
+- id: RT-4
+  name: Human Approval Chain
+  name_ja: 組織解決型承認チェーン
+  facet: runtime
+  file: patterns/rt-runtime/rt4-human-approval-chain.md
+  summary: 'Approvers are dynamically resolved from the org chart rather than hard-coded, and approval workflows are delivered
+    through existing tools (Slack, ServiceNow) with SLA timers, delegation, and escalation.
+
+    '
+  summary_ja: '承認者を組織図から動的に解決し、既存ワークフローツールで承認チェーンを完結させる。 SLAタイマー・委譲・エスカレーション・否決理由フィードバックまで含めて設計する。
+
+    '
+  requires:
+  - RT-8
+  - ID-7
+  required_by: []
+  applies_when:
+  - irreversible_high_risk_operations_like_fund_transfer_or_permission_grant
+  - org_chart_is_maintained_and_approvers_can_be_resolved_by_role
+  - existing_approval_workflow_tools_already_deployed
+  not_applicable_when:
+  - strict_real_time_latency_requirements
+  - low_risk_tier_0_1_operations
+  - org_chart_not_maintained
+  risk_tiers:
+  - 3
+  - 4
+  key_technologies:
+  - Temporal
+  - AWS Step Functions
+  - Workday HCM
+  - Microsoft Entra
+  - Slack Block Kit
+  - ServiceNow
+  - OpenTelemetry
+  saas_targets:
+  - Workday
+  - Slack
+  - ServiceNow
+  - Microsoft Entra
+  interfaces:
+  - name: Approver Resolution Engine
+    description: Queries the org chart API to dynamically identify the correct approver (line manager, cost owner, data owner)
+      per request type and risk tier.
+  - name: Workflow Tool Notification
+    description: Sends approval requests with action buttons to Slack or ServiceNow tasks so approvers can act within familiar
+      tools.
+  - name: Decision Log
+    description: Records the approver identity, decision (approve/deny/delegate), reason, and timestamp for internal control
+      evidence.
+  value_kpis:
+  - approval_lead_time_hours
+  - approval_routing_error_rate_pct
+  - escalation_rate_pct
+- id: RT-5
+  name: Intent-to-Enterprise Command Envelope
+  name_ja: 構造化コマンド封筒（意図→エンタープライズコマンド変換）
+  facet: runtime
+  file: patterns/rt-runtime/rt5-command-envelope.md
+  summary: 'Natural language intent is converted into a structured Command Envelope (actor, agent, target_system, action,
+    risk_tier, requires_approval, reason) that serves as a stable contract between agents, policy checks, approval workflows,
+    and SaaS adapters.
+
+    '
+  summary_ja: '自然言語をactor・agent・target_system・action・risk_tier等を含む構造化コマンドへ 変換し、ポリシーチェック・承認・SaaSアダプタに一貫したインターフェースを提供する。 LLMの不確定性をEnvelopeというバリアで止める。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - multi_saas_write_automation
+  - strict_policy_check_approval_and_audit_requirements
+  - multiple_agents_operating_the_same_saas
+  not_applicable_when:
+  - read_only_query_agents_without_write_risk
+  - prototype_stage_where_schema_design_cost_too_high
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - JSON Schema
+  - Command Bus
+  - DDD Command Pattern
+  - OPA
+  - Cedar
+  saas_targets:
+  - Salesforce
+  - Workday
+  - Slack
+  - Google Calendar
+  interfaces:
+  - name: Intent Parser + Entity Extractor
+    description: LLM interprets natural language and extracts entities to produce a validated Command Envelope JSON object.
+  - name: Policy Engine (ID-7)
+    description: Evaluates the Envelope fields including actor permissions, risk_tier, and target_system combination independently
+      of agent self-reporting.
+  - name: SaaS Adapter (IN-2)
+    description: Receives the approved Envelope and translates it into the target SaaS API call, shielding agents from SaaS-specific
+      schemas.
+  value_kpis:
+  - write_automation_expansion_rate_pct
+  - policy_violation_rate_per_1000_operations
+  - audit_reconstruction_success_rate_pct
+- id: RT-6
+  name: System-of-Record Write Boundary
+  name_ja: 基幹システム書き込み境界
+  facet: runtime
+  file: patterns/rt-runtime/rt6-sor-write-boundary.md
+  summary: 'Agents never write directly to Systems of Record; instead they submit Command Envelopes to a domain service that
+    enforces validation, authorization, and business rules before committing to the SoR.
+
+    '
+  summary_ja: 'エージェントはSoRに直接書き込まず、Command EnvelopeをドメインサービスにPassし、 バリデーション・認可・ビジネスルール適用・トランザクション管理をドメインサービス側で完結させる。 下書きはSoEに留め、人間確認後にSoRへ昇格する。
+
+    '
+  requires:
+  - RT-5
+  required_by: []
+  applies_when:
+  - systems_holding_master_data_like_hr_accounting_customers
+  - multiple_agents_accessing_same_sor_with_consistency_requirements
+  - sox_or_internal_control_requiring_approval_and_audit_trail
+  not_applicable_when:
+  - low_risk_stores_like_logs_or_temporary_data
+  - immediate_update_required_real_time_use_cases
+  risk_tiers:
+  - 3
+  - 4
+  key_technologies:
+  - DDD Domain Service
+  - Command Handler
+  - JSON Schema Validation
+  - Immutable Audit Log
+  saas_targets:
+  - Workday
+  - Salesforce
+  - Shopify
+  - Slack
+  - Notion
+  interfaces:
+  - name: Domain Service
+    description: Single write path that enforces validation, authorization check (ID-4/ID-7), and business rules before executing
+      the SoR transaction.
+  - name: SoE Draft Store
+    description: Holds agent-generated proposals (Slack/Notion/email) for human review before escalation to the domain service.
+  - name: Audit Trail
+    description: Records before/after values, operator identity, and timestamp as an immutable log for internal control evidence.
+  value_kpis:
+  - sor_data_integrity_incident_count
+  - last_mile_manual_transcription_hours_saved
+  - audit_trail_completeness_pct
+- id: RT-7
+  name: Enterprise Saga Agent
+  name_ja: エンタープライズSagaエージェント（補償トランザクション）
+  facet: runtime
+  file: patterns/rt-runtime/rt7-enterprise-saga.md
+  summary: 'Multi-SaaS side-effect workflows are designed using the Saga pattern; each step commits locally with an idempotency
+    key and, on failure, compensation actions are executed in reverse order to recover consistency.
+
+    '
+  summary_ja: '複数SaaSをまたぐ副作用処理をSagaパターンで設計し、各ステップに補償アクションを 持たせる。分散トランザクション（2PC）が使えないSaaS環境で冪等性キーと補償で整合性を保つ。 補償はベストエフォートであり不可逆ステップはSagaの後段に配置する。
+
+    '
+  requires:
+  - RT-8
+  required_by: []
+  applies_when:
+  - sequential_multi_saas_writes_requiring_partial_rollback_on_failure
+  - compensation_actions_can_be_defined_per_step
+  - each_step_has_independent_api_supporting_idempotent_calls
+  not_applicable_when:
+  - strict_acid_required_like_financial_debit_credit
+  - only_one_or_two_steps_in_a_single_system
+  - compensation_cannot_be_defined_for_external_system
+  risk_tiers:
+  - 3
+  - 4
+  key_technologies:
+  - Temporal
+  - AWS Step Functions
+  - Azure Durable Functions
+  - Outbox Pattern
+  - UUIDv4 Idempotency Key
+  - PostgreSQL
+  - DynamoDB
+  saas_targets:
+  - Salesforce
+  - Jira
+  - Slack
+  - ServiceNow
+  interfaces:
+  - name: Saga Orchestrator
+    description: Drives step execution, persists progress state durably, and triggers the compensation sequence in reverse
+      order on failure.
+  - name: Idempotency Key Manager
+    description: Issues a unique key per step to prevent duplicate execution on retry; distinct from session IDs.
+  - name: Compensation Action Library
+    description: Deterministic code (Temporal Activity etc.) implementing the rollback logic for each step without delegating
+      decisions to the LLM.
+  value_kpis:
+  - multi_saas_transaction_success_rate_pct
+  - manual_reconciliation_hours_eliminated
+  - compensation_success_rate_pct
+- id: RT-8
+  name: Durable Enterprise Agent Workflow
+  name_ja: 永続エンタープライズエージェントワークフロー
+  facet: runtime
+  file: patterns/rt-runtime/rt8-durable-workflow.md
+  summary: 'Long-running agent processes lasting minutes to hours persist state at each step boundary so that worker crashes,
+    restarts, and scale-out events do not lose execution progress; LLM outputs are fixed at activity boundaries and not re-invoked
+    on replay.
+
+    '
+  summary_ja: '分単位から時間単位の長時間エージェント処理を、ワーカー障害・承認待機・再起動を跨いで 継続できる永続ワークフローとして設計する。LLMの出力はアクティビティ境界で固定し、 リプレイ時に再呼び出ししない。
+
+    '
+  requires:
+  - OB-1
+  required_by:
+  - RT-4
+  - RT-7
+  - OB-2
+  applies_when:
+  - processes_taking_minutes_to_hours_including_human_approval_wait
+  - high_availability_requirements_where_worker_failures_must_not_lose_work
+  - strict_idempotency_and_audit_trail_requirements_in_regulated_industries
+  not_applicable_when:
+  - real_time_responses_required_within_one_to_three_seconds
+  - small_projects_where_workflow_engine_infrastructure_cost_not_justified
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Temporal
+  - AWS Step Functions
+  - Azure Durable Functions
+  - LangGraph Persistence
+  - SQS
+  - Azure Service Bus
+  - RabbitMQ
+  saas_targets:
+  - Slack
+  - ServiceNow
+  interfaces:
+  - name: Workflow Definition (State Machine)
+    description: Explicitly defined state transitions where each state is triggered by events; activity boundary results are
+      persisted to the durable store.
+  - name: Activity Function
+    description: Wraps LLM calls and external API calls; implements idempotent execution and stores results in workflow history
+      to avoid re-invocation on replay.
+  - name: Budget / Step Limit Guard
+    description: Enforces maximum step count, execution time, and cost limits in the workflow definition; triggers safe termination
+      on breach.
+  value_kpis:
+  - workflow_completion_rate_pct
+  - sla_compliance_rate_pct
+  - human_intervention_for_crashed_workflows_count
+- id: RT-9
+  name: Enterprise Work Queue Agent
+  name_ja: エンタープライズ業務キュー参加エージェント
+  facet: runtime
+  file: patterns/rt-runtime/rt9-work-queue-agent.md
+  summary: 'Agents participate as workers in existing ITSM queues (ServiceNow, Zendesk, Jira) alongside humans, processing
+    tickets autonomously when capable and escalating with a documented handoff when not.
+
+    '
+  summary_ja: 'エージェントを「チャットボット」ではなく「業務キューのワーカー」として設計し、 人間と同じキューから処理を試み、できないタスクはコメント付きでエスカレーションする。 既存のSLA管理・負荷分散・優先度付けはキュー基盤に委ねる。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - existing_itsm_or_customer_support_system_with_volume_growth_or_after_hours_need
+  - unified_sla_and_ticket_history_management_required
+  - agent_scope_is_clearly_definable_with_escalation_logic_implementable
+  not_applicable_when:
+  - no_defined_tasks_and_general_purpose_assistant_preferred
+  - sla_does_not_exist_and_priority_management_not_needed
+  - no_human_escalation_target_exists
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  key_technologies:
+  - ServiceNow
+  - Zendesk
+  - Jira Service Management
+  - LangGraph
+  - LangChain Agents
+  saas_targets:
+  - ServiceNow
+  - Zendesk
+  - Jira Service Management
+  - Slack
+  interfaces:
+  - name: Queue Consumer
+    description: Agent subscribes to the same queue as human operators with identical SLA rules and priority routing.
+  - name: Escalation Handler
+    description: Evaluates whether a task is within scope; if not, documents findings and attempts to date in ticket comments
+      before reassigning to a human.
+  - name: SLA Monitor
+    description: Triggers automatic escalation to a human when SLA remaining time falls below threshold or processing cannot
+      proceed.
+  value_kpis:
+  - ticket_auto_resolution_rate_pct
+  - sla_compliance_rate_pct
+  - escalation_rate_pct
+  - agent_processing_throughput_tickets_per_hour
+- id: RT-10
+  name: Event-Driven Enterprise Orchestrator
+  name_ja: イベント駆動エンタープライズオーケストレーター
+  facet: runtime
+  file: patterns/rt-runtime/rt10-event-driven-orchestrator.md
+  summary: 'Agents autonomously start when SaaS or internal system events arrive on an event bus, completing multi-system
+    back-end workflows without waiting for human invocation; debouncing, HMAC verification, rate limits, and HitL approval
+    for high-risk steps are mandatory safeguards.
+
+    '
+  summary_ja: 'SaaSや社内システムのイベントをトリガーにエージェントを自律起動し、複数システムにまたがる 処理をバックエンドで完結させる。デバウンス・HMAC検証・レートリミット・高リスク操作への HitL承認が必須の安全装置となる。
+
+    '
+  requires:
+  - RT-7
+  - RT-8
+  required_by: []
+  applies_when:
+  - saas_standard_events_trigger_multi_system_workflows
+  - copy_paste_work_across_systems_to_be_eliminated
+  - majority_of_processing_is_async_and_does_not_require_real_time_human_wait
+  not_applicable_when:
+  - interactive_processing_requiring_immediate_user_response
+  - event_frequency_too_high_for_agent_startup_cost
+  - trigger_conditions_cannot_be_defined
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Amazon EventBridge
+  - Google Pub/Sub
+  - Azure Service Bus
+  - Apache Kafka
+  - CloudEvents
+  - Debezium
+  - Temporal
+  - Workato
+  - MuleSoft
+  saas_targets:
+  - Workday
+  - Salesforce
+  - GitHub
+  - PagerDuty
+  - Slack
+  - ServiceNow
+  - Okta
+  interfaces:
+  - name: Event Gateway
+    description: Validates incoming webhooks via HMAC signature, source IP allowlist, and CloudEvents source field before
+      routing to the orchestrator.
+  - name: Debounce / Rate Limiter
+    description: Collapses duplicate events for the same entity within a short window and enforces a maximum concurrent workflow
+      launch rate.
+  - name: Durable Workflow Engine (RT-8)
+    description: Manages long-running post-event processing with crash resilience and HitL approval integration.
+  value_kpis:
+  - process_lead_time_reduction_pct
+  - manual_handoff_steps_eliminated_count
+  - event_storm_incident_count
+- id: RT-11
+  name: Project Workspace / Digital Twin Agent
+  name_ja: プロジェクト・デジタルツインエージェント
+  facet: runtime
+  file: patterns/rt-runtime/rt11-project-digital-twin.md
+  summary: 'An agent is provisioned per project as a shared team member with a dynamic-RBAC workspace (GraphRAG, Slack channel,
+    task board, decision log), provides on-demand context to any member, and expires all memory and permissions automatically
+    on project closure.
+
+    '
+  summary_ja: 'エージェントを個人ではなくプロジェクト・チームに紐付け、GraphRAGベースの共有メモリ・ Slackチャンネル・Jiraボード・意思決定ログを動的RBACワークスペースとして共有する。 プロジェクト終了時にメモリと権限を自動で失効させる。
+
+    '
+  requires:
+  - KM-1
+  - KM-4
+  - ID-4
+  required_by: []
+  applies_when:
+  - multi_tool_project_teams_five_to_fifty_members
+  - project_duration_weeks_or_more_with_decision_history_reference_needed
+  - member_turnover_with_onboarding_cost_reduction_needed
+  not_applicable_when:
+  - one_off_short_tasks_where_workspace_overhead_not_worth_it
+  - one_to_two_person_personal_projects
+  - fully_integrated_erp_with_no_information_silos
+  risk_tiers:
+  - 2
+  - 3
+  key_technologies:
+  - Neo4j (GraphRAG)
+  - Slack Bot
+  - Dynamic RBAC (Okta Groups / Azure AD Groups)
+  - PostgreSQL Decision Log
+  - Asana API
+  - Jira REST API
+  - Box API
+  - SharePoint
+  saas_targets:
+  - Slack
+  - Jira
+  - Box
+  - Asana
+  - Notion
+  - SharePoint
+  interfaces:
+  - name: Project Workspace Provisioner
+    description: On project creation, auto-provisions Slack channel, Jira board, Box folder, and dynamic RBAC group; auto-deprovisions
+      all on project closure.
+  - name: GraphRAG Memory
+    description: Maintains a knowledge graph of people, decisions, artifacts, and tasks within the project, filtered by each
+      member's RBAC permissions at read time.
+  - name: Decision Log Store
+    description: Structured record of decisions made, rejected alternatives, and rationale for retrospective and audit use.
+  value_kpis:
+  - member_onboarding_time_to_productivity_days
+  - spec_task_inconsistency_detection_lead_time_hours
+  - project_context_retrieval_time_seconds
+- id: KM-1
+  name: Access-Controlled Enterprise RAG
+  name_ja: 権限認識RAG（アクセス制御型エンタープライズRAG）
+  facet: knowledge
+  file: patterns/km-knowledge/km1-access-controlled-rag.md
+  summary: 'Each chunk ingested into the vector DB carries the source ACL, data classification, and freshness metadata; at
+    query time the requester''s current entitlements are re-evaluated so only permissible documents appear in results, preventing
+    ex-employee and transferred-employee leakage.
+
+    '
+  summary_ja: '取り込み時に各チャンクにソースのACL・分類・鮮度を同梱し、検索のたびに依頼者の 最新権限で再評価する。退職者・異動者の「見えてはいけないものが見える」問題を防ぎ、 引用付き回答で根拠の透明性を確保する。
+
+    '
+  requires:
+  - ID-2
+  - ID-4
+  required_by: []
+  applies_when:
+  - cross_saas_document_ticket_crm_chat_search
+  - frequent_access_changes_from_departures_or_transfers
+  - multiple_saas_integrated_search_required
+  not_applicable_when:
+  - data_sources_where_acl_cannot_be_controlled
+  - real_time_db_master_requiring_direct_query
+  - public_information_only_no_acl_needed
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  key_technologies:
+  - Hybrid Search (BM25 + Vector)
+  - Reranker
+  - Pinecone
+  - Weaviate
+  - Qdrant
+  - Elasticsearch
+  - Freshness Ranking
+  - Citation
+  saas_targets:
+  - Box
+  - Google Drive
+  - Notion
+  - Confluence
+  - SharePoint
+  interfaces:
+  - name: Ingest Pipeline with ACL Embedding
+    description: Embeds source ACL, classification label, and freshness timestamp into each chunk at ingestion time; ACL is
+      treated as a reference value for refresh not a fixed copy.
+  - name: Permission Filter (ID-4)
+    description: Evaluates the requester's current entitlements against chunk ACLs at query time, filtering inaccessible documents
+      before ranking.
+  - name: Hybrid Search + Reranker
+    description: Combines BM25 keyword matching with vector similarity; reranker produces final scored results including freshness
+      penalty for stale documents.
+  value_kpis:
+  - information_search_time_minutes
+  - unauthorized_document_exposure_incident_count
+  - rag_answer_precision_at_5
+- id: KM-2
+  name: Access-Controlled Context Mesh
+  name_ja: フェデレーテッド文脈メッシュ（アクセス制御型コンテキストメッシュ）
+  facet: knowledge
+  file: patterns/km-knowledge/km2-context-mesh.md
+  summary: 'Rather than aggregating data in one place, a Context Router federates queries to each SaaS Context Provider using
+    the requester''s OBO token so that confidential SaaS data is retrieved just-in-time without copying, preserving the original
+    permission model.
+
+    '
+  summary_ja: '各データ源を一箇所に集約せず、本人のOBOトークンで各SaaSに分散問い合わせして リアルタイムに文脈を取得する。コピーによる権限モデル崩壊を防ぎ、 データ所在地規制への対応もしやすい。
+
+    '
+  requires:
+  - ID-2
+  required_by: []
+  applies_when:
+  - confidentiality_priority_and_data_residency_regulations_important
+  - cross_saas_confidential_data_needed_transversally
+  - avoiding_audit_complexity_from_data_copies
+  not_applicable_when:
+  - public_data_only_with_no_permission_requirements
+  - extreme_low_latency_requirements_federation_too_slow
+  - bulk_statistical_bi_analysis_where_central_lake_better
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - Federated Search
+  - Context Router
+  - Retrieval Proxy
+  - Embedding Index per Scope
+  - JIT Retrieval
+  saas_targets:
+  - Salesforce
+  - Slack
+  - Google Drive
+  - Jira
+  - ServiceNow
+  - Notion
+  - Workday
+  interfaces:
+  - name: Context Router
+    description: Dispatches queries in parallel to each Context Provider with independent timeouts so one slow provider does
+      not block others.
+  - name: Context Provider (per SaaS)
+    description: Calls the target SaaS with the requester's OBO token (ID-2) and returns only the data the requester is permitted
+      to see.
+  - name: Context Package Builder
+    description: Assembles the collected provider results and passes them through KM-5 purpose policy for final filtering
+      before sending to the LLM.
+  value_kpis:
+  - cross_saas_context_retrieval_latency_ms
+  - unauthorized_data_access_incident_count
+  - cross_department_insight_utilization_rate
+- id: KM-3
+  name: Canonical Enterprise Object Model & Knowledge Graph
+  name_ja: 正規オブジェクト／知識グラフ
+  facet: knowledge
+  file: patterns/km-knowledge/km3-canonical-object-knowledge-graph.md
+  summary: 'Disparate SaaS entities are normalized to canonical business objects (Customer, Employee, Project, Contract, etc.)
+    with entity resolution for cross-system de-duplication; the graph holds reference links only, leaving actual data in source
+    SaaS systems.
+
+    '
+  summary_ja: '多様なSaaSデータを共通業務オブジェクトに正規化し、エンティティ解決で同一人物・ 同一顧客を名寄せして関係を張る。完全なETL統合ではなく「意味的統合」を目指し、 実データは元の場所に残す。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - many_systems_with_scattered_data_for_cross_department_ai
+  - customer_person_entity_deduplication_needed
+  - org_graph_used_as_cross_cutting_axis
+  not_applicable_when:
+  - single_saas_workflow_with_no_cross_system_need
+  - roi_insufficient_for_small_scale_data_integration
+  - saas_proprietary_vocabulary_sufficient
+  risk_tiers:
+  - 2
+  - 3
+  key_technologies:
+  - Canonical Data Model
+  - GraphRAG
+  - Neo4j
+  - Master Data Management (MDM)
+  - Entity Resolution
+  - Sansan
+  saas_targets:
+  - Salesforce
+  - Workday
+  - ServiceNow
+  - Jira
+  - Sansan
+  interfaces:
+  - name: Entity Resolution Engine
+    description: Matches cross-SaaS entities (e.g., Salesforce Account == Workday Organization) using fuzzy matching and ID
+      mapping tables; flags low-confidence matches for manual review.
+  - name: Knowledge Graph (Neo4j)
+    description: Stores reference links and relationship metadata (member-of, owned-by, referenced-by) plus entitlement edges;
+      actual data stays in source SaaS.
+  - name: Graph Traversal API
+    description: Enables agents to navigate related entities and then use KM-2 Context Providers to JIT-fetch actual data
+      from source systems.
+  value_kpis:
+  - cross_system_entity_resolution_accuracy_pct
+  - cross_department_kpi_aggregation_time_hours
+  - management_decision_data_preparation_time_reduction_pct
+- id: KM-4
+  name: Scoped Memory Hierarchy
+  name_ja: スコープ記憶階層
+  facet: knowledge
+  file: patterns/km-knowledge/km4-scoped-memory-hierarchy.md
+  summary: 'Agent memory is partitioned into Personal, Team, Project, Department, Company, and Customer scopes with access
+    governed by the org chart; lifecycle events (project closure, resignation, transfer) automatically expire memory and permissions,
+    and individuals retain the right to review and erase their personal memory.
+
+    '
+  summary_ja: 'メモリを個人/チーム/プロジェクト/部門/全社/顧客に分離し、共有範囲を組織グラフに 従わせる。退職やプロジェクト終了に連動してメモリと権限を自動失効させ、 本人が自分のメモリを消去できる権利も設計に含める。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - continuous_use_spanning_multiple_departments_or_projects
+  - agents_handling_customer_information
+  - long_term_projects_where_context_accumulation_is_important
+  not_applicable_when:
+  - completely_stateless_one_off_use
+  - read_only_reference_ai_without_memory_needed
+  - one_time_question_answer_sessions
+  risk_tiers:
+  - 2
+  - 3
+  key_technologies:
+  - Memory Store
+  - Vector DB (Namespace isolation)
+  - ACL
+  - TTL
+  - Memory Review UI
+  saas_targets:
+  - Workday
+  - Okta
+  interfaces:
+  - name: Memory Scope Partitioner
+    description: Physically or logically separates memory by scope using Vector DB namespaces or encryption keys; writes pass
+      through a classification and duplicate-detection gate.
+  - name: Lifecycle Event Handler
+    description: Listens for org events (project closed, employee departed, transfer) and triggers memory archive/expiry and
+      RBAC group removal automatically.
+  - name: Memory Review UI
+    description: Allows individuals to inspect, correct, and erase their personal memory scope to satisfy Right to Erasure
+      requirements.
+  value_kpis:
+  - context_reuse_rate_pct
+  - knowledge_silo_reduction_score
+  - memory_leakage_incident_count
+- id: KM-5
+  name: Purpose-Bound Context Package
+  name_ja: 目的限定コンテキストパッケージ
+  facet: knowledge
+  file: patterns/km-knowledge/km5-purpose-bound-context.md
+  summary: 'Per-business-purpose policies define the minimum data types, source systems, token budget, and TTL allowed in
+    a context package; any data outside the permitted classification or purpose is filtered or masked before reaching the
+    LLM.
+
+    '
+  summary_ja: '業務目的ごとに「必要な最小データ」をポリシーで定義し、トークン予算内のコンテキスト パッケージを生成する。目的に無関係なデータや過剰な情報がLLMに渡ることを防ぎ、 GDPR等のデータ目的外利用禁止要件に対応する。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - multiple_business_purposes_reusing_same_agent
+  - high_classification_data_pii_hr_contracts_involved
+  - gdpr_or_similar_data_purpose_restriction_compliance
+  not_applicable_when:
+  - agent_specialized_for_single_purpose_with_fixed_data_scope
+  - prototype_stage_with_undetermined_purpose
+  - low_risk_internal_tools_handling_only_technical_docs
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - OPA (Open Policy Agent)
+  - Microsoft Purview
+  - Google Cloud DLP
+  - AWS Macie
+  - Context Builder
+  - Token Budget Manager
+  saas_targets:
+  - Salesforce
+  - ServiceNow
+  - Box
+  interfaces:
+  - name: Purpose Policy Store
+    description: Stores per-purpose definitions of allowed data types, connected systems, token limits, and TTL; versioned
+      and regularly reviewed with data owners.
+  - name: Context Builder
+    description: Fetches data according to the purpose policy, passes it through DLP/classification checks, applies token
+      budget, and attaches version and purpose tags.
+  - name: DLP / Classification Filter (KM-6)
+    description: Detects and masks or removes any data whose classification is not permitted by the current purpose before
+      the package is handed to the LLM.
+  value_kpis:
+  - context_token_cost_per_request
+  - purpose_policy_violation_count
+  - llm_answer_precision_improvement_pct
+- id: KM-6
+  name: DLP & Redaction Boundary
+  name_ja: DLP・マスキング境界
+  facet: knowledge
+  file: patterns/km-knowledge/km6-dlp-redaction-boundary.md
+  summary: 'DLP detection and masking or tokenization are applied at all five data boundaries (user input, RAG retrieval,
+    tool results, LLM output, and log storage); the highest-classification data is routed to an on-premise or VPC-internal
+    inference path rather than external LLM APIs.
+
+    '
+  summary_ja: 'LLM・RAG・ツール実行・ログの入出力すべての境界でDLP検出・マスキング・ トークナイゼーションを適用し、PII/シークレット/契約情報の外部送信と ログへの機密データ混入を防ぐ。最高機密は外部LLMへの送信自体を禁止する。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - any_enterprise_use_case_with_possible_pii_secrets_or_contract_data
+  - external_llm_api_in_use
+  - gdpr_appi_or_similar_pii_processing_control_audit_required
+  not_applicable_when:
+  - public_information_only_internal_tool_no_pii
+  - completely_air_gapped_on_premise_no_external_transmission_possible
+  - extremely_strict_real_time_latency_requirements_dlp_scan_bottleneck
+  risk_tiers:
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - Microsoft Purview
+  - Google Cloud DLP / Sensitive Data Protection
+  - Presidio (Microsoft OSS)
+  - GitGuardian
+  - truffleHog
+  - HashiCorp Vault Transit Secrets Engine
+  - Format-Preserving Encryption (FPE)
+  - Fluentd / Logstash masking plugins
+  saas_targets:
+  - Any external LLM API (Claude, GPT, etc.)
+  interfaces:
+  - name: Input DLP Gate
+    description: Scans user input and RAG chunks for PII and secrets before sending to the LLM; applies masking or tokenization
+      and routes highest-classification data to an internal inference path.
+  - name: Output DLP Gate
+    description: Post-scans LLM output and tool results for residual sensitive data before returning to the user or writing
+      to logs.
+  - name: Log Filter
+    description: Strips PII from log collection pipeline (Fluentd/Logstash) so that audit logs do not contain plaintext sensitive
+      data.
+  value_kpis:
+  - pii_leakage_incident_count
+  - dlp_false_positive_rate_pct
+  - agent_applicable_scope_expansion_rate
+- id: KM-7
+  name: Ephemeral Secure Context Bus
+  name_ja: 揮発・機密計算コンテキストバス
+  facet: knowledge
+  file: patterns/km-knowledge/km7-ephemeral-secure-context-bus.md
+  summary: 'Context is processed in an isolated inference environment (VPC-hosted or Confidential GPU) and all memory is released
+    and zeroed at session end; only metadata and input/output hashes are sent to the observability layer, leaving no plaintext
+    residue even in logs.
+
+    '
+  summary_ja: 'コンテキストを隔離推論環境で処理し、セッション終了と同時にメモリを解放・ゼロ化する。 ログ基盤にはメタデータと入出力ハッシュのみ送信し、本文を一切残さない。 人事評価・M&A・インサイダー情報など最高機密処理向けの揮発アプローチ。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - highest_classification_data_hr_evaluation_ma_insider_information
+  - regulatory_data_requiring_no_plaintext_in_logs_or_cache
+  - ma_or_insider_related_information_processing
+  not_applicable_when:
+  - low_classification_bulk_processing_over_isolation_cost
+  - development_phase_requiring_plaintext_logs_for_debugging
+  - continuous_context_accumulation_use_cases
+  risk_tiers:
+  - 4
+  - 5
+  key_technologies:
+  - Azure OpenAI (VNet integration / private endpoint)
+  - AWS Bedrock (VPC endpoint)
+  - Azure Confidential VM
+  - NVIDIA H100 Confidential Computing (Confidential GPU)
+  - AMD SEV-SNP
+  - Redis No-Persistence
+  - Presidio
+  - DPA (Data Processing Agreement)
+  saas_targets:
+  - Salesforce
+  - Workday
+  interfaces:
+  - name: DLP Proxy
+    description: Masks and classifies data collected from source SaaS systems before it enters the isolated inference environment.
+  - name: Isolated Inference Environment
+    description: VPC-hosted LLM (or Confidential GPU) with learning opt-out; context lives in-memory only and is zeroed immediately
+      after the session completes.
+  - name: Sealed Audit Metadata Sink
+    description: Sends only metadata (latency, token count, cost) and hashed input/output to the observability lake; full
+      content is never persisted.
+  value_kpis:
+  - highest_classification_workflow_automation_coverage_pct
+  - sealed_audit_metadata_completeness_pct
+  - confidential_processing_latency_ms
+- id: IN-1
+  name: Enterprise Tool / MCP Gateway
+  name_ja: エンタープライズツール／MCPゲートウェイ
+  facet: integration
+  file: patterns/in-integration/in1-tool-mcp-gateway.md
+  summary: 'All tool calls from agents are routed through a centrally managed Tool/MCP Gateway that enforces authentication,
+    authorization (PDP/PEP), schema validation, rate control, DLP, idempotency, audit logging, and dry-run in one place; API
+    credentials are never exposed to agents.
+
+    '
+  summary_ja: 'すべてのツール呼び出しを企業管理のGatewayに集約し、認証・認可・スキーマ検証・ レート制御・DLP・監査・冪等性・ドライランを一箇所で適用する。 APIキーはエージェントに渡さずGateway側のSecret
+    Managerが保持する。
+
+    '
+  requires:
+  - ID-6
+  required_by: []
+  applies_when:
+  - multiple_tool_integrations_or_multiple_agents_sharing_common_tools
+  - multiple_mcp_servers_in_the_environment
+  - audit_and_authorization_required_for_tool_calls
+  not_applicable_when:
+  - single_llm_chat_without_tool_use
+  - single_tool_proof_of_concept
+  - fully_isolated_experimental_environment
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  - 4
+  key_technologies:
+  - MCP Gateway
+  - API Gateway (Kong / Envoy)
+  - Tool Registry (JSON Schema)
+  - Secret Manager
+  - OPA / Cedar (ID-6)
+  - Idempotency Key
+  saas_targets:
+  - Salesforce
+  - Workday
+  - Slack
+  - ServiceNow
+  - GitHub
+  interfaces:
+  - name: Tool Catalog
+    description: JSON Schema-based registry managing schema, required permissions, estimated cost, version, and enabled/disabled
+      state for each tool.
+  - name: Auth / Authz Layer (ID-6 PDP/PEP)
+    description: Validates agent identity and evaluates per-tool authorization policy before forwarding the request; credentials
+      are held in Secret Manager not passed to agents.
+  - name: Audit Recorder
+    description: Records every tool invocation with its input, output, actor, agent ID, and correlation ID for cross-system
+      tracing.
+  value_kpis:
+  - new_saas_integration_time_days
+  - tool_call_policy_violation_count
+  - unauthorized_api_key_exposure_incident_count
+- id: IN-2
+  name: SaaS Connector Adapter
+  name_ja: SaaSコネクタアダプタ（腐敗防止層）
+  facet: integration
+  file: patterns/in-integration/in2-saas-connector-adapter.md
+  summary: 'SaaS-specific API differences (authentication, pagination, rate limits, error formats, data models) are encapsulated
+    in per-SaaS adapters that expose a common business-vocabulary interface to agents, so SaaS changes or replacements are
+    contained within the adapter.
+
+    '
+  summary_ja: '各SaaSの独自API仕様・認証・データモデルを、エージェントが扱う共通インターフェイスに 変換する腐敗防止層。SaaS差し替えや仕様変更の影響をアダプタ内部に閉じ込め、 エージェントには業務語彙だけを見せる。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - multiple_saas_crosscutting_or_future_replacement_possible
+  - common_business_vocabulary_across_multiple_saas_needed
+  - agent_prompts_should_remain_saas_agnostic
+  not_applicable_when:
+  - single_saas_with_deep_dependency_and_no_replacement_need
+  - full_use_of_saas_proprietary_features
+  - adapter_layer_overhead_not_justified
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  key_technologies:
+  - Adapter Pattern
+  - Anti-Corruption Layer
+  - OpenAPI
+  - GraphQL Federation
+  - Connector SDK
+  - Error Normalization
+  saas_targets:
+  - Salesforce
+  - Workday
+  - ServiceNow
+  - Slack
+  - Google Workspace
+  interfaces:
+  - name: Canonical Tool Interface
+    description: Business-vocabulary API (e.g., get_customer, create_ticket, update_opportunity) that agents use regardless
+      of the underlying SaaS.
+  - name: SaaS-Specific Adapter
+    description: Encapsulates authentication method, pagination, rate limit handling, and error normalization for one SaaS;
+      changes to SaaS API are absorbed here.
+  - name: Error Normalizer
+    description: Converts SaaS-specific error codes into a common error type so agents and orchestrators handle errors uniformly.
+  value_kpis:
+  - saas_api_change_agent_rework_hours
+  - saas_connector_reuse_count
+  - integration_defect_rate_per_saas
+- id: IN-3
+  name: Rate / Quota Broker
+  name_ja: レート／クォータ調停ブローカー
+  facet: integration
+  file: patterns/in-integration/in3-rate-quota-broker.md
+  summary: 'A centralized token-bucket broker manages SaaS API quota across all agents, enforces priority queues (interactive
+    > batch) with per-tenant fairness caps, and handles 429 retries centrally with exponential back-off to prevent retry storms
+    from individual agents.
+
+    '
+  summary_ja: 'SaaS APIレート上限をトークンバケット型ブローカーで集中管理し、対話（優先高）と バッチ（優先低）で公平に枠を配分する。429発生時はBrokerが集中リトライし、 個々のエージェントが独自にリトライするリトライストームを防ぐ。
+
+    '
+  requires: []
+  required_by: []
+  applies_when:
+  - more_than_1000_users_sharing_same_saas_via_agents
+  - batch_jobs_and_interactive_use_coexisting
+  - monthly_saas_api_request_quota_exists
+  not_applicable_when:
+  - poc_small_scale_with_ample_api_quota
+  - agents_only_call_internal_apis_with_no_rate_limits
+  - no_rate_limited_saas_in_use
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  key_technologies:
+  - Redis (Lua atomic bucket operations)
+  - Envoy Rate Limit Service
+  - Kong Rate Limiting Plugin
+  - Apigee Quota Policy
+  - RabbitMQ Priority Queue
+  - Redis Sorted Set
+  saas_targets:
+  - Salesforce
+  - ServiceNow
+  - Slack
+  interfaces:
+  - name: Token Bucket per SaaS
+    description: Per-SaaS bucket with configurable burst capacity, refill rate, and per-tenant maximum share; approaching
+      exhaustion triggers back-pressure to upstream agents.
+  - name: Priority Queue
+    description: Separates interactive (high priority) and batch (low priority) requests; batch is scheduled to off-peak hours
+      when quota is constrained.
+  - name: Centralized Retry Handler
+    description: Absorbs 429 responses from SaaS APIs and retries with exponential back-off plus jitter; individual agents
+      receive only back-pressure signals, never raw 429s.
+  value_kpis:
+  - interactive_agent_sla_compliance_pct
+  - saas_api_throttling_incident_count
+  - batch_off_peak_execution_rate_pct
+- id: IN-4
+  name: Existing iPaaS Reuse
+  name_ja: 既存iPaaS資産再利用
+  facet: integration
+  file: patterns/in-integration/in4-existing-ipaas-reuse.md
+  summary: 'Instead of rebuilding SaaS integrations from scratch, existing iPaaS flows (MuleSoft, Workato, Boomi, ESB) are
+    wrapped with thin MCP adapters and called through the Tool Gateway; only net-new integrations are built as native MCP
+    servers, preventing duplicate maintenance.
+
+    '
+  summary_ja: 'エージェント導入のたびにSaaS統合をゼロから作り直さず、既存iPaaSを薄いMCPアダプタで ラップしてTool Gateway経由で呼び出す。新規統合のみMCPで追加するハイブリッド構成で 重複投資と保守分散を防ぐ。
+
+    '
+  requires:
+  - IN-1
+  required_by: []
+  applies_when:
+  - mulesoftworkato_boomi_or_esb_already_running_with_many_integration_flows
+  - integration_team_and_ai_team_separate_with_difficult_knowledge_transfer
+  - gradual_migration_needed_keeping_existing_flows_while_adding_agent_capability
+  not_applicable_when:
+  - first_integration_project_with_no_existing_ipaas
+  - existing_flow_quality_too_low_and_rebuild_more_rational
+  - only_a_few_saas_connections_with_low_mcp_direct_implementation_effort
+  risk_tiers:
+  - 1
+  - 2
+  - 3
+  key_technologies:
+  - MuleSoft Anypoint Platform
+  - Workato
+  - Boomi AtomSphere
+  - Apache Camel / IBM MQ
+  - Apigee / Kong
+  - MCP Adapter (thin wrapper)
+  saas_targets:
+  - Salesforce
+  - ServiceNow
+  - ERP (SAP, Oracle)
+  - On-premise systems
+  interfaces:
+  - name: MCP Adapter (iPaaS Wrapper)
+    description: Thin translation layer that converts MCP tool-call format to the iPaaS API or webhook trigger; all business
+      logic remains inside the iPaaS flow.
+  - name: iPaaS Flow (existing)
+    description: Existing integration flow with its connection config, transformation logic, error handling, and monitoring
+      retained as-is.
+  - name: Contract Test Suite
+    description: Consumer-driven contract tests on the MCP adapter to auto-detect when iPaaS flow changes break the agent-facing
+      interface.
+  value_kpis:
+  - integration_build_cost_vs_greenfield_pct
+  - duplicate_maintenance_surface_count
+  - time_to_first_agent_integration_days
+- id: OB-1
+  name: Enterprise Agent Observability Lake
+  name_ja: エンタープライズエージェント観測基盤（Observability Lake）
+  facet: observability
+  file: patterns/ob-observability/ob1-observability-lake.md
+  summary: 'A three-layer observability store captures every agent execution: metadata (Trace DB), full content (encrypted
+    object storage, PII-masked), and aggregated metrics (DWH); instrumented with OpenTelemetry GenAI semantic conventions
+    it enables incident investigation, quality improvement, and cost chargeback.
+
+    '
+  summary_ja: '実行ログ・トレース・コスト・ツール呼び出し・取得文脈・承認・評価結果を三層に分離して 統合する観測基盤。メタデータはTrace DB、本文はPIIマスキング済み暗号化ストレージ、 集計指標はDWH。OpenTelemetry
+    GenAI semantic conventionsに準拠する。
+
+    '
+  requires: []
+  required_by:
+  - GV-7
+  - GV-9
+  - GV-6
+  applies_when:
+  - all_production_ai_deployments
+  not_applicable_when:
+  - unlimited_plaintext_logging_of_all_prompts_is_never_appropriate
+  risk_tiers:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - OpenTelemetry (GenAI semantic conventions)
+  - Jaeger
+  - Tempo
+  - Datadog APM
+  - S3 (encrypted)
+  - GCS
+  - BigQuery
+  - Snowflake
+  - Redshift
+  - Grafana
+  - Prompt Store + Replay Tool
+  saas_targets: []
+  interfaces:
+  - name: OTel Instrumentation Layer
+    description: Records run_id, session_id, user_id, agent_id, model, prompt_version, tool_calls, retrieved_context, approval_status,
+      token_usage, cost, latency, error, and risk_tier per execution using OpenTelemetry GenAI conventions.
+  - name: Three-Layer Storage
+    description: Layer 1 (Trace DB) for fast metadata queries; Layer 2 (encrypted object store, PII-masked) for full content
+      keyed by run_id; Layer 3 (DWH) for quality scores and ROI aggregations.
+  - name: Replay Tool
+    description: Reconstructs past executions from stored metadata and content for incident investigation and quality regression
+      testing.
+  value_kpis:
+  - mean_time_to_root_cause_hours
+  - agent_quality_improvement_cycle_days
+  - cost_per_agent_run_usd
+- id: OB-2
+  name: Unified Audit & Lineage
+  name_ja: 統一監査台帳・系統追跡（三者帰責）
+  facet: observability
+  file: patterns/ob-observability/ob2-unified-audit-lineage.md
+  summary: 'Every agent action is recorded immutably as a triple of principal (human), workload (agent), and target system;
+    OpenTelemetry correlation IDs link internal agent audit records with each SaaS audit log (Salesforce Shield, Okta System
+    Log, etc.) to enable full incident replay and regulatory reporting.
+
+    '
+  summary_ja: 'すべてのエージェント行為を人＋エージェント＋対象システムの三者で改ざん不能に記録する。 相関IDでエージェント内監査と各SaaS監査ログを一本化し、インシデント時のリプレイと 規制当局への報告に対応する統一監査基盤。
+
+    '
+  requires:
+  - GV-1
+  - RT-8
+  required_by:
+  - GV-9
+  applies_when:
+  - all_production_ai_deployments
+  - regulated_industries_requiring_full_action_traceability
+  not_applicable_when: []
+  risk_tiers:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  key_technologies:
+  - Splunk
+  - Microsoft Sentinel
+  - Salesforce Shield
+  - Google Workspace Audit
+  - Okta System Log
+  - OpenTelemetry Trace ID / Span ID
+  - Event Store (append-only / WORM)
+  saas_targets:
+  - Salesforce
+  - Google Workspace
+  - Okta
+  interfaces:
+  - name: Three-Party Audit Record
+    description: Appends principal (human ID), workload (agent ID), tool/system, input/output hashes, policy decision (allow/deny/require_approval),
+      delegation chain, and cost to an append-only immutable log per action.
+  - name: Correlation ID Stitcher
+    description: Uses OpenTelemetry Trace ID / Span ID to join agent-side audit records with SaaS-side audit logs (Salesforce
+      Shield, Okta System Log) enabling cross-system investigation.
+  - name: SIEM Integration
+    description: Forwards normalized audit events to Splunk or Microsoft Sentinel so that agent actions appear alongside human
+      actions in the same correlation queries.
+  value_kpis:
+  - regulatory_audit_preparation_time_hours
+  - incident_root_cause_time_to_identify_hours
+  - audit_log_completeness_pct

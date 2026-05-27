@@ -2,6 +2,14 @@
 title: "RT-2 RACI-based Multi-Agent Orchestration"
 description: "A pattern for designing multi-agent configurations based on RACI (Responsible, Accountable, Consulted, Informed) responsibility assignment structures rather than task complexity."
 status: done
+pattern_id: RT-2
+facet: runtime
+requires: ["OB-2"]
+required_by: []
+applies_when: [cross_department_decision_flows_with_multiple_accountable_parties, high_risk_tasks_requiring_approval_and_escalation, compliance_domains_requiring_raci_audit_trail]
+not_applicable_when: [simple_tasks_contained_in_single_department, real_time_interactive_low_latency_required, raci_matrix_does_not_exist_for_the_process]
+risk_tiers: [3, 4]
+key_technologies: [LangGraph, AutoGen, Semantic Kernel, YAML/JSON RACI definition, OpenTelemetry]
 ---
 
 # RT-2 RACI-based Multi-Agent Orchestration
@@ -88,6 +96,50 @@ The orchestrator records who is R, A, C, and I at each phase in a decision log. 
 **Infinite feedback loops from Consulted.** Consulted agents can end up requesting additional opinions from each other. Limit C involvement to one round and explicitly design R's responsibility to aggregate.
 
 **Backfilling decision logs.** Designs that write logs in a batch after processing completes will lose records upon mid-process failure. Record in real time at the start and end of each phase.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Orchestrator
+    description: "Drives the workflow according to the RACI matrix, recording each phase start/end in the decision log in real time."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Orchestrator processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Decision Log
+    description: "Structured log (OpenTelemetry) that records which role (R/A/C/I) performed which action and when."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Decision Log processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Approval Gate
+    description: "Prevents progression to the next phase until the Accountable human provides approval."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Approval Gate processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

@@ -2,6 +2,14 @@
 title: "EX-2 業務埋め込み＋独立ワークベンチ（チャネル配置）"
 description: "EX-1 Gateway をどこに設置するかの構成オプション。日常ツール埋め込みと横断・承認向け独立ワークベンチを組み合わせる配置パターン。"
 status: done
+pattern_id: EX-2
+facet: experience
+requires: ["EX-1", "EX-3"]
+required_by: []
+applies_when: [slack_teams_salesforce_are_the_central_daily_tools, cross_system_long_running_or_approval_workflows_are_common, incremental_ui_expansion_starting_with_embedded_then_adding_workbench]
+not_applicable_when: [business_tools_are_fragmented_with_too_many_embedding_targets, all_tasks_are_short_and_single_system_no_standalone_portal_needed, poc_stage_where_ui_shape_should_not_be_fixed]
+risk_tiers: [1, 2, 3]
+key_technologies: [Slack Bolt SDK, Block Kit, Microsoft Bot Framework, Adaptive Cards, "Lightning Web Components (LWC)", Salesforce Embedded Service, ServiceNow Service Portal Widget, React/Vue SPA, "Server-Sent Events (SSE)"]
 ---
 
 # EX-2 業務埋め込み＋独立ワークベンチ（チャネル配置）
@@ -12,7 +20,9 @@ status: done
 
 ## 解決する企業課題
 
-エージェントを「別のポータルを開いて使う」ものとして提供すると、日常業務の流れが断ち切られて使われなくなる。ツール切り替え摩擦（コンテキストスイッチ）は、AI の機能品質に関わらず採用率の最大の阻害要因になる。現場担当者は Slack や Salesforce の画面を離れることなく業務を完結したい——この動線に沿ってエージェントを配置しなければ、展開数のわりに利用率が低い「名前だけの AI」になる。一方で独立ポータルを一切持たないと、横断業務で複数画面の往復が発生し、承認証跡の管理も困難になる。この二通りを使い分けることで、採用率と統制の両立を実現する。
+エージェントを「別のポータルを開いて使う」ものとして提供すると、日常業務の流れが断ち切られて使われなくなる。ツール切り替えの摩擦（コンテキストスイッチ）は、AI の機能品質に関わらず採用率を下げる最大の要因だ。現場担当者は Slack や Salesforce の画面を離れることなく業務を完結したい——この動線に沿ってエージェントを置かなければ、展開数のわりに利用率が低い「名前だけの AI」になってしまう。
+
+一方、独立ポータルをまったく持たないと、横断業務で複数画面を往復することになり、承認証跡の管理も難しくなる。この二通りを使い分けることで、採用率と統制を両立させる。
 
 !!! tip "最小成立条件（MVP）"
     最も利用者が多い業務ツール（例：Slack）への埋め込み1つと、EX-1 Gateway 経由の共通バックエンドを用意する。独立ワークベンチは承認フローが必要になった段階で追加する。
@@ -54,7 +64,7 @@ flowchart TB
     ORC --> TOOLS
 ```
 
-業務埋め込みでは、エージェントはユーザーが既に開いているコンテキスト（商談ページ、チケット画面など）を引き継いで動作する。独立ワークベンチでは、長時間実行の進捗ストリーミング・承認アクション・出力の差分ビューを一画面で提供する。
+業務埋め込みでは、エージェントはユーザーが既に開いているコンテキスト（商談ページ、チケット画面など）を引き継いで動作する。独立ワークベンチでは、長時間実行の進捗ストリーミング・承認アクション・出力の差分ビューを一画面にまとめて提供する。
 
 ## 向き／不向き
 
@@ -76,11 +86,55 @@ flowchart TB
 ## 落とし穴／選定の勘所
 
 !!! warning "独立ポータル一本化の失敗"
-    独立ポータルだけを作り「そこを開けば何でもできる」とするのは、日常業務からエージェントが切り離される最大の要因である。日常タスクは業務ツールへの埋め込みを優先し、独立ポータルは横断・長時間・承認用途に限定する。
+    独立ポータルだけを作り「そこを開けば何でもできる」とするのは、日常業務からエージェントが切り離される最大の要因になる。日常タスクは業務ツールへの埋め込みを優先し、独立ポータルは横断・長時間・承認用途に絞る。
 
-- 埋め込み UI と独立ポータルで異なるエンドポイントを呼ぶ実装にすると、権限・履歴・監査が乖離する。両者は同一の Gateway を経由することを原則とする。
-- 埋め込み UI のアクセストークンをローカルに保存するのは危険である。トークンの取り回しは [ID-5 JIT Scoped Credentials](../id-identity/id5-jit-scoped-credentials.md) の原則に従い、呼び出しごとに短命トークンを取得する。
-- 承認フローをチャットのみで実装すると、承認証跡の再現が困難になる。独立ワークベンチで承認アクションと証跡を一体管理する。
+- 埋め込み UI と独立ポータルで異なるエンドポイントを呼ぶ実装は避けたい。権限・履歴・監査が乖離するためだ。両者は同一の Gateway を経由させることを原則とする。
+- 埋め込み UI のアクセストークンをローカルに保存するのは危険だ。[ID-5 JIT Scoped Credentials](../id-identity/id5-jit-scoped-credentials.md) の原則に従い、呼び出しごとに短命トークンを取得する。
+- 承認フローをチャットのみで実装すると、承認証跡の再現が困難になる。独立ワークベンチで承認アクションと証跡を一体管理することを勧める。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Embedded UI (Business Tool)
+    description: "Lightweight widget injected into Slack, Teams, or Salesforce that inherits the current business context and submits requests to EX-1 Gateway."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Embedded UI (Business Tool) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Standalone Workbench
+    description: "React/Vue SPA providing streaming progress, approval actions, and diff view for long-running or cross-system tasks."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Standalone Workbench の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Channel Adapter
+    description: "Normalizes each platform's event format and forwards to EX-1 Gateway; absorbs UI differences so the backend remains channel-agnostic."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Channel Adapter の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

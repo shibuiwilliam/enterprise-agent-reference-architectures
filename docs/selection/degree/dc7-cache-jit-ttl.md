@@ -8,7 +8,33 @@ status: done
 
 ## 概要
 
-同じ質問を 10 人が連続で投げたとき、毎回フル推論するのはコストの無駄である。しかし人事異動の直後に「この人の部下一覧」をキャッシュから返せば、古い組織図に基づく誤った結果を返すことになる。同様に、JIT で発行した一時認証トークン（[ID-5](../../patterns/id-identity/id5-jit-scoped-credentials.md)）の有効期間を長くすれば再認証の手間は減るが、権限剥奪後もアクセスが残るリスクが生まれる。キャッシュの積極度と資格情報の TTL を、用途のリスクに応じてどう調整するかを扱う。
+同じ質問を 10 人が連続で投げたとき、毎回フル推論するのはコストの無駄だ。しかし人事異動の直後に「この人の部下一覧」をキャッシュから返せば、古い組織図に基づく誤った結果を返すことになる。同様に、JIT で発行した一時認証トークン（[ID-5](../../patterns/id-identity/id5-jit-scoped-credentials.md)）の有効期間を長くすれば再認証の手間は減るが、権限剥奪後もアクセスが残るリスクが生まれる。キャッシュの積極度と資格情報の TTL を、用途のリスクに応じて調整する方法を扱う。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-7
+parameter: cache_jit_ttl
+rules:
+  - condition: "data_freshness_requirement == 'tolerate_stale' AND operation_risk == 'low' AND personalized == false"
+    cache_strategy: aggressive
+    cache_ttl: long
+    jit_credential_ttl: hours
+    reason: "変化が少なく非パーソナライズかつ低リスクなデータは積極的にキャッシュしてレイテンシとコストを削減できる"
+  - condition: "data_freshness_requirement == 'real_time' OR personalized == true OR data_classification IN ['confidential', 'top_secret']"
+    cache_strategy: disabled
+    jit_credential_ttl: minutes
+    reason: "パーソナライズ応答・時系列依存データ・機密情報を含む取得結果はキャッシュを無効化し、常にフレッシュな取得を行う"
+  - condition: "operation_has_side_effects == true OR confidential_data_in_result == true"
+    cache_strategy: disabled
+    similarity_threshold: high
+    reason: "高害リスク領域（機密情報を含む検索・副作用を持つ操作）は類似度閾値を高く設定し、TTLを短くする"
+  - condition: "permission_change_event_received == true OR employee_departure == true OR session_ended == true"
+    action: force_expire_jit_credentials
+    reason: "権限変更・退職・セッション終了を検知してTTL期限前に資格情報を強制失効させる仕組みを設ける"
+  - condition: "cache_holding_stale_permissions == true"
+    action: invalidate_cache_on_permission_event
+    reason: "キャッシュが古い権限状態を保持するとID-4で実現した最小権限の効果が損なわれる。キャッシュ無効化と権限変更イベントを連動させる"
+```
 
 ## 過小・過大の害
 
@@ -33,7 +59,7 @@ status: done
 - 権限変更・退職・セッション終了を検知して TTL 期限前に資格情報を強制失効させる仕組みを設ける
 
 !!! tip "キャッシュと最小権限の整合"
-    キャッシュが古い権限状態を保持すると、[ID-4 Permission Mirror & Least-of](../../patterns/id-identity/id4-permission-mirror-least-of.md) で実現した最小権限の効果が損なわれる。キャッシュ無効化と権限変更イベントを連動させる。
+    キャッシュが古い権限状態を保持すると、[ID-4 Permission Mirror & Least-of](../../patterns/id-identity/id4-permission-mirror-least-of.md) で実現した最小権限の効果が損なわれる。キャッシュ無効化と権限変更イベントを連動させること。
 
 ## 調整の仕組み
 

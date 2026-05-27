@@ -8,7 +8,30 @@ status: done
 
 ## 概要
 
-エージェントが「前回の会話の続き」を覚えていればパーソナライズが効くが、退職した社員の業務記録や終了したプロジェクトの機密メモをいつまでも保持していれば、漏洩リスクの塊になる。「何をどのくらいの期間覚えておくか」「いつ忘れさせるか」を、セッション・個人・プロジェクト・組織の各スコープ（[KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md)）ごとに設計する方法を扱う。
+エージェントが「前回の会話の続き」を覚えていればパーソナライズが効く。しかし退職した社員の業務記録や終了したプロジェクトの機密メモをいつまでも保持していれば、漏洩リスクの塊になる。「何をどのくらいの期間覚えておくか」「いつ忘れさせるか」——この設計を、セッション・個人・プロジェクト・組織の各スコープ（[KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md)）ごとに行う方法を扱う。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-5
+parameter: memory_retention_ttl
+rules:
+  - condition: "memory_scope == 'session'"
+    ttl: session_end
+    reason: "セッションスコープの記憶はセッション終了で破棄する。一時的な作業コンテキストは永続化不要"
+  - condition: "memory_scope == 'personal' AND reference_frequency IN ['high', 'medium']"
+    ttl: 90_days_rolling_with_extension
+    reason: "頻繁に参照される個人設定・業務スタイルは90日ローリングTTLで保持し、アクセス時に延長する"
+  - condition: "memory_scope == 'personal' AND reference_frequency == 'never'"
+    action: auto_archive_then_delete
+    ttl: 30_days_after_last_access
+    reason: "未参照のメモリは自動アーカイブ・削除する。古い情報に基づく誤判断とストレージコスト増大を防ぐ"
+  - condition: "lifecycle_event IN ['employee_departure', 'role_change', 'project_end']"
+    action: immediate_expiry_and_permission_revocation
+    reason: "プロジェクト終了・退職・異動でメモリと権限を失効させる。人事システムとの連携で自動失効を実装する"
+  - condition: "user_requests_deletion == true"
+    action: immediate_delete_all_personal_scope
+    reason: "本人がメモリを削除・修正できる権利を設計に含める（ID-8 Consent & Access Transparency）"
+```
 
 ## 過小・過大の害
 
@@ -21,8 +44,8 @@ status: done
 
 - **重要度 × 鮮度 × 参照頻度**の3軸で残すものを選別する。古い詳細は要約へ圧縮する
 - [KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) のスコープ（セッション・個人・プロジェクト・組織）ごとに TTL と失効条件を設定する
-- **ライフサイクルイベントとの連動**：プロジェクト終了・退職・異動でメモリと権限を失効させる
-- **本人の消去権**：本人がメモリを削除・修正できる権利を設計に含める（[ID-8](../../patterns/id-identity/id8-consent-access-transparency.md)）
+- **ライフサイクルイベントとの連動**：プロジェクト終了・退職・異動のタイミングでメモリと権限を失効させる
+- **本人の消去権**：本人がメモリを削除・修正できる権利を設計に組み込む（[ID-8](../../patterns/id-identity/id8-consent-access-transparency.md)）
 
 ## 調整の仕組み
 

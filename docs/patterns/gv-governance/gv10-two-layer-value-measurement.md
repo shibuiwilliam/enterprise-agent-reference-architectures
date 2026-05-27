@@ -2,6 +2,14 @@
 title: "GV-10 Three-Layer Value Measurement（採用定着×生産性×経営KPI）"
 description: "採用・定着、従業員効率化、経営価値の三層で計測し、利用ログと業務成果を紐づけてAI投資の効果を可視化するパターン。"
 status: done
+pattern_id: GV-10
+facet: governance
+requires: ["GV-8", "OB-1"]
+required_by: []
+applies_when: [enterprise_wide_rollout_phase_requiring_management_approval, enterprises_needing_to_justify_ai_investment_to_business_units, multiple_agents_running_in_parallel_requiring_investment_prioritization]
+not_applicable_when: [initial_poc_or_validation_phase, use_cases_where_linking_to_business_outcomes_is_structurally_difficult]
+risk_tiers: [1, 2, 3, 4]
+key_technologies: [Looker, Tableau, Power BI, "OB-1 Observability Lake", "GV-8 Cost Attribution", Salesforce, Zendesk, Workday]
 ---
 
 # GV-10 Three-Layer Value Measurement（採用定着×生産性×経営KPI）
@@ -12,7 +20,7 @@ status: done
 
 ## 解決する企業課題
 
-エージェントを導入したあと、技術チームはトークン数・レイテンシ・稼働率を報告するが、経営陣は「それで売上がいくら増えたか、コストがいくら減ったか」を問う。この二つが噛み合わないため、経営承認が得られず全社展開が止まるケースが多い。「導入したが価値を説明できず展開が止まる」という状態は、技術的な成功と事業的な評価が分断していることが原因である。複数のエージェントが並走する段階では、どれに投資を集中すべきかを判断するための客観的な比較軸も必要になる。トークン消費量や利用回数を報告するだけでは、経営が求める投資対効果の説明にならない。
+エージェントを導入したあと、技術チームはトークン数・レイテンシ・稼働率を報告するが、経営陣は「それで売上がいくら増えたか、コストがいくら減ったか」を問う。この二つが噛み合わないため、経営承認が得られず全社展開が止まるケースが多い。「導入したが価値を説明できない」という状態は、技術的な成功と事業的な評価が分断していることが原因だ。複数のエージェントが並走する段階では、どれに投資を集中すべきかを判断するための客観的な比較軸も必要になる。トークン消費量や利用回数を報告するだけでは、経営が求める投資対効果の説明にならない。
 
 !!! tip "最小成立条件（MVP）"
     1つの業務指標（例：タスク完了時間）をエージェント利用ログと突合し、導入前後の差分を BI で可視化する。経営 KPI との紐づけは後から拡張できるが、「利用と成果が対になった1枚のダッシュボード」が最小の出発点である。
@@ -98,13 +106,13 @@ flowchart TD
     「月間トークン数が 1 億を超えた」「レスポンスタイム 0.5 秒」「稼働率 99.9%」という指標で成功レポートを作っても、経営陣は「それで何が変わったか」を理解できず、展開拡大の承認が得られない。技術指標は前提に過ぎず、成果指標（売上・コスト・リードタイム・離職率）とセットで報告することが必要である。
 
 !!! warning "計測期間が短すぎる"
-    エージェント導入直後は利用率が低く、成果指標に有意差が出ない。最低でも 3 ヶ月以上の計測期間を確保し、利用が定着した後の数値で比較することが重要である。「1 ヶ月で効果なし」と判断して展開を止める早期打ち切りが典型的なアンチパターンである。
+    エージェント導入直後は利用率が低く、成果指標に有意差が出ない。最低でも 3 ヶ月以上の計測期間を確保し、利用が定着した後の数値で比較することが重要だ。「1 ヶ月で効果なし」と判断して展開を止める早期打ち切りが典型的なアンチパターンになっている。
 
 !!! warning "因果と相関の混同"
-    エージェント利用と業績改善が同時期に起きても、その因果関係を証明するのは難しい。市場環境・組織変更・その他の施策との複合効果を考慮し、コントロールグループ（エージェントを使わない部門・チーム）との比較設計を事前に検討する。
+    エージェント利用と業績改善が同時期に起きても、その因果関係を証明するのは難しい。市場環境・組織変更・その他の施策との複合効果を考慮し、コントロールグループ（エージェントを使わない部門・チーム）との比較設計を事前に検討しておくとよい。
 
 !!! warning "GV-8 なしのコスト計測"
-    ROI の分母となるコストを把握していないと ROI を計算できない。GV-8（コスト配賦）でエージェント別・部門別コストを計測していることが GV-10 の前提条件である。コスト計測なしに ROI ダッシュボードを構築しても、「分母」が抜けた不完全な指標になる。
+    ROI の分母となるコストを把握していないと ROI は計算できない。GV-8（コスト配賦）でエージェント別・部門別コストを計測していることが GV-10 の前提条件だ。コスト計測なしに ROI ダッシュボードを構築しても、「分母」が抜けた不完全な指標になる。
 
 ## 価値→計測→学習→再投資ループ
 
@@ -153,6 +161,50 @@ GV-10 が「何が起きたか（結果）」を計測するのに対し、GV-7 
 ### 第0層（採用・定着）の運用
 
 第0層の指標（採用率・継続利用率・定着率）は[定着・アダプション](../../integration/adoption.md)のチェンジマネジメント施策と連動する。「価値が出ない」原因が「エージェントの品質問題（第1層の劣化）」なのか「そもそも使われていない定着問題（第0層の低迷）」なのかを切り分けることが、改善の起点になる。定着・アダプション章は第0層の指標を引き上げるための運用施策（オンボーディング・チャンピオン制度・フィードバック導線）を担い、GV-10 は計測の正本として3層すべてを統合管理する。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Layer 0 Adoption Metrics
+    description: "Tracks adoption rate, monthly cohort retention, and DAU/MAU stickiness from agent usage logs; feeds change management decisions."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Layer 0 Adoption Metrics の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Layer 1 & 2 Business KPI Joiner
+    description: "Time-series joins agent usage logs with Salesforce lead time, Zendesk CSAT/AHT, and Workday HR KPIs to compute business impact."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Layer 1 & 2 Business KPI Joiner の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: ROI Dashboard
+    description: "Executive-facing report combining cost (GV-8) as denominator and business outcomes as numerator; supports investment expand/improve/retire decisions."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "ROI Dashboard の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

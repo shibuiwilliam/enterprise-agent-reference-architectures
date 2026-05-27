@@ -2,6 +2,14 @@
 title: "OB-1 Enterprise Agent Observability Lake"
 description: "An observability platform that consolidates execution logs, traces, costs, tool calls, retrieved context, approval status, and evaluation results."
 status: done
+pattern_id: OB-1
+facet: observability
+requires: []
+required_by: ["GV-7", "GV-9", "GV-6"]
+applies_when: [all_production_ai_deployments]
+not_applicable_when: [unlimited_plaintext_logging_of_all_prompts_is_never_appropriate]
+risk_tiers: [0, 1, 2, 3, 4, 5]
+key_technologies: ["OpenTelemetry (GenAI semantic conventions)", Jaeger, Tempo, Datadog APM, "S3 (encrypted)", GCS, BigQuery, Snowflake, Redshift, Grafana, Prompt Store + Replay Tool]
 ---
 
 # OB-1 Enterprise Agent Observability Lake
@@ -88,6 +96,50 @@ The system conforms to OpenTelemetry GenAI semantic conventions, instrumenting a
 - Use sampling — full storage only for errors, low-rated results, and a random N% — to balance cost and coverage.
 - For highly confidential processing ([KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)), restrict to metadata only. Eliminating the body layer while retaining the metadata layer achieves both confidentiality and observability.
 - Use correlation IDs (run_id/session_id) to enable cross-cutting tracing with audit logs from each SaaS. A design that can correlate internal agent traces with SaaS-side audit logs using the same ID is decisive for the efficiency of failure investigation.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: OTel Instrumentation Layer
+    description: "Records run_id, session_id, user_id, agent_id, model, prompt_version, tool_calls, retrieved_context, approval_status, token_usage, cost, latency, error, and risk_tier per execution using OpenTelemetry GenAI conventions."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during OTel Instrumentation Layer processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Three-Layer Storage
+    description: "Layer 1 (Trace DB) for fast metadata queries; Layer 2 (encrypted object store, PII-masked) for full content keyed by run_id; Layer 3 (DWH) for quality scores and ROI aggregations."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Three-Layer Storage processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Replay Tool
+    description: "Reconstructs past executions from stored metadata and content for incident investigation and quality regression testing."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Replay Tool processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

@@ -8,7 +8,34 @@ status: done
 
 ## 概要
 
-「社内 FAQ の検索」と「100万円の発注承認」を同じ自律度で扱うわけにはいかない。エージェントにどこまで自動でやらせ、どこから人間の承認を求めるか——この境界線の引き方がビジネス価値とリスクの両方を左右する。[RT-3 Risk-Tiered Autonomy](../../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) の Tier 0–5 を実際にどう区切るかを扱う。
+「社内 FAQ の検索」と「100万円の発注承認」を同じ自律度で扱うわけにはいかない。エージェントにどこまで自動でやらせ、どこから人間の承認を求めるか——この境界線の引き方が、ビジネス価値とリスクの両方を左右する。[RT-3 Risk-Tiered Autonomy](../../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) の Tier 0–5 を実際にどう区切るかを扱う。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-1
+parameter: autonomy_tier_boundary
+rules:
+  - condition: "operation_type == 'read' AND data_classification <= 'internal_general'"
+    tier: 0
+    autonomy: auto_execute
+    reason: "参照系（読み取り）かつ公開〜社内一般データは原則自動。影響が閉じていてリスクが小さい"
+  - condition: "irreversibility == 'reversible' AND impact_scope IN ['personal', 'team'] AND data_classification <= 'department_confidential'"
+    tier: 1
+    autonomy: auto_execute_with_audit
+    reason: "可逆でチーム内に閉じた操作は自動実行可。ただし監査証跡を残し評価パイプラインで品質を定期検証する"
+  - condition: "irreversibility == 'partially_reversible' OR impact_scope IN ['department', 'company_wide'] OR data_classification == 'department_confidential'"
+    tier: 2
+    autonomy: require_approval
+    reason: "部分的に不可逆または影響が部門・全社に及ぶ操作は承認要求。影響の連鎖リスクが人間監視を正当化する"
+  - condition: "irreversibility == 'irreversible' AND impact_type IN ['financial', 'contractual', 'external_publish', 'permission_escalation']"
+    tier: 3
+    autonomy: require_approval_with_dual_sign
+    reason: "不可逆かつ金銭移動・契約締結・外部送信・権限昇格は承認寄りに倒す。複数承認者を要求する構成も検討する"
+  - condition: "deployment_phase == 'initial' OR eval_not_complete == true"
+    tier: 2
+    autonomy: require_approval
+    reason: "導入初期は広めに要承認に設定し、GV-7評価パイプラインで安全性を確認しながら自動範囲を段階的に拡大する"
+```
 
 ## 過小・過大の害
 
@@ -19,14 +46,14 @@ status: done
 
 ## 判断基準
 
-ティア境界は以下の4軸の掛け合わせで決定する。
+ティア境界は以下の4軸を組み合わせて決定する。
 
 - **影響の不可逆性**：取り消し可能な操作（ドラフト作成・参照）は自動寄り、取り消し不能な操作（送金・契約締結・外部送信）は承認寄り
-- **影響額／影響範囲**：影響が個人に閉じるか、チーム・部門・全社・社外に及ぶかで段階を分ける
+- **影響額／影響範囲**：個人に閉じるか、チーム・部門・全社・社外に及ぶかで段階を分ける
 - **データ機密度**：公開情報 → 社内一般 → 部門機密 → 極秘の分類に応じて厳格度を上げる
-- **本人の職責**：依頼者の役職・権限レベルに応じて自律範囲を可変にする。同じ操作でも管理職と一般職で閾値が異なりうる
+- **本人の職責**：依頼者の役職・権限レベルに応じて自律範囲を変える。同じ操作でも管理職と一般職で閾値が異なりうる
 
-参照系（読み取り）は原則自動、更新系（金銭・契約・人事・権限変更・外部公開）は承認寄りに倒す。
+参照系（読み取り）は原則自動、更新系（金銭・契約・人事・権限変更・外部公開）は承認寄りに設定する。
 
 !!! tip "導入初期の原則"
     導入初期は広めに要承認に設定し、[GV-7 評価パイプライン](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)で安全性を確認しながら自動範囲を段階的に拡大する。最初から緩い設定で始めるのは取り返しがつかない。
@@ -36,7 +63,7 @@ status: done
 - [OB-1 Observability Lake](../../patterns/ob-observability/ob1-observability-lake.md) で承認率・自動実行の成功率・インシデント発生率を計測する
 - [GV-7 Evaluation & Governance Pipeline](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) の定期 eval で、自動実行された操作の品質を検証する
 - 承認率が高止まりしている Tier は自動化候補、インシデントが発生した Tier は承認範囲を拡大する
-- Tier 境界の変更自体を変更管理（[GV-1](../../patterns/gv-governance/gv1-agent-control-plane.md)）の対象にし、監査証跡を残す
+- Tier 境界の変更自体も変更管理（[GV-1](../../patterns/gv-governance/gv1-agent-control-plane.md)）の対象とし、監査証跡を残す
 
 ## 関連パターン
 

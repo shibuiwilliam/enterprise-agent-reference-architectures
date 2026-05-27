@@ -2,6 +2,14 @@
 title: "RT-7 Enterprise Saga Agent (Compensating Transactions)"
 description: "A pattern that designs cross-SaaS side-effect processing using the Saga pattern, with each step holding a compensating action to maintain consistency without long-running distributed transactions."
 status: done
+pattern_id: RT-7
+facet: runtime
+requires: ["RT-8"]
+required_by: []
+applies_when: [sequential_multi_saas_writes_requiring_partial_rollback_on_failure, compensation_actions_can_be_defined_per_step, each_step_has_independent_api_supporting_idempotent_calls]
+not_applicable_when: [strict_acid_required_like_financial_debit_credit, only_one_or_two_steps_in_a_single_system, compensation_cannot_be_defined_for_external_system]
+risk_tiers: [3, 4]
+key_technologies: [Temporal, AWS Step Functions, Azure Durable Functions, Outbox Pattern, UUIDv4 Idempotency Key, PostgreSQL, DynamoDB]
 ---
 
 # RT-7 Enterprise Saga Agent (Compensating Transactions)
@@ -99,6 +107,50 @@ This ordering design minimizes the number of steps requiring compensation on fai
 
 !!! warning "Poor idempotency key management"
     If idempotency keys are not generated per request and session IDs are reused directly, different steps within the same session will have the same key, causing unintended deduplication. Issue unique keys for each step.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Saga Orchestrator
+    description: "Drives step execution, persists progress state durably, and triggers the compensation sequence in reverse order on failure."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Saga Orchestrator processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Idempotency Key Manager
+    description: "Issues a unique key per step to prevent duplicate execution on retry; distinct from session IDs."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Idempotency Key Manager processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Compensation Action Library
+    description: "Deterministic code (Temporal Activity etc.) implementing the rollback logic for each step without delegating decisions to the LLM."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Compensation Action Library processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

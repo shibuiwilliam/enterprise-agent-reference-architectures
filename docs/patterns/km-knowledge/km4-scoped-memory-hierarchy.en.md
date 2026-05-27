@@ -2,6 +2,14 @@
 title: "KM-4 Scoped Memory Hierarchy (Scoped Memory Hierarchy)"
 description: "A pattern that isolates memory into personal/team/project/department/company/customer/agent-internal scopes and keeps sharing scope aligned with the organizational graph."
 status: done
+pattern_id: KM-4
+facet: knowledge
+requires: []
+required_by: []
+applies_when: [continuous_use_spanning_multiple_departments_or_projects, agents_handling_customer_information, long_term_projects_where_context_accumulation_is_important]
+not_applicable_when: [completely_stateless_one_off_use, read_only_reference_ai_without_memory_needed, one_time_question_answer_sessions]
+risk_tiers: [2, 3]
+key_technologies: [Memory Store, "Vector DB (Namespace isolation)", ACL, TTL, Memory Review UI]
 ---
 
 # KM-4 Scoped Memory Hierarchy (Scoped Memory Hierarchy)
@@ -78,6 +86,50 @@ Scope boundaries are physically isolated using Vector DB Namespaces or encryptio
 - Include the right for individuals to review and delete their own memory (Right to Erasure) in the design. This is needed not only for regulatory compliance (GDPR, etc.) but also as a means of correction when incorrect information accumulates.
 - Automate memory archive/expiration at project end. If neglected, former project information leaks through transferred employees.
 - Select what to retain and forget based on "importance × freshness × reference frequency," compressing old details into summaries. Unlimited accumulation increases noise and degrades search accuracy for useful context.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Memory Scope Partitioner
+    description: "Physically or logically separates memory by scope using Vector DB namespaces or encryption keys; writes pass through a classification and duplicate-detection gate."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Memory Scope Partitioner processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Lifecycle Event Handler
+    description: "Listens for org events (project closed, employee departed, transfer) and triggers memory archive/expiry and RBAC group removal automatically."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Lifecycle Event Handler processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Memory Review UI
+    description: "Allows individuals to inspect, correct, and erase their personal memory scope to satisfy Right to Erasure requirements."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Memory Review UI processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

@@ -2,6 +2,14 @@
 title: "GV-10 Three-Layer Value Measurement (Adoption & Retention × Productivity × Business KPIs)"
 description: "A pattern that measures across three layers — adoption/retention, employee efficiency, and business value — linking usage logs with business outcomes to visualize the ROI of AI investment."
 status: done
+pattern_id: GV-10
+facet: governance
+requires: ["GV-8", "OB-1"]
+required_by: []
+applies_when: [enterprise_wide_rollout_phase_requiring_management_approval, enterprises_needing_to_justify_ai_investment_to_business_units, multiple_agents_running_in_parallel_requiring_investment_prioritization]
+not_applicable_when: [initial_poc_or_validation_phase, use_cases_where_linking_to_business_outcomes_is_structurally_difficult]
+risk_tiers: [1, 2, 3, 4]
+key_technologies: [Looker, Tableau, Power BI, "OB-1 Observability Lake", "GV-8 Cost Attribution", Salesforce, Zendesk, Workday]
 ---
 
 # GV-10 Three-Layer Value Measurement (Adoption & Retention × Productivity × Business KPIs)
@@ -153,6 +161,50 @@ Where GV-10 measures "what happened (outcomes)," GV-7 evaluates "why it happened
 ### Layer 0 (Adoption & Retention) Operations
 
 Layer 0 metrics (adoption rate, continuing-use rate, stickiness) work in conjunction with change management initiatives described in [Adoption & Change Management](../../integration/adoption.md). Distinguishing whether "value isn't emerging" is caused by "agent quality issues (Layer 1 degradation)" or "not being used in the first place (Layer 0 stagnation)" is the starting point for improvement. The Adoption & Change Management section covers operational initiatives for improving Layer 0 metrics (onboarding, champion programs, feedback channels), while GV-10 serves as the canonical measurement system that consolidates all three layers.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Layer 0 Adoption Metrics
+    description: "Tracks adoption rate, monthly cohort retention, and DAU/MAU stickiness from agent usage logs; feeds change management decisions."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Layer 0 Adoption Metrics processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Layer 1 & 2 Business KPI Joiner
+    description: "Time-series joins agent usage logs with Salesforce lead time, Zendesk CSAT/AHT, and Workday HR KPIs to compute business impact."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Layer 1 & 2 Business KPI Joiner processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: ROI Dashboard
+    description: "Executive-facing report combining cost (GV-8) as denominator and business outcomes as numerator; supports investment expand/improve/retire decisions."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during ROI Dashboard processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

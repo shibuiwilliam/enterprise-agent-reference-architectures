@@ -2,6 +2,14 @@
 title: "ID-2 Identity Federation & On-Behalf-Of (OBO Delegation)"
 description: "A pattern that calls downstream SaaS services with a delegation token scoped down to the requester's own permissions, faithfully propagating authorization."
 status: done
+pattern_id: ID-2
+facet: identity
+requires: []
+required_by: ["KM-1", "KM-2"]
+applies_when: [cross_saas_operations_with_strict_audit_requirements, personal_business_support_employee_copilot_requiring_own_permissions, high_risk_workflows_including_write_operations]
+not_applicable_when: [completely_public_information_only, delegation_unsupported_legacy_saas_use_id4_permission_mirror, autonomous_batch_processing_id3_workload_identity_is_more_appropriate]
+risk_tiers: [2, 3, 4]
+key_technologies: [OIDC, SAML 2.0, SCIM, "OAuth 2.0 Token Exchange (RFC 8693)", Okta, Auth0, Microsoft Entra ID, Google Workspace]
 ---
 
 # ID-2 Identity Federation & On-Behalf-Of (OBO Delegation)
@@ -111,6 +119,50 @@ The delegation chain (user → agent → tool) is recorded in the token's actor/
 - Keep token lifetimes short. Extending cache windows to avoid "slowness" violates the principles of [ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md).
 - In multi-agent configurations with long delegation chains, establish a mechanism to verify that scope narrows at each hop. Always confirm that downstream agents do not exceed the original user's permissions.
 - In environments with tens of thousands of users and many SaaS systems, the operational cost of obtaining user consent (the initial OAuth flow) and managing token revocation (on offboarding, transfers, and permission changes) is non-trivial. Design lifecycle management automation in conjunction with the IdP's auto-provisioning (SCIM).
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Token Broker (Gateway)
+    description: "At EX-1 Gateway, exchanges the requester's ID token for a per-SaaS OBO token using direct federation (path a) or RFC 8693 Token Exchange (path b)."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Token Broker (Gateway) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: SaaS Native Authorization (RP)
+    description: "The target SaaS (Relying Party) applies its own native authorization (Salesforce profiles, ServiceNow ACLs) based on the token subject, enforcing data-level permissions."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during SaaS Native Authorization (RP) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Audit Delegation Chain
+    description: "Records actor (agent) and subject (human) separately in audit logs so each SaaS audit (Salesforce Shield, Okta System Log) shows the human principal."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Audit Delegation Chain processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

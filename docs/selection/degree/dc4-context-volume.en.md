@@ -10,6 +10,31 @@ status: done
 
 Just because 50 internal documents were retrieved with RAG does not mean stuffing them all into the prompt improves accuracy. Beyond high token consumption and increased latency, the "lost in the middle" phenomenon — where information in the middle of a long context is ignored — can actually reduce answer quality. This covers how to set top-k and token budgets to narrow down to "the minimum data necessary for this task" rather than "data that can be used" ([KM-5 Purpose-Bound Context](../../patterns/km-knowledge/km5-purpose-bound-context.md)).
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-4
+parameter: context_volume
+rules:
+  - condition: "task_type == 'qa' AND expected_answer_is_factual"
+    recommended_top_k: 3
+    token_budget_fraction: 0.25
+    reason: "Factual Q&A needs only highly-relevant top chunks; over-stuffing causes 'lost in the middle' quality degradation"
+  - condition: "task_type == 'analysis' AND multiple_source_comparison == true"
+    recommended_top_k: 10
+    token_budget_fraction: 0.5
+    reranking: required
+    reason: "Multi-source analysis benefits from broader context; use reranker to filter to most relevant subset within budget"
+  - condition: "data_classification IN ['confidential', 'top_secret'] AND context_contains_sensitive_fields == true"
+    action: dlp_mask_before_inject
+    reason: "Apply DLP/redaction (KM-6) to mask sensitive fields before injecting into context; do not inject raw confidential data"
+  - condition: "context_injection_maximized == true"
+    action: reduce_to_purpose_bound_minimum
+    reason: "Anti-pattern: injecting all available data wastes tokens, raises cost, increases latency, and may expose unnecessary confidential data"
+  - condition: "quality_vs_cost_optimum_unknown == true"
+    action: ab_test_top_k_values
+    reason: "A/B test different top-k and token budget values; measure quality score vs. cost ratio via GV-7 evaluation pipeline"
+```
+
 ## Harms of Too Little or Too Much
 
 | Extreme | State | Harm |

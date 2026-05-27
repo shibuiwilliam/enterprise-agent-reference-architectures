@@ -10,6 +10,27 @@ status: done
 
 Executives often think "let the agent handle all the work and cut headcount." But when a probabilistically operating LLM starts autonomously rewriting Workday payroll data or SAP purchase orders, a single error can be irreversible. "Searching for information and suggesting" (Copilot) and "deciding and completing execution" (Autopilot) should be clearly separated, with the dividing line drawn at "read vs. write."
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-5
+decision_rules:
+  - condition: "operation_type == 'read_only' AND eval_complete == true AND canary_passed == true"
+    recommendation: autopilot
+    reason: "Read-only operations with no irreversible side effects and completed eval/canary validation are safe for autonomous execution"
+  - condition: "operation_type IN ['update', 'delete', 'approve'] OR target_system IN ['erp', 'crm', 'hr']"
+    recommendation: copilot
+    reason: "Irreversible operations and writes to core business systems must retain human-in-the-loop via approval chain"
+  - condition: "approval_rate_historically_high == true AND risk_level == 'low' AND kill_switch_available == true"
+    recommendation: autopilot
+    reason: "Operations that humans historically approve almost always, combined with kill switch and audit trail, are candidates for autopilot promotion"
+  - condition: "infrastructure_readiness == 'incomplete' OR autopilot_expansion_too_fast == true"
+    recommendation: copilot
+    reason: "'Autopilot before readiness' is the primary risk; always start with Copilot and expand incrementally"
+  - condition: "same_agent_mixed_operations == true"
+    recommendation: hybrid_per_operation
+    reason: "Within the same agent, apply Copilot/Autopilot per operation type; do not force a single mode across all operations"
+```
+
 ## Comparison
 
 | Perspective | Copilot (Work Assistance) | Autopilot (Work Proxy) |

@@ -2,6 +2,14 @@
 title: "ID-1 Workforce/Customer 二面分離"
 description: "従業員向けと顧客向けでIdP・データ・エージェント・実行環境・監査を物理的・論理的に完全分離するパターン。"
 status: done
+pattern_id: ID-1
+facet: identity
+requires: []
+required_by: []
+applies_when: [all_enterprises_with_customer_touchpoints, b2b_b2c_requiring_strict_separation_of_customer_and_internal_data, multi_tenant_b2b_saas_where_cross_customer_data_mixing_is_fatal]
+not_applicable_when: [internal_only_no_customer_facing_surface, completely_closed_internal_tool_operations, poc_phase_where_dual_separation_design_is_cost_prohibitive]
+risk_tiers: [2, 3, 4, 5]
+key_technologies: [Okta, Microsoft Entra ID, Google Workspace, Auth0, "Okta Customer Identity (CIAM)", Tenant Isolation, Namespace Isolation, Output Guardrail, PII Filter, Human Handoff]
 ---
 
 # ID-1 Workforce/Customer 二面分離
@@ -14,11 +22,11 @@ status: done
 
 企業が AI エージェントを導入するとき、社内 AI を顧客接点にそのまま流用する誘惑が生まれる。コスト効率や開発速度の観点からは合理的に見えるが、この判断が最も危険な漏洩経路を開く。
 
-従業員面のエージェントは社内ナレッジ・人事情報・未公開案件情報・内部メトリクスにアクセスできる状態で設計される。このエージェントを顧客接点に転用すると、プロンプトインジェクションや意図せぬコンテキスト流出によって社内データが顧客に到達しうる。逆方向——顧客のデータが従業員エージェントの推論に混入するケース——も同様に深刻である。
+従業員面のエージェントは社内ナレッジ・人事情報・未公開案件情報・内部メトリクスにアクセスできる状態で設計される。このエージェントを顧客接点に転用すると、プロンプトインジェクションや意図せぬコンテキスト流出によって社内データが顧客に届いてしまう。逆方向——顧客のデータが従業員エージェントの推論に混入するケース——も同様に深刻だ。
 
-さらに、マルチテナント顧客環境では別顧客の情報が混入する「テナント汚染」リスクがある。ある顧客の問い合わせ文脈が別顧客のセッションに漏れることは、B2B SaaS 企業にとって契約上・法的に致命的な問題になる。
+マルチテナント顧客環境では、別顧客の情報が混入する「テナント汚染」リスクもある。ある顧客の問い合わせ文脈が別顧客のセッションに漏れることは、B2B SaaS 企業にとって契約上・法的に致命的な問題になる。
 
-このパターンが解決する企業課題は次の3点である。
+解決すべき企業課題は次の3点にまとめられる。
 
 - 社内データ・推論過程が顧客チャネルへ流出する構造的リスクの排除
 - 顧客データが社内エージェントの推論に混入する逆方向漏洩の防止
@@ -98,10 +106,54 @@ flowchart TB
 !!! danger "社内AIの流用禁止"
     社内AIの一部機能をそのまま外に出して顧客向けにするのは最も危険なアンチパターンである。顧客面は別境界として独立設計する。
 
-- 面をまたぐデータフローは「存在しない」が既定である。必要な場合は明示ゲートを通し、データ分類・承認・マスキングを経てから移動させる。
-- 顧客面のエージェントが社内用のツール・MCP・RAG インデックスにアクセスできないよう、ネットワーク・実行環境レベルで隔離する。アプリ層のフラグによる制御は不十分である。
-- 顧客別テナント分離により、ある顧客の問い合わせ文脈が別顧客に漏れることを防ぐ。セッション管理・コンテキスト境界の実装をアーキテクチャレビューで必ず確認する。
-- 監査ログも面ごとに分離する。従業員面と顧客面の監査ログが混在すると、インシデント調査時に証跡が汚染される。
+- 面をまたぐデータフローは「存在しない」が既定だ。必要な場合は明示ゲートを通し、データ分類・承認・マスキングを経てから移動させる。
+- 顧客面のエージェントが社内用のツール・MCP・RAG インデックスにアクセスできないよう、ネットワーク・実行環境レベルで隔離する。アプリ層のフラグによる制御では不十分である。
+- 顧客別テナント分離により、ある顧客の問い合わせ文脈が別顧客に漏れることを防ぐ。セッション管理・コンテキスト境界の実装は、アーキテクチャレビューで必ず確認してほしい。
+- 監査ログも面ごとに分離する。従業員面と顧客面の監査ログが混在すると、インシデント調査時に証跡が汚染されてしまう。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Dual IdP Boundary
+    description: "Workforce uses Okta/Entra ID/Google Workspace; customer-facing uses Auth0/Okta CIAM; no identity tokens cross the boundary."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Dual IdP Boundary の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Explicit Cross-Boundary Gate
+    description: "The only permitted path for data to move from workforce to customer side; enforces classification, approval, and KM-6 DLP masking."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Explicit Cross-Boundary Gate の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Tenant Isolation
+    description: "In multi-tenant B2B SaaS, prevents one customer's session context from mixing into another customer's agent execution."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Tenant Isolation の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

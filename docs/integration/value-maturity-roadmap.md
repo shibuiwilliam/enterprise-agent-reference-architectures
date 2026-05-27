@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エンタープライズAIエージェントの価値は一夜にして出るものではない。本ロードマップは、Executive の「価値の階段」、[定着・アダプション](adoption.md)のチェンジマネジメント・ロードマップ（0-30 / 30-90 / 90日〜）、[TO-4 Read-only vs Write-capable](../selection/tradeoff/to4-readonly-vs-write.md) の段階拡張、[RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) のリスク階層を**全社共通の1枚**に統合し、「いつ・何の価値が・どの統制の上に出るか」を経営層に示すためのものである。
+エンタープライズAIエージェントの価値は一夜にして出るものではない。本ロードマップは、Executive の「価値の階段」・[定着・アダプション](adoption.md)のチェンジマネジメント・ロードマップ（0-30 / 30-90 / 90日〜）・[TO-4 Read-only vs Write-capable](../selection/tradeoff/to4-readonly-vs-write.md) の段階拡張・[RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) のリスク階層を**全社共通の1枚**に統合したものだ。「いつ・何の価値が・どの統制の上に出るか」を経営層に示すことを目的としている。
 
 ## 4段階の価値成熟度
 
@@ -44,7 +44,7 @@ flowchart LR
 
 ## 因果連鎖：利用率→効率→事業成果
 
-4段階を通じて価値が積み上がる因果経路を示す。この図は[GV-10 価値計測](../patterns/gv-governance/gv10-two-layer-value-measurement.md)の3層と[定着・アダプション](adoption.md)の指標体系を統合したものである。
+4段階を通じて価値が積み上がる因果経路を示す。この図は[GV-10 価値計測](../patterns/gv-governance/gv10-two-layer-value-measurement.md)の3層と[定着・アダプション](adoption.md)の指標体系を統合したものだ。
 
 ```mermaid
 flowchart LR
@@ -84,7 +84,7 @@ flowchart LR
 
 ## 各部門への適用
 
-本ロードマップは全社共通のフレームワークであり、各部門の具体的なユースケース・KPIは以下を参照する。
+本ロードマップは全社共通のフレームワークだ。各部門の具体的なユースケース・KPIは以下を参照する。
 
 - [Sales Agent](departments/sales.md) — 受注率・案件サイクル・パイプライン健全性
 - [HR Agent](departments/hr.md) — 採用リードタイム・離職率・自己解決率

@@ -10,6 +10,32 @@ status: done
 
 Using the largest model for "tell me how to book a meeting room" wastes cost, but assigning complex contract review to a lightweight model produces insufficient quality. Furthermore, sending prompts containing customer PII to an external API may violate regulations. This covers how to design two-axis routing in [GV-5 Central Model Gateway](../../patterns/gv-governance/gv5-central-model-gateway.md): switching model size by task difficulty, and separating inference paths (within VPC vs. external API) by data sensitivity.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-8
+parameter: model_routing
+rules:
+  - condition: "task_difficulty == 'simple' AND data_classification IN ['public', 'internal_general']"
+    model_size: lightweight
+    routing_path: external_api_or_internal
+    reason: "Simple tasks with non-sensitive data can use lightweight models via any path; minimize cost and latency"
+  - condition: "confidence_score < threshold AND verifier_rejects == true"
+    model_size: escalate_to_stronger
+    routing_path: same_as_original
+    reason: "Cascade escalation: when lightweight model confidence falls below threshold or verifier rejects, escalate to stronger model"
+  - condition: "data_classification == 'top_secret'"
+    routing_path: vpc_or_onprem_only
+    external_api_allowed: false
+    reason: "Top-secret data must route exclusively to VPC-internal or on-premise inference; external API send is prohibited"
+  - condition: "data_classification IN ['public', 'internal_general'] AND latest_capability_required == true"
+    routing_path: external_api_permitted
+    prerequisite: dpa_confirmed
+    reason: "Non-sensitive data may use external API paths; confirm DPA and regional compliance before routing"
+  - condition: "routing_config_manual == true AND classification_auto_labeling == false"
+    action: automate_routing_via_gv5
+    reason: "Anti-pattern: manual routing depends on developer judgment and is error-prone; automate via GV-5 Central Model Gateway with data labels"
+```
+
 ## Harms of Too Little or Too Much
 
 | Extreme | State | Harm |

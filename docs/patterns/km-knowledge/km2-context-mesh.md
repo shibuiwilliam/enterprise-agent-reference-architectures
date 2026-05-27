@@ -2,19 +2,27 @@
 title: "KM-2 Access-Controlled Context Mesh（フェデレーテッド文脈）"
 description: "各データ源を一箇所に集約せず、権限制御を維持したまま分散問い合わせで文脈を供給するパターン。"
 status: done
+pattern_id: KM-2
+facet: knowledge
+requires: ["ID-2"]
+required_by: []
+applies_when: [confidentiality_priority_and_data_residency_regulations_important, cross_saas_confidential_data_needed_transversally, avoiding_audit_complexity_from_data_copies]
+not_applicable_when: [public_data_only_with_no_permission_requirements, extreme_low_latency_requirements_federation_too_slow, bulk_statistical_bi_analysis_where_central_lake_better]
+risk_tiers: [2, 3, 4]
+key_technologies: [Federated Search, Context Router, Retrieval Proxy, Embedding Index per Scope, JIT Retrieval]
 ---
 
 # KM-2 Access-Controlled Context Mesh（フェデレーテッド文脈）
 
 ## 概要
 
-Salesforce の案件情報も Workday の人事データも「一箇所に集めれば便利」に見えるが、コピーした時点で元の権限モデルは崩れる。このパターンは、データを集約せず、本人の OBO トークンで各 SaaS に分散問い合わせ（フェデレーション）してリアルタイムに文脈を取得する。公開情報は中央ベクトル DB でインデックス化し、機密 SaaS データは JIT 取得するハイブリッド構成が実務的な解だ。データ所在地規制への対応もしやすい。
+Salesforce の案件情報も Workday の人事データも「一箇所に集めれば便利」に見える。だがコピーした時点で元の権限モデルは崩れる。このパターンはデータを集約せず、本人の OBO トークンで各 SaaS に分散問い合わせ（フェデレーション）してリアルタイムに文脈を取得する。公開情報は中央ベクトル DB でインデックス化し、機密 SaaS データは JIT 取得するハイブリッド構成が実務的な解だ。データ所在地規制への対応もしやすい。
 
 ## 解決する企業課題
 
-全社データレイクや統一ベクトル DB に機密データを集約すると、複数の問題が同時に発生する。まず、データをコピーした時点で元の権限モデルが失われる（[KM-1](km1-access-controlled-rag.md) の ACL 問題）。次に、Salesforce の案件情報・Workday の人事データ・社内 HR データが一つのインデックスに混在すると、ユーザーの所属や役職に関係なく全データが参照対象になりうる。さらにコピーが増えるほど監査・データカタログ・変更追跡が複雑になる。
+全社データレイクや統一ベクトル DB に機密データを集約すると、複数の問題が同時に発生する。まずデータをコピーした時点で元の権限モデルが失われる（[KM-1](km1-access-controlled-rag.md) の ACL 問題）。次に、Salesforce の案件情報・Workday の人事データが一つのインデックスに混在すると、ユーザーの所属や役職に関係なく全データが参照対象になりうる。コピーが増えるほど監査・データカタログ・変更追跡も複雑になる。
 
-データ所在地規制（GDPR、個人情報保護法）の観点でも、データを本国外のインフラにコピーすることが制約となるケースがある。フェデレーション型は「集約しない」ことを設計原則とし、権限・規制・監査の三課題を一度に解決する。KM-1 との使い分けとしては、ACL を確実に同梱できる文書系は KM-1 でインデックス化し、機密 SaaS データは本パターンで JIT 取得するハイブリッドが実務的な解である。
+データ所在地規制（GDPR、個人情報保護法）の観点でも、データを本国外インフラにコピーすることが制約となるケースがある。フェデレーション型は「集約しない」を設計原則とし、権限・規制・監査の三課題を一度に解決する。KM-1 との使い分けとしては、ACL を確実に同梱できる文書系は KM-1 でインデックス化し、機密 SaaS データは本パターンで JIT 取得するハイブリッドが実務的な解だ。
 
 !!! tip "最小成立条件（MVP）"
     2〜3 の SaaS に対する Context Provider を用意し、本人の OBO トークンで JIT 取得する構成。Context Router の並列化やキャッシュは後続で追加すればよく、まずは「コピーせず都度取得」の原則を1業務で実証する。
@@ -25,7 +33,7 @@ Salesforce の案件情報も Workday の人事データも「一箇所に集め
 
 ## 解決策と設計
 
-Context Router がクエリを各 Context Provider に分散し、各プロバイダが ACL-aware retrieval で権限を維持したまま結果を収集する。機密データは集約せず、本人の OBO トークンで都度取得する。
+Context Router がクエリを各 Context Provider に分散し、各プロバイダが ACL-aware な取得で権限を維持したまま結果を収集する。機密データは集約せず、本人の OBO トークンで都度取得する。
 
 ```mermaid
 flowchart LR
@@ -72,6 +80,50 @@ flowchart LR
 - 公開社内規程は中央ベクトル DB へ、機密 SaaS データは本人トークンでの JIT 取得へ——ハイブリッドが実務的な解である。設計初期に「各データ源をどちらに分類するか」を整理しておく。
 - 「速いから機密も索引化」は禁忌。索引化する場合も ACL 同梱（[KM-1](km1-access-controlled-rag.md)）を必須にする。
 - Context Provider の数が増えるとレイテンシが線形に伸びる可能性がある。並列取得とプロバイダごとの独立タイムアウトを設計し、一部プロバイダの遅延が全体をブロックしないようにする。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Context Router
+    description: "Dispatches queries in parallel to each Context Provider with independent timeouts so one slow provider does not block others."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Context Router の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Context Provider (per SaaS)
+    description: "Calls the target SaaS with the requester's OBO token (ID-2) and returns only the data the requester is permitted to see."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Context Provider (per SaaS) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Context Package Builder
+    description: "Assembles the collected provider results and passes them through KM-5 purpose policy for final filtering before sending to the LLM."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Context Package Builder の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

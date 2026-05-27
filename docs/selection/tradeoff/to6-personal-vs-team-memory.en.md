@@ -10,6 +10,27 @@ status: done
 
 It's convenient when an agent remembers "the approach that person taught me last time." But what if someone transfers to a different team, and the original team's agent can still access that person's work notes? Personal memory used for individual efficiency and project knowledge shared across a team must be physically and logically separated — otherwise they become a breeding ground for leakage and cross-contamination.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-6
+decision_rules:
+  - condition: "information_type IN ['personal_preferences', 'personal_notes', 'confidential_personal']"
+    recommendation: personal_enclave
+    reason: "Personal configuration, work style, and confidential notes must reside only in personal enclave; inaccessible to team members"
+  - condition: "information_type IN ['shared_knowledge', 'project_documents', 'team_decisions']"
+    recommendation: project_workspace
+    reason: "Project knowledge and team decisions belong in shared workspace with ACL following the organizational graph"
+  - condition: "single_store_for_all == true"
+    recommendation: hybrid_separated
+    reason: "Anti-pattern: single store mixes personal confidential data with shared workspace, causing leaks and cross-project contamination"
+  - condition: "user_transfers_team == true OR project_ends == true"
+    recommendation: hybrid_separated
+    reason: "Member changes and project endings require scoped memory invalidation; org graph sync ensures auto-revocation"
+  - condition: "information_type == 'hr_performance_salary_medical'"
+    recommendation: personal_enclave
+    reason: "Personal HR data (performance, salary, medical) must never enter shared workspace even if created as project documents"
+```
+
 ## Comparison
 
 | Perspective | Personal Enclave (Personal Domain) | Project Workspace (Shared Domain) |

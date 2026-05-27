@@ -2,6 +2,14 @@
 title: "GV-4 Industry Policy Pack（業界ポリシーパック）"
 description: "業界特有の規制・慣習・監査要件を再利用可能なポリシーパックとして定義し、policy-as-code・評価・データ分類・承認ルールへ展開するパターン。"
 status: done
+pattern_id: GV-4
+facet: governance
+requires: ["ID-6", "ID-7"]
+required_by: []
+applies_when: [strictly_regulated_industries_with_regular_external_audits, global_enterprises_requiring_simultaneous_multi_regulation_compliance, many_use_cases_requiring_consistent_regulatory_compliance]
+not_applicable_when: [internal_support_ai_only_with_minimal_regulatory_impact, single_team_limited_use_case_where_manual_check_is_more_practical]
+risk_tiers: [3, 4, 5]
+key_technologies: ["OPA (Open Policy Agent) / Rego", YAML Policy Definition, Git, "GV-7 Evaluation Pipeline", ServiceNow GRC, OneTrust, "GV-6 Version Registry"]
 ---
 
 # GV-4 Industry Policy Pack（業界ポリシーパック）
@@ -12,7 +20,7 @@ status: done
 
 ## 解決する企業課題
 
-規制への対応をエージェントごとのプロンプトに記述すると、抜け漏れ・表現ブレ・更新の属人化が避けられない。プロンプトベースの規制対応は担当者が変わると形骸化し、監査時に「規制がどこで強制されているか」を説明できなくなる。プロンプトに書かれた規制文言はプロンプトインジェクション攻撃で無効化できるという根本的な脆弱性も持つ。新しいエージェントを追加するたびに規制対応を再実装すると導入審査のリードタイムが延び、規制改正時に全エージェントのプロンプトを個別更新することも現実的でない。GV-4 は規制を実行基盤レベルで強制することで、プロンプト依存の脆弱な対応から脱却する。
+規制への対応をエージェントごとのプロンプトに記述すると、抜け漏れ・表現ブレ・更新の属人化が避けられない。プロンプトベースの規制対応は担当者が変わると形骸化し、監査時に「規制がどこで強制されているか」を説明できなくなる。プロンプトに書かれた規制文言は、プロンプトインジェクション攻撃で無効化できるという根本的な脆弱性も抱えている。新しいエージェントを追加するたびに規制対応を再実装すれば導入審査のリードタイムが延び、規制改正時に全エージェントのプロンプトを個別更新することも現実的ではない。GV-4 は規制を実行基盤レベルで強制することで、プロンプト依存の脆弱な対応から脱却する。
 
 !!! tip "最小成立条件（MVP）"
     自社の主要規制（例：金融なら FISC、医療なら HIPAA）に対応する禁止操作ルールとデータ分類基準を OPA/YAML で1パック定義し、ID-7 Policy Engine に適用する。
@@ -61,7 +69,7 @@ flowchart TD
     EvalPipeline --> Compliance
 ```
 
-パックはバージョン管理（GV-6）の対象であり、規制改正時にパック単体を更新するだけで全展開先へ変更が伝播する。GV-3（Department Agent Factory）のテンプレートはデプロイ対象の業界に応じて該当パックを自動選択する。
+パックはバージョン管理（GV-6）の対象だ。規制改正時にパック単体を更新するだけで変更が全展開先へ伝播する。GV-3（Department Agent Factory）のテンプレートは、デプロイ対象の業界に応じて該当パックを自動で選択する。
 
 ## 向き／不向き
 
@@ -86,10 +94,54 @@ flowchart TD
     「法令で〇〇は禁止されています」という文言をシステムプロンプトに書くことは、プロンプトインジェクションで無効化できる。規制の強制は実行基盤（Policy Engine・評価パイプライン）に委ね、プロンプトには説明のみを置くことが原則である。
 
 !!! warning "パックの更新漏れ"
-    規制改正があってもパックの更新が後回しになり、古いルールが動き続けるリスクがある。規制改正の追跡を GV-6 と連携させ、改正が検知された際にパック更新チケットを自動起票する運用を設けることが望ましい。
+    規制改正があってもパックの更新が後回しになり、古いルールが動き続けるリスクがある。GV-6 と連携して規制改正を追跡し、改正が検知されたらパック更新チケットを自動起票する運用を設けておくと安心だ。
 
 !!! warning "複数パックの競合"
-    金融かつグローバルの場合、金融パックと GDPR パックが競合するルールを持つことがある。パック間の優先順位・マージ戦略を事前に定義し、矛盾する場合は厳しい方を採用するデフォルト方針を設ける。
+    金融かつグローバルの場合、金融パックと GDPR パックが競合するルールを持つことがある。パック間の優先順位とマージ戦略を事前に定義し、矛盾する場合は厳しい方を採用するデフォルト方針を設けておく。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Policy Pack Definition
+    description: "YAML/OPA-format package per industry/regulation containing prohibited operations, data classification rules, retention periods, approval requirements, and audit evidence requirements."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Policy Pack Definition の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Policy Engine Deployment (ID-7)
+    description: "Deploys pack rules to the ID-7 Policy Engine so they are enforced at runtime independently of agent prompts."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Policy Engine Deployment (ID-7) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Evaluation Rubric (GV-7)
+    description: "Pack-bundled evaluation rubrics and red-team scenarios loaded into the GV-7 CI pipeline to continuously measure regulatory compliance."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Evaluation Rubric (GV-7) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

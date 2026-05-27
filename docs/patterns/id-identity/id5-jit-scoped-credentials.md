@@ -2,6 +2,14 @@
 title: "ID-5 JIT Scoped Credentials（最小・短命・用途限定）"
 description: "長命で広スコープなAPIキー/トークンを廃止し、ツール呼び出し直前に用途・対象・有効期間を限定したJITクレデンシャルをブローカーから都度取得するパターン。"
 status: done
+pattern_id: ID-5
+facet: identity
+requires: ["ID-6"]
+required_by: []
+applies_when: [agents_spanning_multiple_saas_systems, high_risk_operations_including_writes_deletes_or_pii_access, existing_vault_or_sts_secret_management_infrastructure]
+not_applicable_when: [single_system_internal_api_only_poc, broker_introduction_cost_not_justified_at_small_scale, legacy_saas_with_external_idp_jit_unsupported_combine_with_id4]
+risk_tiers: [2, 3, 4]
+key_technologies: ["HashiCorp Vault (Dynamic Secrets)", "AWS STS (AssumeRole / GetSessionToken)", Azure Managed Identity / Entra Workload Identity, Google Workload Identity Federation, "OAuth 2.0 Token Exchange (RFC 8693)"]
 ---
 
 # ID-5 JIT Scoped Credentials（最小・短命・用途限定）
@@ -16,13 +24,13 @@ SaaS 統合でありがちな問題は、開発時に作った広スコープの
 
 具体的には次の3つのリスクが積み重なる。
 
-第一は「露出時間窓の長さ」である。API キーが侵害されてから発見・失効まで平均数ヶ月かかることが多い。長命キーはその間ずっと攻撃者に使い続けられる。短命クレデンシャルなら自動失効までの窓が数分であり、実害を極小化できる。
+第一は「露出時間窓の長さ」だ。API キーが侵害されてから発見・失効まで平均数ヶ月かかることが多い。長命キーはその間ずっと攻撃者に使い続けられる。短命クレデンシャルなら自動失効までの窓が数分で済み、実害を極小化できる。
 
-第二は「スコープの広さ」である。便宜上「全部読み書きできるキー」を作ってしまうと、漏洩時の影響範囲が全データに及ぶ。用途を「この顧客レコードの読み取り専用・今この呼び出し限定」に絞ることで、漏洩しても使える操作を1つに限定できる。
+第二は「スコープの広さ」だ。便宜上「全部読み書きできるキー」を作ってしまうと、漏洩時の影響範囲が全データに及ぶ。用途を「この顧客レコードの読み取り専用・今この呼び出し限定」に絞れば、漏洩しても使える操作は1つに限定される。
 
-第三は「使用状況の不透明さ」である。同一の長命キーを複数のエージェント・コネクターが共有すると、どのエージェントがいつ何を操作したかが特定できない。インシデント調査・コンプライアンス監査で証跡が得られず、最悪の場合はキーを失効させると無関係なサービスまで停止する。
+第三は「使用状況の不透明さ」だ。同一の長命キーを複数のエージェント・コネクターが共有すると、どのエージェントがいつ何を操作したかが特定できない。インシデント調査・コンプライアンス監査で証跡が得られず、最悪の場合はキーを失効させると無関係なサービスまで停止する。
 
-このパターンは、クレデンシャルを「持たない・使い捨てる・最小に絞る」という設計原則でこれらを解消する。
+クレデンシャルを「持たない・使い捨てる・最小に絞る」という設計原則でこれらを解消するのが本パターンの本質だ。
 
 !!! tip "最小成立条件（MVP）"
     Vault または AWS STS でツール呼び出し直前に短命トークン（TTL 数分）を1つの SaaS 向けに動的発行し、コネクタにクレデンシャルをハードコードしない構成を作る。
@@ -80,8 +88,52 @@ sequenceDiagram
 !!! warning "TTL とリスクのミスマッチ"
     読み取り専用で低リスクの操作と、書き込み・削除・PII アクセスを同一の TTL で扱うのは不適切である。高リスク操作ほど TTL を短く、スコープを狭くする。
 
-- コネクターやツールの実装内に API キーをハードコードするのは厳禁である。クレデンシャルブローカー経由での取得を必須とするアーキテクチャ制約を設ける。
-- クレデンシャルブローカー自体が単一障害点になるリスクがある。ブローカーの可用性設計（Active-Active、ヘルスチェック）と、取得失敗時のフェイルクローズ（操作中断）を実装する。
+- コネクターやツールの実装内に API キーをハードコードするのは厳禁だ。クレデンシャルブローカー経由での取得を必須とするアーキテクチャ制約を設ける。
+- クレデンシャルブローカー自体が単一障害点になるリスクもある。ブローカーの可用性設計（Active-Active、ヘルスチェック）と、取得失敗時のフェイルクローズ（操作中断）を実装しておく。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Credential Broker
+    description: "Vault/STS endpoint that issues JIT credentials with explicit scope, TTL, target resource, and agent ID tag; validates request against PDP before issuing."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Credential Broker の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: PDP Pre-Issuance Check
+    description: "Broker consults ID-6 PDP to confirm the requesting agent is authorized before issuing the credential; sets minimum permitted scope."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "PDP Pre-Issuance Check の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Credential Audit Trail
+    description: "Each issued credential record includes agent_id, purpose, scope, TTL, and target_resource for full forensic traceability."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Credential Audit Trail の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

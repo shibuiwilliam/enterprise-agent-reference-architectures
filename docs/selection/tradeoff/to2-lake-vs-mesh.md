@@ -8,7 +8,25 @@ status: done
 
 ## 概要
 
-社内の全文書を中央のベクトル DB に索引化すれば検索は速い。しかし Salesforce の商談レコードのように閲覧権限が人によって異なるデータまで索引化すると、権限変更の反映が追いつかず「見えてはいけないデータが見える」事故が起きる。中央集権レイクとフェデレーテッド Context Mesh（[KM-2](../../patterns/km-knowledge/km2-context-mesh.md)）のどちらを選ぶか——実際には「公開情報はレイク、機密は Mesh」というハイブリッドが必須であり、その線引きをどうするかを扱う。
+社内の全文書を中央のベクトル DB に索引化すれば検索は速い。しかし Salesforce の商談レコードのように閲覧権限が人によって異なるデータまで索引化すると、権限変更の反映が追いつかず「見えてはいけないデータが見える」事故が起きる。中央集権レイクとフェデレーテッド Context Mesh（[KM-2](../../patterns/km-knowledge/km2-context-mesh.md)）のどちらを選ぶか——実際には「公開情報はレイク、機密は Mesh」というハイブリッドが必須であり、その線引きをどこで引くかが設計の核心だ。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-2
+decision_rules:
+  - condition: "data_sensitivity == 'public' AND permission_change_frequency == 'low'"
+    recommendation: central_lake
+    reason: "権限不要の公開情報（社内規程・公開ナレッジベース）は中央ベクトルDBへ索引化し、高速に取得できる"
+  - condition: "data_sensitivity == 'confidential' OR data_type == 'personal_saas_records'"
+    recommendation: federated_mesh
+    reason: "機密SaaSデータ（個人のSalesforceレコード等）は本人トークンでJIT取得するフェデレーテッドMeshへ。権限の同期問題を回避する"
+  - condition: "pre_indexed == true AND acl_required == true"
+    recommendation: central_lake
+    reason: "事前索引する場合もACL同梱（KM-1）を必須にすれば中央レイクを使ってよい"
+  - condition: "mix_of_public_and_confidential == true"
+    recommendation: hybrid
+    reason: "公開情報はレイクで高速に、機密情報はMeshで権限を維持して取得し、KM-3で統合ルーティングする"
+```
 
 ## 比較
 
@@ -21,7 +39,7 @@ status: done
 ## 判断基準
 
 - **権限不要の公開情報**（社内規程・公開ナレッジベース）→ 中央ベクトル DB へ索引化。高速に取得できる
-- **機密 SaaS データ**（個人の Salesforce レコード・Workday 情報等）→ 本人トークンで JIT 取得するフェデレーテッド Mesh へ。権限の同期問題を回避する
+- **機密 SaaS データ**（個人の Salesforce レコード・Workday 情報等）→ 本人トークンで JIT 取得するフェデレーテッド Mesh へ。権限の同期問題を回避できる
 - **事前索引する場合**も ACL 同梱（[KM-1 Access-Controlled RAG](../../patterns/km-knowledge/km1-access-controlled-rag.md)）を必須にする
 
 !!! danger "「速いから機密も索引化」は禁忌"
@@ -29,7 +47,7 @@ status: done
 
 ## ハイブリッド・段階的アプローチ
 
-ハイブリッドが必須である。公開情報はレイクで高速に、機密情報は Mesh で権限を維持して取得する。両者を [KM-3 Knowledge Graph](../../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md) で統合的にルーティングする構成が実務的である。
+ハイブリッドが必須だ。公開情報はレイクで高速に、機密情報は Mesh で権限を維持して取得する。両者を [KM-3 Knowledge Graph](../../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md) で統合的にルーティングする構成が実務的な落としどころである。
 
 ## 関連パターン
 

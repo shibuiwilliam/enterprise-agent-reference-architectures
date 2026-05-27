@@ -2,6 +2,14 @@
 title: "RT-4 Human Approval Chain (Org-Resolved Approval)"
 description: "A pattern where approvers dynamically resolved from the org chart review agent-proposed operations, completing the approval chain in existing workflow tools with delegation, escalation, and SLA management."
 status: done
+pattern_id: RT-4
+facet: runtime
+requires: ["RT-8", "ID-7"]
+required_by: []
+applies_when: [irreversible_high_risk_operations_like_fund_transfer_or_permission_grant, org_chart_is_maintained_and_approvers_can_be_resolved_by_role, existing_approval_workflow_tools_already_deployed]
+not_applicable_when: [strict_real_time_latency_requirements, low_risk_tier_0_1_operations, org_chart_not_maintained]
+risk_tiers: [3, 4]
+key_technologies: [Temporal, AWS Step Functions, Workday HCM, Microsoft Entra, Slack Block Kit, ServiceNow, OpenTelemetry]
 ---
 
 # RT-4 Human Approval Chain (Org-Resolved Approval)
@@ -94,6 +102,50 @@ The approver resolution logic must track changes in organizational structure (tr
 **Discarding rejection reasons.** Rejection reasons are the most valuable learning signals for agents to appropriately revise requests of the same type. Rather than just burying reasons in audit logs, build a feedback loop that reflects them in the agent's proposal generation.
 
 **Unlimited delegation chains.** Approval delegation chains where one approver delegates to another, then that one delegates again, obscures accountability. Limit delegation to one hop and verify the delegatee's qualifications from the org chart.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Approver Resolution Engine
+    description: "Queries the org chart API to dynamically identify the correct approver (line manager, cost owner, data owner) per request type and risk tier."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Approver Resolution Engine processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Workflow Tool Notification
+    description: "Sends approval requests with action buttons to Slack or ServiceNow tasks so approvers can act within familiar tools."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Workflow Tool Notification processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Decision Log
+    description: "Records the approver identity, decision (approve/deny/delegate), reason, and timestamp for internal control evidence."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Decision Log processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

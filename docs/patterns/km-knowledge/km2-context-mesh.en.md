@@ -2,6 +2,14 @@
 title: "KM-2 Access-Controlled Context Mesh (Federated Context)"
 description: "A pattern that supplies context through distributed federated queries while maintaining access controls, without aggregating data sources in one place."
 status: done
+pattern_id: KM-2
+facet: knowledge
+requires: ["ID-2"]
+required_by: []
+applies_when: [confidentiality_priority_and_data_residency_regulations_important, cross_saas_confidential_data_needed_transversally, avoiding_audit_complexity_from_data_copies]
+not_applicable_when: [public_data_only_with_no_permission_requirements, extreme_low_latency_requirements_federation_too_slow, bulk_statistical_bi_analysis_where_central_lake_better]
+risk_tiers: [2, 3, 4]
+key_technologies: [Federated Search, Context Router, Retrieval Proxy, Embedding Index per Scope, JIT Retrieval]
 ---
 
 # KM-2 Access-Controlled Context Mesh (Federated Context)
@@ -72,6 +80,50 @@ Each Context Provider calls SaaS with the person's own OBO token ([ID-2](../id-i
 - Public internal policies go into the central vector DB; confidential SaaS data goes to JIT retrieval using the person's own token — a hybrid is the practical solution. Organize "which data source is classified as which" at the initial design stage.
 - "Indexing sensitive data too because it's fast" is prohibited. Even when indexing, ACL inclusion ([KM-1](km1-access-controlled-rag.md)) is mandatory.
 - As the number of Context Providers grows, latency may increase linearly. Design parallel retrieval and independent timeouts per provider so that delays from some providers do not block the whole operation.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Context Router
+    description: "Dispatches queries in parallel to each Context Provider with independent timeouts so one slow provider does not block others."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Context Router processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Context Provider (per SaaS)
+    description: "Calls the target SaaS with the requester's OBO token (ID-2) and returns only the data the requester is permitted to see."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Context Provider (per SaaS) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Context Package Builder
+    description: "Assembles the collected provider results and passes them through KM-5 purpose policy for final filtering before sending to the LLM."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Context Package Builder processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

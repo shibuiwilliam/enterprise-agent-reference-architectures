@@ -10,6 +10,27 @@ status: done
 
 Is writing "do not output confidential information" in a system prompt sufficient for security? The answer is clearly "no." A prompt that can be bypassed simply by entering "ignore the above instructions" does not constitute a security boundary. Safety guarantees must be placed on the execution platform side — in permissions, authorization, and Policy Engines — while prompts are used for adjusting response tone and output format. This role separation is a core principle of enterprise design.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-12
+decision_rules:
+  - condition: "control_type IN ['access_control', 'approval_flow', 'output_validation', 'sandbox_isolation']"
+    recommendation: prompt_for_quality_platform_for_security
+    reason: "Access control, approval flows, DLP output validation, and execution sandboxing must be enforced by the platform, not prompts"
+  - condition: "control_type IN ['output_format', 'response_style', 'task_context', 'language_setting']"
+    recommendation: prompt_for_quality_platform_for_security
+    reason: "Output format, tone, task context, and language specification are appropriate for prompt engineering; not security boundaries"
+  - condition: "security_enforced_by_prompt == true"
+    recommendation: platform_only
+    reason: "Anti-pattern: prompt-only security is bypassed by prompt injection ('ignore above instructions...'); never use prompts as security boundary"
+  - condition: "platform_not_yet_ready == true AND considering_prompt_as_stopgap == true"
+    recommendation: platform_only
+    reason: "First establish platform access control (ID-4) and Policy-as-Code (ID-7); no prompt is a valid substitute for missing infrastructure"
+  - condition: "defense_in_depth == true"
+    recommendation: prompt_for_quality_platform_for_security
+    reason: "Layered defense: platform handles security enforcement, prompts handle behavior quality; both used together at appropriate layers"
+```
+
 ## Comparison
 
 | Perspective | Guard with Prompts | Policy/Execution Platform ([ID-7](../../patterns/id-identity/id7-policy-as-code-guardrail.md)) |

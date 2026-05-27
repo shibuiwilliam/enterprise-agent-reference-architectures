@@ -2,6 +2,14 @@
 title: "RT-11 Project Workspace / Digital Twin Agent (Project Digital Twin)"
 description: "A pattern that associates agents with projects and teams rather than individuals, sharing context, artifacts, decisions, and tasks as a dynamic RBAC workspace that functions throughout the project lifecycle."
 status: done
+pattern_id: RT-11
+facet: runtime
+requires: ["KM-1", "KM-4", "ID-4"]
+required_by: []
+applies_when: [multi_tool_project_teams_five_to_fifty_members, project_duration_weeks_or_more_with_decision_history_reference_needed, member_turnover_with_onboarding_cost_reduction_needed]
+not_applicable_when: [one_off_short_tasks_where_workspace_overhead_not_worth_it, one_to_two_person_personal_projects, fully_integrated_erp_with_no_information_silos]
+risk_tiers: [2, 3]
+key_technologies: ["Neo4j (GraphRAG)", Slack Bot, "Dynamic RBAC (Okta Groups / Azure AD Groups)", PostgreSQL Decision Log, Asana API, Jira REST API, Box API, SharePoint]
 ---
 
 # RT-11 Project Workspace / Digital Twin Agent (Project Digital Twin)
@@ -97,6 +105,50 @@ Lifecycle processing at project end automatically executes: memory archiving (co
 
 !!! warning "Excessive notifications from proactive behavior"
     Proactive behavior such as specification inconsistency checks and task completion warnings is useful, but if notification frequency and detection condition design is poor, members receive massive Slack notifications and start ignoring them. Define notification frequency, thresholds, and aggregation rules at the design stage and prepare a settings UI that members can tune.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Project Workspace Provisioner
+    description: "On project creation, auto-provisions Slack channel, Jira board, Box folder, and dynamic RBAC group; auto-deprovisions all on project closure."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Project Workspace Provisioner processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: GraphRAG Memory
+    description: "Maintains a knowledge graph of people, decisions, artifacts, and tasks within the project, filtered by each member's RBAC permissions at read time."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during GraphRAG Memory processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Decision Log Store
+    description: "Structured record of decisions made, rejected alternatives, and rationale for retrospective and audit use."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Decision Log Store processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

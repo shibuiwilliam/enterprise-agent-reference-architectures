@@ -2,6 +2,14 @@
 title: "IN-1 Enterprise Tool / MCP Gateway"
 description: "A pattern where agents call SaaS, internal APIs, MCP, DBs, and RPA through a company-managed Gateway rather than directly."
 status: done
+pattern_id: IN-1
+facet: integration
+requires: ["ID-6"]
+required_by: []
+applies_when: [multiple_tool_integrations_or_multiple_agents_sharing_common_tools, multiple_mcp_servers_in_the_environment, audit_and_authorization_required_for_tool_calls]
+not_applicable_when: [single_llm_chat_without_tool_use, single_tool_proof_of_concept, fully_isolated_experimental_environment]
+risk_tiers: [1, 2, 3, 4]
+key_technologies: [MCP Gateway, "API Gateway (Kong / Envoy)", "Tool Registry (JSON Schema)", Secret Manager, "OPA / Cedar (ID-6)", Idempotency Key]
 ---
 
 # IN-1 Enterprise Tool / MCP Gateway
@@ -87,6 +95,50 @@ The tool catalog defines schemas in JSON Schema, managing the list of tools agen
 - Separate MCP servers by trust boundary. Do not run internal and customer-facing in the same process. Always route communication crossing trust boundaries through the Gateway.
 - Enable dry-run functionality to preview execution results without side effects, supporting verification of high-risk operations. Incorporating a dry-run as a human approval step before production execution is also an effective operation.
 - Prevent unintended behavior changes from tool schema changes with tool version management ([GV-6](../gv-governance/gv6-version-registry.md)). Tool schema changes affect all agents, so either maintain backward compatibility or migrate gradually.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Tool Catalog
+    description: "JSON Schema-based registry managing schema, required permissions, estimated cost, version, and enabled/disabled state for each tool."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Tool Catalog processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Auth / Authz Layer (ID-6 PDP/PEP)
+    description: "Validates agent identity and evaluates per-tool authorization policy before forwarding the request; credentials are held in Secret Manager not passed to agents."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Auth / Authz Layer (ID-6 PDP/PEP) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Audit Recorder
+    description: "Records every tool invocation with its input, output, actor, agent ID, and correlation ID for cross-system tracing."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Audit Recorder processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

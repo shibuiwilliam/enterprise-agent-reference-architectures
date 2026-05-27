@@ -2,6 +2,14 @@
 title: "RT-5 Intent-to-Enterprise Command Envelope (Structured Command Envelope)"
 description: "A pattern that converts natural language intent into a structured command containing actor, agent, target_system, resource, action, risk_tier, requires_approval, and reason fields, providing a consistent interface for policy checks, approvals, and SaaS adapters."
 status: done
+pattern_id: RT-5
+facet: runtime
+requires: []
+required_by: []
+applies_when: [multi_saas_write_automation, strict_policy_check_approval_and_audit_requirements, multiple_agents_operating_the_same_saas]
+not_applicable_when: [read_only_query_agents_without_write_risk, prototype_stage_where_schema_design_cost_too_high]
+risk_tiers: [2, 3, 4]
+key_technologies: [JSON Schema, Command Bus, DDD Command Pattern, OPA, Cedar]
 ---
 
 # RT-5 Intent-to-Enterprise Command Envelope (Structured Command Envelope)
@@ -92,6 +100,50 @@ Intent analysis is performed by the LLM, but its output is validated against the
 **Self-reported risk_tier.** Designs where agents set their own risk_tier allow misconfiguration or intentional under-reporting. The risk_tier is computed independently by the policy engine from the Envelope's other fields.
 
 **Hollow reason field.** Filling reason with an empty string or boilerplate has no audit value. reason is a faithful verbalization of the user's intent, and an LLM-summarized and formatted explanation should be placed there.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Intent Parser + Entity Extractor
+    description: "LLM interprets natural language and extracts entities to produce a validated Command Envelope JSON object."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Intent Parser + Entity Extractor processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Policy Engine (ID-7)
+    description: "Evaluates the Envelope fields including actor permissions, risk_tier, and target_system combination independently of agent self-reporting."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Policy Engine (ID-7) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: SaaS Adapter (IN-2)
+    description: "Receives the approved Envelope and translates it into the target SaaS API call, shielding agents from SaaS-specific schemas."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during SaaS Adapter (IN-2) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

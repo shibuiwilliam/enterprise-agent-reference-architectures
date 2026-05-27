@@ -8,7 +8,28 @@ status: done
 
 ## 概要
 
-中央の AI CoE がすべてのエージェントを作ろうとすれば現場のニーズに追いつけず、結局は各部署が勝手に「野良エージェント」を立ち上げる。逆に各部署に完全に任せれば、セキュリティ設定がバラバラで監査もできない。どちらの極端も失敗する。認証・監査・コストは中央が統制し、業務ロジックやドメイン知識は部署が持つ二層統治が唯一の実用的な解である。
+中央の AI CoE がすべてのエージェントを作ろうとすれば現場のニーズに追いつけず、結局は各部署が勝手に「野良エージェント」を立ち上げる。逆に各部署に完全に任せれば、セキュリティ設定がバラバラで監査もできない。どちらの極端も失敗する。認証・監査・コストは中央が統制し、業務ロジックやドメイン知識は部署が持つ二層統治が、唯一の実用的な解だ。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-8
+decision_rules:
+  - condition: "concern == 'authentication_or_audit_or_model_control_or_cost'"
+    recommendation: two_layer_governance
+    reason: "認証・認可基盤、監査ログ、モデル認定、コスト追跡、Policy-as-Codeは中央が担う（GV/ID面）"
+  - condition: "concern == 'domain_knowledge_or_use_case_or_agent_content'"
+    recommendation: two_layer_governance
+    reason: "業務ドメインの知識・ユースケース定義・プロンプトは部署にフェデレート（GV-3テンプレートによる権限委譲）"
+  - condition: "central_builds_all_agents == true"
+    recommendation: two_layer_governance
+    reason: "「中央が全部作る」モデルは部署ニーズへの対応速度が出ず、野良エージェントが乱立するアンチパターン"
+  - condition: "departments_fully_autonomous == true"
+    recommendation: two_layer_governance
+    reason: "「各部署が野放し」モデルはセキュリティポリシーのばらつきにより情報漏洩・コンプライアンス違反が生じるアンチパターン"
+  - condition: "setup_phase == 'initial'"
+    recommendation: two_layer_governance
+    reason: "中央基盤（GV-1 Agent Control Plane）とPolicy-as-Code（ID-7）を先行整備し、その後GV-3テンプレートで部署展開する順序が正しい"
+```
 
 ## 比較
 

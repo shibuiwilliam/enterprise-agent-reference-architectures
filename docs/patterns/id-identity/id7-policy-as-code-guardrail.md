@@ -2,6 +2,14 @@
 title: "ID-7 Policy-as-Code Guardrail（決定論的行動可否）"
 description: "行動可否を自然言語プロンプトでなくPolicy-as-Codeで決定論的に判定し、安全保証を実行基盤側に置くパターン。"
 status: done
+pattern_id: ID-7
+facet: identity
+requires: ["ID-6"]
+required_by: ["RT-3", "RT-4", "GV-4"]
+applies_when: [complex_regulatory_and_internal_rules_in_large_enterprises, regulated_industries_finance_healthcare_legal_public, multiple_agents_required_to_follow_common_rules]
+not_applicable_when: [simple_text_generation_only_use_cases, internal_faq_without_permission_control, personal_experimental_use]
+risk_tiers: [2, 3, 4, 5]
+key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, "PDP/PEP (ID-6)", "Policy Versioning (GV-6)", Git, "Approval Workflow (RT-4)", "Industry Policy Pack (GV-4)"]
 ---
 
 # ID-7 Policy-as-Code Guardrail（決定論的行動可否）
@@ -16,9 +24,9 @@ status: done
 
 理由は明確である。プロンプトはプロンプトインジェクションで書き換えられうる。ユーザーの入力、外部ツールが返した内容、他エージェントが生成したメッセージのいずれも、悪意ある指示を含み得る。LLM はそれを文脈として処理し、元の安全指示を「上書き」した判断を出力することがある。
 
-さらに、大企業では規制・社内ルール・コンプライアンス要件が複雑に絡み合う。金融機関なら顧客情報の取り扱い規則、医療機関なら PHI のアクセス制限、上場企業ならインサイダー情報の管理規定——これらが各エージェントのプロンプトに散在すると、承認基準が属人化し変更管理も困難になる。「なぜそのアクションを許可したか」を監査者に説明できなくなる。
+さらに、大企業では規制・社内ルール・コンプライアンス要件が複雑に絡み合う。金融機関なら顧客情報の取り扱い規則、医療機関なら PHI のアクセス制限、上場企業ならインサイダー情報の管理規定——これらが各エージェントのプロンプトに散在すると、承認基準が属人化し変更管理も困難になる。「なぜそのアクションを許可したか」を監査者に説明できなくなってしまう。
 
-このパターンが解決する企業課題は次の4点である。
+解決すべき企業課題は次の4点にまとめられる。
 
 - プロンプトインジェクションで突破されない、実行基盤側の決定論的ガードレール
 - 規制・社内ルールをコードとして一元管理し、属人化を排除する
@@ -109,10 +117,54 @@ flowchart LR
 !!! danger "LLMに最終判断を委ねない"
     高リスク領域で LLM に最終的な許可/拒否判断をさせてはならない。判断は決定論ポリシーに委ね、LLM は判断材料の整理と構造化に留める。
 
-- 「プロンプトに『機密情報を出力するな』と書けば安全」という設計は禁忌である。プロンプトインジェクションで容易に突破される。
+- 「プロンプトに『機密情報を出力するな』と書けば安全」という設計は禁忌だ。プロンプトインジェクションで容易に突破される。
 - ポリシーは Git で版管理し、変更はレビュー・テスト・カナリアを経てデプロイする（[GV-7](../gv-governance/gv7-evaluation-governance-pipeline.md)）。
-- ポリシーが増えすぎると競合が生じる。優先順位を明確にし、競合を検出する仕組みを持つ。
+- ポリシーが増えすぎると競合が生じる。優先順位を明確にし、競合を検出する仕組みをあらかじめ持つ。
 - deny の理由をユーザーに返すことで、正当な業務がブロックされた場合の改善サイクルを回せる。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Structured Policy Input
+    description: "Agent action proposals are structured into actor, agent, action, resource, data_classification, risk_tier, purpose, and project attributes before policy evaluation."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Structured Policy Input の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Policy Engine (OPA/Cedar)
+    description: "Deterministically evaluates inputs against versioned policy rules; returns allow, deny, require_approval, or redact with reason."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Policy Engine (OPA/Cedar) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Policy Version & Test Gate
+    description: "Policy changes are managed in Git with PR review, automated test, and canary before production deployment; conflicts between policies are surfaced automatically."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Policy Version & Test Gate の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

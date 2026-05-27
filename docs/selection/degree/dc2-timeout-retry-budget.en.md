@@ -10,6 +10,37 @@ status: done
 
 Compared to traditional APIs, agents are orders of magnitude slower, and a single session can consume hundreds of dollars in token costs. If timeout is set too short, legitimate processing is aborted prematurely; if too loose, infinite loops generate enormous bills. This covers how to set three limits: "how many seconds to wait," "how many times to retry," and "how much can be spent per session."
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-2
+parameter: timeout_retry_budget
+rules:
+  - condition: "operation_type == 'simple_qa' AND expected_duration_seconds <= 10"
+    timeout_ttft_seconds: 5
+    timeout_total_seconds: 30
+    max_retries: 2
+    session_budget_multiplier: 1.5
+    reason: "Short Q&A: tight timeouts, limited retries, small budget multiplier prevent runaway cost on simple tasks"
+  - condition: "operation_type == 'document_analysis' OR expected_duration_seconds > 30"
+    timeout_ttft_seconds: 15
+    timeout_total_seconds: 300
+    max_retries: 2
+    session_budget_multiplier: 3.0
+    reason: "Long document analysis needs extended timeouts; consider async escalation if it consistently exceeds 300s"
+  - condition: "operation_type == 'multi_step_workflow' AND steps_include_human_approval == true"
+    timeout_ttft_seconds: 15
+    timeout_total_seconds: null
+    max_retries: 2
+    session_budget_multiplier: 5.0
+    reason: "Human approval steps make synchronous timeout meaningless; use durable workflow (RT-8) with budget cap per step"
+  - condition: "idempotency == 'non_idempotent' AND operation_type IN ['write', 'send', 'publish']"
+    max_retries: 0
+    reason: "Non-idempotent write/send/publish operations must not be retried; double execution causes more harm than timeout failure"
+  - condition: "operation_type == 'multi_agent'"
+    session_budget_multiplier: "N * single_agent_budget"
+    reason: "Multi-agent architectures multiply inference cost by N agents; set strict budget caps with GV-8 per-department quota"
+```
+
 ## Harms of Too Little or Too Much
 
 | Extreme | State | Harm |

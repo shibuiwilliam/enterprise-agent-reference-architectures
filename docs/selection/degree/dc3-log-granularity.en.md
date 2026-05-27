@@ -10,6 +10,37 @@ status: done
 
 Without being able to trace what an agent thought and what it output, incident investigation and quality improvement are impossible. But storing all prompts and responses in plain text spreads PII and confidential information across the logging infrastructure and causes storage costs to skyrocket. This covers how to design the granularity of "what to record and to what extent" using three-layer separation ([OB-1](../../patterns/ob-observability/ob1-observability-lake.md)): metadata, body, and aggregate.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-3
+parameter: log_granularity
+rules:
+  - condition: "data_classification == 'top_secret' OR context_bus_pattern == 'ephemeral'"
+    log_layer: metadata_only
+    storage: trace_db
+    body_retention: none
+    reason: "Top-secret or ephemeral: store only request ID, timestamp, and completion flag; never persist prompt body"
+  - condition: "data_classification IN ['internal_general', 'confidential'] AND debug_or_audit_required == true"
+    log_layer: three_layer_separated
+    storage_metadata: trace_db
+    storage_body: encrypted_object_storage
+    storage_aggregate: dwh
+    pii_masking: required_before_body_storage
+    reason: "Standard: metadata to Trace DB, PII-masked body to encrypted object storage, anonymized metrics to DWH"
+  - condition: "cost_constraint == true AND all_records_not_required == true"
+    sampling_strategy: "error_events + high_risk_operations + random_N_percent"
+    recommended_n_percent: 5
+    reason: "Sample-based full body storage (errors + high-risk + N%) controls storage cost while preserving debugging capability"
+  - condition: "regulatory_scope == 'regulated'"
+    retention_policy: per_data_classification_per_regulation
+    deletion_rule: required
+    reason: "Regulated data: define per-classification retention and deletion rules; compliance takes precedence over reproducibility"
+  - condition: "body_stored_as_plaintext == true"
+    log_layer: three_layer_separated
+    action: remediate_immediately
+    reason: "Anti-pattern: plaintext prompt storage in general log infrastructure must be remediated; it is a security incident source"
+```
+
 ## Harms of Too Little or Too Much
 
 | Extreme | State | Harm |

@@ -8,7 +8,28 @@ status: done
 
 ## 概要
 
-顧客の医療情報を含むプロンプトを外部 API に送信すれば規制違反になりうる。一方で社内 FAQ の回答のために高価な GPU インフラを自前で運用するのはコストが見合わない。「全部オンプレ」も「全部外部 API」も現実的ではなく、データの機密度に応じて推論経路を自動的に切り替えるハイブリッドが実務的な解である。
+顧客の医療情報を含むプロンプトを外部 API に送信すれば規制違反になりうる。一方で社内 FAQ の回答のために高価な GPU インフラを自前で運用するのはコストが見合わない。「全部オンプレ」も「全部外部 API」も現実的ではない。データの機密度に応じて推論経路を自動的に切り替えるハイブリッドが実務的な解だ。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-10
+decision_rules:
+  - condition: "data_classification IN ['top_secret', 'personally_identifiable', 'competitive_intelligence']"
+    recommendation: internal_onprem
+    reason: "極秘データ（社内秘・個人情報・競争情報等）を含むプロンプトは内部/オンプレモデルが必須"
+  - condition: "regulatory_requirement IN ['gdpr', 'financial', 'medical'] AND cross_border_transfer_prohibited == true"
+    recommendation: internal_onprem
+    reason: "GDPR・金融規制・医療規制等で国外への持ち出しが規制されるデータは内部推論経路のみを使用する"
+  - condition: "data_classification == 'public' OR data_classification == 'general_internal' AND latest_model_required == true"
+    recommendation: external_api
+    reason: "一般公開情報や権限不要の社内規程を扱う推論、最新モデル性能を必要とするユースケースは外部APIが適切"
+  - condition: "data_classification_mixed == true"
+    recommendation: hybrid_data_classification_routing
+    reason: "GV-5のCentral Model Gatewayがデータ分類に応じて推論経路を自動ルーティングするため、開発者が都度判断する手間を排除できる"
+  - condition: "external_api_used == true AND dpa_not_confirmed == true"
+    recommendation: internal_onprem
+    reason: "外部APIを使う際はDPA・利用リージョン・データ保持ポリシーを必ず確認する。デフォルト設定のまま利用すると意図しないデータ利用や越境転送のリスクがある"
+```
 
 ## 比較
 
@@ -42,7 +63,7 @@ status: done
 
 ## ハイブリッド・段階的アプローチ
 
-同一アプリケーション内でデータ分類に応じた経路分岐が標準設計である。
+同一アプリケーション内でデータ分類に応じた経路分岐が標準設計だ。
 
 1. [GV-5](../../patterns/gv-governance/gv5-central-model-gateway.md) のCentral Model Gatewayを設置し、全推論リクエストを経由させる。
 2. データ分類ラベル（機密性・規制対象フラグ等）をリクエストに付与する仕組みを整備する。

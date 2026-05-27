@@ -2,6 +2,14 @@
 title: "KM-1 Access-Controlled Enterprise RAG (Permission-Aware RAG)"
 description: "A pattern that restricts retrieval/RAG results to only what the requester is allowed to see, while preserving the access controls of the data source."
 status: done
+pattern_id: KM-1
+facet: knowledge
+requires: ["ID-2", "ID-4"]
+required_by: []
+applies_when: [cross_saas_document_ticket_crm_chat_search, frequent_access_changes_from_departures_or_transfers, multiple_saas_integrated_search_required]
+not_applicable_when: [data_sources_where_acl_cannot_be_controlled, real_time_db_master_requiring_direct_query, public_information_only_no_acl_needed]
+risk_tiers: [1, 2, 3]
+key_technologies: ["Hybrid Search (BM25 + Vector)", Reranker, Pinecone, Weaviate, Qdrant, Elasticsearch, Freshness Ranking, Citation]
 ---
 
 # KM-1 Access-Controlled Enterprise RAG (Permission-Aware RAG)
@@ -77,6 +85,50 @@ The Permission Filter integrates with [ID-4 Permission Mirror](../id-identity/id
 - "Indexing all company data in one vector DB for fast search" is prohibited. ACL inclusion is mandatory, and data that cannot have ACL included should be JIT-fetched via federation ([KM-2](km2-context-mesh.md)).
 - Always include source citations in search results to ensure evidence transparency. Answers without citations make it impossible to trace "why that answer was produced."
 - Use freshness ranking to lower the priority of older documents, preventing incorrect answers from stale information. The freshness filter becomes especially important after organizational restructuring and policy changes.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Ingest Pipeline with ACL Embedding
+    description: "Embeds source ACL, classification label, and freshness timestamp into each chunk at ingestion time; ACL is treated as a reference value for refresh not a fixed copy."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Ingest Pipeline with ACL Embedding processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Permission Filter (ID-4)
+    description: "Evaluates the requester's current entitlements against chunk ACLs at query time, filtering inaccessible documents before ranking."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Permission Filter (ID-4) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Hybrid Search + Reranker
+    description: "Combines BM25 keyword matching with vector similarity; reranker produces final scored results including freshness penalty for stale documents."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Hybrid Search + Reranker processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

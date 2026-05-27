@@ -2,6 +2,14 @@
 title: "IN-4 Existing iPaaS Reuse (Reusing Existing Integration Assets)"
 description: "A pattern that avoids building agent SaaS integrations from scratch and instead reuses existing MuleSoft/Workato/Boomi/internal ESB iPaaS, using a hybrid configuration of MCP for new integrations and iPaaS for existing ones to prevent duplicate investment and scattered maintenance."
 status: done
+pattern_id: IN-4
+facet: integration
+requires: ["IN-1"]
+required_by: []
+applies_when: [mulesoftworkato_boomi_or_esb_already_running_with_many_integration_flows, integration_team_and_ai_team_separate_with_difficult_knowledge_transfer, gradual_migration_needed_keeping_existing_flows_while_adding_agent_capability]
+not_applicable_when: [first_integration_project_with_no_existing_ipaas, existing_flow_quality_too_low_and_rebuild_more_rational, only_a_few_saas_connections_with_low_mcp_direct_implementation_effort]
+risk_tiers: [1, 2, 3]
+key_technologies: [MuleSoft Anypoint Platform, Workato, Boomi AtomSphere, Apache Camel / IBM MQ, Apigee / Kong, "MCP Adapter (thin wrapper)"]
 ---
 
 # IN-4 Existing iPaaS Reuse (Reusing Existing Integration Assets)
@@ -94,6 +102,50 @@ When wrapping existing iPaaS flows in MCP adapters, only format the flow's input
 
 - Writing business logic into MCP adapters results in double maintenance with iPaaS after all. Keep adapters to interface conversion only, with logic remaining on the iPaaS side.
 - Changes to existing flows (iPaaS side) affect agent behavior. Set up consumer-driven contract tests in the MCP adapter and automate regression verification when flows change.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: MCP Adapter (iPaaS Wrapper)
+    description: "Thin translation layer that converts MCP tool-call format to the iPaaS API or webhook trigger; all business logic remains inside the iPaaS flow."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during MCP Adapter (iPaaS Wrapper) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: iPaaS Flow (existing)
+    description: "Existing integration flow with its connection config, transformation logic, error handling, and monitoring retained as-is."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during iPaaS Flow (existing) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Contract Test Suite
+    description: "Consumer-driven contract tests on the MCP adapter to auto-detect when iPaaS flow changes break the agent-facing interface."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Contract Test Suite processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

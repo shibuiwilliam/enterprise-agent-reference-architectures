@@ -2,6 +2,14 @@
 title: "GV-9 Incident Response & Kill Switch（事故対応・停止）"
 description: "誤送信・漏洩・暴走に備えた検知・粒度別停止・調査・復旧の仕組み。"
 status: done
+pattern_id: GV-9
+facet: governance
+requires: ["OB-1", "OB-2", "GV-1", "GV-5"]
+required_by: []
+applies_when: [all_production_ai_deployments]
+not_applicable_when: [no_practical_cases_kill_switch_design_cost_is_negligible_vs_operational_risk]
+risk_tiers: [0, 1, 2, 3, 4, 5]
+key_technologies: ["Kill Switch (Feature Flag / Gateway Blocklist)", Circuit Breaker, Runbook, Audit Snapshot, Event Store, Replay Tool, Access Revocation, PagerDuty, Splunk, Microsoft Sentinel]
 ---
 
 # GV-9 Incident Response & Kill Switch（事故対応・停止）
@@ -12,7 +20,7 @@ status: done
 
 ## 解決する企業課題
 
-エージェントが本番で稼働すると、必ずインシデントは発生する。機密データの誤送信、プロンプトインジェクションによる不正操作、ツール暴走による意図しないデータ書き換え、コスト暴走——これらに対して「止められない」「何が起きたか分からない」「影響範囲を特定できない」という状態は、AI を企業の中核業務に組み込む際の最大リスクである。全体停止しかできない設計では、1 つのエージェントの問題で全社の AI が止まる。粒度別に止められる構造を持たない組織は、インシデント時に「全停止か放置か」の二択を迫られる。
+エージェントが本番で稼働すると、インシデントは必ず発生する。機密データの誤送信、プロンプトインジェクションによる不正操作、ツール暴走による意図しないデータ書き換え、コスト暴走——これらに対して「止められない」「何が起きたか分からない」「影響範囲を特定できない」という状態は、AI を企業の中核業務に組み込む際の最大リスクだ。全体停止しかできない設計では、1 つのエージェントの問題で全社の AI が止まる。粒度別に止められる構造を持たない組織は、インシデント時に「全停止か放置か」の二択しか取れなくなる。
 
 !!! tip "最小成立条件（MVP）"
     エージェント単位で即時停止できる Kill Switch（フィーチャーフラグ or Gateway のブロックリスト）を1つ用意し、停止→通知→原因調査の Runbook を書く。粒度の細分化やリプレイ機能は後から追加できる。
@@ -66,9 +74,53 @@ flowchart LR
 !!! danger "全体停止しかできない設計"
     全体停止しかできないと、1つのエージェントの問題で全社の AI が止まる。粒度別（モデル/エージェント/ツール/テナント）に止められるよう設計する。
 
-- Kill Switch は「ある」だけでなく、定期的なゲームデーで動作を確認する。
-- インシデント時のトレース保全を自動化する。手動対応では遅れて証跡が消える。
-- ポストモーテムの結果をポリシー（[ID-7](../id-identity/id7-policy-as-code-guardrail.md)）や評価（[GV-7](gv7-evaluation-governance-pipeline.md)）にフィードバックし、再発を構造的に防ぐ。
+- Kill Switch は「ある」だけでなく、定期的なゲームデーで実際に動作を確認する。
+- インシデント時のトレース保全は自動化しておく。手動対応では遅れて証跡が消えることがある。
+- ポストモーテムの結果をポリシー（[ID-7](../id-identity/id7-policy-as-code-guardrail.md)）や評価（[GV-7](gv7-evaluation-governance-pipeline.md)）にフィードバックし、再発を構造的に防ぐことが大切だ。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Granular Kill Switch
+    description: "Feature flag or gateway blocklist enabling immediate stop at model, agent, tool, or tenant scope without affecting other dimensions."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Granular Kill Switch の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Trace Preservation
+    description: "Automatically snapshots relevant audit and trace data at incident detection time before any remediation changes the evidence state."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Trace Preservation の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Incident Response Runbook
+    description: "Pre-defined automation-ready runbook covering detect→contain→preserve→assess→notify→fix→postmortem; postmortem outputs feed back to ID-7 and GV-7."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Incident Response Runbook の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

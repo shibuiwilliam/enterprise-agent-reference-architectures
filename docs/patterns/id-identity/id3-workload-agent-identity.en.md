@@ -2,6 +2,14 @@
 title: "ID-3 Workload / Agent Identity (The Agent's Own Identity)"
 description: "A pattern that assigns short-lived machine identities to agents operating autonomously on schedules or system triggers, achieving authentication, auditing, and least-privilege separate from human delegation."
 status: done
+pattern_id: ID-3
+facet: identity
+requires: ["ID-5", "ID-6"]
+required_by: []
+applies_when: [scheduled_batch_or_system_triggered_autonomous_execution_exists, audit_separation_of_autonomous_and_human_delegated_agent_operations_required, workloads_dynamically_scale_on_kubernetes_or_cloud]
+not_applicable_when: [all_agent_operations_originate_from_explicit_human_requests_id2_sufficient, poc_with_immature_id_infrastructure, small_single_fixed_server_batch_certificate_rotation_overhead_not_justified]
+risk_tiers: [2, 3, 4]
+key_technologies: [SPIFFE/SPIRE, "SVID (Short-lived Certificate)", AWS IAM Roles Anywhere / IRSA, Microsoft Entra Workload Identity, Google Workload Identity Federation, mTLS]
 ---
 
 # ID-3 Workload / Agent Identity (The Agent's Own Identity)
@@ -82,6 +90,50 @@ When a human request is the origin (e.g., autonomous processing that starts afte
 - Caching long-lived SVIDs or tokens and reusing them defeats the purpose of short-lived certificates. Combine with [ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md) and obtain fresh credentials immediately before each tool call.
 - As the number of workload identities grows, management tends to become superficial. Automate the identity lifecycle (issuance, revocation, inventory) and regularly remove unused identities.
 - When autonomous batch processes chain multiple agents, verify that permissions narrow at each hop. Use [ID-6 Zero-Trust PDP/PEP](id6-zero-trust-pdp-pep.md) to confirm that downstream agents do not inherit the original permissions.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Workload Certificate Issuer (SPIRE / Cloud IAM)
+    description: "Issues short-lived SVID certificates or cloud managed identity tokens to agents at startup; auto-rotates within TTL."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Workload Certificate Issuer (SPIRE / Cloud IAM) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Dual Representation Audit Record
+    description: "Records workload_id as actor and human_id as subject (if present) per call; purely autonomous batches record only workload_id with policy/schedule reference."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Dual Representation Audit Record processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Least-Privilege Workload Scope
+    description: "Each autonomous agent's workload identity carries only the minimum permissions needed for its specific job; broader permissions are never inherited."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Least-Privilege Workload Scope processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

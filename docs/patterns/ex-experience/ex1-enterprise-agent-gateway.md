@@ -2,6 +2,14 @@
 title: "EX-1 Enterprise Agent Gateway（統一フロントドア）"
 description: "すべてのエージェント要求が通る単一の入口で、認証・分類・リスク判定・レート制御・監査エントリを一元適用するパターン。"
 status: done
+pattern_id: EX-1
+facet: experience
+requires: ["ID-1", "ID-2", "ID-6"]
+required_by: []
+applies_when: [multiple_channels_and_large_scale_enterprise_deployment, governance_and_audit_requirements_exist, workforce_and_customer_channel_separation_required]
+not_applicable_when: [single_poc_with_one_channel_only, completely_isolated_experimental_environment, single_channel_small_scale_usage]
+risk_tiers: [1, 2, 3, 4]
+key_technologies: [Kong, Apigee, AWS API Gateway, OIDC, SAML 2.0, Risk Scoring, OpenTelemetry Trace ID, Token Bucket]
 ---
 
 # EX-1 Enterprise Agent Gateway（統一フロントドア）
@@ -12,7 +20,7 @@ status: done
 
 ## 解決する企業課題
 
-エンタープライズ AI が複数チャネル（Slack/Web/SaaS 埋め込み/API）から呼ばれるようになると、入口が分散し統制・監査・容量管理が崩れる。チャネルごとに認証方式が異なると権限チェックの網羅性が保証できず、監査ログが分断して事後調査に支障をきたす。数万人規模のバースト（業務時間帯の全社一斉利用）を個々のエージェントが吸収しようとすると、バックエンドに過負荷がかかる。さらに、チャネルごとに個別の統制ロジックを実装すると保守コストが乗数的に増大し、ガバナンスの穴が生じやすい。単一入口を置くことで、これらの問題を構造的に一括して封じる。
+エンタープライズ AI が複数チャネル（Slack/Web/SaaS 埋め込み/API）から呼ばれるようになると、入口が分散し統制・監査・容量管理が崩れていく。チャネルごとに認証方式が異なれば権限チェックの網羅性を保証できないし、監査ログも分断されて事後調査が難しくなる。数万人規模のバースト（業務時間帯の全社一斉利用）を個々のエージェントで吸収しようとすれば、バックエンドに過負荷がかかる。チャネルごとに個別の統制ロジックを実装すると保守コストが乗数的に増大し、ガバナンスの穴も生じやすい。単一入口を置くことで、これらの問題を構造的にまとめて封じる。
 
 !!! tip "最小成立条件（MVP）"
     単一のリバースプロキシで全チャネルのリクエストを受け、OIDC 認証・相関 ID 付与・監査ログ出力の3点を実装する。リスク分類やレート制御は後段階で追加すればよい。
@@ -23,9 +31,9 @@ status: done
 
 ## 解決策と設計
 
-Gateway を「実行面への唯一の通路」として位置づけ、すべての統制をここで一括実施する。個別エージェントは認証・リスク判定・監査エントリを持たず、Gateway が保証した本人 ID と相関 ID を受け取るだけでよい。新しいエージェントやチャネルが追加されても統制ロジックを再実装する必要がなくなる。
+Gateway を「実行面への唯一の通路」として位置づけ、すべての統制をここで一括実施する。個別エージェントは認証・リスク判定・監査エントリを持たず、Gateway が保証した本人 ID と相関 ID を受け取るだけでよい。新しいエージェントやチャネルが追加されても、統制ロジックを再実装する必要はない。
 
-チャネル（Slack/Web/SaaS埋め込み）を吸収し、本人 ID と相関 ID を後段へ伝播する。Gateway は統制点であり、認証・分類・リスク判定・レート制御・監査を実行する最初の PEP（[ID-6](../id-identity/id6-zero-trust-pdp-pep.md)）でもある。
+Gateway はチャネル（Slack/Web/SaaS埋め込み）からのリクエストをすべて吸収し、本人 ID と相関 ID を後段へ伝播する。認証・分類・リスク判定・レート制御・監査を一手に引き受け、実行面への最初の PEP（[ID-6](../id-identity/id6-zero-trust-pdp-pep.md)）として機能する。
 
 ```mermaid
 flowchart TB
@@ -78,6 +86,50 @@ flowchart TB
 - 従業員チャネルと顧客チャネルは [ID-1 二面分離](../id-identity/id1-workforce-customer-split.md) に従い、信頼境界で分ける。
 - Token Exchange（[ID-2 OBO](../id-identity/id2-identity-federation-obo.md)）は Gateway で実行し、後段には OBO トークンを渡す。
 - レート制御は [IN-3 Rate/Quota Broker](../in-integration/in3-rate-quota-broker.md) と連携し、SaaS 側のレート上限も考慮する。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Authentication & Risk Classification
+    description: "Validates OIDC/SAML identity tokens, classifies request intent and risk tier, and assigns a correlation ID before forwarding to the backend runtime."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Authentication & Risk Classification の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Rate Control & Burst Absorption
+    description: "Token-bucket rate limiter that absorbs enterprise-wide peak bursts and coordinates with IN-3 Rate/Quota Broker for SaaS-side quota limits."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Rate Control & Burst Absorption の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Audit Entry Point
+    description: "Emits a structured audit record per request (actor ID, channel, intent, risk tier, correlation ID) to OB-1 Observability Lake."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Audit Entry Point の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

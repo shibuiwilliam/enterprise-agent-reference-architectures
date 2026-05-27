@@ -8,7 +8,28 @@ status: done
 
 ## 概要
 
-経営層は「エージェントに業務を任せきりにして人件費を削減したい」と考えがちだ。しかし確率的に動作する LLM が Workday の給与データや SAP の発注を自律的に書き換え始めたら、たった1回の誤動作で取り返しがつかない。「情報を探して提案する」（Copilot）と「判断して実行まで完了する」（Autopilot）は明確に分けるべきであり、その分離線は「参照系か更新系か」で引く。
+経営層は「エージェントに業務を任せきりにして人件費を削減したい」と考えがちだ。しかし確率的に動作する LLM が Workday の給与データや SAP の発注を自律的に書き換え始めたら、たった1回の誤動作で取り返しがつかない。「情報を探して提案する」（Copilot）と「判断して実行まで完了する」（Autopilot）は明確に分けるべきだ。その分離線は「参照系か更新系か」で引く。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-5
+decision_rules:
+  - condition: "operation_type == 'read_only' AND eval_complete == true AND canary_passed == true"
+    recommendation: autopilot
+    reason: "操作が読み取り専用で誤動作しても不可逆な被害が生じず、eval・カナリア・監査証跡が整備されていればAutopilot適切"
+  - condition: "operation_type IN ['update', 'delete', 'approve'] OR target_system IN ['erp', 'crm', 'hr']"
+    recommendation: copilot
+    reason: "更新・削除・承認といった不可逆な操作や基幹業務システムへの書き込みはHitLのCopilotを維持する"
+  - condition: "approval_rate_historically_high == true AND risk_level == 'low' AND kill_switch_available == true"
+    recommendation: autopilot
+    reason: "承認率が高く低リスクな操作にevalとカナリアを適用し、kill switchと監査証跡が整備された状態でAutopilot化する"
+  - condition: "infrastructure_readiness == 'incomplete' OR autopilot_expansion_too_fast == true"
+    recommendation: copilot
+    reason: "「整備が追いつく前にAutopilotにする」という判断が最大のリスク。全操作をCopilotで開始し段階的に拡張する"
+  - condition: "same_agent_mixed_operations == true"
+    recommendation: hybrid_per_operation
+    reason: "同一エージェントでも操作種別ごとにCopilot/Autopilotを使い分けるハイブリッドが現実的"
+```
 
 ## 比較
 
@@ -22,7 +43,7 @@ status: done
 
 ## 判断基準
 
-**参照系API＝Autopilot、更新系API＝HitL（Human-in-the-Loop）のCopilot** という分離を基本原則とする。
+**参照系API＝Autopilot、更新系API＝HitL（Human-in-the-Loop）のCopilot** が基本原則だ。
 
 Autopilotが適切な条件：
 
@@ -36,11 +57,11 @@ Copilot（HitL）を維持すべき条件：
 - 基幹業務システム（ERP・CRM・HRシステム等）への書き込みを行う
 - 操作ミスの影響が広範囲に及び、ロールバックが困難または不可能
 
-Autopilot化の拡張は焦らず段階的に進める。「整備が追いつく前にAutopilotにする」という判断が最大のリスクである。
+Autopilot化の拡張は焦らず段階的に進めること。「整備が追いつく前にAutopilotにする」という判断が最大のリスクだ。
 
 ## ハイブリッド・段階的アプローチ
 
-同一エージェントでも操作種別ごとにCopilot/Autopilotを使い分けるハイブリッドが現実的である。
+同一エージェントでも操作種別ごとにCopilot/Autopilotを使い分けるハイブリッドが現実的だ。
 
 1. 全操作をCopilotモードで開始し、人間の承認パターンを観測する。
 2. 承認率が高く（ほぼ必ず承認される）、かつ低リスクな操作を特定する。

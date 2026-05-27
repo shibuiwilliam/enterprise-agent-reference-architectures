@@ -10,6 +10,29 @@ status: done
 
 An agent that remembers "how to do things from the last conversation" enables personalization, but holding on indefinitely to work records of former employees or confidential memos from completed projects becomes a mass of leakage risk. This covers how to design "what to remember for how long" and "when to forget it" per scope — session, individual, project, organization ([KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md)).
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-5
+parameter: memory_retention_ttl
+rules:
+  - condition: "memory_scope == 'session'"
+    ttl: session_end
+    reason: "Session-scoped memory is discarded at session end; temporary working context does not require persistence"
+  - condition: "memory_scope == 'personal' AND reference_frequency IN ['high', 'medium']"
+    ttl: 90_days_rolling_with_extension
+    reason: "Actively-used personal memory (preferences, work style) warrants multi-month retention with TTL extension on access"
+  - condition: "memory_scope == 'personal' AND reference_frequency == 'never'"
+    action: auto_archive_then_delete
+    ttl: 30_days_after_last_access
+    reason: "Unreferenced personal memory should be auto-archived and deleted; stale data accumulates risk without value"
+  - condition: "lifecycle_event IN ['employee_departure', 'role_change', 'project_end']"
+    action: immediate_expiry_and_permission_revocation
+    reason: "HR lifecycle events (departure, transfer, project end) must trigger immediate memory expiry and access revocation"
+  - condition: "user_requests_deletion == true"
+    action: immediate_delete_all_personal_scope
+    reason: "Right-to-erasure: individual must be able to delete or modify their personal memory scope at any time (ID-8)"
+```
+
 ## Harms of Too Little or Too Much
 
 | Extreme | State | Harm |

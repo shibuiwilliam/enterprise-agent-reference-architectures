@@ -2,19 +2,27 @@
 title: "RT-2 RACI-based Multi-Agent Orchestration"
 description: "マルチエージェント構成をタスクの複雑さではなく RACI（責任・説明責任・協議・情報共有）の責任割り当て構造に基づいて設計するパターン。"
 status: done
+pattern_id: RT-2
+facet: runtime
+requires: ["OB-2"]
+required_by: []
+applies_when: [cross_department_decision_flows_with_multiple_accountable_parties, high_risk_tasks_requiring_approval_and_escalation, compliance_domains_requiring_raci_audit_trail]
+not_applicable_when: [simple_tasks_contained_in_single_department, real_time_interactive_low_latency_required, raci_matrix_does_not_exist_for_the_process]
+risk_tiers: [3, 4]
+key_technologies: [LangGraph, AutoGen, Semantic Kernel, YAML/JSON RACI definition, OpenTelemetry]
 ---
 
 # RT-2 RACI-based Multi-Agent Orchestration
 
 ## 概要
 
-マルチエージェントにする理由が「タスクが複雑だから」ではうまくいかない。うまくいくのは「企業内の責任分担が複数に分かれるから」だ。たとえば契約書レビューなら、Legal Agent が実行し、Sales/Finance Agent が助言し、法務マネージャーが最終責任を負い、営業担当に結果を通知する——この RACI 構造をそのままエージェントのトポロジに反映する。責任境界が明確でなければ、複数のエージェントが議論だけして誰も決めない事態に陥る。
+マルチエージェントにする理由が「タスクが複雑だから」ではうまくいかない。うまくいくのは「企業内の責任分担が複数に分かれるから」という場合だ。たとえば契約書レビューなら、Legal Agent が実行（R）し、Sales/Finance Agent が助言（C）し、法務マネージャーが最終責任（A）を負い、営業担当に結果を通知（I）する——この RACI 構造をそのままエージェントのトポロジに反映する。責任境界が明確でなければ、複数のエージェントが議論だけして誰も決めない事態に陥る。
 
 ## 解決する企業課題
 
-エンタープライズで頻出する課題は「誰が最終的な説明責任を持つか不明確」な状態である。マルチエージェントシステムでは、複数のエージェントが関与することで責任の所在が拡散しやすい。法務・財務・セキュリティが関わる契約承認のような複数部門にまたがる業務では、各ドメインが「どこまでが自分の判断範囲か」を把握していないと、エージェントが越権した判断を下す構造的リスクが生まれる。
+エンタープライズで頻出する課題は「誰が最終的な説明責任を持つか不明確」な状態だ。マルチエージェントシステムでは、複数のエージェントが関与するほど責任の所在が拡散しやすい。法務・財務・セキュリティが関わる契約承認など複数部門にまたがる業務では、各ドメインが「どこまでが自分の判断範囲か」を把握していないと、エージェントが越権した判断を下す構造的リスクが生まれる。
 
-「複雑だからマルチエージェント」という動機でシステムを構築すると、責任境界のないアーキテクチャが生まれる。責任が不明確なまま高リスク判断をエージェントに委ねると、ミス発生時の責任者が不在になる。規制対応（SOX、個人情報保護法など）の観点では、「誰がいつどの根拠で判断したか」を監査証跡として残せない構造は、コンプライアンス上の重大なリスクとなる。
+「複雑だからマルチエージェント」という動機でシステムを構築すると、責任境界のないアーキテクチャになる。責任が不明確なまま高リスク判断をエージェントに委ねると、ミス発生時の責任者が不在になる。SOX・個人情報保護法などの規制対応の観点では、「誰がいつどの根拠で判断したか」を監査証跡として残せない構造はコンプライアンス上の重大なリスクだ。
 
 このパターンは RACI マトリクスをシステム設計の入力として扱い、責任割り当てをアーキテクチャに直接写像することでこれらの課題を解決する。
 
@@ -30,11 +38,11 @@ status: done
 
 ## 解決策と設計
 
-解決策の核心は「エージェントを増やす理由を責任分担（RACI）の存在に限定すること」である。マルチエージェント化の判断基準は処理の複雑さではなく、組織上の責任が複数の主体に分かれているかどうかである。RACI マトリクスが先に存在し、それに対応するエージェント構成を導出する順序を守る。
+解決策の核心は「エージェントを増やす理由を責任分担（RACI）の存在に限定すること」だ。マルチエージェント化の判断基準は処理の複雑さではなく、組織上の責任が複数の主体に分かれているかどうかである。RACI マトリクスを先に定義し、それに対応するエージェント構成を導出する順序を守る。
 
-各ロールに対応するエージェントまたは人間アクターを定義し、オーケストレーターがマトリクスに従って処理を進める。Accountable は常に人間が担う。エージェントに A を割り当てると、ミス発生時の責任者が不在になるためである。
+各ロールに対応するエージェントまたは人間アクターを定義し、オーケストレーターがマトリクスに従って処理を進める。Accountable（A）は常に人間が担う。エージェントに A を割り当てると、ミス発生時の責任者が不在になるからだ。
 
-契約書レビューを例にとると、RはLegalエージェント（実行）、AはLegal Manager（最終承認）、CはSales/Finance/Securityエージェント（意見提供）、IはAE/CS担当者（結果通知）となる。
+契約書レビューを例にとると、R は Legal エージェント（実行）、A は Legal Manager（最終承認）、C は Sales/Finance/Security エージェント（意見提供）、I は AE/CS 担当者（結果通知）となる。
 
 ```mermaid
 sequenceDiagram
@@ -59,7 +67,7 @@ sequenceDiagram
     ORC->>I: 完了通知
 ```
 
-オーケストレーターは各フェーズで誰が R・A・C・I であるかをデシジョンログに記録する。承認（A）が得られるまで次フェーズへ進まないゲートを設ける。C からのフィードバックは R に集約し、R が最終判断に統合する責任を持つ。C の関与は1ラウンドに限定し、無限ループを防ぐ。デシジョンログは各フェーズの開始・終了時点でリアルタイムに記録する（事後補完ではなく）。
+オーケストレーターは各フェーズで誰が R・A・C・I であるかをデシジョンログに記録する。承認（A）が得られるまで次フェーズへは進めない。C からのフィードバックは R に集約し、R が最終判断に統合する責任を持つ。C の関与は1ラウンドに限定して無限ループを防ぐ。デシジョンログは各フェーズの開始・終了時点でリアルタイムに記録する——事後補完では障害発生時に記録が消える。
 
 ## 向き／不向き
 
@@ -83,11 +91,55 @@ sequenceDiagram
 
 **「複雑だからマルチエージェント」という設計根拠の欠如**。タスクの難しさだけを理由にエージェントを増やすと、責任境界のないアーキテクチャが生まれる。マルチエージェントへの移行は必ず RACI マトリクスを先に定義し、それに対応するエージェント構成を導出する順序を守ること。
 
-**Accountable の空席**。マルチエージェントシステムでは A を別のエージェントに担わせたくなる誘惑がある。しかし A は常に人間が担うべきである。エージェントに A を割り当てると、ミス発生時の責任者が不在になる。
+**Accountable の空席**。マルチエージェントシステムでは A を別のエージェントに担わせたくなる誘惑がある。しかし A は常に人間が担うべきだ。エージェントに A を割り当てると、ミス発生時の責任者が不在になる。
 
-**C フィードバックの無限ループ**。Consulted エージェントが互いに追加意見を要求し合う状況が生じうる。C の関与は1ラウンドに限定し、R が集約する責任を明示的に設計する。
+**C フィードバックの無限ループ**。Consulted エージェントが互いに追加意見を要求し合う状況は起きやすい。C の関与を1ラウンドに限定し、R が集約する責任を明示的に設計すること。
 
-**デシジョンログの事後補完**。ログを処理完了後にまとめて書き込む設計は、途中失敗時に記録が失われる。各フェーズの開始・終了時点でリアルタイムに記録する。
+**デシジョンログの事後補完**。ログを処理完了後にまとめて書き込む設計では、途中失敗時に記録が消える。各フェーズの開始・終了時点でリアルタイムに記録する設計にすること。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Orchestrator
+    description: "Drives the workflow according to the RACI matrix, recording each phase start/end in the decision log in real time."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Orchestrator の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Decision Log
+    description: "Structured log (OpenTelemetry) that records which role (R/A/C/I) performed which action and when."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Decision Log の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Approval Gate
+    description: "Prevents progression to the next phase until the Accountable human provides approval."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Approval Gate の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

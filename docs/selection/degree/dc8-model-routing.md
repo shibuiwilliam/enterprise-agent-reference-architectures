@@ -8,7 +8,33 @@ status: done
 
 ## 概要
 
-「会議室の予約方法を教えて」に最大規模のモデルを使うのはコストの無駄だが、複雑な契約書レビューを軽量モデルに任せれば品質が足りない。加えて、顧客の個人情報を含むプロンプトを外部 API に送れば規制違反になりうる。タスクの難易度でモデルサイズを切り替え、データの機密度で推論経路（VPC 内か外部 API か）を分ける——この2軸のルーティングを [GV-5 Central Model Gateway](../../patterns/gv-governance/gv5-central-model-gateway.md) でどう設計するかを扱う。
+「会議室の予約方法を教えて」に最大規模のモデルを使うのはコストの無駄だが、複雑な契約書レビューを軽量モデルに任せれば品質が足りない。さらに、顧客の個人情報を含むプロンプトを外部 API に送れば規制違反になりうる。タスクの難易度でモデルサイズを切り替え、データの機密度で推論経路（VPC 内か外部 API か）を分ける——この2軸のルーティングを [GV-5 Central Model Gateway](../../patterns/gv-governance/gv5-central-model-gateway.md) でどう設計するかを扱う。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-8
+parameter: model_routing
+rules:
+  - condition: "task_difficulty == 'simple' AND data_classification IN ['public', 'internal_general']"
+    model_size: lightweight
+    routing_path: external_api_or_internal
+    reason: "会議室予約方法などの単純タスクに最大規模モデルを使うのはコストの無駄。軽量モデルで処理を試みる"
+  - condition: "confidence_score < threshold AND verifier_rejects == true"
+    model_size: escalate_to_stronger
+    routing_path: same_as_original
+    reason: "応答の信頼度が閾値を下回る、または検証エージェントが品質を否定した場合に、より強いモデルへエスカレーションする"
+  - condition: "data_classification == 'top_secret'"
+    routing_path: vpc_or_onprem_only
+    external_api_allowed: false
+    reason: "極秘データはVPC内またはオンプレミス推論経路のみを使用する。外部APIへの送信は禁止する"
+  - condition: "data_classification IN ['public', 'internal_general'] AND latest_capability_required == true"
+    routing_path: external_api_permitted
+    prerequisite: dpa_confirmed
+    reason: "一般データは外部APIを含む経路を使用可とし、コスト・性能バランスで選択する。ただしDPA・リージョン・データ保持の統制が必要"
+  - condition: "routing_config_manual == true AND classification_auto_labeling == false"
+    action: automate_routing_via_gv5
+    reason: "極秘データのルーティング設定ミスは情報漏洩を引き起こす。分類別ルーティングはデータラベルに基づき自動適用し、手動設定に依存しない"
+```
 
 ## 過小・過大の害
 
@@ -17,7 +43,7 @@ status: done
 | 過小（弱いモデルに偏りすぎ） | すべてのタスクを軽量モデルで処理 | 複雑な推論・長文分析で品質が低下し、エラー修正コストが増える |
 | 過大（強いモデルに偏りすぎ） | すべてのタスクを最大モデルで処理 | 単純なタスクでもコストが過大になり、レイテンシも不必要に高くなる |
 
-機密分類を無視したルーティングは別の問題を引き起こす。極秘データを外部 API に送信することは規制違反・情報漏洩のリスクになる。
+機密分類を無視したルーティングは別の問題を引き起こす。極秘データを外部 API に送信すると、規制違反・情報漏洩のリスクに直結する。
 
 ## 判断基準
 

@@ -2,6 +2,14 @@
 title: "GV-1 Enterprise Agent Control Plane (Registry / Lifecycle)"
 description: "A control plane that centrally governs all internal agents from registration and owner assignment through review, versioning, and decommissioning."
 status: done
+pattern_id: GV-1
+facet: governance
+requires: ["ID-7"]
+required_by: ["GV-2", "GV-8", "OB-2"]
+applies_when: [agents_exceed_three_and_multiple_teams_are_using_them, enterprise_wide_deployment_as_common_platform, audit_and_compliance_requirements_exist]
+not_applicable_when: [individual_poc_or_experimental_phase, single_department_with_only_one_or_two_agents, isolated_research_environment]
+risk_tiers: [2, 3, 4]
+key_technologies: [Agent Registry, ServiceNow CMDB Extension, "Policy-as-Code (ID-7)", "Model Gateway (GV-5)"]
 ---
 
 # GV-1 Enterprise Agent Control Plane (Registry / Lifecycle)
@@ -90,6 +98,50 @@ New agents and changes go through security, legal, and data protection review be
 - Assign an explicit "owner" to each agent so a first responder can always be identified during an incident.
 - An overly heavy review process invites workarounds. Calibrate review depth to risk tier (Tier 0–1: lightweight self-service; Tier 3 and above: legal and security review).
 - At decommissioning time, close the lifecycle fully — including expiration of memory, permissions, and tokens.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Agent Registry
+    description: "Stores per-agent attributes (owner, business_purpose, allowed_tools, data_domains, risk_tier, approval_policy, cost_budget) with versioning and lifecycle state."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Agent Registry processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Lifecycle Review Gate
+    description: "Routes new and changed agent registrations through security, legal, and data protection review; adjusts review depth by risk tier."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Lifecycle Review Gate processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Execution Enforcement
+    description: "Connects to Model Gateway (GV-5) and Agent Gateway (EX-1) so unregistered agents are physically blocked from executing."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Execution Enforcement processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

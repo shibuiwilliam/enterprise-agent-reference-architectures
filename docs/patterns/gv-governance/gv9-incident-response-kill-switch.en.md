@@ -2,6 +2,14 @@
 title: "GV-9 Incident Response & Kill Switch"
 description: "Pre-built mechanisms for detection, granular shutdown, trace preservation, impact assessment, notification, remediation, and post-mortem in response to mis-sends, leaks, and runaway behavior."
 status: done
+pattern_id: GV-9
+facet: governance
+requires: ["OB-1", "OB-2", "GV-1", "GV-5"]
+required_by: []
+applies_when: [all_production_ai_deployments]
+not_applicable_when: [no_practical_cases_kill_switch_design_cost_is_negligible_vs_operational_risk]
+risk_tiers: [0, 1, 2, 3, 4, 5]
+key_technologies: ["Kill Switch (Feature Flag / Gateway Blocklist)", Circuit Breaker, Runbook, Audit Snapshot, Event Store, Replay Tool, Access Revocation, PagerDuty, Splunk, Microsoft Sentinel]
 ---
 
 # GV-9 Incident Response & Kill Switch
@@ -69,6 +77,50 @@ Design shutdown granularity as follows.
 - A Kill Switch is not useful just by "existing" — verify its operation through regular game-day exercises.
 - Automate trace preservation during incidents. Manual response is too slow and evidence disappears.
 - Feed post-mortem findings back into policies ([ID-7](../id-identity/id7-policy-as-code-guardrail.md)) and evaluation ([GV-7](gv7-evaluation-governance-pipeline.md)) to structurally prevent recurrence.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Granular Kill Switch
+    description: "Feature flag or gateway blocklist enabling immediate stop at model, agent, tool, or tenant scope without affecting other dimensions."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Granular Kill Switch processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Trace Preservation
+    description: "Automatically snapshots relevant audit and trace data at incident detection time before any remediation changes the evidence state."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Trace Preservation processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Incident Response Runbook
+    description: "Pre-defined automation-ready runbook covering detect→contain→preserve→assess→notify→fix→postmortem; postmortem outputs feed back to ID-7 and GV-7."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Incident Response Runbook processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

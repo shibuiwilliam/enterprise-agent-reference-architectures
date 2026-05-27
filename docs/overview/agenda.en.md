@@ -6,6 +6,29 @@ status: done
 
 # Introduction: Core Thesis, Taxonomy, Org Graph, and 7 Planes
 
+## How to Use This Reference
+
+### For Human Architects & Engineers
+
+1. **[Design Principles](principles.md)** — Understand the core philosophy
+2. **[Pattern Catalog](../patterns/index.md)** — Browse patterns by facet to identify relevant ones
+3. **[Degree Criteria](../selection/degree/index.md)** and **[Tradeoff Criteria](../selection/tradeoff/index.md)** — Calibrate continuous parameters and binary choices
+4. **[Composition Recipes](../integration/recipe.md)** — Review proven pattern combinations
+5. **[Department Examples](../integration/departments/index.md)** — See concrete examples for your domain
+
+### For Coding Agents
+
+This reference is designed to help coding agents (Claude Code, Cursor, GitHub Copilot Workspace, etc.) assist in designing and developing software that integrates AI agents into enterprise systems.
+
+1. **Start here**: [`agent-digest.en.md`](../agent-digest.en.md) — A single-file digest of all patterns, selection criteria, dependency graph, and interface listings
+2. **Structured data**: [`patterns-index.yaml`](../patterns-index.yaml) — Machine-readable metadata for all patterns (requires, applies_when, interfaces). Filter by `applies_when` to match a scenario, resolve dependencies via `requires`
+3. **Decision support**: [`selection-rules.yaml`](../selection-rules.yaml) — Evaluable decision rules for tradeoffs (TO-1–TO-12) and degree criteria (DC-1–DC-9). Evaluate user constraints and return recommendations
+4. **Detailed design**: Each pattern page has a `## Interfaces` section with YAML interface definitions. Generate stub code from these
+5. **Bulk ingestion**: For file-upload workflows, use `agent-digest.en.md`. For a larger bundle, use `assets/full-reference.en.md` (at the repository root)
+
+!!! tip "Hint for Coding Agents"
+    When a user asks "design an AI agent system for [scenario]", start by loading `patterns-index.yaml`, filter patterns by `applies_when` matching the scenario, resolve dependencies via `requires`, then read the individual pattern pages for the matched set.
+
 ## Core Thesis
 
 The central challenge of integrating AI agents into an enterprise is not "**making AI smarter**," but rather "**safely introducing a new execution actor into the enterprise's existing identity, permissions, accountability, business processes, auditing, data boundaries, and organizational structures — and extracting enterprise value in the form of improved sales, productivity, and decision-making**." Safe participation is a prerequisite; improving enterprise value is the purpose.

@@ -2,6 +2,14 @@
 title: "GV-6 Version Registry（モデル/プロンプト/ツール/ポリシー/索引の版管理）"
 description: "モデル・プロンプト・ツール・ポリシー・RAG索引・スキーマをバージョン管理し、変更をPR・eval・カナリア・ロールバックの対象にするパターン。"
 status: done
+pattern_id: GV-6
+facet: governance
+requires: ["OB-1"]
+required_by: []
+applies_when: [continuously_operated_agents_with_regular_model_updates_and_prompt_improvements, regulated_compliance_work_requiring_reproduction_of_past_behavior, multi_agent_configurations_requiring_version_combination_management]
+not_applicable_when: [short_term_throwaway_experimental_poc, completely_stateless_simple_tasks_with_no_quality_management_needed]
+risk_tiers: [2, 3, 4]
+key_technologies: [Git, MLflow Model Registry, "LaunchDarkly (Feature Flag)", Canary Deploy Infrastructure, Eval Dataset, "GV-7 Evaluation Pipeline"]
 ---
 
 # GV-6 Version Registry（モデル/プロンプト/ツール/ポリシー/索引の版管理）
@@ -12,7 +20,7 @@ status: done
 
 ## 解決する企業課題
 
-LLM エージェントの挙動は、コードを一切変えなくてもモデルのマイナーアップデートやプロンプトの一語変更で大きく変化する。「先週まで正しく動いていたのに今週は誤った回答をする」という現象は、バージョンが記録されていないと原因特定が困難になる。プロバイダがモデルをサイレントに更新するケースでは、自社でバージョンを固定していない限り変更を検知できない。監査対応でも「あの判断はどのモデル・プロンプトで行われたか」を示せる必要があり、再現可能な記録がなければ事後調査に支障をきたす。コードだけ Git 管理してプロンプト・モデル・索引を野放しにする運用は、LLM エージェントにおける最も一般的なガバナンスの穴である。
+LLM エージェントの挙動は、コードを一切変えなくてもモデルのマイナーアップデートやプロンプトの一語変更で大きく変化する。「先週まで正しく動いていたのに今週は誤った回答をする」という現象は、バージョンが記録されていないと原因特定が難しい。プロバイダがモデルをサイレントに更新するケースでは、自社でバージョンを固定していない限り変更を検知できない。監査対応でも「あの判断はどのモデル・プロンプトで行われたか」を示せる必要があり、再現可能な記録がなければ事後調査に支障をきたす。コードだけ Git 管理してプロンプト・モデル・索引を野放しにする運用は、LLM エージェントにおいて最も一般的なガバナンスの穴になっている。
 
 !!! tip "最小成立条件（MVP）"
     各実行ログに model@version と prompt@commit_hash を記録し、プロンプト定義を Git 管理する。カナリアやロールバック自動化は後から追加できるが、「どのバージョンで動いたか」の記録が最小の出発点である。
@@ -57,7 +65,7 @@ flowchart LR
     Store --> History
 ```
 
-フィーチャーフラグを組み合わせることで、特定のテナント・部門・ユーザーにのみ新バージョンを先行適用できる。監査時は実行 ID からバージョンセット全体を一括取得し、当時の挙動を再現できる。
+フィーチャーフラグを組み合わせれば、特定のテナント・部門・ユーザーにのみ新バージョンを先行適用できる。監査時は実行 ID からバージョンセット全体を一括取得し、当時の挙動を再現することも可能だ。
 
 ## 向き／不向き
 
@@ -82,10 +90,54 @@ flowchart LR
     アプリケーションコードは Git で管理しているが、プロンプトは Notion の文書、RAG 索引は月次で手動更新、モデルはプロバイダの最新版を自動使用——という運用がよくある。この状態では変更のどの組み合わせが現在の挙動を生み出しているかを特定できず、品質劣化の原因調査に数日を要する。すべての挙動決定要素をバージョン管理の対象にすることが大前提である。
 
 !!! warning "モデルのバージョン固定の見落とし"
-    プロバイダ API のデフォルト呼び出しでは最新モデルが使われることが多い。明示的にモデルバージョン（例：`gpt-4o-2024-08-06`）を指定しない限り、プロバイダのサイレント更新で挙動が変わる。Registry に記録するだけでなく、呼び出し時にも固定バージョンを指定することが必要である。
+    プロバイダ API のデフォルト呼び出しでは最新モデルが使われることが多い。明示的にモデルバージョン（例：`gpt-4o-2024-08-06`）を指定しない限り、プロバイダのサイレント更新で挙動が変わる。Registry に記録するだけでなく、呼び出し時にも固定バージョンを指定することが必要だ。
 
 !!! warning "変更の粒度が大きすぎるロールバック"
-    全体を一括ロールバックする設計だと、問題のないコンポーネントまで戻してしまいデグレードが連鎖する。model/prompt/tool/policy/index それぞれを独立してロールバックできる粒度で設計することが望ましい。
+    全体を一括ロールバックする設計では、問題のないコンポーネントまで戻してしまいデグレードが連鎖する。model/prompt/tool/policy/index それぞれを独立してロールバックできる粒度で設計しておくことが望ましい。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Version Tag per Execution
+    description: "Records model@version, prompt@commit_hash, tool@version, policy@version, index@version, and schema@version in every execution log for full reproduction."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Version Tag per Execution の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: PR-Gated Change Flow
+    description: "All changes to model/prompt/tool/policy/index must pass automated GV-7 evaluation before merge; failed evaluations block the PR."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "PR-Gated Change Flow の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Canary + Auto-Rollback
+    description: "Staged rollout (1%→5%→25%→100%) with continuous quality/cost/error monitoring; auto-rollback to previous version on threshold breach."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Canary + Auto-Rollback の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

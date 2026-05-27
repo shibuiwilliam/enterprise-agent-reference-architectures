@@ -2,6 +2,14 @@
 title: "KM-5 Purpose-Bound Context Package (Purpose-Scoped Context)"
 description: "A pattern that manages context packages containing only the minimum data needed for each business purpose — not all available data — preventing unauthorized use, over-sharing, and cost explosion."
 status: done
+pattern_id: KM-5
+facet: knowledge
+requires: []
+required_by: []
+applies_when: [multiple_business_purposes_reusing_same_agent, high_classification_data_pii_hr_contracts_involved, gdpr_or_similar_data_purpose_restriction_compliance]
+not_applicable_when: [agent_specialized_for_single_purpose_with_fixed_data_scope, prototype_stage_with_undetermined_purpose, low_risk_internal_tools_handling_only_technical_docs]
+risk_tiers: [2, 3, 4]
+key_technologies: ["OPA (Open Policy Agent)", Microsoft Purview, Google Cloud DLP, AWS Macie, Context Builder, Token Budget Manager]
 ---
 
 # KM-5 Purpose-Bound Context Package (Purpose-Scoped Context)
@@ -85,6 +93,50 @@ Examples of purpose definitions:
 
 - Mixing multiple purposes in one package eliminates purpose boundaries. Separate packages by purpose.
 - If purpose policy changes are not immediately reflected in context packages, old policies continue to pass excess data. Tag packages with version and force regeneration on policy updates.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Purpose Policy Store
+    description: "Stores per-purpose definitions of allowed data types, connected systems, token limits, and TTL; versioned and regularly reviewed with data owners."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Purpose Policy Store processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Context Builder
+    description: "Fetches data according to the purpose policy, passes it through DLP/classification checks, applies token budget, and attaches version and purpose tags."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Context Builder processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: DLP / Classification Filter (KM-6)
+    description: "Detects and masks or removes any data whose classification is not permitted by the current purpose before the package is handed to the LLM."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during DLP / Classification Filter (KM-6) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

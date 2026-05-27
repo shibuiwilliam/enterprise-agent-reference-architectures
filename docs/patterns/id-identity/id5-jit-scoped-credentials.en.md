@@ -2,6 +2,14 @@
 title: "ID-5 JIT Scoped Credentials (Minimal, Short-Lived, Purpose-Limited)"
 description: "A pattern that eliminates long-lived, broad-scope API keys and tokens by dynamically obtaining purpose-limited, scope-constrained, short-TTL JIT credentials from a broker immediately before each tool call."
 status: done
+pattern_id: ID-5
+facet: identity
+requires: ["ID-6"]
+required_by: []
+applies_when: [agents_spanning_multiple_saas_systems, high_risk_operations_including_writes_deletes_or_pii_access, existing_vault_or_sts_secret_management_infrastructure]
+not_applicable_when: [single_system_internal_api_only_poc, broker_introduction_cost_not_justified_at_small_scale, legacy_saas_with_external_idp_jit_unsupported_combine_with_id4]
+risk_tiers: [2, 3, 4]
+key_technologies: ["HashiCorp Vault (Dynamic Secrets)", "AWS STS (AssumeRole / GetSessionToken)", Azure Managed Identity / Entra Workload Identity, Google Workload Identity Federation, "OAuth 2.0 Token Exchange (RFC 8693)"]
 ---
 
 # ID-5 JIT Scoped Credentials (Minimal, Short-Lived, Purpose-Limited)
@@ -80,6 +88,50 @@ Each credential includes a purpose tag, requesting agent ID, issuance time, TTL,
 
 - Hardcoding API keys inside connector or tool implementations is strictly prohibited. Establish an architectural constraint requiring that all credentials be obtained through the credential broker.
 - The credential broker itself can become a single point of failure. Design for broker availability (Active-Active, health checks) and implement fail-closed behavior (abort the operation) if broker acquisition fails.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Credential Broker
+    description: "Vault/STS endpoint that issues JIT credentials with explicit scope, TTL, target resource, and agent ID tag; validates request against PDP before issuing."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Credential Broker processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: PDP Pre-Issuance Check
+    description: "Broker consults ID-6 PDP to confirm the requesting agent is authorized before issuing the credential; sets minimum permitted scope."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during PDP Pre-Issuance Check processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Credential Audit Trail
+    description: "Each issued credential record includes agent_id, purpose, scope, TTL, and target_resource for full forensic traceability."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Credential Audit Trail processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

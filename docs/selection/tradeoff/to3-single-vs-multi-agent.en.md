@@ -10,6 +10,27 @@ status: done
 
 "Let's go multi-agent because the processing is complex" is the entry point to over-engineering in enterprise settings. Going multi means costs multiply by N, latency adds up, and failure points increase. Multi-agent is justified not "because it's technically complex" but only "because enterprise responsibility allocation spans multiple departments like sales, legal, and finance."
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-3
+decision_rules:
+  - condition: "responsibility_spans_multiple_departments == false AND latency_sensitive == true"
+    recommendation: single_agent
+    reason: "Default to single agent; multi-agent adds cost, latency, and failure points without organizational benefit when responsibility is unified"
+  - condition: "multiple_departments_with_independent_approval == true"
+    recommendation: multi_agent
+    reason: "Independent approval and accountability across departments (e.g. sales, legal, finance) justifies multi-agent RACI separation"
+  - condition: "subtasks_require_different_models_or_toolsets == true"
+    recommendation: multi_agent
+    reason: "Specialist subagents with domain-specific models/tools are appropriate when subtasks have distinct expertise requirements"
+  - condition: "team_multi_agent_experience == 'low' OR availability_requirements == 'strict'"
+    recommendation: single_agent
+    reason: "Low team experience or strict availability requirements make multi-agent operational overhead unacceptable"
+  - condition: "single_agent_bottleneck_identified == true AND responsibility_split_boundary_clear == true"
+    recommendation: multi_agent
+    reason: "Incrementally extract only the subagent where a clear responsibility boundary has been observed in production"
+```
+
 ## Comparison
 
 | Perspective | Single Agent | RACI Multi-Agent ([RT-2](../../patterns/rt-runtime/rt2-raci-multi-agent.md)) |

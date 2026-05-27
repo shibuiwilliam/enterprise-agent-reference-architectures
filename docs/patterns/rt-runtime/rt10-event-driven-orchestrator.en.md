@@ -2,6 +2,14 @@
 title: "RT-10 Event-Driven Enterprise Orchestrator (Event-Driven)"
 description: "A pattern where agents autonomously start without waiting for human invocation, triggered by events from SaaS and internal systems, completing cross-system processing in the backend."
 status: done
+pattern_id: RT-10
+facet: runtime
+requires: ["RT-7", "RT-8"]
+required_by: []
+applies_when: [saas_standard_events_trigger_multi_system_workflows, copy_paste_work_across_systems_to_be_eliminated, majority_of_processing_is_async_and_does_not_require_real_time_human_wait]
+not_applicable_when: [interactive_processing_requiring_immediate_user_response, event_frequency_too_high_for_agent_startup_cost, trigger_conditions_cannot_be_defined]
+risk_tiers: [2, 3, 4]
+key_technologies: [Amazon EventBridge, Google Pub/Sub, Azure Service Bus, Apache Kafka, CloudEvents, Debezium, Temporal, Workato, MuleSoft]
 ---
 
 # RT-10 Event-Driven Enterprise Orchestrator (Event-Driven)
@@ -101,6 +109,50 @@ External Webhooks are authenticated by HMAC signature verification, source IP wh
 
 !!! warning "Omitting event authentication and verification"
     Using external Webhooks directly as agent triggers creates a Webhook spoofing attack risk. Perform HMAC signature verification, source IP whitelist, and CloudEvents `source` field verification at receipt time to block illegitimate events before triggering.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Event Gateway
+    description: "Validates incoming webhooks via HMAC signature, source IP allowlist, and CloudEvents source field before routing to the orchestrator."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Event Gateway processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Debounce / Rate Limiter
+    description: "Collapses duplicate events for the same entity within a short window and enforces a maximum concurrent workflow launch rate."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Debounce / Rate Limiter processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Durable Workflow Engine (RT-8)
+    description: "Manages long-running post-event processing with crash resilience and HitL approval integration."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Durable Workflow Engine (RT-8) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

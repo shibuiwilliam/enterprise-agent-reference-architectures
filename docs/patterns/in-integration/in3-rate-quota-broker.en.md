@@ -2,6 +2,14 @@
 title: "IN-3 Rate / Quota Broker (Rate/Quota Arbitration)"
 description: "A pattern that centrally manages SaaS API rate limits for agents used by tens of thousands of users using a token-bucket broker with priority, tenant fairness, and backpressure to prevent company-wide exhaustion by batch jobs."
 status: done
+pattern_id: IN-3
+facet: integration
+requires: []
+required_by: []
+applies_when: [more_than_1000_users_sharing_same_saas_via_agents, batch_jobs_and_interactive_use_coexisting, monthly_saas_api_request_quota_exists]
+not_applicable_when: [poc_small_scale_with_ample_api_quota, agents_only_call_internal_apis_with_no_rate_limits, no_rate_limited_saas_in_use]
+risk_tiers: [1, 2, 3]
+key_technologies: ["Redis (Lua atomic bucket operations)", Envoy Rate Limit Service, Kong Rate Limiting Plugin, Apigee Quota Policy, RabbitMQ Priority Queue, Redis Sorted Set]
 ---
 
 # IN-3 Rate / Quota Broker (Rate/Quota Arbitration)
@@ -86,6 +94,50 @@ Token bucket settings are configured per SaaS. Define bucket capacity (burst all
 
 - Know per-SaaS rate limits from both documentation and actual measurement. Some SaaS have discrepancies between stated and actual throttling.
 - Since the Rate Broker itself becomes a single point of failure, Active-Standby or distributed availability design is needed. If fallback to direct SaaS calls is possible when the Broker goes down, also govern that fallback path.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Token Bucket per SaaS
+    description: "Per-SaaS bucket with configurable burst capacity, refill rate, and per-tenant maximum share; approaching exhaustion triggers back-pressure to upstream agents."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Token Bucket per SaaS processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Priority Queue
+    description: "Separates interactive (high priority) and batch (low priority) requests; batch is scheduled to off-peak hours when quota is constrained."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Priority Queue processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Centralized Retry Handler
+    description: "Absorbs 429 responses from SaaS APIs and retries with exponential back-off plus jitter; individual agents receive only back-pressure signals, never raw 429s."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Centralized Retry Handler processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

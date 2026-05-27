@@ -2,6 +2,14 @@
 title: "ID-7 Policy-as-Code Guardrail (Deterministic Action Authorization)"
 description: "A pattern that deterministically evaluates action authorization using Policy-as-Code rather than natural-language prompts, placing safety guarantees in the execution infrastructure."
 status: done
+pattern_id: ID-7
+facet: identity
+requires: ["ID-6"]
+required_by: ["RT-3", "RT-4", "GV-4"]
+applies_when: [complex_regulatory_and_internal_rules_in_large_enterprises, regulated_industries_finance_healthcare_legal_public, multiple_agents_required_to_follow_common_rules]
+not_applicable_when: [simple_text_generation_only_use_cases, internal_faq_without_permission_control, personal_experimental_use]
+risk_tiers: [2, 3, 4, 5]
+key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, "PDP/PEP (ID-6)", "Policy Versioning (GV-6)", Git, "Approval Workflow (RT-4)", "Industry Policy Pack (GV-4)"]
 ---
 
 # ID-7 Policy-as-Code Guardrail (Deterministic Action Authorization)
@@ -113,6 +121,50 @@ The policy input attributes are:
 - Version-control policies in Git, and deploy changes through review, testing, and canary phases ([GV-7](../gv-governance/gv7-evaluation-governance-pipeline.md)).
 - As the number of policies grows, conflicts emerge. Define priority rules explicitly and build a mechanism to detect conflicts.
 - Returning the deny reason to the user enables an improvement cycle when legitimate business operations are blocked.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Structured Policy Input
+    description: "Agent action proposals are structured into actor, agent, action, resource, data_classification, risk_tier, purpose, and project attributes before policy evaluation."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Structured Policy Input processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Policy Engine (OPA/Cedar)
+    description: "Deterministically evaluates inputs against versioned policy rules; returns allow, deny, require_approval, or redact with reason."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Policy Engine (OPA/Cedar) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Policy Version & Test Gate
+    description: "Policy changes are managed in Git with PR review, automated test, and canary before production deployment; conflicts between policies are surfaced automatically."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Policy Version & Test Gate processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

@@ -2,6 +2,14 @@
 title: "RT-3 Risk-Tiered Autonomy (Autonomy Hierarchy)"
 description: "A pattern that classifies operation risk into Tier 0–5 and enforces the corresponding autonomy level (from fully automatic to dual authorization) for each tier."
 status: done
+pattern_id: RT-3
+facet: runtime
+requires: ["ID-7"]
+required_by: []
+applies_when: [diverse_operation_types_from_read_only_to_financial_transactions, enterprise_systems_involving_money_hr_customer_data, org_with_varying_risk_tolerance_per_department]
+not_applicable_when: [all_operations_are_simple_read_only, no_resources_to_design_tier_boundary_policies, deterministic_rpa_sufficient]
+risk_tiers: [0, 1, 2, 3, 4, 5]
+key_technologies: ["OPA (Open Policy Agent)", Cedar, Risk Scoring Engine, Microsoft Purview, Varonis]
 ---
 
 # RT-3 Risk-Tiered Autonomy (Autonomy Hierarchy)
@@ -87,6 +95,50 @@ Risk scoring is handled by the policy engine (ID-7). The tier is determined usin
 **Decoupling autonomy from data classification.** Many implementations evaluate only risk level in tier design without considering the classification of the target data. Even read access to highly sensitive data may need to be elevated from Tier 0 to Tier 1–2.
 
 **Approval fatigue.** Too many Tier 3–4 operations cause approvers to approve superficially. Design the Tier 1–2 scope appropriately and monitor and optimize the volume of Tier 3+ operations.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Risk Scoring Engine
+    description: "Calculates the risk tier dynamically from operation attributes, data classification, irreversibility, and affected scope."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Risk Scoring Engine processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Policy Engine (ID-7)
+    description: "Enforces the tier decision at the execution infrastructure level, preventing agents from self-reporting their own tier."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Policy Engine (ID-7) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Approval Workflow (RT-4)
+    description: "Triggered for Tier 3–4 operations to route to human approval before execution proceeds."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Approval Workflow (RT-4) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

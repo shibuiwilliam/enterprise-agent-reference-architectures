@@ -2,6 +2,14 @@
 title: "GV-4 Industry Policy Pack"
 description: "A pattern that codifies industry-specific regulations, conventions, and audit requirements as reusable policy packs and deploys them to policy-as-code, evaluation, data classification, and approval rules."
 status: done
+pattern_id: GV-4
+facet: governance
+requires: ["ID-6", "ID-7"]
+required_by: []
+applies_when: [strictly_regulated_industries_with_regular_external_audits, global_enterprises_requiring_simultaneous_multi_regulation_compliance, many_use_cases_requiring_consistent_regulatory_compliance]
+not_applicable_when: [internal_support_ai_only_with_minimal_regulatory_impact, single_team_limited_use_case_where_manual_check_is_more_practical]
+risk_tiers: [3, 4, 5]
+key_technologies: ["OPA (Open Policy Agent) / Rego", YAML Policy Definition, Git, "GV-7 Evaluation Pipeline", ServiceNow GRC, OneTrust, "GV-6 Version Registry"]
 ---
 
 # GV-4 Industry Policy Pack
@@ -90,6 +98,50 @@ Packs are subject to version control (GV-6), so updating a single pack when regu
 
 !!! warning "Conflicting Packs"
     In a scenario that is both global and in finance, the finance pack and the GDPR pack may contain conflicting rules. Define inter-pack priority and merge strategies in advance, and set a default policy of adopting the stricter rule when conflicts arise.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Policy Pack Definition
+    description: "YAML/OPA-format package per industry/regulation containing prohibited operations, data classification rules, retention periods, approval requirements, and audit evidence requirements."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Policy Pack Definition processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Policy Engine Deployment (ID-7)
+    description: "Deploys pack rules to the ID-7 Policy Engine so they are enforced at runtime independently of agent prompts."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Policy Engine Deployment (ID-7) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Evaluation Rubric (GV-7)
+    description: "Pack-bundled evaluation rubrics and red-team scenarios loaded into the GV-7 CI pipeline to continuously measure regulatory compliance."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Evaluation Rubric (GV-7) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

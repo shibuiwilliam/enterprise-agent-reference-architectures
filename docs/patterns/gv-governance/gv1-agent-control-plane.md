@@ -2,6 +2,14 @@
 title: "GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）"
 description: "社内の全エージェントを登録・所有者明示・審査・版管理・廃止まで一元統制する制御プレーン。"
 status: done
+pattern_id: GV-1
+facet: governance
+requires: ["ID-7"]
+required_by: ["GV-2", "GV-8", "OB-2"]
+applies_when: [agents_exceed_three_and_multiple_teams_are_using_them, enterprise_wide_deployment_as_common_platform, audit_and_compliance_requirements_exist]
+not_applicable_when: [individual_poc_or_experimental_phase, single_department_with_only_one_or_two_agents, isolated_research_environment]
+risk_tiers: [2, 3, 4]
+key_technologies: [Agent Registry, ServiceNow CMDB Extension, "Policy-as-Code (ID-7)", "Model Gateway (GV-5)"]
 ---
 
 # GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）
@@ -12,7 +20,7 @@ status: done
 
 ## 解決する企業課題
 
-エージェントが増殖すると「誰が作ったか分からない」「何を実行しているか把握できない」野良エージェント（シャドーAI）が組織に蔓延する。責任者が不明なエージェントはインシデント時に一次対応者を特定できず、事後調査が停止する。複数部門が同等機能を重複開発し、過剰権限を持つエージェントが承認なしに本番データを操作する。変更履歴が追跡できないため、監査対応に多大な工数がかかる。エージェントが3個を超えて複数チームが使い始めると、台帳なしでは統制不能になる——これが制御プレーンを持つ出発点である。
+エージェントが増殖すると「誰が作ったか分からない」「何を実行しているか把握できない」野良エージェント（シャドーAI）が組織に蔓延する。責任者が不明なエージェントはインシデント時に一次対応者を特定できず、事後調査が止まる。複数部門が同等機能を重複開発することも珍しくなく、過剰権限を持つエージェントが承認なしに本番データを操作するリスクも生まれる。変更履歴を追跡できなければ、監査対応に多大な工数がかかる。エージェントが3個を超えて複数チームが使い始めると、台帳なしでは統制不能になる——これが制御プレーンを持つ出発点だ。
 
 !!! tip "最小成立条件（MVP）"
     各エージェントに owner・purpose・risk_tier を付与した台帳を1つ作り、未登録エージェントの実行を Model Gateway で遮断する仕組みを入れる。審査フローや版管理は後から追加できるが、「登録しなければ動かない」ゲートが最小の出発点である。
@@ -65,7 +73,7 @@ flowchart LR
     GW --> BLOCK
 ```
 
-新規・変更はセキュリティ・法務・データ保護の審査を経て公開する。未登録エージェントは実行基盤・モデル GW（[GV-5](gv5-central-model-gateway.md)）で遮断する。
+新規・変更はセキュリティ・法務・データ保護の審査を経て公開する。未登録エージェントは実行基盤とモデル GW（[GV-5](gv5-central-model-gateway.md)）の双方で遮断される。
 
 ## 向き／不向き
 
@@ -87,9 +95,53 @@ flowchart LR
 !!! warning "台帳止まりの罠"
     台帳を作っても実行制御と結びつけなければ形骸化する。登録を実行許可のゲートとし、未登録は Model Gateway/Agent Gateway で物理的に遮断する。
 
-- エージェントの「所有者」を明示し、インシデント時の一次対応者を常に特定できるようにする。
-- 審査プロセスが重すぎると回避を招く。リスク階層に応じて審査の深さを変える（Tier 0-1 は軽量セルフサービス、Tier 3 以上は法務・セキュリティレビュー）。
-- 廃止時はメモリ・権限・トークンの失効まで含めてライフサイクルを閉じる。
+- エージェントの「所有者」を明示し、インシデント時の一次対応者を常に特定できる状態を保つ。
+- 審査プロセスが重すぎると回避を招く。リスク階層に応じて審査の深さを変えることが大切だ（Tier 0-1 は軽量セルフサービス、Tier 3 以上は法務・セキュリティレビュー）。
+- 廃止時はメモリ・権限・トークンの失効まで含めてライフサイクルをきちんと閉じる。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Agent Registry
+    description: "Stores per-agent attributes (owner, business_purpose, allowed_tools, data_domains, risk_tier, approval_policy, cost_budget) with versioning and lifecycle state."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Agent Registry の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Lifecycle Review Gate
+    description: "Routes new and changed agent registrations through security, legal, and data protection review; adjusts review depth by risk tier."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Lifecycle Review Gate の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Execution Enforcement
+    description: "Connects to Model Gateway (GV-5) and Agent Gateway (EX-1) so unregistered agents are physically blocked from executing."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Execution Enforcement の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

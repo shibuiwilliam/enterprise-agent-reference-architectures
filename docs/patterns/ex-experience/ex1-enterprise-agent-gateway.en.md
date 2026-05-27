@@ -2,6 +2,14 @@
 title: "EX-1 Enterprise Agent Gateway (Unified Front Door)"
 description: "A pattern that applies authentication, classification, risk scoring, rate control, and audit entry creation centrally at a single entry point through which every agent request passes."
 status: done
+pattern_id: EX-1
+facet: experience
+requires: ["ID-1", "ID-2", "ID-6"]
+required_by: []
+applies_when: [multiple_channels_and_large_scale_enterprise_deployment, governance_and_audit_requirements_exist, workforce_and_customer_channel_separation_required]
+not_applicable_when: [single_poc_with_one_channel_only, completely_isolated_experimental_environment, single_channel_small_scale_usage]
+risk_tiers: [1, 2, 3, 4]
+key_technologies: [Kong, Apigee, AWS API Gateway, OIDC, SAML 2.0, Risk Scoring, OpenTelemetry Trace ID, Token Bucket]
 ---
 
 # EX-1 Enterprise Agent Gateway (Unified Front Door)
@@ -78,6 +86,50 @@ flowchart TB
 - Separate workforce and customer channels with a trust boundary, following [ID-1 Dual-Plane Separation](../id-identity/id1-workforce-customer-split.md).
 - Execute Token Exchange ([ID-2 OBO](../id-identity/id2-identity-federation-obo.md)) at the Gateway and pass OBO tokens to downstream components.
 - Integrate rate control with [IN-3 Rate/Quota Broker](../in-integration/in3-rate-quota-broker.md) and account for SaaS-side rate limits as well.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Authentication & Risk Classification
+    description: "Validates OIDC/SAML identity tokens, classifies request intent and risk tier, and assigns a correlation ID before forwarding to the backend runtime."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Authentication & Risk Classification processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Rate Control & Burst Absorption
+    description: "Token-bucket rate limiter that absorbs enterprise-wide peak bursts and coordinates with IN-3 Rate/Quota Broker for SaaS-side quota limits."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Rate Control & Burst Absorption processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Audit Entry Point
+    description: "Emits a structured audit record per request (actor ID, channel, intent, risk tier, correlation ID) to OB-1 Observability Lake."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Audit Entry Point processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

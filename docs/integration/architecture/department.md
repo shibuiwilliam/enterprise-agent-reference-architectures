@@ -16,13 +16,13 @@ status: done
 
 [GV-3 Department Agent Factory](../../patterns/gv-governance/gv3-department-agent-factory.md)は部署エージェントの雛形（役割・ポリシー・ツールセット）をテンプレートとして提供する。HR部門なら採用・勤怠・給与ドメインのテンプレート、Sales部門なら案件管理・見積もりドメインのテンプレートが用意される。部署はテンプレートをベースに固有部分だけをカスタマイズし、ゼロから構築するコストを削減する。
 
-[GV-2 Agent Catalog & Marketplace](../../patterns/gv-governance/gv2-agent-catalog-marketplace.md)は全社で承認済みのエージェントを一覧化する。部署は既に別部門で構築されたエージェントを探して再利用できる。重複開発を防ぎ、実績あるエージェントを横展開する仕組みである。
+[GV-2 Agent Catalog & Marketplace](../../patterns/gv-governance/gv2-agent-catalog-marketplace.md)は全社で承認済みのエージェントを一覧化する。部署は既に別部門で構築されたエージェントを探して再利用できる。重複開発を防ぎ、実績あるエージェントを横展開できる。
 
-[GV-4 Industry Policy Pack](../../patterns/gv-governance/gv4-industry-policy-pack.md)は業界規制・コンプライアンス要件をポリシーパックとして部署に配布する。金融コンプライアンス・個人情報保護・医療規制など、部門ごとに適用される規制が異なる場合に特に有効である。
+[GV-4 Industry Policy Pack](../../patterns/gv-governance/gv4-industry-policy-pack.md)は業界規制・コンプライアンス要件をポリシーパックとして部署に配布する。金融コンプライアンス・個人情報保護・医療規制など、部門ごとに適用される規制が異なる場合に特に有効だ。
 
 ### 実行・オーケストレーション（RT）
 
-[RT-1 Hub & Spoke（Spoke側）](../../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md)の文脈では、各部署エージェントがSpokeとして機能する。Hub（全社共通の意図ルーター）から委譲されたドメイン固有のタスクを、部署エージェントが処理する。ドメイン知識とツールセットはSpoke側が保持し、Hubは意図分類と権限縮退トークンの発行に専念する。
+[RT-1 Hub & Spoke（Spoke側）](../../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md)の文脈では、各部署エージェントがSpokeとして機能する。Hub（全社共通の意図ルーター）から委譲されたドメイン固有のタスクを、部署エージェントが処理する。ドメイン知識とツールセットはSpoke側が保持し、Hubは意図分類と権限縮退トークンの発行に集中する。
 
 ### 統合・ツール（IN）
 
@@ -32,7 +32,7 @@ status: done
 
 [KM-1 権限認識RAG](../../patterns/km-knowledge/km1-access-controlled-rag.md)は部署スコープのドメイン知識ベース（規程・マニュアル・過去事例）をベクトルDB化し、アクセス権限に応じた検索を提供する。HR部門の人事情報は人事権限者にのみ開示されるよう、ACLを検索インデックスに持たせる。
 
-[KM-2 Context Mesh](../../patterns/km-knowledge/km2-context-mesh.md)は部署をまたいだ文脈フェデレーションを担う。Sales AgentがCS Agentの顧客対応履歴を参照したい場合、互いに直接アクセスするのではなく、Context Mesh経由でアクセス制御された情報を受け取る。
+[KM-2 Context Mesh](../../patterns/km-knowledge/km2-context-mesh.md)は部署をまたいだ文脈フェデレーションを担う。Sales AgentがCS Agentの顧客対応履歴を参照したい場合、互いに直接アクセスするのではなくContext Mesh経由でアクセス制御された情報を受け取る。
 
 ## 部署エージェントの構成図
 

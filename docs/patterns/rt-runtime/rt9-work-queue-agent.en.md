@@ -2,6 +2,14 @@
 title: "RT-9 Enterprise Work Queue Agent (Business Queue Participation)"
 description: "A pattern for designing agents as 'workers in a business queue' rather than chatbots, processing tickets, inquiries, and requests in parallel with humans."
 status: done
+pattern_id: RT-9
+facet: runtime
+requires: []
+required_by: []
+applies_when: [existing_itsm_or_customer_support_system_with_volume_growth_or_after_hours_need, unified_sla_and_ticket_history_management_required, agent_scope_is_clearly_definable_with_escalation_logic_implementable]
+not_applicable_when: [no_defined_tasks_and_general_purpose_assistant_preferred, sla_does_not_exist_and_priority_management_not_needed, no_human_escalation_target_exists]
+risk_tiers: [1, 2, 3]
+key_technologies: [ServiceNow, Zendesk, Jira Service Management, LangGraph, LangChain Agents]
 ---
 
 # RT-9 Enterprise Work Queue Agent (Business Queue Participation)
@@ -78,6 +86,50 @@ When picking up a task, the agent evaluates its own processing scope (handleable
 
 !!! warning "Operating without measuring SLA impact"
     Cases where agents monopolizing the queue push out tasks that humans should process immediately occur. Regularly measure agent processing speed, completion rate, escalation rate, and SLA achievement rate, and adjust queue routing policies.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Queue Consumer
+    description: "Agent subscribes to the same queue as human operators with identical SLA rules and priority routing."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Queue Consumer processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Escalation Handler
+    description: "Evaluates whether a task is within scope; if not, documents findings and attempts to date in ticket comments before reassigning to a human."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Escalation Handler processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: SLA Monitor
+    description: "Triggers automatic escalation to a human when SLA remaining time falls below threshold or processing cannot proceed."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during SLA Monitor processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

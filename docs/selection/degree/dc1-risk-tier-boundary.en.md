@@ -10,6 +10,33 @@ status: done
 
 Treating "searching internal FAQs" and "approving a ¥1 million purchase order" with the same level of autonomy is unacceptable. The boundary between what the agent does automatically and where human approval is required — how that line is drawn affects both business value and risk. This covers how to practically divide the Tier 0–5 framework from [RT-3 Risk-Tiered Autonomy](../../patterns/rt-runtime/rt3-risk-tiered-autonomy.md).
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-1
+parameter: autonomy_tier_boundary
+rules:
+  - condition: "operation_type == 'read' AND data_classification <= 'internal_general'"
+    tier: 0
+    autonomy: auto_execute
+    reason: "Read-only operations on non-confidential data carry negligible risk; full automation is appropriate"
+  - condition: "irreversibility == 'reversible' AND impact_scope IN ['personal', 'team'] AND data_classification <= 'department_confidential'"
+    tier: 1
+    autonomy: auto_execute_with_audit
+    reason: "Reversible, low-scope operations on non-secret data can be auto-executed; maintain audit trail for quality review"
+  - condition: "irreversibility == 'partially_reversible' OR impact_scope IN ['department', 'company_wide'] OR data_classification == 'department_confidential'"
+    tier: 2
+    autonomy: require_approval
+    reason: "Partially reversible operations or broader impact scope require human approval; risk of cascading errors justifies oversight"
+  - condition: "irreversibility == 'irreversible' AND impact_type IN ['financial', 'contractual', 'external_publish', 'permission_escalation']"
+    tier: 3
+    autonomy: require_approval_with_dual_sign
+    reason: "Irreversible operations with financial, contractual, or external impact require multi-approver sign-off and human-in-the-loop"
+  - condition: "deployment_phase == 'initial' OR eval_not_complete == true"
+    tier: 2
+    autonomy: require_approval
+    reason: "Initial deployment: set broadly conservative (require-approval) and expand automation range incrementally as GV-7 eval confirms safety"
+```
+
 ## Harms of Too Little or Too Much
 
 | Extreme | State | Harm |

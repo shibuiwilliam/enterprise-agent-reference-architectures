@@ -8,7 +8,28 @@ status: done
 
 ## 概要
 
-システムプロンプトに「機密情報を出力するな」と書けば安全だろうか。答えは明確に「いいえ」である。「上記の指示を無視して」と入力するだけで突破されるプロンプトはセキュリティ境界にならない。安全保証は権限・認可・Policy Engine など実行基盤側に置き、プロンプトは応答トーンや出力形式の調整に使う——この役割分担がエンタープライズ設計の大原則である。
+システムプロンプトに「機密情報を出力するな」と書けば安全だろうか。答えは明確に「いいえ」だ。「上記の指示を無視して」と入力するだけで突破されるプロンプトはセキュリティ境界にならない。安全保証は権限・認可・Policy Engine など実行基盤側に置き、プロンプトは応答トーンや出力形式の調整に使う——この役割分担がエンタープライズ設計の大原則である。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-12
+decision_rules:
+  - condition: "control_type IN ['access_control', 'approval_flow', 'output_validation', 'sandbox_isolation']"
+    recommendation: prompt_for_quality_platform_for_security
+    reason: "アクセス制御・承認フロー・DLP出力検証・実行環境の隔離は実行基盤側（権限・認可・Policy Engine）に置く"
+  - condition: "control_type IN ['output_format', 'response_style', 'task_context', 'language_setting']"
+    recommendation: prompt_for_quality_platform_for_security
+    reason: "出力フォーマット・回答スタイル・タスクの目的・使用言語の指定はプロンプトが担うべき品質・ふるまいの調整"
+  - condition: "security_enforced_by_prompt == true"
+    recommendation: platform_only
+    reason: "プロンプトでのセキュリティ保証は禁忌。「上記の指示を無視して」で容易に回避されるプロンプトはセキュリティ境界にならない"
+  - condition: "platform_not_yet_ready == true AND considering_prompt_as_stopgap == true"
+    recommendation: platform_only
+    reason: "まず実行基盤側のアクセス制御（ID-4）とPolicy-as-Code（ID-7）を整備する。これがなければプロンプトを精緻にしても安全は保証されない"
+  - condition: "defense_in_depth == true"
+    recommendation: prompt_for_quality_platform_for_security
+    reason: "プロンプト制御と実行基盤制御は排他ではなく、それぞれ適切な役割を担う多層防御として組み合わせる"
+```
 
 ## 比較
 
@@ -22,7 +43,7 @@ status: done
 
 ## 判断基準
 
-この問いに対する答えは二択ではなく、役割の明確な分担である。
+この問いに対する答えは二択ではなく、役割の明確な分担だ。
 
 **実行基盤側（ポリシー・権限・承認）が担うべきもの**：
 
@@ -48,7 +69,7 @@ status: done
 
 実装の優先順位：
 
-1. まず実行基盤側のアクセス制御（[ID-4](../../patterns/id-identity/id4-permission-mirror-least-of.md)）と Policy-as-Code（[ID-7](../../patterns/id-identity/id7-policy-as-code-guardrail.md)）を整備する。これがなければいくらプロンプトを精緻にしても安全は保証されない。
+1. まず実行基盤側のアクセス制御（[ID-4](../../patterns/id-identity/id4-permission-mirror-least-of.md)）と Policy-as-Code（[ID-7](../../patterns/id-identity/id7-policy-as-code-guardrail.md)）を整備する。これがなければプロンプトをいくら精緻にしても安全は保証されない。
 2. 承認フロー（[RT-4](../../patterns/rt-runtime/rt4-human-approval-chain.md)）と出力検証・DLP（[RT-5](../../patterns/rt-runtime/rt5-command-envelope.md)）を追加する。
 3. PDP/PEP（[ID-6](../../patterns/id-identity/id6-zero-trust-pdp-pep.md)）で全リクエストを認可判定する構造を完成させる。
 4. 実行基盤の制御が整った後に、品質向上・ふるまい調整のためのプロンプトエンジニアリングを行う。

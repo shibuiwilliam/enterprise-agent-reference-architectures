@@ -2,24 +2,32 @@
 title: "RT-11 Project Workspace / Digital Twin Agent（プロジェクト・デジタルツイン）"
 description: "エージェントを個人ではなくプロジェクト・チームに紐付け、コンテキスト・成果物・決定事項・タスクを動的RBACワークスペースとして共有し、プロジェクトライフサイクル全体を通じて機能するパターン。"
 status: done
+pattern_id: RT-11
+facet: runtime
+requires: ["KM-1", "KM-4", "ID-4"]
+required_by: []
+applies_when: [multi_tool_project_teams_five_to_fifty_members, project_duration_weeks_or_more_with_decision_history_reference_needed, member_turnover_with_onboarding_cost_reduction_needed]
+not_applicable_when: [one_off_short_tasks_where_workspace_overhead_not_worth_it, one_to_two_person_personal_projects, fully_integrated_erp_with_no_information_silos]
+risk_tiers: [2, 3]
+key_technologies: ["Neo4j (GraphRAG)", Slack Bot, "Dynamic RBAC (Okta Groups / Azure AD Groups)", PostgreSQL Decision Log, Asana API, Jira REST API, Box API, SharePoint]
 ---
 
 # RT-11 Project Workspace / Digital Twin Agent（プロジェクト・デジタルツイン）
 
 ## 概要
 
-プロジェクトの文脈は Slack・Notion・Jira・会議録・メールに散らばり、新メンバーが追いつくのに何日もかかる。このパターンは、エージェントを個人アシスタントではなく「プロジェクトに紐づく共有メンバー」として設計する。プロジェクト開始時に GraphRAG ベースの共有メモリ・Slack チャンネル・Jira ボード・Box フォルダを自動プロビジョニングし、`@Project-X-Agent` で誰でも対話できる。毎朝 Jira と Slack を突き合わせて仕様の不整合を警告するなど、能動的に振る舞う。プロジェクト終了時にはメモリと権限を自動で失効させる。
+プロジェクトの文脈は Slack・Notion・Jira・会議録・メールに散らばり、新メンバーが追いつくのに何日もかかる。このパターンは、エージェントを個人アシスタントではなく「プロジェクトに紐づく共有メンバー」として設計する。プロジェクト開始時に GraphRAG ベースの共有メモリ・Slack チャンネル・Jira ボード・Box フォルダを自動プロビジョニングし、`@Project-X-Agent` で誰でも対話できるようにする。毎朝 Jira と Slack を突き合わせて仕様の不整合を警告するなど、能動的に振る舞う点も特徴だ。プロジェクト終了時にはメモリと権限を自動で失効させる。
 
 ## 解決する企業課題
 
-プロジェクトのコンテキストがSlack・Notion・Jira・会議メモ・メールに散在し、誰も全体を把握できない状態はエンタープライズの典型的な問題である。情報サイロは新規参加者のオンボーディング遅延・意思決定理由の消失・仕様の乖離検知の失敗という形で業務コストに直結する。
+プロジェクトの文脈が Slack・Notion・Jira・会議メモ・メールに散在し、誰も全体を把握できない状態はエンタープライズの典型的な問題だ。情報サイロは新規参加者のオンボーディング遅延・意思決定理由の消失・仕様の乖離検知の失敗という形で業務コストに直結する。
 
 !!! tip "最小成立条件（MVP）"
     まず Slack チャンネル＋Jira ボードの自動プロビジョニングと、メンション応答による Q&A を実装する。GraphRAG は初期段階ではシンプルなベクトル検索で代替し、プロアクティブ監視は仕様不整合チェック1本に絞る。
 
-特にマトリクス組織・アジャイル・長期大型プロジェクトでは、メンバーの入れ替えが頻繁に発生し、「誰がなぜその設計を選んだか」という文脈が個人の記憶に依存する。担当者の異動・退職によりこの文脈が組織から失われる問題は、「言った言わない」の温床となる。
+特にマトリクス組織・アジャイル・長期大型プロジェクトでは、メンバーの入れ替えが頻繁に発生し、「誰がなぜその設計を選んだか」という文脈が個人の記憶に依存する。担当者の異動・退職によりその文脈が組織から失われる問題は、「言った言わない」の温床となる。
 
-エンタープライズのセキュリティ観点では、プロジェクト終了後もメモリと権限が残存すると、異動した元メンバーが旧プロジェクトの機密情報に継続アクセスできる状態が生じる。個人アシスタント型のエージェントではライフサイクル管理が設計に含まれないため、この問題を構造的に解決できない。
+セキュリティの観点でも課題がある。プロジェクト終了後もメモリと権限が残存すると、異動した元メンバーが旧プロジェクトの機密情報に継続アクセスできる状態が生じる。個人アシスタント型のエージェントではライフサイクル管理が設計に含まれないため、この問題を構造的に解決できない。
 
 ## 価値仮説
 
@@ -27,7 +35,7 @@ status: done
 
 ## 解決策と設計
 
-解決策の核心は「プロジェクトを一つの認識主体として扱い、その全情報源を横断するエージェントをプロジェクトメンバーとして参加させること」である。エージェントはプロジェクトの記憶・監視・問い合わせ窓口を一手に担い、人間メンバーの認知負荷を低減する。動的 RBAC により、メンバーの権限変更・追加・削除がエージェントのアクション権限に即時反映される。
+解決策の核心は「プロジェクトを一つの認識主体として扱い、その全情報源を横断するエージェントをプロジェクトメンバーとして参加させること」だ。エージェントはプロジェクトの記憶・監視・問い合わせ窓口を一手に担い、人間メンバーの認知負荷を低減する。動的 RBAC により、メンバーの権限変更・追加・削除がエージェントのアクション権限に即時反映される。
 
 プロジェクトワークスペースはプロジェクト作成時にプロビジョニングされ、メンバーの RBAC により参照範囲が制御される。エージェントはワークスペース内の全情報源をコンテキストとして持ち、各ツール呼び出しはメンバーの権限に縮退させて実行する。
 
@@ -97,6 +105,50 @@ GraphRAGはプロジェクト内の「人・決定・成果物・タスク」の
 
 !!! warning "プロアクティブ動作の過剰通知"
     仕様不整合チェック・タスク未完了警告などのプロアクティブ動作は有用だが、頻度・検知条件の設計が甘いとSlackに大量通知が届き、メンバーに無視されるようになる。通知頻度・閾値・集約ルールを設計段階で定め、メンバーがチューニングできる設定UIを用意すること。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Project Workspace Provisioner
+    description: "On project creation, auto-provisions Slack channel, Jira board, Box folder, and dynamic RBAC group; auto-deprovisions all on project closure."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Project Workspace Provisioner の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: GraphRAG Memory
+    description: "Maintains a knowledge graph of people, decisions, artifacts, and tasks within the project, filtered by each member's RBAC permissions at read time."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "GraphRAG Memory の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Decision Log Store
+    description: "Structured record of decisions made, rejected alternatives, and rationale for retrospective and audit use."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Decision Log Store の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

@@ -2,6 +2,14 @@
 title: "GV-8 Cost Quota & Chargeback"
 description: "A pattern that meters token, tool, and execution costs at the tenant/department/project/user level and visualizes them through budgets, limits, allocation, and ROI dashboards."
 status: done
+pattern_id: GV-8
+facet: governance
+requires: ["GV-1", "GV-5"]
+required_by: []
+applies_when: [thousands_of_users_operating_agents_where_cost_allocation_is_a_management_issue, enterprises_providing_ai_features_commercially_requiring_per_customer_profitability, multi_agent_configurations_with_high_inference_cost_explosion_risk]
+not_applicable_when: [small_poc_or_single_team_where_cost_measurement_overhead_exceeds_value, monthly_costs_are_negligible_and_department_allocation_unnecessary]
+risk_tiers: [1, 2, 3, 4]
+key_technologies: [Token Meter, Cost Attribution Pipeline, Budget/Quota Manager, "FinOps Tools (CloudCost, Apptio)", Looker, Tableau, Power BI]
 ---
 
 # GV-8 Cost Quota & Chargeback
@@ -89,6 +97,50 @@ Design the degradation strategy at limit-reached time in stages. Send an alert a
 
 !!! warning "Missing Degradation UX Design"
     When agents suddenly stop working due to budget limits, business operations halt and confusion ensues. In degradation mode, display a message such as "currently responding in simplified mode," or implement queuing that allocates resources only to high-priority processing.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: cost_center Tag Attribution
+    description: "All LLM calls carry a cost_center tag (department code, project ID, tenant ID) enabling per-dimension aggregation."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during cost_center Tag Attribution processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Budget Alert & Degradation
+    description: "Alerts at 80% budget; at 100% switches to cheaper model, cache-first mode, or queues requests; prevents runaway inference chains."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Budget Alert & Degradation processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: ROI Dashboard
+    description: "Pairs cost data (denominator) with GV-10 business outcome data (numerator) to compute unit-cost-per-business-outcome per agent and department."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during ROI Dashboard processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

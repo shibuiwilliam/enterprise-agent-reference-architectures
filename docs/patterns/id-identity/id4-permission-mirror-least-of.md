@@ -2,6 +2,14 @@
 title: "ID-4 Permission Mirror & Least-of Faithful Access（権限忠実アクセス）"
 description: "各SaaSの権限を基盤側で再現し、実効権限を常に「エージェント能力∩本人権限∩ポリシー」の最小に縮退させるパターン。"
 status: done
+pattern_id: ID-4
+facet: identity
+requires: []
+required_by: ["KM-1"]
+applies_when: [enterprise_rag_or_cross_system_search_agents, frequent_permission_changes_from_departures_or_transfers, obo_delegation_unsupported_legacy_saas_or_custom_systems_in_mix]
+not_applicable_when: [extremely_simple_permission_small_environment, public_information_only_use_cases, single_saas_completable_with_obo_obo_is_preferred]
+risk_tiers: [2, 3, 4]
+key_technologies: [ACL Sync, SCIM Group Sync, SaaS Admin API, "Zanzibar-based ReBAC", ABAC, "PDP (ID-6)"]
 ---
 
 # ID-4 Permission Mirror & Least-of Faithful Access（権限忠実アクセス）
@@ -14,20 +22,20 @@ status: done
 
 ## 解決する企業課題
 
-企業 RAG や横断検索エージェントが社内に展開されるとき、「検索できたから答える」という状態が最大のリスクになる。ベクトル DB に全社文書を入れて高速検索できるようにした結果、本来ユーザーが参照できないはずの機密文書を RAG が取得して回答に含めてしまう——これが実際に発生する。
+企業 RAG や横断検索エージェントが社内に展開されるとき、「検索できたから答える」という状態が最大のリスクになる。ベクトル DB に全社文書を入れて高速検索できるようにした結果、本来ユーザーが参照できないはずの機密文書を RAG が取得して回答に含めてしまう——これが実際に発生する事故だ。
 
-問題の根本は、検索インデックスの構築と権限チェックが切り離されていることにある。インデックスは全文書を平等に扱うが、各ユーザーのアクセス権限は SaaS ごと・ドキュメントごとに異なる。この乖離を埋めるのが Permission Mirror である。
+問題の根本は、検索インデックスの構築と権限チェックが切り離されていることにある。インデックスは全文書を平等に扱うが、各ユーザーのアクセス権限は SaaS ごと・ドキュメントごとに異なる。この乖離を埋めるのが Permission Mirror だ。
 
-さらに深刻なのは退職者・異動者の問題である。Salesforce の権限を剥奪しても、エージェント側のキャッシュが古い状態のまま残ると「剥奪済みのはずの情報」にアクセスできてしまう。これは遅延失効問題として知られ、ACL 同期の仕組みがなければ防げない。
+さらに深刻なのは退職者・異動者の問題だ。Salesforce の権限を剥奪しても、エージェント側のキャッシュが古い状態のまま残ると「剥奪済みのはずの情報」にアクセスできてしまう。これは遅延失効問題として知られ、ACL 同期の仕組みがなければ防げない。
 
-OBO 委譲（[ID-2](id2-identity-federation-obo.md)）が使える SaaS では、SaaS 側が本人権限でアクセスを制御できる。しかし委譲非対応の旧式 SaaS や独自システムでは、エージェント基盤側で権限を再現する必要がある。Permission Mirror はこの差を埋める。
+OBO 委譲（[ID-2](id2-identity-federation-obo.md)）が使える SaaS では、SaaS 側が本人権限でアクセスを制御できる。委譲非対応の旧式 SaaS や独自システムでは、エージェント基盤側で権限を再現する必要があり、Permission Mirror がその差を埋める。
 
 !!! tip "最小成立条件（MVP）"
     まず RAG 対象の主要ドキュメントストア（Box・Google Drive 等）の ACL を日次同期し、検索結果フィルタに適用する。全 SaaS の完全同期は段階的に拡大する。
 
-このパターンが解決する企業課題は次の3点である。
+解決すべき企業課題は次の3点にまとめられる。
 
-- RAGが本来見えない文書を返す「サイロ越え漏洩」の防止
+- RAG が本来見えない文書を返す「サイロ越え漏洩」の防止
 - 退職・異動後に剥奪済みアクセスが残る「遅延失効」リスクの抑制
 - OBO 委譲が使えない系での権限忠実なアクセス制御の実現
 
@@ -98,9 +106,53 @@ $$\text{effective\_permission} = \text{agent\_capability} \cap \text{user\_entit
 !!! warning "遅延失効の罠"
     エンタイトルメントのコピーが源と乖離し、剥奪済みアクセスが残る「遅延失効」が最大のリスクである。再同期＋短TTLで抑え、同期遅延を監視する。
 
-- Permission Mirror は**キャッシュであり権威ソースではない**。SaaS 側の権限を真実とし、乖離を検出・修正する仕組みを持つ。
+- Permission Mirror は**キャッシュであり権威ソースではない**。SaaS 側の権限を真実とし、乖離を検出・修正する仕組みを持つこと。
 - 同期頻度はリスクに応じて決める。人事異動は日次、機密文書の共有変更はリアルタイムに近づける。
-- 「全社データを1つのベクトル DB に入れて高速検索」は禁忌である。ACL 同梱（[KM-1](../km-knowledge/km1-access-controlled-rag.md)）またはフェデレーション（[KM-2](../km-knowledge/km2-context-mesh.md)）を前提にする。
+- 「全社データを1つのベクトル DB に入れて高速検索」は禁忌だ。ACL 同梱（[KM-1](../km-knowledge/km1-access-controlled-rag.md)）またはフェデレーション（[KM-2](../km-knowledge/km2-context-mesh.md)）を前提にする。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: ACL Sync Pipeline
+    description: "Synchronizes SaaS ACLs (Salesforce, Box, Google Drive) into the Permission Mirror; near-real-time for sensitive documents, daily for org-wide role changes."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "ACL Sync Pipeline の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Effective Permission Calculator
+    description: "Computes agent_capability ∩ user_entitlement ∩ policy_constraint before each RAG query or tool call; records which factor was the limiting constraint in audit."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Effective Permission Calculator の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Stale-Access Monitor
+    description: "Detects and alerts when Mirror-to-source divergence exceeds threshold; triggers forced re-sync on departure/transfer events."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Stale-Access Monitor の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

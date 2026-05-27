@@ -2,6 +2,14 @@
 title: "GV-5 Central Model Gateway（モデル・ベンダー統制）"
 description: "全LLM呼び出しを単一GW経由にし、ベンダー承認・データ所在地・PII・コスト・監査を集中制御するパターン。"
 status: done
+pattern_id: GV-5
+facet: governance
+requires: ["GV-1"]
+required_by: []
+applies_when: [multiple_vendors_and_models_used_in_combination, data_classification_based_routing_required, enterprise_wide_ai_platform_requiring_cost_visibility_and_compliance]
+not_applicable_when: [single_application_with_lightweight_configuration, completely_offline_air_gapped_environment, single_model_poc]
+risk_tiers: [1, 2, 3, 4, 5]
+key_technologies: [LiteLLM, Portkey Proxy, Amazon Bedrock, "Azure OpenAI (VNet integration)", vLLM, "TGI (Text Generation Inference)", "KM-6 DLP & Redaction Boundary"]
 ---
 
 # GV-5 Central Model Gateway（モデル・ベンダー統制）
@@ -12,7 +20,7 @@ status: done
 
 ## 解決する企業課題
 
-各チームが独自に外部 LLM API を直接呼び出す運用が定着すると、機密データが承認なしに外部に送信される事故が起きる。どのチームがどのモデルを使っているか把握できず、ベンダーが乱立してコストが不可視になる。データ所在地（リージョン）要件や DPA（データ処理契約）が守られているかの確認手段もなくなる。プロバイダが無告知でモデルを更新すると挙動変化を検知できない。LLM 呼び出しのコストを部門別に集計できなければ、コスト配賦（GV-8）も ROI 計測（GV-10）も成立しない。これらをすべて個別管理しようとすると統制コストが爆発する——Gateway を唯一の通路にすることで一括して解決する。
+各チームが独自に外部 LLM API を直接呼び出す運用が定着すると、機密データが承認なしに外部へ送信される事故が起きる。どのチームがどのモデルを使っているか把握できず、ベンダーが乱立してコストも不可視になる。データ所在地（リージョン）要件や DPA（データ処理契約）が守られているかを確認する手段もなくなっていく。プロバイダが無告知でモデルを更新すると挙動の変化を検知できないし、LLM 呼び出しのコストを部門別に集計できなければコスト配賦（GV-8）も ROI 計測（GV-10）も成立しない。これらをすべて個別管理しようとすると統制コストが爆発する——Gateway を唯一の通路にすることで、まとめて解決する。
 
 !!! tip "最小成立条件（MVP）"
     LiteLLM 等のプロキシを1台立て、承認済みモデルのホワイトリストと egress 制御による直接 API 呼び出しの遮断を設定する。PII 検出やデータ分類ルーティングは段階的に追加すればよい。
@@ -79,9 +87,53 @@ flowchart TB
 !!! danger "迂回ルートの放置"
     Gateway を設置しても、開発者が直接外部 API を叩く迂回ルートを放置すれば意味をなさない。egress 制御（ネットワークポリシー/ファイアウォール）で LLM API への直接通信を遮断する。
 
-- 本文をログ基盤に直接入れると巨大・高コスト・PII リスクになる。本文はストレージに退避し、メタデータのみ監査に送る（三層分離）。
-- モデルベンダーのサイレントアップデートに対応するため、[GV-6 Version Registry](gv6-version-registry.md) と連携してモデル版を記録する。
-- Gateway のレイテンシが業務に影響しないよう、接続プール・キャッシュ・非同期処理を適切に設計する。
+- 本文をログ基盤に直接入れると容量大・高コスト・PII リスクになる。本文はストレージに退避し、メタデータのみ監査に送る（三層分離）。
+- モデルベンダーのサイレントアップデートに対応するため、[GV-6 Version Registry](gv6-version-registry.md) と連携してモデル版を記録しておく。
+- Gateway のレイテンシが業務に影響しないよう、接続プール・キャッシュ・非同期処理を適切に設計することも忘れずに。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Model Approval Check
+    description: "Validates that the requested model is on the approved allowlist; blocks calls to unapproved or deprecated models."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Model Approval Check の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Data Classification Router
+    description: "Routes top-secret classified requests to VPC/on-premises inference and general data requests to external API providers."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Data Classification Router の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Token & Cost Meter
+    description: "Records per-request token counts and cost with cost_center tag; feeds GV-8 Cost Quota & Chargeback for department-level aggregation."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Token & Cost Meter の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

@@ -2,19 +2,27 @@
 title: "IN-2 SaaS Connector Adapter（腐敗防止）"
 description: "各SaaSの独自API仕様・認証・データモデルを、エージェントが扱う共通インターフェイスに変換するパターン。"
 status: done
+pattern_id: IN-2
+facet: integration
+requires: []
+required_by: []
+applies_when: [multiple_saas_crosscutting_or_future_replacement_possible, common_business_vocabulary_across_multiple_saas_needed, agent_prompts_should_remain_saas_agnostic]
+not_applicable_when: [single_saas_with_deep_dependency_and_no_replacement_need, full_use_of_saas_proprietary_features, adapter_layer_overhead_not_justified]
+risk_tiers: [1, 2, 3]
+key_technologies: [Adapter Pattern, "Anti-Corruption Layer", OpenAPI, GraphQL Federation, Connector SDK, Error Normalization]
 ---
 
 # IN-2 SaaS Connector Adapter（腐敗防止）
 
 ## 概要
 
-Salesforce は REST、Workday は SOAP、ServiceNow は Table API——SaaS ごとに API 仕様がバラバラで、その差がプロンプトやロジックに染み出すと保守が地獄になる。このパターンは、SaaS 固有の差をアダプタに閉じ込め、エージェントには `get_customer`・`create_ticket` のような業務語彙だけを見せる腐敗防止層（Anti-Corruption Layer）だ。SaaS を差し替えても影響はアダプタ内部で完結する。
+Salesforce は REST、Workday は SOAP、ServiceNow は Table API——SaaS ごとに API 仕様がバラバラで、その差がプロンプトやロジックに染み出すと保守が地獄になる。このパターンは SaaS 固有の差をアダプタに閉じ込め、エージェントには `get_customer`・`create_ticket` のような業務語彙だけを見せる腐敗防止層（Anti-Corruption Layer）だ。SaaS を差し替えても影響はアダプタ内部で完結する。
 
 ## 解決する企業課題
 
-複数の SaaS を横断するエージェントシステムを構築すると、各 SaaS の独自仕様がプロンプトやオーケストレーションロジックに染み出す「保守地獄」が発生する。Salesforce の REST API、Workday の SOAP、ServiceNow の Table API——それぞれ認証方式・レート制限・エラーコード・ページネーション仕様が異なる。これらの差異が上流に露出すると、SaaS 仕様変更のたびにプロンプトやロジックの修正が波及する。
+複数の SaaS を横断するエージェントシステムを構築すると、各 SaaS の独自仕様がプロンプトやオーケストレーションロジックに染み出す「保守地獄」が発生する。Salesforce の REST API、Workday の SOAP、ServiceNow の Table API——それぞれ認証方式・レート制限・エラーコード・ページネーション仕様が異なる。これらの差異が上流に露出すると、SaaS 仕様変更のたびにプロンプトやロジックへの修正が波及する。
 
-SaaS の差し替えや追加（例：ServiceNow から Jira Service Management への移行）が必要になったとき、アダプタ層がなければ影響範囲が全エージェント・全プロンプトに及ぶ。腐敗防止層はこの変更の影響をアダプタ内部に閉じ込める。認証方式の差異（OAuth 2.0 / API Key / SAML）も吸収することで、上流はビジネスロジックに集中できる。
+SaaS の差し替えや追加（例：ServiceNow から Jira Service Management への移行）が必要になったとき、アダプタ層がなければ影響範囲が全エージェント・全プロンプトに及ぶ。腐敗防止層はこの変更の影響をアダプタ内部に閉じ込める。認証方式の差異（OAuth 2.0 / API Key / SAML）も吸収するため、上流はビジネスロジックに集中できる。
 
 !!! tip "最小成立条件（MVP）"
     最も利用頻度の高い SaaS 1つに対し、3つの主要操作（例：get / create / update）を共通インターフェイスで定義したアダプタを1本作る。共通モデルの網羅性より「プロンプトから SaaS 固有語彙を排除する」ことを優先する。
@@ -44,7 +52,7 @@ flowchart LR
     AD5 --> CS[独自 API]
 ```
 
-各アダプタは対象 SaaS の認証・ページネーション・レート制限・エラー形式をカプセル化する。共通インターフェイスは業務語彙（例：`get_customer`、`create_ticket`、`update_opportunity`）で定義し、SaaS の内部概念（例：Salesforce の Account ID と Workday の Worker ID）の差異をアダプタが解決する。エラー正規化（各 SaaS のエラーコードを共通エラー型に変換）もアダプタが担う。
+各アダプタは対象 SaaS の認証・ページネーション・レート制限・エラー形式をカプセル化する。共通インターフェイスは業務語彙（例：`get_customer`、`create_ticket`、`update_opportunity`）で定義し、Salesforce の Account ID と Workday の Worker ID のような内部概念の差異はアダプタが解決する。エラー正規化（各 SaaS のエラーコードを共通エラー型に変換）もアダプタの責務だ。
 
 ## 向き／不向き
 
@@ -71,6 +79,50 @@ flowchart LR
 - アダプタの認可粒度が粗いと権限忠実性（[ID-4](../id-identity/id4-permission-mirror-least-of.md)）が崩れる。万能サービスアカウント1個でアダプタを動かすと、エージェントのユーザーに関係なく全権限でアクセスしてしまう。SaaS 側の権限モデルを忠実に伝播する設計にする。
 - SaaS の API バージョンアップをアダプタで吸収し、上流のエージェントに影響させない。アダプタにバージョン管理を持ち、旧 API から新 API への移行をアダプタ内で完結させる。
 - アダプタのテストは SaaS の Sandbox 環境で行い、本番 API への副作用を防ぐ。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Canonical Tool Interface
+    description: "Business-vocabulary API (e.g., get_customer, create_ticket, update_opportunity) that agents use regardless of the underlying SaaS."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Canonical Tool Interface の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: SaaS-Specific Adapter
+    description: "Encapsulates authentication method, pagination, rate limit handling, and error normalization for one SaaS; changes to SaaS API are absorbed here."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "SaaS-Specific Adapter の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Error Normalizer
+    description: "Converts SaaS-specific error codes into a common error type so agents and orchestrators handle errors uniformly."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error Normalizer の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

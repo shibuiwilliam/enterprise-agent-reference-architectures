@@ -2,6 +2,14 @@
 title: "GV-8 Cost Quota & Chargeback（コスト配賦）"
 description: "トークン・ツール・実行コストをテナント/部門/プロジェクト/ユーザー単位で計測し、予算・上限・按分・ROIダッシュボードで可視化するパターン。"
 status: done
+pattern_id: GV-8
+facet: governance
+requires: ["GV-1", "GV-5"]
+required_by: []
+applies_when: [thousands_of_users_operating_agents_where_cost_allocation_is_a_management_issue, enterprises_providing_ai_features_commercially_requiring_per_customer_profitability, multi_agent_configurations_with_high_inference_cost_explosion_risk]
+not_applicable_when: [small_poc_or_single_team_where_cost_measurement_overhead_exceeds_value, monthly_costs_are_negligible_and_department_allocation_unnecessary]
+risk_tiers: [1, 2, 3, 4]
+key_technologies: [Token Meter, Cost Attribution Pipeline, Budget/Quota Manager, "FinOps Tools (CloudCost, Apptio)", Looker, Tableau, Power BI]
 ---
 
 # GV-8 Cost Quota & Chargeback（コスト配賦）
@@ -12,7 +20,7 @@ status: done
 
 ## 解決する企業課題
 
-LLM コストは従来のインフラコストと異なり、リクエスト数・トークン数・エージェント呼び出し深度に依存して非線形に増加する。部門が自由に使うと月末に予想外の請求が発生し、どの部門・プロジェクト・エージェントが費用を生んでいるかが不明瞭になる。マルチエージェント構成では 1 つのユーザーリクエストが連鎖的に数百回の LLM 呼び出しを生む推論爆発が起きうる。顧客向け AI 機能を提供している企業では顧客別採算が把握できないとプライシング設計ができない。コストを「インフラ費」として一括管理するだけでは「高いコストをかけているが成果が出ていない」エージェントを見逃し、AI 投資全体の説明責任が果たせなくなる。
+LLM コストは従来のインフラコストと異なり、リクエスト数・トークン数・エージェント呼び出し深度に依存して非線形に増加する。部門が自由に使うと月末に予想外の請求が発生し、どの部門・プロジェクト・エージェントが費用を生んでいるか不明瞭になる。マルチエージェント構成では、1 つのユーザーリクエストが連鎖的に数百回の LLM 呼び出しを生む「推論爆発」が起きうる。顧客向け AI 機能を提供している企業では、顧客別採算を把握できなければプライシング設計もできない。コストを「インフラ費」として一括管理するだけでは「高いコストをかけているが成果が出ていない」エージェントを見逃し、AI 投資全体の説明責任が果たせなくなる。
 
 !!! tip "最小成立条件（MVP）"
     全 LLM 呼び出しに cost_center タグを付与し、部門別の月次トークン消費量と概算コストをダッシュボードに表示する。予算上限や縮退戦略は後から追加すればよい。
@@ -60,7 +68,7 @@ flowchart TD
     Attribution --> FinOps
 ```
 
-上限到達時の縮退戦略は段階的に設計する。予算の 80% でアラートを送信し、100% に達すると簡易モデル（コスト小）へ切り替えるか、キャッシュ結果で代替するか、人間への移譲を促す。マルチエージェント構成では再帰呼び出しによる推論コストの爆発が起きやすく、エージェント単位の実行コスト上限を設けることが重要である。
+上限到達時の縮退戦略は段階的に設計する。予算の 80% でアラートを送信し、100% に達すると簡易モデル（コスト小）へ切り替えるか、キャッシュ結果で代替するか、人間への移譲を促す。マルチエージェント構成では再帰呼び出しによる推論コストの爆発が起きやすいため、エージェント単位の実行コスト上限を設けることが重要だ。
 
 ## 向き／不向き
 
@@ -88,7 +96,51 @@ flowchart TD
     単純な API 呼び出しコストしか監視していないと、マルチエージェントの再帰呼び出しによる数百倍のコスト爆発を検知できない。エージェント単位・実行セッション単位のコスト上限を設け、深度制限と組み合わせることが必須である。
 
 !!! warning "縮退時のユーザー体験設計の欠落"
-    予算上限に達してエージェントが突然動かなくなると業務が止まり、混乱を招く。縮退モードでは「現在は簡易モードで回答しています」等のメッセージを出すか、優先度の高い処理にのみリソースを割り当てるキューイングを実装する。
+    予算上限に達してエージェントが突然動かなくなると業務が止まり、混乱を招く。縮退モードでは「現在は簡易モードで回答しています」等のメッセージを出すか、優先度の高い処理にのみリソースを割り当てるキューイングを実装しておく。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: cost_center Tag Attribution
+    description: "All LLM calls carry a cost_center tag (department code, project ID, tenant ID) enabling per-dimension aggregation."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "cost_center Tag Attribution の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Budget Alert & Degradation
+    description: "Alerts at 80% budget; at 100% switches to cheaper model, cache-first mode, or queues requests; prevents runaway inference chains."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Budget Alert & Degradation の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: ROI Dashboard
+    description: "Pairs cost data (denominator) with GV-10 business outcome data (numerator) to compute unit-cost-per-business-outcome per agent and department."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "ROI Dashboard の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

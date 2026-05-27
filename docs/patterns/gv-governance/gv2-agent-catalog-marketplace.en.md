@@ -2,6 +2,14 @@
 title: "GV-2 Agent Catalog & Marketplace (Internal Catalog)"
 description: "A pattern that provides reviewed agents, skills, and tools as an internal app store, centralizing discovery, request, usage, and cloning."
 status: done
+pattern_id: GV-2
+facet: governance
+requires: ["GV-1"]
+required_by: []
+applies_when: [agents_deployed_across_multiple_departments, discovery_duplication_and_unreviewed_usage_are_problematic, platform_team_exists_for_centralized_access_request_approval_and_permission_management]
+not_applicable_when: [single_team_single_purpose_internal_operation_only, poc_stage_with_only_a_few_agents_gv1_registry_alone_is_sufficient]
+risk_tiers: [2, 3, 4]
+key_technologies: ["Backstage (Internal Developer Portal)", ServiceNow, Jira Service Management, Usage Analytics, Quality Rating]
 ---
 
 # GV-2 Agent Catalog & Marketplace (Internal Catalog)
@@ -79,6 +87,50 @@ When a usage request is approved, the Control Plane grants access and records it
 
 !!! warning "Request Log Becoming Meaningless"
     Even with a usage request flow in place, if approvers rubber-stamp requests without reading them, the original purpose — recording who is using which agent and for what — is lost. Make purpose, expiry, and data access scope required fields in the request form, and establish clear accountability for approvers.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Catalog UI/API
+    description: "Search and detail view exposing purpose, owner, risk tier, cost estimate, quality score, version, and approval status for each agent."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Catalog UI/API processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Access Request Workflow
+    description: "Structured access request requiring purpose, expiry, and data access scope; integrates with existing approval systems (ServiceNow, Jira SM)."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Access Request Workflow processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Usage Analytics & Quality Score
+    description: "Aggregates execution logs, token consumption, and error rates into a quality score updated on each GV-7 evaluation run."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Usage Analytics & Quality Score processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

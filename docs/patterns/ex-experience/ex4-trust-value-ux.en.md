@@ -2,6 +2,14 @@
 title: "EX-4 Trust and Value UX (Experience Design for Retention)"
 description: "An experience pattern that builds user trust and increases retention by surfacing rationale and confidence levels, making corrections easy, and providing immediate feedback on the value delivered."
 status: done
+pattern_id: EX-4
+facet: experience
+requires: ["EX-1", "KM-1", "RT-3"]
+required_by: []
+applies_when: [enterprise_wide_rollout_phase_where_adoption_rate_is_a_challenge, agent_output_used_as_basis_for_business_decisions, initial_deployment_requiring_employee_trust_building]
+not_applicable_when: [poc_stage_with_only_a_few_power_users, fully_automated_backend_processing_with_no_human_review_of_results]
+risk_tiers: [1, 2, 3]
+key_technologies: ["RAG Source Tracking (KM-1)", LLM Log Probabilities, Source Consistency Check, WebSocket Streaming, "Usage Metrics Collection (OB-1)", A/B Testing Infrastructure]
 ---
 
 # EX-4 Trust and Value UX (Experience Design for Retention)
@@ -88,6 +96,50 @@ flowchart LR
 
 !!! warning "Over-Engineering the Correction UI"
     Adding sophisticated editing UI to all agent output becomes cost-excessive. Start with a minimal "approve / reject / comment" UI and add rich UI only to outputs where editing is frequent, based on usage data.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Citation & Confidence Layer
+    description: "Attaches source document links, confidence labels (high/estimated/insufficient), and freshness timestamps to agent responses using KM-1 retrieval metadata."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Citation & Confidence Layer processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Progressive Confirmation UI
+    description: "For RT-3 Tier-2+ operations, presents operation details before execution and requests user modification or approval."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Progressive Confirmation UI processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Value Feedback Dashboard
+    description: "Displays estimated time saved per completed task and cumulative weekly/monthly savings, tied to GV-10 measurement data."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Value Feedback Dashboard processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

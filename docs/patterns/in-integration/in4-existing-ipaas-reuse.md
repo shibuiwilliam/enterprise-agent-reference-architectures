@@ -2,19 +2,27 @@
 title: "IN-4 Existing iPaaS Reuse（既存統合資産の再利用）"
 description: "エージェントのSaaS統合をゼロから作らず、既存のMuleSoft/Workato/Boomi/社内ESBなどiPaaSを再利用し、新規統合はMCP、既存統合はiPaaSというハイブリッド構成で重複投資と保守分散を防ぐパターン。"
 status: done
+pattern_id: IN-4
+facet: integration
+requires: ["IN-1"]
+required_by: []
+applies_when: [mulesoftworkato_boomi_or_esb_already_running_with_many_integration_flows, integration_team_and_ai_team_separate_with_difficult_knowledge_transfer, gradual_migration_needed_keeping_existing_flows_while_adding_agent_capability]
+not_applicable_when: [first_integration_project_with_no_existing_ipaas, existing_flow_quality_too_low_and_rebuild_more_rational, only_a_few_saas_connections_with_low_mcp_direct_implementation_effort]
+risk_tiers: [1, 2, 3]
+key_technologies: [MuleSoft Anypoint Platform, Workato, Boomi AtomSphere, Apache Camel / IBM MQ, Apigee / Kong, "MCP Adapter (thin wrapper)"]
 ---
 
 # IN-4 Existing iPaaS Reuse（既存統合資産の再利用）
 
 ## 概要
 
-エージェント導入のたびに SaaS 統合をゼロから作り直すのは、既に動いている MuleSoft や Workato のフローを無視した二重投資だ。このパターンは、既存の iPaaS 統合フロー・変換ロジック・認証設定をそのまま再利用し、新規に必要な統合だけ MCP で追加するハイブリッド構成を取る。ただし、iPaaS の認可粒度がユーザー単位の権限忠実性を満たすかは事前に検証が必要である。
+エージェント導入のたびに SaaS 統合をゼロから作り直すのは、既に動いている MuleSoft や Workato のフローを無視した二重投資だ。このパターンは既存の iPaaS 統合フロー・変換ロジック・認証設定をそのまま再利用し、新規に必要な統合だけ MCP で追加するハイブリッド構成を取る。ただし、iPaaS の認可粒度がユーザー単位の権限忠実性を満たすかは事前に検証が必要だ。
 
 ## 解決する企業課題
 
 iPaaS で運用中の統合フローは、接続設定・変換ロジック・エラーハンドリング・監視の4つが作り込まれた資産だ。これをエージェント導入のたびに作り直すと、同じ SaaS 接続を2箇所で保守する状態になり、変更・障害対応・セキュリティパッチの適用がすべて二重化する。
 
-統合チームと AI チームが分離している組織では、既存フローの内部知識（SaaS の挙動の癖、変換ロジックの経緯、エラー処理の特殊ケース）が統合チームに集中している。ゼロから再実装すると、その知識を再度習得するコストが発生する。ハイブリッド再利用はこの重複を排除し、既存チームの保守スキルと運用知識を引き継ぐ。既存フローのセキュリティ監査済みの実績もそのまま継承できる。
+統合チームと AI チームが分離している組織では、既存フローの内部知識（SaaS の挙動の癖、変換ロジックの経緯、エラー処理の特殊ケースなど）が統合チームに集中している。ゼロから再実装すると、その知識を再度習得するコストが発生する。ハイブリッド再利用はこの重複を排除し、既存チームの保守スキルと運用知識を引き継げる。既存フローのセキュリティ監査済みの実績もそのまま継承できる。
 
 !!! tip "最小成立条件（MVP）"
     既存 iPaaS の最も利用頻度の高いフロー1本を MCP アダプターでラップし、Tool Gateway 経由で呼び出せるようにする。アダプターはインターフェース変換のみとし、ロジックは iPaaS 側に残す。
@@ -65,7 +73,7 @@ flowchart TB
     MUL & WRK & ESB --> SF & SN & ERP
 ```
 
-既存 iPaaS フローを MCP アダプターでラップする際は、フローの入出力インターフェースのみをエージェント向けに整形し、フロー内部のビジネスロジック・変換・エラーハンドリングは iPaaS 側に残す。アダプターはインターフェース変換のみを担い、ロジックは iPaaS 側に留めることで、二重保守を防ぐ。
+既存 iPaaS フローを MCP アダプターでラップする際は、フローの入出力インターフェースのみをエージェント向けに整形し、フロー内部のビジネスロジック・変換・エラーハンドリングは iPaaS 側に残す。アダプターはインターフェース変換のみを担い、ロジックは iPaaS 側に留める。これが二重保守を防ぐ肝心の設計判断だ。
 
 ## 向き／不向き
 
@@ -94,6 +102,50 @@ flowchart TB
 
 - MCP アダプターにビジネスロジックを書き込むと、結局 iPaaS と二重保守になる。アダプターはインターフェース変換のみを担い、ロジックは iPaaS 側に留める。
 - 既存フローの変更（iPaaS 側）がエージェントの動作に影響する。MCP アダプターに契約テスト（Consumer-Driven Contract Test）を設け、フロー変更時の回帰検証を自動化する。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: MCP Adapter (iPaaS Wrapper)
+    description: "Thin translation layer that converts MCP tool-call format to the iPaaS API or webhook trigger; all business logic remains inside the iPaaS flow."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "MCP Adapter (iPaaS Wrapper) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: iPaaS Flow (existing)
+    description: "Existing integration flow with its connection config, transformation logic, error handling, and monitoring retained as-is."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "iPaaS Flow (existing) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Contract Test Suite
+    description: "Consumer-driven contract tests on the MCP adapter to auto-detect when iPaaS flow changes break the agent-facing interface."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Contract Test Suite の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

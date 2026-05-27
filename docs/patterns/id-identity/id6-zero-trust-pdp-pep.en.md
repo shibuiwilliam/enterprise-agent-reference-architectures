@@ -2,6 +2,14 @@
 title: "ID-6 Zero-Trust Runtime + Central PDP / Distributed PEP (ABAC/ReBAC)"
 description: "A pattern that achieves zero-trust authorization — never trusting even internal traffic — by verifying every action every time, using a central PDP and distributed PEPs."
 status: done
+pattern_id: ID-6
+facet: identity
+requires: []
+required_by: ["GV-4", "RT-3", "ID-5", "IN-1"]
+applies_when: [multi_saas_environments_handling_confidential_data, multi_cloud_multi_tenant_configurations, regulated_industries_requiring_financial_or_healthcare_compliance]
+not_applicable_when: [completely_isolated_experimental_environment, single_user_personal_poc, public_information_only_processing_without_authorization_needs]
+risk_tiers: [2, 3, 4, 5]
+key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, mTLS, "Workload Identity (ID-3)", "Short-lived Token (ID-5)", Network Policy, Runtime Sandbox]
 ---
 
 # ID-6 Zero-Trust Runtime + Central PDP / Distributed PEP (ABAC/ReBAC)
@@ -92,6 +100,50 @@ PEPs are distributed across multiple locations:
 - Default to "deny if uncertain" (fail-closed), not "permit if uncertain."
 - When authorization decision latency impacts business operations, address it through PDP replicas or edge caching — never by bypassing the PDP.
 - The freshness of the organizational graph directly affects the accuracy of PDP decisions. Monitor delays in reflecting transfers and departures.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Central PDP (OPA/Cedar)
+    description: "Evaluates every authorization request with ABAC/ReBAC against attributes from the org graph; returns allow/deny/require_approval and logs the decision."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Central PDP (OPA/Cedar) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Distributed PEP
+    description: "PEPs at Gateway (EX-1), runtime, and connector enforce PDP decisions; no enforcement point bypasses the PDP."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Distributed PEP processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Org Graph Attribute Feed
+    description: "Supplies department, role, and project attributes to the PDP for contextual evaluation; attribute staleness is monitored."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Org Graph Attribute Feed processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

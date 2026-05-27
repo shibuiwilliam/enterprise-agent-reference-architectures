@@ -2,6 +2,14 @@
 title: "OB-2 Unified Audit & Lineage (Three-Party Attribution)"
 description: "A pattern that tamper-proof records every agent action with three-party attribution (human + agent + target system), enabling full reconstruction and regulatory reporting."
 status: done
+pattern_id: OB-2
+facet: observability
+requires: ["GV-1", "RT-8"]
+required_by: ["GV-9"]
+applies_when: [all_production_ai_deployments, regulated_industries_requiring_full_action_traceability]
+not_applicable_when: []
+risk_tiers: [0, 1, 2, 3, 4, 5]
+key_technologies: [Splunk, Microsoft Sentinel, Salesforce Shield, Google Workspace Audit, Okta System Log, OpenTelemetry Trace ID / Span ID, "Event Store (append-only / WORM)"]
 ---
 
 # OB-2 Unified Audit & Lineage (Three-Party Attribution)
@@ -93,6 +101,50 @@ The correlation ID (reusing the OpenTelemetry Trace ID / Span ID) threads throug
 
 !!! note "Compatibility with Highly Confidential Processing (KM-7)"
     [KM-7 Ephemeral Secure Context Bus](../km-knowledge/km7-ephemeral-secure-context-bus.md) is designed to retain no prompt/response body whatsoever, but this does not contradict this pattern's requirement of making all actions reconstructible. Even in KM-7 processing, a **sealed judgment trail** — "who, when, what classification of data, under what policy decision was processed" as metadata and input/output hashes — is recorded in tamper-proof storage. Full body reconstruction is not possible, but the fact of the action, attribution, and policy decision remain traceable. Disclosure of sealed trails requires dual-authority approval (CISO + General Counsel, etc.) and is not accessible in normal operations. For areas where evidence retention may be legally required after the fact — such as HR evaluations and internal reporting — design retention periods to match regulatory requirements.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Three-Party Audit Record
+    description: "Appends principal (human ID), workload (agent ID), tool/system, input/output hashes, policy decision (allow/deny/require_approval), delegation chain, and cost to an append-only immutable log per action."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Three-Party Audit Record processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Correlation ID Stitcher
+    description: "Uses OpenTelemetry Trace ID / Span ID to join agent-side audit records with SaaS-side audit logs (Salesforce Shield, Okta System Log) enabling cross-system investigation."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Correlation ID Stitcher processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: SIEM Integration
+    description: "Forwards normalized audit events to Splunk or Microsoft Sentinel so that agent actions appear alongside human actions in the same correlation queries."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during SIEM Integration processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

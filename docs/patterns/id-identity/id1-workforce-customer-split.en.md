@@ -2,6 +2,14 @@
 title: "ID-1 Workforce/Customer Dual-Plane Separation"
 description: "A pattern that physically and logically separates the IdP, data, agents, execution environment, and audit trail between the workforce plane and the customer-facing plane."
 status: done
+pattern_id: ID-1
+facet: identity
+requires: []
+required_by: []
+applies_when: [all_enterprises_with_customer_touchpoints, b2b_b2c_requiring_strict_separation_of_customer_and_internal_data, multi_tenant_b2b_saas_where_cross_customer_data_mixing_is_fatal]
+not_applicable_when: [internal_only_no_customer_facing_surface, completely_closed_internal_tool_operations, poc_phase_where_dual_separation_design_is_cost_prohibitive]
+risk_tiers: [2, 3, 4, 5]
+key_technologies: [Okta, Microsoft Entra ID, Google Workspace, Auth0, "Okta Customer Identity (CIAM)", Tenant Isolation, Namespace Isolation, Output Guardrail, PII Filter, Human Handoff]
 ---
 
 # ID-1 Workforce/Customer Dual-Plane Separation
@@ -102,6 +110,50 @@ Design constraints for the customer plane:
 - Ensure agents on the customer plane cannot access internal tools, MCPs, or RAG indexes at the network and execution-environment level. Application-layer flags alone are insufficient.
 - Tenant isolation for individual customers prevents one customer's inquiry context from leaking into another's. Always verify session management and context boundary implementations during architecture review.
 - Audit logs must also be separated by plane. Mixing workforce and customer audit logs contaminates the evidence trail during incident investigations.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Dual IdP Boundary
+    description: "Workforce uses Okta/Entra ID/Google Workspace; customer-facing uses Auth0/Okta CIAM; no identity tokens cross the boundary."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Dual IdP Boundary processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Explicit Cross-Boundary Gate
+    description: "The only permitted path for data to move from workforce to customer side; enforces classification, approval, and KM-6 DLP masking."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Explicit Cross-Boundary Gate processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Tenant Isolation
+    description: "In multi-tenant B2B SaaS, prevents one customer's session context from mixing into another customer's agent execution."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Tenant Isolation processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

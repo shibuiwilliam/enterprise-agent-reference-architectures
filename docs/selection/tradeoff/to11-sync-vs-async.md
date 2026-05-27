@@ -8,7 +8,28 @@ status: done
 
 ## 概要
 
-「今日の予定を教えて」は2秒で返ってほしいが、「過去3年分の契約書を分析して」は数分かかっても構わない。途中で上長の承認が入る業務であれば、承認待ちの間ずっとブラウザを開いたまま待つわけにはいかない。処理の所要時間と承認ステップの有無で、同期・非同期・ハイブリッドをどう使い分けるかを扱う。
+「今日の予定を教えて」は2秒で返ってほしいが、「過去3年分の契約書を分析して」は数分かかっても構わない。途中で上長の承認が入る業務であれば、承認待ちの間ずっとブラウザを開いたまま待つわけにはいかない。処理の所要時間と承認ステップの有無に応じて、同期・非同期・ハイブリッドをどう使い分けるかを扱う。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-11
+decision_rules:
+  - condition: "expected_duration_seconds <= 5 AND human_approval_step == false AND operation_type == 'qa_or_search'"
+    recommendation: synchronous
+    reason: "処理が数秒以内に完了するシンプルなQ&A・検索・文書要約等は同期処理が適切"
+  - condition: "expected_duration_seconds > 10 OR steps_include_human_approval == true OR external_api_calls_multiple == true"
+    recommendation: asynchronous
+    reason: "処理が10秒を超える、または多段階処理・承認待ちステップ・複数外部API呼び出しがある場合は非同期処理（RT-8）が必要"
+  - condition: "multi_system_transaction == true AND compensation_on_failure_required == true"
+    recommendation: saga_transactional
+    reason: "複数システムにまたがる操作でトランザクション整合性が必要かつ途中失敗時の補償処理が必要な条件はSagaパターン（RT-7）"
+  - condition: "duration_5s_to_30s == true AND ux_responsiveness_important == true"
+    recommendation: streaming_sync
+    reason: "LLMの生成結果をトークン単位でストリーミング配信する。数秒〜30秒程度の処理でユーザーは「読みながら待つ」体験になる"
+  - condition: "sync_started_but_exceeded_timeout == true"
+    recommendation: hybrid_timeout_escalation
+    reason: "同期で開始した処理が想定時間を超えた場合、自動的に非同期モードに切り替え、完了通知をWebhookまたはメールで送る"
+```
 
 ## 比較
 
@@ -45,11 +66,11 @@ status: done
 
 ## ハイブリッド・段階的アプローチ
 
-部分結果を即ストリーム配信し、重い処理を非同期化するハイブリッドが実用的である。
+部分結果を即ストリーム配信し、重い処理を非同期化するハイブリッドが実用的だ。
 
-- **ストリーミング同期**：LLMの生成結果をトークン単位でストリーミング配信する。ユーザーは「待つ」のではなく「読みながら待つ」体験になる。数秒〜30秒程度の処理に有効。
-- **部分完了通知**：非同期タスクの中間状態（「情報収集完了」「承認待ち中」）をリアルタイムで通知し、ユーザーが進捗を把握できるようにする。
-- **タイムアウト昇格**：同期で開始した処理が想定時間を超えた場合、自動的に非同期モードに切り替え、完了通知をWebhookまたはメールで送る。
+- **ストリーミング同期**：LLMの生成結果をトークン単位でストリーミング配信する。ユーザーは「待つ」のではなく「読みながら待つ」体験になる。数秒〜30秒程度の処理に有効
+- **部分完了通知**：非同期タスクの中間状態（「情報収集完了」「承認待ち中」）をリアルタイムで通知し、ユーザーが進捗を把握できるようにする
+- **タイムアウト昇格**：同期で開始した処理が想定時間を超えた場合、自動的に非同期モードに切り替え、完了通知をWebhookまたはメールで送る
 
 段階的な導入順序：
 

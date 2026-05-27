@@ -8,9 +8,9 @@ status: done
 
 ## 概要
 
-45のパターンはメニューから好きなものを選ぶのではなく、建物の基礎→構造→内装のように積み上げて使う。あるパターンが機能するには別のパターンが先に整っている必要がある——この依存関係を理解することが、導入順序と優先度の決定に直結する。
+45のパターンはメニューから好きなものを選ぶものではない。建物の基礎→構造→内装のように積み上げて使う。あるパターンが機能するには別のパターンが先に整っている必要があり、この依存関係の理解が、導入順序と優先度の決定に直結する。
 
-基盤パターンが整っていない状態で上位パターンを入れようとすると、「動くには動くが権限が漏れる」「ログが取れていないため事故時に原因特定できない」「ポリシー変更をコードで管理できないため現場が独自ルールを作る」といった事態が起きる。依存関係マップは、その導入順序の設計図である。
+基盤パターンが整わないまま上位パターンを入れようとすると問題が起きる。「動くには動くが権限が漏れる」「ログが取れておらず、事故時に原因を特定できない」「ポリシー変更をコードで管理できず、現場が独自ルールを作る」——こうした事態が典型例だ。依存関係マップは、その導入順序を示す設計図である。
 
 ## 依存関係マップ
 
@@ -77,7 +77,7 @@ graph TB
 | [OB-1 Observability Lake](../patterns/ob-observability/ob1-observability-lake.md) | [GV-6 バージョン管理](../patterns/gv-governance/gv6-version-registry.md) | 版ごとの振る舞い比較には実行記録が必要 |
 | [OB-2 Unified Audit](../patterns/ob-observability/ob2-unified-audit-lineage.md) | [GV-9 インシデント対応](../patterns/gv-governance/gv9-incident-response-kill-switch.md) | 三者帰責の監査証跡なしに責任追跡はできない |
 
-可観測性チェーンの本質は「記録なくして評価・再現・調査なし」という一点に尽きる。[OB-1](../patterns/ob-observability/ob1-observability-lake.md) がトレース・メトリクス・ログを一元収集していなければ、[GV-7](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) の評価パイプラインは空振りになる。どのエージェントが何を実行したかを後から証明できない状態でガバナンスを語ることはできない。
+可観測性チェーンの本質は「記録なくして評価・再現・調査なし」の一点に尽きる。[OB-1](../patterns/ob-observability/ob1-observability-lake.md) がトレース・メトリクス・ログを一元収集していなければ、[GV-7](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) の評価パイプラインは空振りに終わる。どのエージェントが何を実行したかを後から証明できない状態で、ガバナンスを語ることはできない。
 
 ### ID（アイデンティティ）→ KM（知識管理）チェーン
 
@@ -87,7 +87,7 @@ graph TB
 | [ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md) | [KM-1 権限認識RAG](../patterns/km-knowledge/km1-access-controlled-rag.md) | 最小権限合成がドキュメントアクセスの上限になる |
 | [ID-2 OBO](../patterns/id-identity/id2-identity-federation-obo.md) | [KM-2 Context Mesh](../patterns/km-knowledge/km2-context-mesh.md) | 複数SaaSをまたぐ横断文脈の取得には権限伝播が必須 |
 
-このチェーンのポイントは「権限の伝播なくして安全な横断文脈なし」という一点に尽きる。[ID-2](../patterns/id-identity/id2-identity-federation-obo.md) のOBO（On-Behalf-Of）委譲が整っていなければ、エージェントはサービスアカウントの過剰権限でRAGを叩くことになる。依頼者が本来見えないはずのドキュメントが検索結果に混入するリスクを、このチェーンが断ち切る。
+このチェーンのポイントも「権限の伝播なくして安全な横断文脈なし」の一点に尽きる。[ID-2](../patterns/id-identity/id2-identity-federation-obo.md) の OBO（On-Behalf-Of）委譲が整っていなければ、エージェントはサービスアカウントの過剰権限で RAG を叩くことになる。依頼者が本来見えないはずのドキュメントが検索結果に混入するリスクを、このチェーンが断ち切る。
 
 ### ID（アイデンティティ）→ RT/GV チェーン
 
@@ -98,7 +98,7 @@ graph TB
 | [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) | [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) | ID→RT | リスク階層の判定ロジックはポリシーコードに記述される |
 | [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md) | [RT-4 Human Approval Chain](../patterns/rt-runtime/rt4-human-approval-chain.md) | ID→RT | いつ人間承認が必要かの基準はポリシーで定義する |
 
-このチェーンは RT（ランタイム）と GV（ガバナンス）の両方にまたがる。[ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md)/[ID-7](../patterns/id-identity/id7-policy-as-code-guardrail.md) が整っていない状態で [RT-3](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) や [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md) を導入すると、「高リスク操作かどうかの判定」が設定ファイルや担当者の判断に依存し、組織全体でのポリシー一貫性が失われる。同様に [GV-4](../patterns/gv-governance/gv4-industry-policy-pack.md) の業界ポリシーも、PDP とポリシーコード基盤なしには評価・適用できない。ポリシーをコードとして管理することで、変更履歴・テスト・デプロイが統制される。
+このチェーンは RT（ランタイム）と GV（ガバナンス）の両方にまたがる。[ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md)/[ID-7](../patterns/id-identity/id7-policy-as-code-guardrail.md) が整わないまま [RT-3](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) や [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md) を導入すると、「高リスク操作かどうかの判定」が設定ファイルや担当者の判断に依存し、組織全体でのポリシー一貫性が失われる。[GV-4](../patterns/gv-governance/gv4-industry-policy-pack.md) の業界ポリシーも、PDP とポリシーコード基盤なしには評価・適用できない。ポリシーをコードとして管理することで、変更履歴・テスト・デプロイが一貫して統制される。
 
 ### GV-1（コントロールプレーン）→ GV チェーン
 
@@ -108,7 +108,7 @@ graph TB
 | [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md) | [GV-8 Cost Quota](../patterns/gv-governance/gv8-cost-quota-chargeback.md) | コスト割り当てには実行単位の識別と承認が必要 |
 | [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md) | [OB-2 Unified Audit](../patterns/ob-observability/ob2-unified-audit-lineage.md) | 実行許可の判断記録は統一監査台帳に書き込まれる |
 
-[GV-1](../patterns/gv-governance/gv1-agent-control-plane.md) は実行許可のゲートである。すべてのエージェントはコントロールプレーンを通じて存在を登録し、実行を許可される。このゲートがなければカタログは形骸化し、コスト管理は不能になり、どのエージェントがいつ動いたかの証跡も残らなくなる。
+[GV-1](../patterns/gv-governance/gv1-agent-control-plane.md) は実行許可のゲートである。すべてのエージェントはコントロールプレーンを通じて存在を登録し、実行を許可される。このゲートがなければ、カタログは形骸化し、コスト管理は不能になり、どのエージェントがいつ動いたかの証跡も残らない。
 
 ### RT-8（Durable Workflow）→ RT チェーン
 
@@ -118,7 +118,7 @@ graph TB
 | [RT-8 Durable Workflow](../patterns/rt-runtime/rt8-durable-workflow.md) | [RT-7 Enterprise Saga](../patterns/rt-runtime/rt7-enterprise-saga.md) | 複数SaaSへの分散トランザクションには補償操作の状態保持が必要 |
 | [RT-8 Durable Workflow](../patterns/rt-runtime/rt8-durable-workflow.md) | [OB-2 Unified Audit](../patterns/ob-observability/ob2-unified-audit-lineage.md) | ワークフロー再実行時のリプレイ保証には監査ログが使われる |
 
-長時間ワークフローは数時間から数日にわたって実行される。[RT-8](../patterns/rt-runtime/rt8-durable-workflow.md) の状態永続化がなければ、途中でサービスが再起動したときにワークフローは消失する。承認チェーンの「承認待ち」状態や、Sagaの「補償操作が必要な段階」がどこまで進んだかを記録しているのが Durable Workflow の役割である。
+長時間ワークフローは数時間から数日にわたって実行される。[RT-8](../patterns/rt-runtime/rt8-durable-workflow.md) の状態永続化がなければ、途中でサービスが再起動したときにワークフローは消えてしまう。承認チェーンの「承認待ち」状態や、Saga の「補償操作が必要な段階」がどこまで進んだかを記録するのが Durable Workflow の役割だ。
 
 ### 組織グラフ → ID/RT/KM チェーン
 
@@ -130,11 +130,11 @@ graph TB
 | 組織グラフ | [KM-4 Scoped Memory Hierarchy](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) | メモリのスコープ（個人/チーム/部門/全社）は組織構造に対応する |
 | 組織グラフ | [KM-3 Canonical Object Knowledge Graph](../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md) | ナレッジグラフのエンティティ名寄せに組織マスターを参照する |
 
-組織グラフはシステムではなくデータである。Workday・Okta・プロジェクト管理ツールなど複数ソースから名寄せした単一の権威ある組織マスターが存在しなければ、「このエージェントが動かせる範囲はどこか」「誰が承認者か」という問いに一貫した答えを出せない。
+組織グラフはシステムではなくデータである。Workday・Okta・プロジェクト管理ツールなど複数ソースから名寄せした単一の権威ある組織マスターがなければ、「このエージェントが動かせる範囲はどこか」「誰が承認者か」という問いに一貫した答えを出せない。
 
 ## 価値計測・定着：成果を回収する最終リンク
 
-依存チェーンは「安全に動かす順序」を定めるが、動かした結果として**価値が生まれ・計測され・定着する**ところまでを含めなければ、導入は完了しない。以下の3つの仕組みは、すべての依存チェーンの「出口」に位置する最終リンクである。
+依存チェーンは「安全に動かす順序」を定めるが、動かした結果として**価値が生まれ・計測され・定着する**ところまで含めなければ、導入は完了しない。以下の3つの仕組みは、すべての依存チェーンの「出口」に位置する最終リンクだ。
 
 | 最終リンク | 役割 | 主要ページ |
 |---|---|---|
@@ -142,13 +142,13 @@ graph TB
 | [定着・アダプション](adoption.md) | 利用率を引き上げ、ROIの「分母」を確保する。価値実現アンチパターンの回避もここで扱う | チェンジマネジメント・ロードマップの3フェーズ |
 | [AI投資ポートフォリオ](portfolio.md) | 計測結果に基づきユースケースの拡大・改善・撤退を判断し、再投資先を決定する | 四半期レビューでの意思決定サイクル |
 
-依存チェーンに沿ってパターンを積み上げ、部門別ユースケースで価値を創出し、GV-10 で計測し、定着施策で利用率を確保し、ポートフォリオで再投資判断する——この**価値ループ（創出→計測→定着→再投資）**が回ることで、パターン導入が実際の企業価値向上につながる。
+依存チェーンに沿ってパターンを積み上げ、部門別ユースケースで価値を創出し、GV-10 で計測し、定着施策で利用率を確保し、ポートフォリオで再投資判断する。この**価値ループ（創出→計測→定着→再投資）**が回ることで、パターン導入が実際の企業価値向上へとつながる。
 
 ## 依存の読み方
 
-あるパターンを導入したいとき、この図の上流（矢印の始点）がまだ整っていなければ、そこから着手する。たとえば [KM-1 権限認識RAG](../patterns/km-knowledge/km1-access-controlled-rag.md) を入れたいなら、まず [ID-2](../patterns/id-identity/id2-identity-federation-obo.md) と [ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md) が動いていることを確認する。
+あるパターンを導入したいとき、この図の上流（矢印の始点）がまだ整っていなければ、そこから着手する。たとえば [KM-1 権限認識RAG](../patterns/km-knowledge/km1-access-controlled-rag.md) を入れたいなら、まず [ID-2](../patterns/id-identity/id2-identity-federation-obo.md) と [ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md) が動いているかを確認する。
 
-逆に言えば、基盤層のパターン（OB-1/OB-2、ID-2/ID-4/ID-6/ID-7、GV-1、RT-8、組織グラフ）は優先度が高い。これらは他の多くのパターンが依存しているため、後から入れようとすると既存パターンの改修コストが大きくなる。「最初に基盤を敷く」という原則はこの依存構造から来ている。
+逆にいえば、基盤層のパターン（OB-1/OB-2・ID-2/ID-4/ID-6/ID-7・GV-1・RT-8・組織グラフ）は優先度が高い。他の多くのパターンがこれらに依存しているため、後から入れようとすると既存パターンの改修コストが膨らむ。「最初に基盤を敷く」という原則は、この依存構造から来ている。
 
 !!! tip "導入順序の原則"
     依存グラフの上流から着手する。基盤層（可観測性・アイデンティティ・コントロールプレーン）を先に整えることで、後続パターンの導入コストと手戻りが大幅に減る。

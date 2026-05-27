@@ -10,6 +10,27 @@ status: done
 
 When an incident occurs, "what was input and what was returned at that time" must be reproducible — otherwise root cause investigation hits a dead end. But piping all prompts in plain text into the logging infrastructure spreads customers' personal information and confidential data across log storage, itself becoming a security incident seed. This covers how to design a practical middle ground — three-layer separation — between "wanting to record everything" and "not wanting to spread confidential data."
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-7
+decision_rules:
+  - condition: "data_classification == 'top_secret' OR pattern == 'ephemeral_secure_context_bus'"
+    recommendation: metadata_only
+    reason: "Top-secret processing: store only metadata (request ID, timestamp, completion flag); prove execution occurred without preserving content"
+  - condition: "standard_operations == true AND audit_required == true"
+    recommendation: three_layer_separated
+    reason: "Standard architecture: metadata to Trace DB, encrypted body to object storage, aggregated/anonymized metrics to DWH"
+  - condition: "body_storage_policy == 'full_plaintext'"
+    recommendation: three_layer_separated
+    reason: "Anti-pattern: storing confidential prompts as plaintext in general log infrastructure is a security incident source"
+  - condition: "cost_constraint == true OR not_all_records_needed == true"
+    recommendation: selective_with_encrypted_body
+    reason: "Use sampling strategy: full body storage only on errors, high-risk operations, and random N% sample to control cost"
+  - condition: "regulatory_requirement IN ['gdpr', 'personal_information_protection']"
+    recommendation: three_layer_separated
+    reason: "Regulatory data: set retention period and deletion rules per data classification; compliance over reproducibility"
+```
+
 ## Comparison
 
 | Log Type | Storage | Contains | Purpose |

@@ -2,6 +2,14 @@
 title: "IN-2 SaaS Connector Adapter (Anti-Corruption Layer)"
 description: "A pattern that converts each SaaS's proprietary API specifications, authentication, and data models into a common interface for agents to use."
 status: done
+pattern_id: IN-2
+facet: integration
+requires: []
+required_by: []
+applies_when: [multiple_saas_crosscutting_or_future_replacement_possible, common_business_vocabulary_across_multiple_saas_needed, agent_prompts_should_remain_saas_agnostic]
+not_applicable_when: [single_saas_with_deep_dependency_and_no_replacement_need, full_use_of_saas_proprietary_features, adapter_layer_overhead_not_justified]
+risk_tiers: [1, 2, 3]
+key_technologies: [Adapter Pattern, "Anti-Corruption Layer", OpenAPI, GraphQL Federation, Connector SDK, Error Normalization]
 ---
 
 # IN-2 SaaS Connector Adapter (Anti-Corruption Layer)
@@ -71,6 +79,50 @@ Each adapter encapsulates the target SaaS's authentication, pagination, rate lim
 - Coarse authorization granularity in adapters breaks permission fidelity ([ID-4](../id-identity/id4-permission-mirror-least-of.md)). Running adapters with a single all-powerful service account causes access with full permissions regardless of which agent user is involved. Design to faithfully propagate the SaaS permission model.
 - Absorb SaaS API version upgrades in the adapter without impacting upstream agents. Maintain version management in the adapter and complete migration from old to new APIs within the adapter.
 - Test adapters in SaaS sandbox environments to prevent side effects on production APIs.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Canonical Tool Interface
+    description: "Business-vocabulary API (e.g., get_customer, create_ticket, update_opportunity) that agents use regardless of the underlying SaaS."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Canonical Tool Interface processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: SaaS-Specific Adapter
+    description: "Encapsulates authentication method, pagination, rate limit handling, and error normalization for one SaaS; changes to SaaS API are absorbed here."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during SaaS-Specific Adapter processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Error Normalizer
+    description: "Converts SaaS-specific error codes into a common error type so agents and orchestrators handle errors uniformly."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Error Normalizer processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

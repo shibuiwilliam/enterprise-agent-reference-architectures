@@ -2,6 +2,14 @@
 title: "EX-3 Channel-Agnostic Front Door"
 description: "A pattern that uses channel adapters to absorb differences between multiple channels so that the same agent can be called from all of them, while keeping identity, scope, history, and auditing consistent."
 status: done
+pattern_id: EX-3
+facet: experience
+requires: ["EX-1", "ID-2"]
+required_by: []
+applies_when: [incrementally_adding_channels_to_an_existing_agent, cross_channel_session_continuity_required, unified_permission_history_and_audit_management_needed]
+not_applicable_when: [permanently_using_single_channel_only, channels_are_completely_independent_services_with_no_session_sharing, cross_channel_session_sharing_not_needed_for_independent_tasks]
+risk_tiers: [1, 2, 3]
+key_technologies: [Slack Bolt SDK, "Bot Framework (Teams)", REST/gRPC Adapter, Redis Session Store, JWT Session Claims, OIDC Federation]
 ---
 
 # EX-3 Channel-Agnostic Front Door
@@ -88,6 +96,50 @@ The normalization performed by channel adapters covers three things: (1) convert
 
 - Embedding business logic in channel adapters causes channel-specific behavioral differences to recur. Adapters handle only input normalization; delegate all decisions to the Gateway and beyond.
 - Token storage risk is high in mobile/API channels. Design using [ID-5 JIT Scoped Credentials](../id-identity/id5-jit-scoped-credentials.md) to obtain short-lived tokens per call.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Channel Adapter
+    description: "Converts channel-specific authentication tokens to a unified identity, normalizes input format, and forwards with a unified session ID to EX-1 Gateway."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Channel Adapter processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Unified Session Store
+    description: "Redis-backed session store that enables cross-channel session continuity; session handoff requires re-authentication or signature verification."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Unified Session Store processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Unified Audit Logger
+    description: "Ensures cross-channel operations appear in a single audit trail (OB-2), preventing session fragmentation from hiding activity."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Unified Audit Logger processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

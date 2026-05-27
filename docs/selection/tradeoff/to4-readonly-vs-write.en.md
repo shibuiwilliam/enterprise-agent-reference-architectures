@@ -10,6 +10,27 @@ status: done
 
 The damage from "retrieving a record" and "updating a record" are completely different when things go wrong. A retrieval mistake can be retried, but issuing an invoice with the wrong amount may be unrecoverable. The golden rule is to gradually expand write permissions: Read-only → Draft-only → Approved Write → Automatic Write.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-4
+decision_rules:
+  - condition: "operation_type == 'read' AND human_review_before_use == true"
+    recommendation: read_only
+    reason: "Information retrieval, reporting, and analysis are safe for autopilot; humans review output before acting on it"
+  - condition: "operation_type == 'write' AND irreversible == false AND operation_frequency == 'high' AND eval_complete == true"
+    recommendation: auto_write_low_risk
+    reason: "Low-risk, high-frequency, reversible write operations can be automated once eval and canary validation are complete"
+  - condition: "operation_type == 'write' AND irreversible == true AND approval_workflow_available == true"
+    recommendation: approved_write
+    reason: "Irreversible write operations require human approval; use SoR write boundary with approval chain"
+  - condition: "system_of_record == 'erp_crm_hr' OR financial_impact == true"
+    recommendation: high_risk_controlled_write
+    reason: "Core business systems (ERP/CRM/HR) and financial operations require SoR + HitL; must not be fully automated"
+  - condition: "deployment_phase == 'initial'"
+    recommendation: read_only
+    reason: "Start all operations in read-only mode; observe agent behavior via production traces before expanding write permissions"
+```
+
 ## Comparison
 
 | Stage | Description | Applicable Conditions |

@@ -2,6 +2,14 @@
 title: "KM-7 Ephemeral Secure Context Bus (Volatile Confidential Computing)"
 description: "A top-secret processing pattern that processes context in an isolated environment with volatilization and encryption, releasing and zeroing memory simultaneously with session end."
 status: done
+pattern_id: KM-7
+facet: knowledge
+requires: []
+required_by: []
+applies_when: [highest_classification_data_hr_evaluation_ma_insider_information, regulatory_data_requiring_no_plaintext_in_logs_or_cache, ma_or_insider_related_information_processing]
+not_applicable_when: [low_classification_bulk_processing_over_isolation_cost, development_phase_requiring_plaintext_logs_for_debugging, continuous_context_accumulation_use_cases]
+risk_tiers: [4, 5]
+key_technologies: ["Azure OpenAI (VNet integration / private endpoint)", "AWS Bedrock (VPC endpoint)", Azure Confidential VM, "NVIDIA H100 Confidential Computing (Confidential GPU)", "AMD SEV-SNP", "Redis No-Persistence", Presidio, "DPA (Data Processing Agreement)"]
 ---
 
 # KM-7 Ephemeral Secure Context Bus (Volatile Confidential Computing)
@@ -106,6 +114,50 @@ These are independent controls that can be combined according to requirements. T
 - Confidential computing has high latency and cost. Rather than routing all processing through this pattern, apply only to top-secret processing based on data classification. Build mechanisms to automatically determine application scope through data classification.
 - Verify LLM vendor learning opt-out settings and obtain assurance through contracts (DPA: Data Processing Agreement). Settings verification alone is insufficient; document as a contractual obligation.
 - Since this pattern cannot reference past context, it is unsuitable for business requiring continuous dialogue. If needed, consider designs using encrypted external memory outside confidential computing (though assurance is weakened).
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: DLP Proxy
+    description: "Masks and classifies data collected from source SaaS systems before it enters the isolated inference environment."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during DLP Proxy processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Isolated Inference Environment
+    description: "VPC-hosted LLM (or Confidential GPU) with learning opt-out; context lives in-memory only and is zeroed immediately after the session completes."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Isolated Inference Environment processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Sealed Audit Metadata Sink
+    description: "Sends only metadata (latency, token count, cost) and hashed input/output to the observability lake; full content is never persisted."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Sealed Audit Metadata Sink processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

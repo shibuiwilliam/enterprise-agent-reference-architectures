@@ -2,6 +2,14 @@
 title: "ID-8 Consent & Access Transparency"
 description: "A pattern that provides a dashboard where users can review, consent to, and revoke the access permissions they have granted to agents — resolving distrust about what the agent is doing with their identity, and addressing consent requirements under compliance regulations."
 status: done
+pattern_id: ID-8
+facet: identity
+requires: ["ID-2", "ID-4", "ID-5"]
+required_by: []
+applies_when: [agents_accessing_personal_data_email_calendar_documents, privacy_regulations_gdpr_appi_requiring_user_consent_and_revocation, trust_building_needed_through_scope_visibility]
+not_applicable_when: [agent_handles_only_system_data_with_no_personal_data, fully_autonomous_batch_processing_with_no_human_operation_origin_id3_is_appropriate, poc_where_consent_flow_implementation_cost_cannot_be_justified]
+risk_tiers: [2, 3, 4]
+key_technologies: [Okta Consent, Microsoft Entra ID Admin/User Consent, OAuth 2.0 Scope Management, RFC 7009 Token Revocation, "Consent Registry (DB / Policy Store)", Internal Consent Portal]
 ---
 
 # ID-8 Consent & Access Transparency
@@ -100,6 +108,50 @@ Consent is not perpetual once granted — it is managed individually by purpose 
 
 - Reducing the consent screen to a single "allow all" button renders it meaningless. Allow users to select scopes individually, and attach a user-readable explanation to each scope.
 - Store the consent log in tamper-proof form for use in audits and compliance investigations.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Consent Screen (IdP / Internal Portal)
+    description: "At first OBO token issuance or for high-risk operations, presents scope, purpose, and expiry to the user; records approval in Consent Registry."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Consent Screen (IdP / Internal Portal) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Consent Registry
+    description: "Stores per-purpose consent entries (subject, scope, purpose, expiry); PDP checks registry before any delegated action proceeds."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Consent Registry processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Revocation & Instant Token Invalidation
+    description: "User revocation in the dashboard immediately invalidates cached tokens via RFC 7009; Gateway re-checks consent state on each subsequent call."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Revocation & Instant Token Invalidation processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

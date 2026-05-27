@@ -2,6 +2,14 @@
 title: "EX-2 Business-Embedded + Independent Workbench (Channel Placement)"
 description: "Configuration options for where to place the EX-1 Gateway. A placement pattern that combines business-tool embedding for everyday use with an independent workbench for cross-system and approval workflows."
 status: done
+pattern_id: EX-2
+facet: experience
+requires: ["EX-1", "EX-3"]
+required_by: []
+applies_when: [slack_teams_salesforce_are_the_central_daily_tools, cross_system_long_running_or_approval_workflows_are_common, incremental_ui_expansion_starting_with_embedded_then_adding_workbench]
+not_applicable_when: [business_tools_are_fragmented_with_too_many_embedding_targets, all_tasks_are_short_and_single_system_no_standalone_portal_needed, poc_stage_where_ui_shape_should_not_be_fixed]
+risk_tiers: [1, 2, 3]
+key_technologies: [Slack Bolt SDK, Block Kit, Microsoft Bot Framework, Adaptive Cards, "Lightning Web Components (LWC)", Salesforce Embedded Service, ServiceNow Service Portal Widget, React/Vue SPA, "Server-Sent Events (SSE)"]
 ---
 
 # EX-2 Business-Embedded + Independent Workbench (Channel Placement)
@@ -81,6 +89,50 @@ In business-embedded mode, the agent operates by picking up the context the user
 - Implementing embedded UI and the independent portal to call different endpoints causes permissions, history, and auditing to diverge. Make it a principle that both go through the same Gateway.
 - Storing access tokens for embedded UI locally is dangerous. Follow the principles of [ID-5 JIT Scoped Credentials](../id-identity/id5-jit-scoped-credentials.md) — obtain short-lived tokens per call.
 - Implementing approval flows through chat only makes it difficult to reproduce approval audit trails. Manage approval actions and audit trails together in the independent workbench.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Embedded UI (Business Tool)
+    description: "Lightweight widget injected into Slack, Teams, or Salesforce that inherits the current business context and submits requests to EX-1 Gateway."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Embedded UI (Business Tool) processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Standalone Workbench
+    description: "React/Vue SPA providing streaming progress, approval actions, and diff view for long-running or cross-system tasks."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Standalone Workbench processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Channel Adapter
+    description: "Normalizes each platform's event format and forwards to EX-1 Gateway; absorbs UI differences so the backend remains channel-agnostic."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Channel Adapter processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 

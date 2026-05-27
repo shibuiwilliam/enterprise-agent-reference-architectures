@@ -10,6 +10,30 @@ status: done
 
 A prompt improvement is ready for company-wide rollout — but applying it to all users at once risks company-wide impact if quality degrades. When thousands of events fire simultaneously during month-end closing, agents can go into an inference storm that causes costs to spike. This covers how to design the stages of canary releases (1% → 5% → 25% → 100%) and frequency limits for event-driven agents ([RT-10](../../patterns/rt-runtime/rt10-event-driven-orchestrator.md)).
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-9
+parameter: canary_event_throttle
+rules:
+  - condition: "new_agent_version_deploy == true"
+    canary_stages: [1, 5, 25, 100]
+    stage_unit: percent_of_traffic
+    reason: "Use 1%→5%→25%→100% multi-stage rollout as baseline; collect sufficient traffic at each stage before advancing"
+  - condition: "quality_score_below_threshold OR error_rate_above_threshold OR cost_spike == true"
+    action: auto_rollback_via_gv6
+    reason: "If quality score, error rate, or cost exceeds threshold at any canary stage, trigger GV-6 automatic rollback immediately"
+  - condition: "traffic_volume_too_low_for_statistical_significance == true"
+    action: supplement_with_offline_eval
+    reason: "When live traffic is insufficient for statistical significance, supplement with offline evaluation (GV-7) before advancing to next stage"
+  - condition: "event_storm_detected == true OR event_volume_per_minute > budget_threshold"
+    throttle_action: queue_or_sample
+    mechanisms: [debounce, rate_limit, session_budget_cap]
+    reason: "Combine debounce, rate limit, and session budget cap to prevent event storms from causing cost spikes and downstream overload"
+  - condition: "event_throttle_too_aggressive == true AND event_gaps_causing_stale_state == true"
+    action: loosen_throttle_per_event_type
+    reason: "Over-throttling causes agents to operate on stale state; tune throttle parameters per event type based on business criticality and inference cost"
+```
+
 ## Harms of Too Little or Too Much
 
 **Canary Release**

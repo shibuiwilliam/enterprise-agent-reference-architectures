@@ -2,6 +2,14 @@
 title: "RT-10 Event-Driven Enterprise Orchestrator（イベント駆動）"
 description: "人間からの呼び出しを待たず、SaaSや社内システムのイベントをトリガーにエージェントを自律起動し、複数システムにまたがる処理をバックエンドで完結させるパターン。"
 status: done
+pattern_id: RT-10
+facet: runtime
+requires: ["RT-7", "RT-8"]
+required_by: []
+applies_when: [saas_standard_events_trigger_multi_system_workflows, copy_paste_work_across_systems_to_be_eliminated, majority_of_processing_is_async_and_does_not_require_real_time_human_wait]
+not_applicable_when: [interactive_processing_requiring_immediate_user_response, event_frequency_too_high_for_agent_startup_cost, trigger_conditions_cannot_be_defined]
+risk_tiers: [2, 3, 4]
+key_technologies: [Amazon EventBridge, Google Pub/Sub, Azure Service Bus, Apache Kafka, CloudEvents, Debezium, Temporal, Workato, MuleSoft]
 ---
 
 # RT-10 Event-Driven Enterprise Orchestrator（イベント駆動）
@@ -12,11 +20,11 @@ status: done
 
 ## 解決する企業課題
 
-このパターンは従来のシステム連携における受動性の問題を解決する。エージェントを「呼ばれたときだけ動く」存在ではなく、業務プロセスの流れに沿って自律的に動くバックエンドワーカーとして機能させる。人間のオペレーターが介在しなければ進まなかった業務フローを常時自律稼働させる構成であり、バックオフィスの抜本的自動化を実現する。
+このパターンは従来のシステム連携における受動性の問題を解決する。エージェントを「呼ばれたときだけ動く」存在ではなく、業務プロセスの流れに沿って自律的に動くバックエンドワーカーとして機能させる。人間のオペレーターが介在しなければ進まなかった業務フローを常時自律稼働させることで、バックオフィスの抜本的な自動化を実現する。
 
-Workday・Salesforce・GitHub など複数 SaaS の間で発生するコピー&ペースト作業（オンボーディング時のアカウント作成、契約更新時の通知連携、コードマージ後のドキュメント更新など）は、コストが高くミスが起きやすいシステム間連携の典型例である。RPA は HTML 構造変化に脆く、例外パターンへの対処が困難だが、エージェントは自然言語理解によって非定型の例外を処理できる。
+Workday・Salesforce・GitHub など複数 SaaS の間で発生するコピー&ペースト作業（オンボーディング時のアカウント作成、契約更新時の通知連携、コードマージ後のドキュメント更新など）は、コストが高くミスも起きやすいシステム間連携の典型例だ。RPA は HTML 構造変化に脆く例外パターンへの対処が難しいが、エージェントは自然言語理解によって非定型の例外を処理できる。
 
-Webhook が増加するにつれ「誰がどの Webhook をどう処理しているか」が管理不能になる問題（Webhook 混乱）も深刻だ。イベントバスを中心とした一元管理で Webhook の散在を解消する。イベントの認証・フィルタリング・デバウンス・コスト管理をゲートウェイ層に集約することで、安全なイベント駆動基盤を構築できる。
+Webhook が増加するにつれ「誰がどの Webhook をどう処理しているか」が管理不能になる（Webhook 混乱）。イベントバスを中心とした一元管理で Webhook の散在を解消し、イベントの認証・フィルタリング・デバウンス・コスト管理をゲートウェイ層に集約することで安全なイベント駆動基盤を構築できる。
 
 !!! tip "最小成立条件（MVP）"
     1つの SaaS イベント（例：Workday の onboarding_completed）をイベントバス経由で受信し、2〜3ステップの Durable Workflow を起動する構成。デバウンスと HMAC 署名検証をゲートウェイ層に入れれば最小成立である。
@@ -27,7 +35,7 @@ Webhook が増加するにつれ「誰がどの Webhook をどう処理してい
 
 ## 解決策と設計
 
-解決策の核心は「SaaS のイベントをエンタープライズのビジネスイベントとして標準化し、エージェントをそのコンシューマとして設計すること」である。イベントバスをシステム間の疎結合な接続点とし、エージェントはイベントの意味を解釈して適切なアクションを判断する。書き込みを伴う処理は Saga パターンで実行し、リスク判定に基づいて HitL 承認を挟む。
+解決策の核心は「SaaS のイベントをエンタープライズのビジネスイベントとして標準化し、エージェントをそのコンシューマとして設計すること」だ。イベントバスをシステム間の疎結合な接続点とし、エージェントはイベントの意味を解釈して適切なアクションを判断する。書き込みを伴う処理は Saga パターンで実行し、リスク判定に基づいて HitL 承認を挟む。
 
 イベントバスを介して SaaS からイベントを受け取り、オーケストレーターがワークフローを起動する。
 
@@ -60,9 +68,9 @@ sequenceDiagram
     OR->>SL: 完了通知 → 担当者
 ```
 
-トリガー条件・レートリミット・デバウンス・リスク分類はオーケストレーター起動前のゲートウェイ層で評価する。同一イベントが短時間に複数発火した場合（イベントストーム）はデバウンスにより重複起動を防ぐ。ワークフロー実行中の予算上限・ステップ上限は Durable Workflow エンジン（RT-8）に委譲する。
+トリガー条件・レートリミット・デバウンス・リスク分類はオーケストレーター起動前のゲートウェイ層で評価する。同一イベントが短時間に複数発火した場合（イベントストーム）はデバウンスで重複起動を防ぐ。ワークフロー実行中の予算上限・ステップ上限は Durable Workflow エンジン（RT-8）に委譲する。
 
-外部 Webhook は HMAC 署名検証・送信元 IP ホワイトリスト・CloudEvents の `source` フィールド検証により認証する。不正なイベントを起動前に遮断することで Webhook 偽装攻撃を防ぐ。
+外部 Webhook は HMAC 署名検証・送信元 IP ホワイトリスト・CloudEvents の `source` フィールド検証で認証する。不正なイベントを起動前に遮断することで Webhook 偽装攻撃を防ぐ。
 
 ## 向き／不向き
 
@@ -101,6 +109,50 @@ sequenceDiagram
 
 !!! warning "イベントの認証・検証省略"
     外部WebhookをそのままエージェントのトリガーとするとWebhook偽装攻撃のリスクがある。受信時にHMAC署名検証・送信元IPホワイトリスト・CloudEventsの`source`フィールド検証を実施し、不正なイベントを起動前に遮断すること。
+
+## Interfaces
+
+以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+
+```yaml
+interfaces:
+  - name: Event Gateway
+    description: "Validates incoming webhooks via HMAC signature, source IP allowlist, and CloudEvents source field before routing to the orchestrator."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Event Gateway の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Debounce / Rate Limiter
+    description: "Collapses duplicate events for the same entity within a short window and enforces a maximum concurrent workflow launch rate."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Debounce / Rate Limiter の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+  - name: Durable Workflow Engine (RT-8)
+    description: "Manages long-running post-event processing with crash resilience and HitL approval integration."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Durable Workflow Engine (RT-8) の処理中にエラーが発生"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "詳細は本文の「解決策と設計」節を参照"
+```
 
 ## 関連パターン
 

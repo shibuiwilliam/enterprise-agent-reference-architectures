@@ -10,6 +10,30 @@ status: done
 
 If guardrails are too strict, even legitimate emails get blocked every time on suspicion of "possible confidential leakage," and users stop using the agent. Too lenient and truly dangerous outputs pass through unchecked. This balance cannot be determined uniformly — "external email sending" and "summarizing an internal memo" obviously differ. This covers how to adjust the thresholds of [ID-7 Policy-as-Code Guardrail](../../patterns/id-identity/id7-policy-as-code-guardrail.md) per the risk characteristics of each pathway.
 
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: DC-6
+parameter: guardrail_strength
+rules:
+  - condition: "route_risk_level == 'low_risk' AND operation IN ['internal_draft', 'read_only', 'pre_approved_template']"
+    threshold: lenient
+    approach: lightweight_guardrail
+    reason: "Low-risk routes (read-only, internal draft, pre-approved templates) warrant lightweight guardrails to minimize false-positive business disruption"
+  - condition: "route_risk_level IN ['high_risk', 'critical'] AND operation IN ['external_send', 'confidential_access', 'side_effect']"
+    threshold: strict
+    approach: minimize_fn
+    reason: "High-risk routes (external send, confidential data access, operations with side effects) require strict thresholds to minimize false negatives"
+  - condition: "latency_critical == true AND synchronous_blocking_inspection == true"
+    approach: async_or_sampling_inspection
+    reason: "For latency-critical routes, use async or sampling-based inspection rather than synchronous blocking to reduce user impact"
+  - condition: "uniform_threshold_all_routes == true"
+    action: differentiate_by_route
+    reason: "Anti-pattern: uniform thresholds inevitably over-restrict some routes and under-restrict others; set per-route thresholds"
+  - condition: "fp_rate_high OR fn_rate_high"
+    action: rebalance_threshold_using_gv7
+    reason: "Measure FP and FN rates via GV-7 evaluation pipeline; adjust threshold based on which harm (business disruption vs. security incident) is larger"
+```
+
 ## Harms of Too Little or Too Much
 
 | Extreme | State | Harm |

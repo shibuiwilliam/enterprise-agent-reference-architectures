@@ -2,6 +2,14 @@
 title: "RT-6 System-of-Record Write Boundary (Write Boundary)"
 description: "A pattern where agents do not write directly to the System of Record but instead pass Command Envelopes to domain services, which handle validation, authorization, business rule application, and transaction management entirely on their side."
 status: done
+pattern_id: RT-6
+facet: runtime
+requires: ["RT-5"]
+required_by: []
+applies_when: [systems_holding_master_data_like_hr_accounting_customers, multiple_agents_accessing_same_sor_with_consistency_requirements, sox_or_internal_control_requiring_approval_and_audit_trail]
+not_applicable_when: [low_risk_stores_like_logs_or_temporary_data, immediate_update_required_real_time_use_cases]
+risk_tiers: [3, 4]
+key_technologies: [DDD Domain Service, Command Handler, JSON Schema Validation, Immutable Audit Log]
 ---
 
 # RT-6 System-of-Record Write Boundary (Write Boundary)
@@ -85,6 +93,50 @@ The domain service calls SoR-specific adapters (IN-2). Agents do not need to kno
 **Long-term SoE stagnation.** Drafts remain in the SoE and no one reviews or discards them. Set expiration dates on SoE proposals, and automatically archive or discard expired proposals.
 
 **Isolated partial updates.** Implementations that split multi-field updates into multiple Command Envelopes and send them sequentially create inconsistent states when mid-process failures occur. Design composite updates as a single transaction and combine with RT-7 Enterprise Saga.
+
+## Interfaces
+
+The following are the key interfaces for implementing this pattern. Coding agents can generate stub code from these definitions.
+
+```yaml
+interfaces:
+  - name: Domain Service
+    description: "Single write path that enforces validation, authorization check (ID-4/ID-7), and business rules before executing the SoR transaction."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Domain Service processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: SoE Draft Store
+    description: "Holds agent-generated proposals (Slack/Notion/email) for human review before escalation to the domain service."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during SoE Draft Store processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+  - name: Audit Trail
+    description: "Records before/after values, operator identity, and timestamp as an immutable log for internal control evidence."
+    input:
+      request: object
+    output:
+      response: object
+    errors:
+      - code: GENERAL_ERROR
+        description: "Error occurred during Audit Trail processing"
+    protocol: "REST / gRPC"
+    implementation_hints:
+      - "See the Solution and Design section for details"
+```
 
 ## Related Patterns
 
