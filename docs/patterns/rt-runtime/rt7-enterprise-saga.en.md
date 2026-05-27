@@ -6,8 +6,8 @@ pattern_id: RT-7
 facet: runtime
 requires: ["RT-8"]
 required_by: []
-applies_when: [sequential_multi_saas_writes_requiring_partial_rollback_on_failure, compensation_actions_can_be_defined_per_step, each_step_has_independent_api_supporting_idempotent_calls]
-not_applicable_when: [strict_acid_required_like_financial_debit_credit, only_one_or_two_steps_in_a_single_system, compensation_cannot_be_defined_for_external_system]
+applies_when: [multi_saas_saga, cross_saas, write_operations, async_processing]
+not_applicable_when: [single_team, real_time_latency]
 risk_tiers: [3, 4]
 key_technologies: [Temporal, AWS Step Functions, Azure Durable Functions, Outbox Pattern, UUIDv4 Idempotency Key, PostgreSQL, DynamoDB]
 ---
@@ -126,6 +126,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SagaOrchestratorRequest {
+          workflowId: string;
+          raciMatrix: object;
+          initialContext: object;
+        }
+        interface SagaOrchestratorResponse {
+          executionId: string;
+          phase: string;
+          state: string;
+        }
+        interface SagaOrchestrator {
+          sagaOrchestrator(req: SagaOrchestratorRequest): Promise<SagaOrchestratorResponse>;
+        }
+      python: |
+        @dataclass
+        class SagaOrchestratorRequest:
+            workflow_id: str
+            raci_matrix: dict
+            initial_context: dict
+        
+        @dataclass
+        class SagaOrchestratorResponse:
+            execution_id: str
+            phase: str
+            state: str
+        
+        class SagaOrchestrator(Protocol):
+            async def saga_orchestrator(self, req: SagaOrchestratorRequest) -> SagaOrchestratorResponse: ...
   - name: Idempotency Key Manager
     description: "Issues a unique key per step to prevent duplicate execution on retry; distinct from session IDs."
     input:
@@ -138,6 +168,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface IdempotencyKeyManagerRequest {
+          sagaId: string;
+          stepId: string;
+        }
+        interface IdempotencyKeyManagerResponse {
+          idempotencyKey: string;
+          alreadyExecuted: boolean;
+          cachedResult: object;
+        }
+        interface IdempotencyKeyManager {
+          idempotencyKeyManager(req: IdempotencyKeyManagerRequest): Promise<IdempotencyKeyManagerResponse>;
+        }
+      python: |
+        @dataclass
+        class IdempotencyKeyManagerRequest:
+            saga_id: str
+            step_id: str
+        
+        @dataclass
+        class IdempotencyKeyManagerResponse:
+            idempotency_key: str
+            already_executed: bool
+            cached_result: dict
+        
+        class IdempotencyKeyManager(Protocol):
+            async def idempotency_key_manager(self, req: IdempotencyKeyManagerRequest) -> IdempotencyKeyManagerResponse: ...
   - name: Compensation Action Library
     description: "Deterministic code (Temporal Activity etc.) implementing the rollback logic for each step without delegating decisions to the LLM."
     input:
@@ -150,6 +208,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CompensationActionLibraryRequest {
+          stepId: string;
+          executionContext: object;
+          failureReason: string;
+        }
+        interface CompensationActionLibraryResponse {
+          compensated: boolean;
+          compensationId: string;
+          compensatedAt: Date;
+        }
+        interface CompensationActionLibrary {
+          compensationActionLibrary(req: CompensationActionLibraryRequest): Promise<CompensationActionLibraryResponse>;
+        }
+      python: |
+        @dataclass
+        class CompensationActionLibraryRequest:
+            step_id: str
+            execution_context: dict
+            failure_reason: str
+        
+        @dataclass
+        class CompensationActionLibraryResponse:
+            compensated: bool
+            compensation_id: str
+            compensated_at: datetime
+        
+        class CompensationActionLibrary(Protocol):
+            async def compensation_action_library(self, req: CompensationActionLibraryRequest) -> CompensationActionLibraryResponse: ...
 ```
 
 ## Related Patterns

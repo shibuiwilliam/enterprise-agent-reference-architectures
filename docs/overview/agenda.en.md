@@ -29,6 +29,41 @@ This reference is designed to help coding agents (Claude Code, Cursor, GitHub Co
 !!! tip "Hint for Coding Agents"
     When a user asks "design an AI agent system for [scenario]", start by loading `patterns-index.yaml`, filter patterns by `applies_when` matching the scenario, resolve dependencies via `requires`, then read the individual pattern pages for the matched set.
 
+### For Coding Agents: End-to-End Example
+
+**Scenario**: A user asks "Design a Sales AI agent that connects to Salesforce and Slack."
+
+**Step 1 — Load the scenario catalog**
+
+Read `docs/scenarios.yaml` and find the `sales_agent` scenario.
+
+→ Result: minimum = [EX-1, ID-2, ID-4, RT-5, RT-4, OB-2, GV-1, ID-6, ...]
+
+**Step 2 — Resolve dependencies**
+
+Read `docs/patterns-index.yaml` and check `requires` for each pattern. For example, ID-2 requires EX-1 and ID-6. Add any missing dependency patterns to the set.
+
+→ Result: Dependency-resolved minimum pattern set
+
+**Step 3 — Read pattern details**
+
+For each pattern, read the `## Interfaces` section from the pattern page. Generate stub code from the `code_examples` TypeScript/Python type definitions.
+
+**Step 4 — Evaluate selection criteria**
+
+Set variables according to the `input_schema` in `docs/selection-rules.yaml`:
+
+- `purpose` = `personal_assistance`
+- `saas_supports_obo` = `true`
+- `data_classification` = `confidential`
+- `action_type` = `write_with_approval`
+
+Evaluate TO-1 → recommendation = obo. Evaluate DC-1 → CRM writes are tier 3 → require_approval.
+
+**Step 5 — Generate architecture**
+
+Combine the pattern designs into a system diagram and implementation plan.
+
 ## Core Thesis
 
 The central challenge of integrating AI agents into an enterprise is not "**making AI smarter**," but rather "**safely introducing a new execution actor into the enterprise's existing identity, permissions, accountability, business processes, auditing, data boundaries, and organizational structures — and extracting enterprise value in the form of improved sales, productivity, and decision-making**." Safe participation is a prerequisite; improving enterprise value is the purpose.

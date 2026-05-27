@@ -6,8 +6,8 @@ pattern_id: RT-4
 facet: runtime
 requires: ["RT-8", "ID-7"]
 required_by: []
-applies_when: [irreversible_high_risk_operations_like_fund_transfer_or_permission_grant, org_chart_is_maintained_and_approvers_can_be_resolved_by_role, existing_approval_workflow_tools_already_deployed]
-not_applicable_when: [strict_real_time_latency_requirements, low_risk_tier_0_1_operations, org_chart_not_maintained]
+applies_when: [high_risk_ops, hitl_approval, org_chart_maintained, write_operations]
+not_applicable_when: [real_time_latency, poc_phase]
 risk_tiers: [3, 4]
 key_technologies: [Temporal, AWS Step Functions, Workday HCM, Microsoft Entra, Slack Block Kit, ServiceNow, OpenTelemetry]
 ---
@@ -16,15 +16,15 @@ key_technologies: [Temporal, AWS Step Functions, Workday HCM, Microsoft Entra, S
 
 ## 概要
 
-エージェントは「この契約を更新しますか？」と提案するまでが仕事だ。実行は人間の承認後に始まる。このパターンでは、組織グラフ（Workday の組織図）から上長・所管責任者・コスト所有者を動的に解決して承認を求める。承認者をコードに直書きすると異動で宛先不明になるため、常に組織グラフから都度解決する設計が必要だ。Slack や ServiceNow での承認体験、不在時の代理委譲、SLA タイマー、却下理由のフィードバックまで含めて設計する。
+エージェントは「この契約を更新しますか？」と提案するまでが仕事だ。実行は人間の承認後に始まる。このパターンでは、組織グラフ（Workday の組織図）から上長・所管責任者・コスト所有者を動的に解決して承認を求める。承認者をコードに直書きすると異動で宛先不明になるため、常に組織グラフから都度解決する設計が欠かせない。Slack や ServiceNow での承認体験、不在時の代理委譲、SLA タイマー、却下理由のフィードバックまでをセットで設計する。
 
 ## 解決する企業課題
 
 不可逆操作（大量メール送信・資金移動・権限変更）をエージェントが直接実行すると、誤判断時の損害が大きい。承認チェーンは実行前の人間介在を構造として保証し、エージェントの自律度を「提案まで」に限定する仕組みだ。
 
-「誰が承認者か」が属人的知識に依存している企業では、担当者の異動・休暇時に承認フローが止まる。承認者がハードコードされていると、組織変更のたびに設定変更が必要になり、変更漏れが続く。組織図からの動的解決はこの問題を構造的に排除し、常に適切な権限を持つ承認者を特定できる。
+「誰が承認者か」が属人的知識に依存している企業では、担当者の異動・休暇時に承認フローが止まる。承認者がハードコードされていると、組織変更のたびに設定変更が必要になり、変更漏れが積み重なる。組織図からの動的解決はこの問題を構造的に排除し、常に適切な権限を持つ承認者を特定できるようにする。
 
-監査の観点でも重要な役割がある。承認行為の記録（誰がいつどの理由で承認・否決したか）は内部統制・規制対応に不可欠であり、否決理由は同種リクエストの再提案品質を改善するフィードバックシグナルにもなる。
+監査の観点でも重要な役割がある。承認行為の記録（誰がいつどの理由で承認・否決したか）は内部統制・規制対応に不可欠だ。否決理由は同種リクエストの再提案品質を改善するフィードバックシグナルにもなる。
 
 !!! tip "最小成立条件（MVP）"
     Slack ボタンによる単一承認者フロー。組織図 API から承認者を1名解決し、承認 or 否決の結果をログに記録する最小構成。委譲・エスカレーション・SLA タイマーは後続フェーズで追加する。
@@ -35,7 +35,7 @@ key_technologies: [Temporal, AWS Step Functions, Workday HCM, Microsoft Entra, S
 
 ## 解決策と設計
 
-解決策の核心は2点だ。まず承認者を静的定義でなく組織図から動的に解決すること。そして承認体験を既存ツールに埋め込むこと。従業員が新規システムを学習する手間をなくし、採用の障壁を下げる。
+解決策の核心は2点だ。第一に、承認者を静的定義でなく組織図から動的に解決すること。第二に、承認体験を既存ツールに埋め込むこと。従業員が新規システムを学習する手間をなくし、採用の障壁を下げる。
 
 承認フローは4つのフェーズで構成される。
 
@@ -73,7 +73,7 @@ sequenceDiagram
     AE->>AUDIT: 判断記録
 ```
 
-承認者の解決ロジックは組織構造の変化（異動・昇格・退職）に追従させる必要がある。ハードコードは組織変更のたびに障害を引き起こす。組織図 API をリアルタイムで参照して承認者を動的に導出する設計が望ましい。
+承認者の解決ロジックは組織構造の変化（異動・昇格・退職）に追従させる必要がある。ハードコードは組織変更のたびに障害を引き起こしかねない。組織図 API をリアルタイムで参照して承認者を動的に導出する設計が望ましい。
 
 ## 向き／不向き
 
@@ -97,9 +97,9 @@ sequenceDiagram
 
 **承認者のハードコード**。「このリクエストは山田部長が承認する」とコードに直接記述すると、組織変更のたびに設定変更が必要になり変更漏れが生じる。承認者は常に組織図から動的に解決し、退職・異動後も正しい承認者にルーティングされる設計を維持すること。
 
-**エスカレーション設計の欠如**。SLA を設定しても上位承認者への自動エスカレーションがないと、承認がサイレントに滞留する。エスカレーション先の定義と通知経路は必ず設計に含めること。
+**エスカレーション設計の欠如**。SLA を設定しても上位承認者への自動エスカレーションがなければ、承認がサイレントに滞留する。エスカレーション先の定義と通知経路は必ず設計に含めること。
 
-**否決理由の捨て置き**。否決理由は、エージェントが同種のリクエストを適切に修正するための最も価値ある学習シグナルだ。理由を監査ログに埋めるだけでなく、エージェントの提案生成に反映するフィードバックループを構築する。
+**否決理由の捨て置き**。否決理由は、エージェントが同種のリクエストを適切に修正するための最も価値ある学習シグナルだ。理由を監査ログに埋めるだけでなく、エージェントの提案生成に反映するフィードバックループを構築したい。
 
 **委譲の無制限連鎖**。承認者が別の承認者に委譲し、さらに委譲される連鎖は責任の所在を不透明にする。委譲は1ホップに制限し、委譲先の資格要件を組織図から検証すること。
 
@@ -121,6 +121,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ApproverResolutionEngineRequest {
+          requestType: string;
+          riskTier: number;
+          requesterId: string;
+          resourceId: string;
+        }
+        interface ApproverResolutionEngineResponse {
+          approverId: string;
+          approverRole: string;
+          escalationChain: string[];
+        }
+        interface ApproverResolutionEngine {
+          approverResolutionEngine(req: ApproverResolutionEngineRequest): Promise<ApproverResolutionEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class ApproverResolutionEngineRequest:
+            request_type: str
+            risk_tier: int
+            requester_id: str
+            resource_id: str
+        
+        @dataclass
+        class ApproverResolutionEngineResponse:
+            approver_id: str
+            approver_role: str
+            escalation_chain: list[str]
+        
+        class ApproverResolutionEngine(Protocol):
+            async def approver_resolution_engine(self, req: ApproverResolutionEngineRequest) -> ApproverResolutionEngineResponse: ...
   - name: Workflow Tool Notification
     description: "Sends approval requests with action buttons to Slack or ServiceNow tasks so approvers can act within familiar tools."
     input:
@@ -133,6 +165,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface WorkflowToolNotificationRequest {
+          approverId: string;
+          approvalRequestId: string;
+          operationSummary: string;
+          actionButtons: string[];
+        }
+        interface WorkflowToolNotificationResponse {
+          notificationId: string;
+          deliveredAt: Date;
+          channel: string;
+        }
+        interface WorkflowToolNotification {
+          workflowToolNotification(req: WorkflowToolNotificationRequest): Promise<WorkflowToolNotificationResponse>;
+        }
+      python: |
+        @dataclass
+        class WorkflowToolNotificationRequest:
+            approver_id: str
+            approval_request_id: str
+            operation_summary: str
+            action_buttons: list[str]
+        
+        @dataclass
+        class WorkflowToolNotificationResponse:
+            notification_id: str
+            delivered_at: datetime
+            channel: str
+        
+        class WorkflowToolNotification(Protocol):
+            async def workflow_tool_notification(self, req: WorkflowToolNotificationRequest) -> WorkflowToolNotificationResponse: ...
   - name: Decision Log
     description: "Records the approver identity, decision (approve/deny/delegate), reason, and timestamp for internal control evidence."
     input:
@@ -145,6 +209,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DecisionLogRequest {
+          projectId: string;
+          decisionText: string;
+          alternatives: string[];
+          rationale: string;
+          authorId: string;
+        }
+        interface DecisionLogResponse {
+          decisionId: string;
+          recordedAt: Date;
+        }
+        interface DecisionLog {
+          decisionLog(req: DecisionLogRequest): Promise<DecisionLogResponse>;
+        }
+      python: |
+        @dataclass
+        class DecisionLogRequest:
+            project_id: str
+            decision_text: str
+            alternatives: list[str]
+            rationale: str
+            author_id: str
+        
+        @dataclass
+        class DecisionLogResponse:
+            decision_id: str
+            recorded_at: datetime
+        
+        class DecisionLog(Protocol):
+            async def decision_log(self, req: DecisionLogRequest) -> DecisionLogResponse: ...
 ```
 
 ## 関連パターン

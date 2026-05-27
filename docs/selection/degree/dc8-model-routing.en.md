@@ -19,7 +19,7 @@ rules:
     model_size: lightweight
     routing_path: external_api_or_internal
     reason: "Simple tasks with non-sensitive data can use lightweight models via any path; minimize cost and latency"
-  - condition: "confidence_score < threshold AND verifier_rejects == true"
+  - condition: "confidence_score_below_threshold == true"
     model_size: escalate_to_stronger
     routing_path: same_as_original
     reason: "Cascade escalation: when lightweight model confidence falls below threshold or verifier rejects, escalate to stronger model"
@@ -27,11 +27,11 @@ rules:
     routing_path: vpc_or_onprem_only
     external_api_allowed: false
     reason: "Top-secret data must route exclusively to VPC-internal or on-premise inference; external API send is prohibited"
-  - condition: "data_classification IN ['public', 'internal_general'] AND latest_capability_required == true"
+  - condition: "data_classification IN ['public', 'internal_general'] AND latest_model_required == true AND dpa_confirmed == true"
     routing_path: external_api_permitted
     prerequisite: dpa_confirmed
     reason: "Non-sensitive data may use external API paths; confirm DPA and regional compliance before routing"
-  - condition: "routing_config_manual == true AND classification_auto_labeling == false"
+  - condition: "routing_automated == false"
     action: automate_routing_via_gv5
     reason: "Anti-pattern: manual routing depends on developer judgment and is error-prone; automate via GV-5 Central Model Gateway with data labels"
 ```

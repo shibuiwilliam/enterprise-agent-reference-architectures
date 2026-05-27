@@ -6,8 +6,8 @@ pattern_id: EX-4
 facet: experience
 requires: ["EX-1", "KM-1", "RT-3"]
 required_by: []
-applies_when: [enterprise_wide_rollout_phase_where_adoption_rate_is_a_challenge, agent_output_used_as_basis_for_business_decisions, initial_deployment_requiring_employee_trust_building]
-not_applicable_when: [poc_stage_with_only_a_few_power_users, fully_automated_backend_processing_with_no_human_review_of_results]
+applies_when: [enterprise_scale, adoption_challenge, prod_deployment]
+not_applicable_when: [poc_phase, autonomous_exec]
 risk_tiers: [1, 2, 3]
 key_technologies: ["RAG Source Tracking (KM-1)", LLM Log Probabilities, Source Consistency Check, WebSocket Streaming, "Usage Metrics Collection (OB-1)", A/B Testing Infrastructure]
 ---
@@ -20,7 +20,7 @@ key_technologies: ["RAG Source Tracking (KM-1)", LLM Log Probabilities, Source C
 
 ## 解決する企業課題
 
-技術的に安全なエージェントを構築しても、従業員が「信頼できない」「本当に正しいか分からない」と感じれば利用は続かない。エンタープライズ AI の最大の失敗要因は技術的障害ではなく「作ったが使われない」という定着の失敗だ。エージェントの出力が不透明で（なぜその回答になったか分からない）、間違いを修正しにくく、価値の実感も得られなければ、初期利用後の離脱率は高くなる。
+技術的に安全なエージェントを構築しても、従業員が「信頼できない」「本当に正しいか分からない」と感じれば利用は続かない。エンタープライズ AI の最大の失敗要因は技術的障害ではなく、「作ったが使われない」という定着の失敗だ。エージェントの出力が不透明で、間違いを修正しにくく、価値の実感も得られなければ、初期利用後の離脱率は高くなる。
 
 ## 価値仮説
 
@@ -53,20 +53,20 @@ flowchart LR
     SRC --> FRESH
 ```
 
-- **出典の明示**：回答の根拠となったドキュメント・データソースへのリンクを付与する。KM-1（権限認識RAG）の検索結果と紐づけることで実現する
-- **確信度の表示**：情報量と一貫性に基づき「高確度」「推定」「情報不足」等のラベルで確からしさを示す
-- **情報の鮮度**：参照データの最終更新日時を表示し、古い情報に基づく回答を利用者が識別できるようにする
+- **出典の明示**：回答の根拠となったドキュメント・データソースへのリンクを付与する。KM-1（権限認識 RAG）の検索結果と紐づけることで実現できる。
+- **確信度の表示**：情報量と一貫性に基づき「高確度」「推定」「情報不足」等のラベルで確からしさを示す。
+- **情報の鮮度**：参照データの最終更新日時を表示し、古い情報に基づく回答を利用者が識別できるようにする。
 
 ### 柱2：人間が介入・修正しやすいインタラクション
 
-- **段階的確認**：高リスク操作（RT-3 の Tier 2以上）は実行前に操作内容を提示し、修正・承認を求める。
+- **段階的確認**：高リスク操作（RT-3 の Tier 2 以上）は実行前に操作内容を提示し、修正・承認を求める。
 - **編集可能な出力**：エージェントの出力（メールドラフト・レポート・見積等）をユーザーが編集してから確定できる UI を提供する。
-- **撤回可能性**：実行後も一定期間内は取り消し・やり直しが可能だと明示する（RT-7 Saga の補償操作と連携）。
-- **透明な進捗表示**：エージェントが今何をしているか、どのステップまで進んだかをリアルタイムに表示する。
+- **撤回可能性**：実行後も一定期間内は取り消し・やり直しが可能だと明示する（RT-7 Saga の補償操作と連携する）。
+- **透明な進捗表示**：エージェントが今何をしているか、どのステップまで進んだかをリアルタイムで見せる。
 
 ### 柱3：価値の即時フィードバック
 
-- **時間削減の可視化**：操作完了時に「この作業で推定○分を節約しました」を表示する。過去の手動処理時間との比較で算出する。
+- **時間削減の可視化**：操作完了時に「この作業で推定○分を節約しました」と表示する。過去の手動処理時間との比較で算出する。
 - **累積効果ダッシュボード**：週次・月次で「エージェント利用による累積節約時間」を利用者に示す。
 - **チーム比較**：同部門内のエージェント活用度と節約効果を匿名で比較表示し、利用へのモチベーションを高める。
 
@@ -80,11 +80,11 @@ flowchart LR
 
 ## 要素技術・既存システム連携
 
-- RAG出典トラッキング（KM-1連携）：検索結果のドキュメントIDと抜粋箇所を回答と紐づける
-- 確信度スコアリング：LLMのログプロブ（log probabilities）またはソース一貫性チェックで確信度を推定
-- リアルタイムWebSocket：処理進捗のストリーミング表示（EX-1 Gateway経由）
-- 利用メトリクス収集（OB-1連携）：操作完了時間を記録し、節約時間の推定に利用
-- A/Bテスト基盤：UX改善の効果をGV-7評価パイプラインで定量計測
+- RAG 出典トラッキング（KM-1 連携）：検索結果のドキュメント ID と抜粋箇所を回答と紐づける。
+- 確信度スコアリング：LLM のログプロブ（log probabilities）またはソース一貫性チェックで確信度を推定する。
+- リアルタイム WebSocket：処理進捗のストリーミング表示（EX-1 Gateway 経由）。
+- 利用メトリクス収集（OB-1 連携）：操作完了時間を記録し、節約時間の推定に利用する。
+- A/B テスト基盤：UX 改善の効果を GV-7 評価パイプラインで定量計測する。
 
 ## 落とし穴／選定の勘所
 
@@ -115,6 +115,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface CitationConfidenceLayerRequest {
+          responseText: string;
+          retrievalMetadata: object[];
+        }
+        interface CitationConfidenceLayerResponse {
+          annotatedResponse: string;
+          citations: object[];
+          confidenceLabel: string;
+          freshnessTimestamp: Date;
+        }
+        interface CitationConfidenceLayer {
+          citationConfidenceLayer(req: CitationConfidenceLayerRequest): Promise<CitationConfidenceLayerResponse>;
+        }
+      python: |
+        @dataclass
+        class CitationConfidenceLayerRequest:
+            response_text: str
+            retrieval_metadata: list[dict]
+        
+        @dataclass
+        class CitationConfidenceLayerResponse:
+            annotated_response: str
+            citations: list[dict]
+            confidence_label: str
+            freshness_timestamp: datetime
+        
+        class CitationConfidenceLayer(Protocol):
+            async def citation_confidence_layer(self, req: CitationConfidenceLayerRequest) -> CitationConfidenceLayerResponse: ...
   - name: Progressive Confirmation UI
     description: "For RT-3 Tier-2+ operations, presents operation details before execution and requests user modification or approval."
     input:
@@ -127,6 +157,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ProgressiveConfirmationUiRequest {
+          operationDetails: object;
+          riskTier: number;
+          userId: string;
+        }
+        interface ProgressiveConfirmationUiResponse {
+          confirmed: boolean;
+          modifications: object;
+        }
+        interface ProgressiveConfirmationUi {
+          progressiveConfirmationUi(req: ProgressiveConfirmationUiRequest): Promise<ProgressiveConfirmationUiResponse>;
+        }
+      python: |
+        @dataclass
+        class ProgressiveConfirmationUiRequest:
+            operation_details: dict
+            risk_tier: int
+            user_id: str
+        
+        @dataclass
+        class ProgressiveConfirmationUiResponse:
+            confirmed: bool
+            modifications: dict
+        
+        class ProgressiveConfirmationUi(Protocol):
+            async def progressive_confirmation_ui(self, req: ProgressiveConfirmationUiRequest) -> ProgressiveConfirmationUiResponse: ...
   - name: Value Feedback Dashboard
     description: "Displays estimated time saved per completed task and cumulative weekly/monthly savings, tied to GV-10 measurement data."
     input:
@@ -139,6 +197,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ValueFeedbackDashboardRequest {
+          userId: string;
+          period: string;
+        }
+        interface ValueFeedbackDashboardResponse {
+          timeSavedMinutes: number;
+          taskCount: number;
+          weeklyTrend: object;
+        }
+        interface ValueFeedbackDashboard {
+          valueFeedbackDashboard(req: ValueFeedbackDashboardRequest): Promise<ValueFeedbackDashboardResponse>;
+        }
+      python: |
+        @dataclass
+        class ValueFeedbackDashboardRequest:
+            user_id: str
+            period: str
+        
+        @dataclass
+        class ValueFeedbackDashboardResponse:
+            time_saved_minutes: float
+            task_count: int
+            weekly_trend: dict
+        
+        class ValueFeedbackDashboard(Protocol):
+            async def value_feedback_dashboard(self, req: ValueFeedbackDashboardRequest) -> ValueFeedbackDashboardResponse: ...
 ```
 
 ## 関連パターン

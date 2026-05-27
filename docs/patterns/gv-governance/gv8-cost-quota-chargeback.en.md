@@ -6,8 +6,8 @@ pattern_id: GV-8
 facet: governance
 requires: ["GV-1", "GV-5"]
 required_by: []
-applies_when: [thousands_of_users_operating_agents_where_cost_allocation_is_a_management_issue, enterprises_providing_ai_features_commercially_requiring_per_customer_profitability, multi_agent_configurations_with_high_inference_cost_explosion_risk]
-not_applicable_when: [small_poc_or_single_team_where_cost_measurement_overhead_exceeds_value, monthly_costs_are_negligible_and_department_allocation_unnecessary]
+applies_when: [enterprise_scale, cost_mgmt_needed, multi_agent]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [Token Meter, Cost Attribution Pipeline, Budget/Quota Manager, "FinOps Tools (CloudCost, Apptio)", Looker, Tableau, Power BI]
 ---
@@ -116,6 +116,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CostCenterTagAttributionRequest {
+          requestId: string;
+          agentId: string;
+          costCenter: string;
+          projectId: string;
+        }
+        interface CostCenterTagAttributionResponse {
+          tagged: boolean;
+          aggregationKey: string;
+        }
+        interface CostCenterTagAttribution {
+          costCenterTagAttribution(req: CostCenterTagAttributionRequest): Promise<CostCenterTagAttributionResponse>;
+        }
+      python: |
+        @dataclass
+        class CostCenterTagAttributionRequest:
+            request_id: str
+            agent_id: str
+            cost_center: str
+            project_id: str
+        
+        @dataclass
+        class CostCenterTagAttributionResponse:
+            tagged: bool
+            aggregation_key: str
+        
+        class CostCenterTagAttribution(Protocol):
+            async def cost_center_tag_attribution(self, req: CostCenterTagAttributionRequest) -> CostCenterTagAttributionResponse: ...
   - name: Budget Alert & Degradation
     description: "Alerts at 80% budget; at 100% switches to cheaper model, cache-first mode, or queues requests; prevents runaway inference chains."
     input:
@@ -128,6 +158,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface BudgetAlertDegradationRequest {
+          costCenter: string;
+          currentSpend: number;
+          budgetLimit: number;
+        }
+        interface BudgetAlertDegradationResponse {
+          alertLevel: string;
+          degradationMode: string;
+          queueEnabled: boolean;
+        }
+        interface BudgetAlertDegradation {
+          budgetAlertDegradation(req: BudgetAlertDegradationRequest): Promise<BudgetAlertDegradationResponse>;
+        }
+      python: |
+        @dataclass
+        class BudgetAlertDegradationRequest:
+            cost_center: str
+            current_spend: float
+            budget_limit: float
+        
+        @dataclass
+        class BudgetAlertDegradationResponse:
+            alert_level: str
+            degradation_mode: str
+            queue_enabled: bool
+        
+        class BudgetAlertDegradation(Protocol):
+            async def budget_alert_degradation(self, req: BudgetAlertDegradationRequest) -> BudgetAlertDegradationResponse: ...
   - name: ROI Dashboard
     description: "Pairs cost data (denominator) with GV-10 business outcome data (numerator) to compute unit-cost-per-business-outcome per agent and department."
     input:
@@ -140,6 +200,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface RoiDashboardRequest {
+          userId: string;
+          period: string;
+        }
+        interface RoiDashboardResponse {
+          timeSavedMinutes: number;
+          taskCount: number;
+          weeklyTrend: object;
+        }
+        interface RoiDashboard {
+          roiDashboard(req: RoiDashboardRequest): Promise<RoiDashboardResponse>;
+        }
+      python: |
+        @dataclass
+        class RoiDashboardRequest:
+            user_id: str
+            period: str
+        
+        @dataclass
+        class RoiDashboardResponse:
+            time_saved_minutes: float
+            task_count: int
+            weekly_trend: dict
+        
+        class RoiDashboard(Protocol):
+            async def roi_dashboard(self, req: RoiDashboardRequest) -> RoiDashboardResponse: ...
 ```
 
 ## Related Patterns

@@ -6,8 +6,8 @@ pattern_id: RT-10
 facet: runtime
 requires: ["RT-7", "RT-8"]
 required_by: []
-applies_when: [saas_standard_events_trigger_multi_system_workflows, copy_paste_work_across_systems_to_be_eliminated, majority_of_processing_is_async_and_does_not_require_real_time_human_wait]
-not_applicable_when: [interactive_processing_requiring_immediate_user_response, event_frequency_too_high_for_agent_startup_cost, trigger_conditions_cannot_be_defined]
+applies_when: [event_driven, async_processing, cross_saas, autonomous_exec]
+not_applicable_when: [real_time_latency, single_team]
 risk_tiers: [2, 3, 4]
 key_technologies: [Amazon EventBridge, Google Pub/Sub, Azure Service Bus, Apache Kafka, CloudEvents, Debezium, Temporal, Workato, MuleSoft]
 ---
@@ -16,7 +16,7 @@ key_technologies: [Amazon EventBridge, Google Pub/Sub, Azure Service Bus, Apache
 
 ## 概要
 
-「入社が完了しました」というイベントが Workday から飛んだ瞬間に、エージェントが自律起動して IDP アカウント作成・ライセンス付与・Slack チャンネル招待・Jira ボード初期設定・歓迎メール送信をまとめて実行する——これがイベント駆動エージェントの姿である。人間が呼び出すのを待たず、業務プロセスの進行がエージェントを自然に起動する。RPA では扱えない例外や判断の揺らぎを LLM が吸収し、書き込み操作には非同期 Saga と人間承認を組み合わせる。バックオフィス自動化において、エージェントの経営価値が最も直接的に発揮される構成である。
+「入社が完了しました」というイベントが Workday から飛んだ瞬間に、エージェントが自律起動して IDP アカウント作成・ライセンス付与・Slack チャンネル招待・Jira ボード初期設定・歓迎メール送信をまとめて実行する——これがイベント駆動エージェントの姿だ。人間が呼び出すのを待たず、業務プロセスの進行がエージェントを自然に起動する。RPA では扱えない例外や判断の揺らぎを LLM が吸収し、書き込み操作には非同期 Saga と人間承認を組み合わせる。バックオフィス自動化において、エージェントの経営価値が最も直接的に発揮される構成だ。
 
 ## 解決する企業課題
 
@@ -35,7 +35,7 @@ Webhook が増加するにつれ「誰がどの Webhook をどう処理してい
 
 ## 解決策と設計
 
-解決策の核心は「SaaS のイベントをエンタープライズのビジネスイベントとして標準化し、エージェントをそのコンシューマとして設計すること」だ。イベントバスをシステム間の疎結合な接続点とし、エージェントはイベントの意味を解釈して適切なアクションを判断する。書き込みを伴う処理は Saga パターンで実行し、リスク判定に基づいて HitL 承認を挟む。
+解決策の核心は「SaaS のイベントをエンタープライズのビジネスイベントとして標準化し、エージェントをそのコンシューマとして設計すること」だ。イベントバスをシステム間の疎結合な接続点とし、エージェントはイベントの意味を解釈して適切なアクションを選択する。書き込みを伴う処理は Saga パターンで実行し、リスク判定に基づいて HitL 承認を挟む。
 
 イベントバスを介して SaaS からイベントを受け取り、オーケストレーターがワークフローを起動する。
 
@@ -68,9 +68,9 @@ sequenceDiagram
     OR->>SL: 完了通知 → 担当者
 ```
 
-トリガー条件・レートリミット・デバウンス・リスク分類はオーケストレーター起動前のゲートウェイ層で評価する。同一イベントが短時間に複数発火した場合（イベントストーム）はデバウンスで重複起動を防ぐ。ワークフロー実行中の予算上限・ステップ上限は Durable Workflow エンジン（RT-8）に委譲する。
+トリガー条件・レートリミット・デバウンス・リスク分類は、オーケストレーター起動前のゲートウェイ層で評価する。同一イベントが短時間に複数発火した場合（イベントストーム）はデバウンスで重複起動を防ぐ。ワークフロー実行中の予算上限・ステップ上限は Durable Workflow エンジン（RT-8）に委譲する。
 
-外部 Webhook は HMAC 署名検証・送信元 IP ホワイトリスト・CloudEvents の `source` フィールド検証で認証する。不正なイベントを起動前に遮断することで Webhook 偽装攻撃を防ぐ。
+外部 Webhook は HMAC 署名検証・送信元 IP ホワイトリスト・CloudEvents の `source` フィールド検証で認証する。不正なイベントを起動前に遮断し、Webhook 偽装攻撃を防ぐ。
 
 ## 向き／不向き
 
@@ -128,6 +128,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface EventGatewayRequest {
+          webhookPayload: object;
+          hmacSignature: string;
+          sourceIp: string;
+          cloudEventsSource: string;
+        }
+        interface EventGatewayResponse {
+          validated: boolean;
+          routedTo: string;
+          eventId: string;
+        }
+        interface EventGateway {
+          eventGateway(req: EventGatewayRequest): Promise<EventGatewayResponse>;
+        }
+      python: |
+        @dataclass
+        class EventGatewayRequest:
+            webhook_payload: dict
+            hmac_signature: str
+            source_ip: str
+            cloud_events_source: str
+        
+        @dataclass
+        class EventGatewayResponse:
+            validated: bool
+            routed_to: str
+            event_id: str
+        
+        class EventGateway(Protocol):
+            async def event_gateway(self, req: EventGatewayRequest) -> EventGatewayResponse: ...
   - name: Debounce / Rate Limiter
     description: "Collapses duplicate events for the same entity within a short window and enforces a maximum concurrent workflow launch rate."
     input:
@@ -140,6 +172,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DebounceRateLimiterRequest {
+          entityId: string;
+          eventType: string;
+          windowMs: number;
+          maxConcurrent: number;
+        }
+        interface DebounceRateLimiterResponse {
+          deduplicated: boolean;
+          throttled: boolean;
+          allowedToProcess: boolean;
+        }
+        interface DebounceRateLimiter {
+          debounceRateLimiter(req: DebounceRateLimiterRequest): Promise<DebounceRateLimiterResponse>;
+        }
+      python: |
+        @dataclass
+        class DebounceRateLimiterRequest:
+            entity_id: str
+            event_type: str
+            window_ms: int
+            max_concurrent: int
+        
+        @dataclass
+        class DebounceRateLimiterResponse:
+            deduplicated: bool
+            throttled: bool
+            allowed_to_process: bool
+        
+        class DebounceRateLimiter(Protocol):
+            async def debounce_rate_limiter(self, req: DebounceRateLimiterRequest) -> DebounceRateLimiterResponse: ...
   - name: Durable Workflow Engine (RT-8)
     description: "Manages long-running post-event processing with crash resilience and HitL approval integration."
     input:
@@ -152,6 +216,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DurableWorkflowEngineRequest {
+          workflowId: string;
+          eventPayload: object;
+          approvalRequired: boolean;
+        }
+        interface DurableWorkflowEngineResponse {
+          executionId: string;
+          state: string;
+          startedAt: Date;
+        }
+        interface DurableWorkflowEngine {
+          durableWorkflowEngine(req: DurableWorkflowEngineRequest): Promise<DurableWorkflowEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class DurableWorkflowEngineRequest:
+            workflow_id: str
+            event_payload: dict
+            approval_required: bool
+        
+        @dataclass
+        class DurableWorkflowEngineResponse:
+            execution_id: str
+            state: str
+            started_at: datetime
+        
+        class DurableWorkflowEngine(Protocol):
+            async def durable_workflow_engine(self, req: DurableWorkflowEngineRequest) -> DurableWorkflowEngineResponse: ...
 ```
 
 ## 関連パターン

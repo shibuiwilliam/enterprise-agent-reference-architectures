@@ -8,14 +8,14 @@ status: done
 
 ## 概要
 
-RAG で社内文書を 50 件取得できたとして、すべてをプロンプトに詰め込めば精度が上がるわけではない。トークンの大量消費とレイテンシ悪化に加え、中盤の情報が無視される「lost in the middle」現象で回答品質がむしろ下がることもある。「使えるデータ」ではなく「このタスクに必要な最小のデータ」に絞る（[KM-5 Purpose-Bound Context](../../patterns/km-knowledge/km5-purpose-bound-context.md)）ために、top-k やトークン予算をどう設定するかを扱う。
+RAG で社内文書を 50 件取得できたとして、すべてをプロンプトに詰め込めば精度が上がるわけではない。トークンの大量消費とレイテンシ悪化が生じるだけでなく、中盤の情報が無視される「lost in the middle」現象で回答品質がむしろ下がることもある。「使えるデータ」ではなく「このタスクに必要な最小のデータ」に絞る（[KM-5 Purpose-Bound Context](../../patterns/km-knowledge/km5-purpose-bound-context.md)）ために、top-k やトークン予算をどう設定するかを扱う。
 
 <!-- machine-readable decision rules for coding agents -->
 ```yaml
 id: DC-4
 parameter: context_volume
 rules:
-  - condition: "task_type == 'qa' AND expected_answer_is_factual"
+  - condition: "task_type == 'qa' AND data_type == 'public_knowledge'"
     recommended_top_k: 3
     token_budget_fraction: 0.25
     reason: "事実確認Q&Aは上位3件程度で十分。全件投入は「lost in the middle」現象で回答品質が下がることがある"
@@ -24,13 +24,13 @@ rules:
     token_budget_fraction: 0.5
     reranking: required
     reason: "多ソース比較分析は広いコンテキストが有効。リランカーで件数をさらに絞り、トークン予算内に圧縮する"
-  - condition: "data_classification IN ['confidential', 'top_secret'] AND context_contains_sensitive_fields == true"
+  - condition: "data_classification IN ['department_confidential', 'top_secret'] AND context_contains_sensitive_fields == true"
     action: dlp_mask_before_inject
     reason: "機密度の高い情報はKM-6 DLP & Redaction Boundaryでマスキング後に投入する。生の機密データをそのまま投入しない"
-  - condition: "context_injection_maximized == true"
+  - condition: "cost_constraint == true AND data_classification == 'public'"
     action: reduce_to_purpose_bound_minimum
     reason: "「使えるデータ」を全件投入するのは過剰。KM-5の目的限定原則に従い、タスクに不要な属性・フィールドは投入しない"
-  - condition: "quality_vs_cost_optimum_unknown == true"
+  - condition: "eval_complete == false"
     action: ab_test_top_k_values
     reason: "top-kやトークン予算の値を段階的に変えたA/Bテストで最適点を探り、GV-7でコスト対品質比を追跡する"
 ```
@@ -45,15 +45,15 @@ rules:
 ## 判断基準
 
 - 関連度ランキングで上位のみを選択し、リランカーでさらに件数を絞る
-- 目的別のトークン予算を設定し、予算内に収める。タスクの種類（Q&A・要約・分析）によって必要量は異なる
+- タスクの種類（Q&A・要約・分析）によって必要な量は異なる。目的別にトークン予算を設定し、その範囲内に収めるようにする
 - [KM-5](../../patterns/km-knowledge/km5-purpose-bound-context.md) の目的限定原則に従い、タスクに不要な属性・フィールドは投入しない
-- 機密度の高い情報は [KM-6 DLP & Redaction Boundary](../../patterns/km-knowledge/km6-dlp-redaction-boundary.md) でマスキング後に投入する
+- 機密度の高い情報は [KM-6 DLP & Redaction Boundary](../../patterns/km-knowledge/km6-dlp-redaction-boundary.md) でマスキングしてから投入する
 
 ## 調整の仕組み
 
 - [GV-7 Evaluation Pipeline](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) で回答品質と投入量の相関を計測する
-- top-k やトークン予算の値を段階的に変えた A/B テストで最適点を探る
-- [OB-1](../../patterns/ob-observability/ob1-observability-lake.md) でトークン消費量と品質スコアの推移を監視し、コスト対品質比を追跡する
+- top-k やトークン予算を段階的に変えた A/B テストで最適点を探る
+- [OB-1](../../patterns/ob-observability/ob1-observability-lake.md) でトークン消費量と品質スコアの推移を監視し、コスト対品質比を継続追跡する
 
 ## 関連パターン
 

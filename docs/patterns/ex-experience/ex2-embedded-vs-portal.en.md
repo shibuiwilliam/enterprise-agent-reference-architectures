@@ -6,8 +6,8 @@ pattern_id: EX-2
 facet: experience
 requires: ["EX-1", "EX-3"]
 required_by: []
-applies_when: [slack_teams_salesforce_are_the_central_daily_tools, cross_system_long_running_or_approval_workflows_are_common, incremental_ui_expansion_starting_with_embedded_then_adding_workbench]
-not_applicable_when: [business_tools_are_fragmented_with_too_many_embedding_targets, all_tasks_are_short_and_single_system_no_standalone_portal_needed, poc_stage_where_ui_shape_should_not_be_fixed]
+applies_when: [multi_channel, enterprise_scale, long_running, hitl_approval]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3]
 key_technologies: [Slack Bolt SDK, Block Kit, Microsoft Bot Framework, Adaptive Cards, "Lightning Web Components (LWC)", Salesforce Embedded Service, ServiceNow Service Portal Widget, React/Vue SPA, "Server-Sent Events (SSE)"]
 ---
@@ -108,6 +108,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface EmbeddedUiRequest {
+          businessContext: object;
+          userQuery: string;
+          channel: string;
+        }
+        interface EmbeddedUiResponse {
+          sessionId: string;
+          gatewayUrl: string;
+        }
+        interface EmbeddedUi {
+          embeddedUi(req: EmbeddedUiRequest): Promise<EmbeddedUiResponse>;
+        }
+      python: |
+        @dataclass
+        class EmbeddedUiRequest:
+            business_context: dict
+            user_query: str
+            channel: str
+        
+        @dataclass
+        class EmbeddedUiResponse:
+            session_id: str
+            gateway_url: str
+        
+        class EmbeddedUi(Protocol):
+            async def embedded_ui(self, req: EmbeddedUiRequest) -> EmbeddedUiResponse: ...
   - name: Standalone Workbench
     description: "React/Vue SPA providing streaming progress, approval actions, and diff view for long-running or cross-system tasks."
     input:
@@ -120,6 +148,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface StandaloneWorkbenchRequest {
+          taskId: string;
+          userId: string;
+        }
+        interface StandaloneWorkbenchResponse {
+          streamUrl: string;
+          approvalActions: string[];
+          diffView: object;
+        }
+        interface StandaloneWorkbench {
+          standaloneWorkbench(req: StandaloneWorkbenchRequest): Promise<StandaloneWorkbenchResponse>;
+        }
+      python: |
+        @dataclass
+        class StandaloneWorkbenchRequest:
+            task_id: str
+            user_id: str
+        
+        @dataclass
+        class StandaloneWorkbenchResponse:
+            stream_url: str
+            approval_actions: list[str]
+            diff_view: dict
+        
+        class StandaloneWorkbench(Protocol):
+            async def standalone_workbench(self, req: StandaloneWorkbenchRequest) -> StandaloneWorkbenchResponse: ...
   - name: Channel Adapter
     description: "Normalizes each platform's event format and forwards to EX-1 Gateway; absorbs UI differences so the backend remains channel-agnostic."
     input:
@@ -132,6 +188,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ChannelAdapterRequest {
+          channelToken: string;
+          channelType: string;
+          rawPayload: object;
+        }
+        interface ChannelAdapterResponse {
+          unifiedSessionId: string;
+          normalizedInput: object;
+          principalId: string;
+        }
+        interface ChannelAdapter {
+          channelAdapter(req: ChannelAdapterRequest): Promise<ChannelAdapterResponse>;
+        }
+      python: |
+        @dataclass
+        class ChannelAdapterRequest:
+            channel_token: str
+            channel_type: str
+            raw_payload: dict
+        
+        @dataclass
+        class ChannelAdapterResponse:
+            unified_session_id: str
+            normalized_input: dict
+            principal_id: str
+        
+        class ChannelAdapter(Protocol):
+            async def channel_adapter(self, req: ChannelAdapterRequest) -> ChannelAdapterResponse: ...
 ```
 
 ## Related Patterns

@@ -14,16 +14,16 @@ When an agent reads a Salesforce record, whether it reads as "Tanaka himself" or
 ```yaml
 id: TO-1
 decision_rules:
-  - condition: "purpose == 'personal_assistance' AND saas_supports_token_exchange"
+  - condition: "purpose == 'personal_assistance' AND saas_supports_token_exchange == true"
     recommendation: obo
     reason: "User-specific permissions are critical; SaaS native audit attribution is preserved via RFC 8693 token exchange"
-  - condition: "purpose == 'department_representative' AND multiple_approvers == true"
+  - condition: "purpose == 'department_service' AND multiple_approvers == true"
     recommendation: agent_identity
     reason: "Multiple persons involved; attach department scope policy to agent identity for bounded authorization"
-  - condition: "purpose == 'company_wide_batch' OR purpose == 'scheduled_job'"
+  - condition: "purpose == 'company_batch'"
     recommendation: service_account
     reason: "Batch/scheduled processing; compensate with strict audit and high-risk data classification controls"
-  - condition: "operation_risk == 'high' AND irreversible == true"
+  - condition: "operation_risk == 'high' AND irreversibility == 'irreversible'"
     recommendation: hybrid
     reason: "High-risk irreversible operations require User OBO combined with human approval chain; agent executes under user permission ceiling"
   - condition: "existing_service_account == true AND migration_phase == 'early'"

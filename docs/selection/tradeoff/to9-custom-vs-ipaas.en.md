@@ -23,10 +23,10 @@ decision_rules:
   - condition: "new_integration_point == true"
     recommendation: mcp_gateway
     reason: "New integration points should be MCP-standardized (IN-1) to enable future swap and extension with unified tool definitions"
-  - condition: "ipaas_obo_support == false AND obo_required == true"
+  - condition: "ipaas_obo_support == false AND saas_supports_token_exchange == true"
     recommendation: hybrid_validated_ipaas
     reason: "If iPaaS lacks User OBO (RFC 8693) support, restrict reuse scope and add MCP Gateway for permission-controlled operations"
-  - condition: "authorization_granularity_not_verified == true"
+  - condition: "authorization_granularity_verified == false AND existing_ipaas_connector == true"
     recommendation: hybrid_validated_ipaas
     reason: "Never skip authorization granularity verification; unverified adoption preserves admin service account anti-pattern"
 ```

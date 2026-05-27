@@ -6,8 +6,8 @@ pattern_id: ID-2
 facet: identity
 requires: []
 required_by: ["KM-1", "KM-2"]
-applies_when: [cross_saas_operations_with_strict_audit_requirements, personal_business_support_employee_copilot_requiring_own_permissions, high_risk_workflows_including_write_operations]
-not_applicable_when: [completely_public_information_only, delegation_unsupported_legacy_saas_use_id4_permission_mirror, autonomous_batch_processing_id3_workload_identity_is_more_appropriate]
+applies_when: [cross_saas, audit_required, write_operations, high_risk_ops]
+not_applicable_when: [public_data_only, autonomous_exec, legacy_saas_mix]
 risk_tiers: [2, 3, 4]
 key_technologies: [OIDC, SAML 2.0, SCIM, "OAuth 2.0 Token Exchange (RFC 8693)", Okta, Auth0, Microsoft Entra ID, Google Workspace]
 ---
@@ -138,6 +138,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface TokenBrokerRequest {
+          userIdToken: string;
+          targetSaas: string;
+          requestedScopes: string[];
+        }
+        interface TokenBrokerResponse {
+          oboToken: string;
+          expiresAt: Date;
+          actor: string;
+          subject: string;
+        }
+        interface TokenBroker {
+          tokenBroker(req: TokenBrokerRequest): Promise<TokenBrokerResponse>;
+        }
+      python: |
+        @dataclass
+        class TokenBrokerRequest:
+            user_id_token: str
+            target_saas: str
+            requested_scopes: list[str]
+        
+        @dataclass
+        class TokenBrokerResponse:
+            obo_token: str
+            expires_at: datetime
+            actor: str
+            subject: str
+        
+        class TokenBroker(Protocol):
+            async def token_broker(self, req: TokenBrokerRequest) -> TokenBrokerResponse: ...
   - name: SaaS Native Authorization (RP)
     description: "The target SaaS (Relying Party) applies its own native authorization (Salesforce profiles, ServiceNow ACLs) based on the token subject, enforcing data-level permissions."
     input:
@@ -150,6 +182,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SaasNativeAuthorizationRequest {
+          oboToken: string;
+          resource: string;
+          action: string;
+        }
+        interface SaasNativeAuthorizationResponse {
+          allowed: boolean;
+          subjectId: string;
+          appliedPolicy: string;
+        }
+        interface SaasNativeAuthorization {
+          saasNativeAuthorization(req: SaasNativeAuthorizationRequest): Promise<SaasNativeAuthorizationResponse>;
+        }
+      python: |
+        @dataclass
+        class SaasNativeAuthorizationRequest:
+            obo_token: str
+            resource: str
+            action: str
+        
+        @dataclass
+        class SaasNativeAuthorizationResponse:
+            allowed: bool
+            subject_id: str
+            applied_policy: str
+        
+        class SaasNativeAuthorization(Protocol):
+            async def saas_native_authorization(self, req: SaasNativeAuthorizationRequest) -> SaasNativeAuthorizationResponse: ...
   - name: Audit Delegation Chain
     description: "Records actor (agent) and subject (human) separately in audit logs so each SaaS audit (Salesforce Shield, Okta System Log) shows the human principal."
     input:
@@ -162,6 +224,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AuditDelegationChainRequest {
+          actorId: string;
+          agentId: string;
+          correlationId: string;
+          action: string;
+          resource: string;
+        }
+        interface AuditDelegationChainResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface AuditDelegationChain {
+          auditDelegationChain(req: AuditDelegationChainRequest): Promise<AuditDelegationChainResponse>;
+        }
+      python: |
+        @dataclass
+        class AuditDelegationChainRequest:
+            actor_id: str
+            agent_id: str
+            correlation_id: str
+            action: str
+            resource: str
+        
+        @dataclass
+        class AuditDelegationChainResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class AuditDelegationChain(Protocol):
+            async def audit_delegation_chain(self, req: AuditDelegationChainRequest) -> AuditDelegationChainResponse: ...
 ```
 
 ## Related Patterns

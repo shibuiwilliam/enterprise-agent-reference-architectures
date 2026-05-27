@@ -6,8 +6,8 @@ pattern_id: GV-9
 facet: governance
 requires: ["OB-1", "OB-2", "GV-1", "GV-5"]
 required_by: []
-applies_when: [all_production_ai_deployments]
-not_applicable_when: [no_practical_cases_kill_switch_design_cost_is_negligible_vs_operational_risk]
+applies_when: [prod_deployment, enterprise_scale]
+not_applicable_when: []
 risk_tiers: [0, 1, 2, 3, 4, 5]
 key_technologies: ["Kill Switch (Feature Flag / Gateway Blocklist)", Circuit Breaker, Runbook, Audit Snapshot, Event Store, Replay Tool, Access Revocation, PagerDuty, Splunk, Microsoft Sentinel]
 ---
@@ -96,6 +96,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface GranularKillSwitchRequest {
+          scope: string;
+          scopeId: string;
+          reason: string;
+          operatorId: string;
+        }
+        interface GranularKillSwitchResponse {
+          stopped: boolean;
+          stoppedAt: Date;
+          affectedRequests: number;
+        }
+        interface GranularKillSwitch {
+          granularKillSwitch(req: GranularKillSwitchRequest): Promise<GranularKillSwitchResponse>;
+        }
+      python: |
+        @dataclass
+        class GranularKillSwitchRequest:
+            scope: str
+            scope_id: str
+            reason: str
+            operator_id: str
+        
+        @dataclass
+        class GranularKillSwitchResponse:
+            stopped: bool
+            stopped_at: datetime
+            affected_requests: int
+        
+        class GranularKillSwitch(Protocol):
+            async def granular_kill_switch(self, req: GranularKillSwitchRequest) -> GranularKillSwitchResponse: ...
   - name: Trace Preservation
     description: "Automatically snapshots relevant audit and trace data at incident detection time before any remediation changes the evidence state."
     input:
@@ -108,6 +140,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface TracePreservationRequest {
+          incidentId: string;
+          agentId: string;
+          timeWindowStart: Date;
+          timeWindowEnd: Date;
+        }
+        interface TracePreservationResponse {
+          snapshotId: string;
+          preservedAt: Date;
+          traceCount: number;
+        }
+        interface TracePreservation {
+          tracePreservation(req: TracePreservationRequest): Promise<TracePreservationResponse>;
+        }
+      python: |
+        @dataclass
+        class TracePreservationRequest:
+            incident_id: str
+            agent_id: str
+            time_window_start: datetime
+            time_window_end: datetime
+        
+        @dataclass
+        class TracePreservationResponse:
+            snapshot_id: str
+            preserved_at: datetime
+            trace_count: int
+        
+        class TracePreservation(Protocol):
+            async def trace_preservation(self, req: TracePreservationRequest) -> TracePreservationResponse: ...
   - name: Incident Response Runbook
     description: "Pre-defined automation-ready runbook covering detect→contain→preserve→assess→notify→fix→postmortem; postmortem outputs feed back to ID-7 and GV-7."
     input:
@@ -120,6 +184,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface IncidentResponseRunbookRequest {
+          incidentId: string;
+          severity: string;
+          agentId: string;
+        }
+        interface IncidentResponseRunbookResponse {
+          phase: string;
+          actionsExecuted: string[];
+          postmortemId: string;
+        }
+        interface IncidentResponseRunbook {
+          incidentResponseRunbook(req: IncidentResponseRunbookRequest): Promise<IncidentResponseRunbookResponse>;
+        }
+      python: |
+        @dataclass
+        class IncidentResponseRunbookRequest:
+            incident_id: str
+            severity: str
+            agent_id: str
+        
+        @dataclass
+        class IncidentResponseRunbookResponse:
+            phase: str
+            actions_executed: list[str]
+            postmortem_id: str
+        
+        class IncidentResponseRunbook(Protocol):
+            async def incident_response_runbook(self, req: IncidentResponseRunbookRequest) -> IncidentResponseRunbookResponse: ...
 ```
 
 ## Related Patterns

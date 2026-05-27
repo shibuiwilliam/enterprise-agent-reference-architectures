@@ -8,19 +8,19 @@ status: done
 
 ## 概要
 
-「レコードを検索する」のと「レコードを更新する」のでは、失敗したときの被害がまるで違う。検索ミスはやり直せるが、間違った金額で請求書を発行すれば取り消しが効かない場合もある。エージェントの書き込み権限は「Read-only → Draft-only → 承認付き Write → 自動 Write」と段階的に広げるのが鉄則だ。
+「レコードを検索する」のと「レコードを更新する」のでは、失敗したときの被害がまるで違う。検索ミスはやり直せる。しかし間違った金額で請求書を発行すれば、取り消しが効かない場合もある。エージェントの書き込み権限は「Read-only → Draft-only → 承認付き Write → 自動 Write」と段階的に広げるのが鉄則だ。
 
 <!-- machine-readable decision rules for coding agents -->
 ```yaml
 id: TO-4
 decision_rules:
-  - condition: "operation_type == 'read' AND human_review_before_use == true"
+  - condition: "operation_type == 'read' AND audit_required == true"
     recommendation: read_only
     reason: "情報検索・レポート生成・分析は自律実行してよい。誤った結果を出しても人間が確認してから使用するため不可逆な被害が生じにくい"
-  - condition: "operation_type == 'write' AND irreversible == false AND operation_frequency == 'high' AND eval_complete == true"
+  - condition: "operation_type == 'write' AND irreversibility == 'reversible' AND operation_frequency == 'high' AND eval_complete == true"
     recommendation: auto_write_low_risk
     reason: "低リスク・高頻度の繰り返し操作はevalとカナリアリリースで安全性を確認後に自動Writeへ昇格する"
-  - condition: "operation_type == 'write' AND irreversible == true AND approval_workflow_available == true"
+  - condition: "operation_type == 'write' AND irreversibility == 'irreversible' AND approval_workflow_available == true"
     recommendation: approved_write
     reason: "不可逆な書き込みはSystem of Record経由で変更ログを残し、かつ人間の確認を挟む構造にする"
   - condition: "system_of_record == 'erp_crm_hr' OR financial_impact == true"
@@ -50,7 +50,7 @@ decision_rules:
 
 段階的拡張の判断軸：
 
-- 当該操作は不可逆か（不可逆＝より慎重な段階を維持する）
+- その操作は不可逆か（不可逆なら、より慎重な段階を維持する）
 - 操作対象の影響範囲はどこまでか（広いほど上位の段階が必要）
 - eval・カナリアによる動作検証が完了しているか
 - 監査証跡が十分に整備されているか
@@ -59,10 +59,10 @@ decision_rules:
 
 全業務を同一段階で扱わず、操作種別ごとに段階を割り当てる。
 
-1. まず全操作をRead-onlyで開始し、エージェントの動作を本番トレースで観測する。
-2. 低リスク・高頻度の繰り返し操作（定型フォーム入力等）からDraft-only→承認付きWriteへ昇格する。
-3. eval（[GV-7](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)）とカナリアリリースで安全性を確認した操作のみ自動Writeに昇格する。
-4. 高リスク操作はSoR＋HitLの組み合わせを維持し、自動化の対象から除外するか最終段階に留める。
+1. まず全操作を Read-only で開始し、エージェントの動作を本番トレースで観測する。
+2. 低リスク・高頻度の繰り返し操作（定型フォーム入力等）から Draft-only → 承認付き Write へ昇格する。
+3. eval（[GV-7](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)）とカナリアリリースで安全性を確認した操作のみ、自動 Write に昇格する。
+4. 高リスク操作は SoR＋HitL の組み合わせを維持し、自動化の対象から除外するか最終段階に留める。
 
 ## 関連パターン
 

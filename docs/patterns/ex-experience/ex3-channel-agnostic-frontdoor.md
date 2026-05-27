@@ -6,8 +6,8 @@ pattern_id: EX-3
 facet: experience
 requires: ["EX-1", "ID-2"]
 required_by: []
-applies_when: [incrementally_adding_channels_to_an_existing_agent, cross_channel_session_continuity_required, unified_permission_history_and_audit_management_needed]
-not_applicable_when: [permanently_using_single_channel_only, channels_are_completely_independent_services_with_no_session_sharing, cross_channel_session_sharing_not_needed_for_independent_tasks]
+applies_when: [multi_channel, audit_required, enterprise_scale]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [1, 2, 3]
 key_technologies: [Slack Bolt SDK, "Bot Framework (Teams)", REST/gRPC Adapter, Redis Session Store, JWT Session Claims, OIDC Federation]
 ---
@@ -20,7 +20,7 @@ Slack で始めた会話を Web で続けても、途中経過も権限もその
 
 ## 解決する企業課題
 
-チャネルごとにエージェントを別々に実装すると、権限判定ロジック・セッション履歴・監査ログがバラバラになる。あるチャネルでは許可されている操作が別チャネルでは未定義のまま素通しになる、といったセキュリティギャップも生じやすい。履歴がチャネルごとに孤立するため、「Slack で開始した作業を Web で続ける」ような業務継続が実現できず、ユーザーは同じ文脈を何度も説明し直すことになる。チャネルが増えるたびに権限・監査の設計を再実装するコストも積み重なっていく。チャネル非依存構造はこれらを構造的に防ぎ、チャネルを増やすことの限界コストを下げる。
+チャネルごとにエージェントを別々に実装すると、権限判定ロジック・セッション履歴・監査ログがバラバラになる。あるチャネルでは許可されている操作が別チャネルでは未定義のまま素通しになるなど、セキュリティギャップも生じやすい。履歴がチャネルごとに孤立するため、「Slack で開始した作業を Web で続ける」ような業務継続が実現できず、ユーザーは同じ文脈を何度も説明し直すことになる。チャネルが増えるたびに権限・監査の設計を再実装するコストも積み重なる。チャネル非依存構造はこれらを構造的に防ぎ、チャネルを増やす際の限界コストを下げる。
 
 !!! tip "最小成立条件（MVP）"
     1つのチャネルアダプターが入力を正規化し、統合セッション ID と本人 ID を付与して Gateway へ転送する構成。2チャネル目の追加時にバックエンドを変更せず済むことが検証基準である。
@@ -31,7 +31,7 @@ Slack で始めた会話を Web で続けても、途中経過も権限もその
 
 ## 解決策と設計
 
-チャネルアダプターを入力の正規化専用レイヤーとして分離し、ビジネスロジックや権限判定をアダプター内に書かない。アダプターは入力を正規化してセッションIDと本人IDを付与し、[EX-1 Enterprise Agent Gateway](ex1-enterprise-agent-gateway.md) へ転送する。Gateway 以降のバックエンドはチャネルを意識しない。セッションはチャネルをまたいで継続できる（例：Slack で開始した作業を Web ワークベンチで続ける）。
+チャネルアダプターは入力の正規化専用レイヤーとして分離し、ビジネスロジックや権限判定をアダプター内に書かない。アダプターは入力を正規化してセッション ID と本人 ID を付与し、[EX-1 Enterprise Agent Gateway](ex1-enterprise-agent-gateway.md) へ転送する。Gateway 以降のバックエンドはチャネルを意識しない。セッションはチャネルをまたいで継続できるため、Slack で開始した作業を Web ワークベンチで続けるといった使い方も自然に実現できる。
 
 ```mermaid
 flowchart TB
@@ -69,7 +69,7 @@ flowchart TB
     NORM --> AUTH --> SES --> AUD --> ORC
 ```
 
-チャネルアダプターが担う正規化は3点ある。入力フォーマットの変換、チャネル固有の認証トークンから統合 ID への変換、そしてセッション ID の引き継ぎまたは新規発行だ。
+チャネルアダプターが担う正規化は3点ある。入力フォーマットの変換、チャネル固有の認証トークンから統合 ID への変換、そしてセッション ID の引き継ぎまたは新規発行である。
 
 ## 向き／不向き
 
@@ -94,8 +94,8 @@ flowchart TB
 !!! warning "チャネル差を埋めるために権限を緩和しない"
     あるチャネルが OAuth スコープを制限している場合に「他チャネルに合わせて広げる」対処は誤りだ。スコープは最も制限された側に合わせるか、用途自体を分離する。
 
-- チャネルアダプターにビジネスロジックを書き込むと、チャネルごとの動作差が再発する。アダプターは入力の正規化だけを担い、判断は Gateway 以降に委ねること。
-- モバイル/API チャネルではトークンの保管リスクが高い。[ID-5 JIT Scoped Credentials](../id-identity/id5-jit-scoped-credentials.md) を用いて短命トークンを都度取得する設計にする。
+- チャネルアダプターにビジネスロジックを書き込むと、チャネルごとの動作差が再発する。アダプターは入力の正規化だけを担い、判断は Gateway 以降に委ねる。
+- モバイル/API チャネルではトークンの保管リスクが高い。[ID-5 JIT Scoped Credentials](../id-identity/id5-jit-scoped-credentials.md) を用いて短命トークンを都度取得する設計が安全だ。
 
 ## Interfaces
 
@@ -115,6 +115,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ChannelAdapterRequest {
+          channelToken: string;
+          channelType: string;
+          rawPayload: object;
+        }
+        interface ChannelAdapterResponse {
+          unifiedSessionId: string;
+          normalizedInput: object;
+          principalId: string;
+        }
+        interface ChannelAdapter {
+          channelAdapter(req: ChannelAdapterRequest): Promise<ChannelAdapterResponse>;
+        }
+      python: |
+        @dataclass
+        class ChannelAdapterRequest:
+            channel_token: str
+            channel_type: str
+            raw_payload: dict
+        
+        @dataclass
+        class ChannelAdapterResponse:
+            unified_session_id: str
+            normalized_input: dict
+            principal_id: str
+        
+        class ChannelAdapter(Protocol):
+            async def channel_adapter(self, req: ChannelAdapterRequest) -> ChannelAdapterResponse: ...
   - name: Unified Session Store
     description: "Redis-backed session store that enables cross-channel session continuity; session handoff requires re-authentication or signature verification."
     input:
@@ -127,6 +157,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface UnifiedSessionStoreRequest {
+          sessionId: string;
+          principalId: string;
+          channelType: string;
+        }
+        interface UnifiedSessionStoreResponse {
+          session: object;
+          expiresAt: Date;
+        }
+        interface UnifiedSessionStore {
+          unifiedSessionStore(req: UnifiedSessionStoreRequest): Promise<UnifiedSessionStoreResponse>;
+        }
+      python: |
+        @dataclass
+        class UnifiedSessionStoreRequest:
+            session_id: str
+            principal_id: str
+            channel_type: str
+        
+        @dataclass
+        class UnifiedSessionStoreResponse:
+            session: dict
+            expires_at: datetime
+        
+        class UnifiedSessionStore(Protocol):
+            async def unified_session_store(self, req: UnifiedSessionStoreRequest) -> UnifiedSessionStoreResponse: ...
   - name: Unified Audit Logger
     description: "Ensures cross-channel operations appear in a single audit trail (OB-2), preventing session fragmentation from hiding activity."
     input:
@@ -139,6 +197,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface UnifiedAuditLoggerRequest {
+          sessionId: string;
+          principalId: string;
+          channelType: string;
+          action: string;
+        }
+        interface UnifiedAuditLoggerResponse {
+          auditId: string;
+          traceId: string;
+        }
+        interface UnifiedAuditLogger {
+          unifiedAuditLogger(req: UnifiedAuditLoggerRequest): Promise<UnifiedAuditLoggerResponse>;
+        }
+      python: |
+        @dataclass
+        class UnifiedAuditLoggerRequest:
+            session_id: str
+            principal_id: str
+            channel_type: str
+            action: str
+        
+        @dataclass
+        class UnifiedAuditLoggerResponse:
+            audit_id: str
+            trace_id: str
+        
+        class UnifiedAuditLogger(Protocol):
+            async def unified_audit_logger(self, req: UnifiedAuditLoggerRequest) -> UnifiedAuditLoggerResponse: ...
 ```
 
 ## 関連パターン

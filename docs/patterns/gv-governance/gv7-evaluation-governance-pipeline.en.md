@@ -6,8 +6,8 @@ pattern_id: GV-7
 facet: governance
 requires: ["OB-1"]
 required_by: []
-applies_when: [all_production_agent_deployments, continuously_operated_environments_with_regular_model_or_prompt_updates, regulated_industries_requiring_continuous_gv4_policy_compliance_verification]
-not_applicable_when: [temporary_poc_or_experimental_phase, extremely_simple_tasks_where_rubric_design_is_not_warranted]
+applies_when: [prod_deployment, continuous_updates, regulated_industry]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [Golden Dataset, "LLM-as-a-judge", promptfoo, DeepEval, Braintrust, GitHub Actions / GitLab CI, "OB-1 Observability Lake"]
 ---
@@ -117,6 +117,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface OfflineEvaluationGateRequest {
+          prId: string;
+          agentId: string;
+          goldenDatasetId: string;
+        }
+        interface OfflineEvaluationGateResponse {
+          passed: boolean;
+          score: number;
+          failureReasons: string[];
+        }
+        interface OfflineEvaluationGate {
+          offlineEvaluationGate(req: OfflineEvaluationGateRequest): Promise<OfflineEvaluationGateResponse>;
+        }
+      python: |
+        @dataclass
+        class OfflineEvaluationGateRequest:
+            pr_id: str
+            agent_id: str
+            golden_dataset_id: str
+        
+        @dataclass
+        class OfflineEvaluationGateResponse:
+            passed: bool
+            score: float
+            failure_reasons: list[str]
+        
+        class OfflineEvaluationGate(Protocol):
+            async def offline_evaluation_gate(self, req: OfflineEvaluationGateRequest) -> OfflineEvaluationGateResponse: ...
   - name: Security Evaluation (Red-Teaming)
     description: "Searches for prompt injection, jailbreak, and data leakage paths in the security evaluation phase; results fed back to the change request."
     input:
@@ -129,6 +159,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SecurityEvaluationRequest {
+          agentId: string;
+          changeSetId: string;
+          redTeamScenarios: string[];
+        }
+        interface SecurityEvaluationResponse {
+          vulnerabilitiesFound: string[];
+          passed: boolean;
+          severity: string;
+        }
+        interface SecurityEvaluation {
+          securityEvaluation(req: SecurityEvaluationRequest): Promise<SecurityEvaluationResponse>;
+        }
+      python: |
+        @dataclass
+        class SecurityEvaluationRequest:
+            agent_id: str
+            change_set_id: str
+            red_team_scenarios: list[str]
+        
+        @dataclass
+        class SecurityEvaluationResponse:
+            vulnerabilities_found: list[str]
+            passed: bool
+            severity: str
+        
+        class SecurityEvaluation(Protocol):
+            async def security_evaluation(self, req: SecurityEvaluationRequest) -> SecurityEvaluationResponse: ...
   - name: Production Drift Monitor
     description: "Continuously detects quality drift, cost anomalies, and error rate increases in production; triggers GV-6 rollback on threshold breach."
     input:
@@ -141,6 +201,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ProductionDriftMonitorRequest {
+          agentId: string;
+          windowMinutes: number;
+        }
+        interface ProductionDriftMonitorResponse {
+          driftDetected: boolean;
+          qualityScore: number;
+          costAnomaly: boolean;
+          triggerRollback: boolean;
+        }
+        interface ProductionDriftMonitor {
+          productionDriftMonitor(req: ProductionDriftMonitorRequest): Promise<ProductionDriftMonitorResponse>;
+        }
+      python: |
+        @dataclass
+        class ProductionDriftMonitorRequest:
+            agent_id: str
+            window_minutes: int
+        
+        @dataclass
+        class ProductionDriftMonitorResponse:
+            drift_detected: bool
+            quality_score: float
+            cost_anomaly: bool
+            trigger_rollback: bool
+        
+        class ProductionDriftMonitor(Protocol):
+            async def production_drift_monitor(self, req: ProductionDriftMonitorRequest) -> ProductionDriftMonitorResponse: ...
 ```
 
 ## Related Patterns

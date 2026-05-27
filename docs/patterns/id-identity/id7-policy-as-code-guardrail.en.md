@@ -6,8 +6,8 @@ pattern_id: ID-7
 facet: identity
 requires: ["ID-6"]
 required_by: ["RT-3", "RT-4", "GV-4"]
-applies_when: [complex_regulatory_and_internal_rules_in_large_enterprises, regulated_industries_finance_healthcare_legal_public, multiple_agents_required_to_follow_common_rules]
-not_applicable_when: [simple_text_generation_only_use_cases, internal_faq_without_permission_control, personal_experimental_use]
+applies_when: [regulated_industry, enterprise_scale, multi_agent, high_risk_ops]
+not_applicable_when: [poc_phase, public_data_only, single_team]
 risk_tiers: [2, 3, 4, 5]
 key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, "PDP/PEP (ID-6)", "Policy Versioning (GV-6)", Git, "Approval Workflow (RT-4)", "Industry Policy Pack (GV-4)"]
 ---
@@ -140,6 +140,42 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface StructuredPolicyInputRequest {
+          actor: string;
+          agent: string;
+          action: string;
+          resource: string;
+          dataClassification: string;
+          riskTier: number;
+          purpose: string;
+        }
+        interface StructuredPolicyInputResponse {
+          structured: boolean;
+          inputId: string;
+        }
+        interface StructuredPolicyInput {
+          structuredPolicyInput(req: StructuredPolicyInputRequest): Promise<StructuredPolicyInputResponse>;
+        }
+      python: |
+        @dataclass
+        class StructuredPolicyInputRequest:
+            actor: str
+            agent: str
+            action: str
+            resource: str
+            data_classification: str
+            risk_tier: int
+            purpose: str
+        
+        @dataclass
+        class StructuredPolicyInputResponse:
+            structured: bool
+            input_id: str
+        
+        class StructuredPolicyInput(Protocol):
+            async def structured_policy_input(self, req: StructuredPolicyInputRequest) -> StructuredPolicyInputResponse: ...
   - name: Policy Engine (OPA/Cedar)
     description: "Deterministically evaluates inputs against versioned policy rules; returns allow, deny, require_approval, or redact with reason."
     input:
@@ -152,6 +188,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PolicyEngineRequest {
+          inputId: string;
+          policyVersion: string;
+          attributes: object;
+        }
+        interface PolicyEngineResponse {
+          verdict: string;
+          reason: string;
+          requiresApproval: boolean;
+          redact: boolean;
+        }
+        interface PolicyEngine {
+          policyEngine(req: PolicyEngineRequest): Promise<PolicyEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyEngineRequest:
+            input_id: str
+            policy_version: str
+            attributes: dict
+        
+        @dataclass
+        class PolicyEngineResponse:
+            verdict: str
+            reason: str
+            requires_approval: bool
+            redact: bool
+        
+        class PolicyEngine(Protocol):
+            async def policy_engine(self, req: PolicyEngineRequest) -> PolicyEngineResponse: ...
   - name: Policy Version & Test Gate
     description: "Policy changes are managed in Git with PR review, automated test, and canary before production deployment; conflicts between policies are surfaced automatically."
     input:
@@ -164,6 +232,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PolicyVersionTestGateRequest {
+          policyDiff: string;
+          prId: string;
+          testSuiteId: string;
+        }
+        interface PolicyVersionTestGateResponse {
+          passed: boolean;
+          conflicts: string[];
+          canarySlot: string;
+        }
+        interface PolicyVersionTestGate {
+          policyVersionTestGate(req: PolicyVersionTestGateRequest): Promise<PolicyVersionTestGateResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyVersionTestGateRequest:
+            policy_diff: str
+            pr_id: str
+            test_suite_id: str
+        
+        @dataclass
+        class PolicyVersionTestGateResponse:
+            passed: bool
+            conflicts: list[str]
+            canary_slot: str
+        
+        class PolicyVersionTestGate(Protocol):
+            async def policy_version_test_gate(self, req: PolicyVersionTestGateRequest) -> PolicyVersionTestGateResponse: ...
 ```
 
 ## Related Patterns

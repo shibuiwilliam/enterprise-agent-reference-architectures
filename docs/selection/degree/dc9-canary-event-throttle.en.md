@@ -19,17 +19,17 @@ rules:
     canary_stages: [1, 5, 25, 100]
     stage_unit: percent_of_traffic
     reason: "Use 1%→5%→25%→100% multi-stage rollout as baseline; collect sufficient traffic at each stage before advancing"
-  - condition: "quality_score_below_threshold OR error_rate_above_threshold OR cost_spike == true"
+  - condition: "canary_stage_healthy == false"
     action: auto_rollback_via_gv6
     reason: "If quality score, error rate, or cost exceeds threshold at any canary stage, trigger GV-6 automatic rollback immediately"
-  - condition: "traffic_volume_too_low_for_statistical_significance == true"
+  - condition: "latency_sensitive == false AND eval_complete == false"
     action: supplement_with_offline_eval
     reason: "When live traffic is insufficient for statistical significance, supplement with offline evaluation (GV-7) before advancing to next stage"
-  - condition: "event_storm_detected == true OR event_volume_per_minute > budget_threshold"
+  - condition: "event_volume_exceeds_budget == true"
     throttle_action: queue_or_sample
     mechanisms: [debounce, rate_limit, session_budget_cap]
     reason: "Combine debounce, rate limit, and session budget cap to prevent event storms from causing cost spikes and downstream overload"
-  - condition: "event_throttle_too_aggressive == true AND event_gaps_causing_stale_state == true"
+  - condition: "throttle_causing_stale_state == true"
     action: loosen_throttle_per_event_type
     reason: "Over-throttling causes agents to operate on stale state; tune throttle parameters per event type based on business criticality and inference cost"
 ```

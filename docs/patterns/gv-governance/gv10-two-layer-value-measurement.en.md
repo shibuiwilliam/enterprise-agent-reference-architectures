@@ -6,8 +6,8 @@ pattern_id: GV-10
 facet: governance
 requires: ["GV-8", "OB-1"]
 required_by: []
-applies_when: [enterprise_wide_rollout_phase_requiring_management_approval, enterprises_needing_to_justify_ai_investment_to_business_units, multiple_agents_running_in_parallel_requiring_investment_prioritization]
-not_applicable_when: [initial_poc_or_validation_phase, use_cases_where_linking_to_business_outcomes_is_structurally_difficult]
+applies_when: [enterprise_scale, roi_justification, multi_agent, prod_deployment]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [Looker, Tableau, Power BI, "OB-1 Observability Lake", "GV-8 Cost Attribution", Salesforce, Zendesk, Workday]
 ---
@@ -180,6 +180,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface Layer0AdoptionMetricsRequest {
+          startDate: Date;
+          endDate: Date;
+          agentIds: string[];
+        }
+        interface Layer0AdoptionMetricsResponse {
+          adoptionRate: number;
+          dauMau: number;
+          cohortRetention: number;
+        }
+        interface Layer0AdoptionMetrics {
+          layer0AdoptionMetrics(req: Layer0AdoptionMetricsRequest): Promise<Layer0AdoptionMetricsResponse>;
+        }
+      python: |
+        @dataclass
+        class Layer0AdoptionMetricsRequest:
+            start_date: datetime
+            end_date: datetime
+            agent_ids: list[str]
+        
+        @dataclass
+        class Layer0AdoptionMetricsResponse:
+            adoption_rate: float
+            dau_mau: float
+            cohort_retention: float
+        
+        class Layer0AdoptionMetrics(Protocol):
+            async def layer_0_adoption_metrics(self, req: Layer0AdoptionMetricsRequest) -> Layer0AdoptionMetricsResponse: ...
   - name: Layer 1 & 2 Business KPI Joiner
     description: "Time-series joins agent usage logs with Salesforce lead time, Zendesk CSAT/AHT, and Workday HR KPIs to compute business impact."
     input:
@@ -192,6 +222,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface Layer12BusinessKpiJoinerRequest {
+          agentId: string;
+          period: string;
+          kpiSources: string[];
+        }
+        interface Layer12BusinessKpiJoinerResponse {
+          businessKpis: object;
+          timeSavedHours: number;
+          impactScore: number;
+        }
+        interface Layer12BusinessKpiJoiner {
+          layer12BusinessKpiJoiner(req: Layer12BusinessKpiJoinerRequest): Promise<Layer12BusinessKpiJoinerResponse>;
+        }
+      python: |
+        @dataclass
+        class Layer12BusinessKpiJoinerRequest:
+            agent_id: str
+            period: str
+            kpi_sources: list[str]
+        
+        @dataclass
+        class Layer12BusinessKpiJoinerResponse:
+            business_kpis: dict
+            time_saved_hours: float
+            impact_score: float
+        
+        class Layer12BusinessKpiJoiner(Protocol):
+            async def layer_1_2_business_kpi_joiner(self, req: Layer12BusinessKpiJoinerRequest) -> Layer12BusinessKpiJoinerResponse: ...
   - name: ROI Dashboard
     description: "Executive-facing report combining cost (GV-8) as denominator and business outcomes as numerator; supports investment expand/improve/retire decisions."
     input:
@@ -204,6 +264,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface RoiDashboardRequest {
+          userId: string;
+          period: string;
+        }
+        interface RoiDashboardResponse {
+          timeSavedMinutes: number;
+          taskCount: number;
+          weeklyTrend: object;
+        }
+        interface RoiDashboard {
+          roiDashboard(req: RoiDashboardRequest): Promise<RoiDashboardResponse>;
+        }
+      python: |
+        @dataclass
+        class RoiDashboardRequest:
+            user_id: str
+            period: str
+        
+        @dataclass
+        class RoiDashboardResponse:
+            time_saved_minutes: float
+            task_count: int
+            weekly_trend: dict
+        
+        class RoiDashboard(Protocol):
+            async def roi_dashboard(self, req: RoiDashboardRequest) -> RoiDashboardResponse: ...
 ```
 
 ## Related Patterns

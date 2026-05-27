@@ -14,19 +14,19 @@ status: done
 ```yaml
 id: TO-11
 decision_rules:
-  - condition: "expected_duration_seconds <= 5 AND human_approval_step == false AND operation_type == 'qa_or_search'"
+  - condition: "expected_duration_seconds <= 5 AND steps_include_human_approval == false AND operation_type == 'simple_qa'"
     recommendation: synchronous
     reason: "Simple Q&A, search, and document summarization that complete in seconds are suitable for synchronous processing"
-  - condition: "expected_duration_seconds > 10 OR steps_include_human_approval == true OR external_api_calls_multiple == true"
+  - condition: "expected_duration_seconds > 10 OR steps_include_human_approval == true"
     recommendation: asynchronous
     reason: "Processing exceeding 10 seconds, multi-step workflows with human approvals, or multiple sequential/parallel API calls require durable async workflow"
-  - condition: "multi_system_transaction == true AND compensation_on_failure_required == true"
+  - condition: "multi_system_transaction == true AND compensation_required == true"
     recommendation: saga_transactional
     reason: "Cross-system operations requiring transactional consistency and rollback compensation on partial failure need Saga pattern"
-  - condition: "duration_5s_to_30s == true AND ux_responsiveness_important == true"
+  - condition: "expected_duration_seconds > 5 AND expected_duration_seconds <= 30 AND ux_responsiveness_important == true"
     recommendation: streaming_sync
     reason: "Stream LLM generation token-by-token; users read as they wait, improving perceived responsiveness for 5-30 second tasks"
-  - condition: "sync_started_but_exceeded_timeout == true"
+  - condition: "expected_duration_seconds <= 5 AND expected_duration_seconds > 10"
     recommendation: hybrid_timeout_escalation
     reason: "Auto-escalate from sync to async when processing exceeds expected time; deliver completion via webhook or email notification"
 ```

@@ -6,8 +6,8 @@ pattern_id: OB-1
 facet: observability
 requires: []
 required_by: ["GV-7", "GV-9", "GV-6"]
-applies_when: [all_production_ai_deployments]
-not_applicable_when: [unlimited_plaintext_logging_of_all_prompts_is_never_appropriate]
+applies_when: [prod_deployment, enterprise_scale]
+not_applicable_when: []
 risk_tiers: [0, 1, 2, 3, 4, 5]
 key_technologies: ["OpenTelemetry (GenAI semantic conventions)", Jaeger, Tempo, Datadog APM, "S3 (encrypted)", GCS, BigQuery, Snowflake, Redshift, Grafana, Prompt Store + Replay Tool]
 ---
@@ -115,6 +115,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface OtelInstrumentationLayerRequest {
+          runId: string;
+          sessionId: string;
+          userId: string;
+          agentId: string;
+          modelId: string;
+        }
+        interface OtelInstrumentationLayerResponse {
+          traceId: string;
+          spanId: string;
+          recordedAt: Date;
+        }
+        interface OtelInstrumentationLayer {
+          otelInstrumentationLayer(req: OtelInstrumentationLayerRequest): Promise<OtelInstrumentationLayerResponse>;
+        }
+      python: |
+        @dataclass
+        class OtelInstrumentationLayerRequest:
+            run_id: str
+            session_id: str
+            user_id: str
+            agent_id: str
+            model_id: str
+        
+        @dataclass
+        class OtelInstrumentationLayerResponse:
+            trace_id: str
+            span_id: str
+            recorded_at: datetime
+        
+        class OtelInstrumentationLayer(Protocol):
+            async def otel_instrumentation_layer(self, req: OtelInstrumentationLayerRequest) -> OtelInstrumentationLayerResponse: ...
   - name: Three-Layer Storage
     description: "Layer 1 (Trace DB) for fast metadata queries; Layer 2 (encrypted object store, PII-masked) for full content keyed by run_id; Layer 3 (DWH) for quality scores and ROI aggregations."
     input:
@@ -127,6 +161,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ThreeLayerStorageRequest {
+          runId: string;
+          traceData: object;
+          fullContent: object;
+          qualityScores: object;
+        }
+        interface ThreeLayerStorageResponse {
+          stored: boolean;
+          layer1Id: string;
+          layer2Key: string;
+        }
+        interface ThreeLayerStorage {
+          threeLayerStorage(req: ThreeLayerStorageRequest): Promise<ThreeLayerStorageResponse>;
+        }
+      python: |
+        @dataclass
+        class ThreeLayerStorageRequest:
+            run_id: str
+            trace_data: dict
+            full_content: dict
+            quality_scores: dict
+        
+        @dataclass
+        class ThreeLayerStorageResponse:
+            stored: bool
+            layer1_id: str
+            layer2_key: str
+        
+        class ThreeLayerStorage(Protocol):
+            async def three_layer_storage(self, req: ThreeLayerStorageRequest) -> ThreeLayerStorageResponse: ...
   - name: Replay Tool
     description: "Reconstructs past executions from stored metadata and content for incident investigation and quality regression testing."
     input:
@@ -139,6 +205,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ReplayToolRequest {
+          runId: string;
+          replayMode: string;
+        }
+        interface ReplayToolResponse {
+          reconstructedExecution: object;
+          replayedAt: Date;
+          differences: object[];
+        }
+        interface ReplayTool {
+          replayTool(req: ReplayToolRequest): Promise<ReplayToolResponse>;
+        }
+      python: |
+        @dataclass
+        class ReplayToolRequest:
+            run_id: str
+            replay_mode: str
+        
+        @dataclass
+        class ReplayToolResponse:
+            reconstructed_execution: dict
+            replayed_at: datetime
+            differences: list[dict]
+        
+        class ReplayTool(Protocol):
+            async def replay_tool(self, req: ReplayToolRequest) -> ReplayToolResponse: ...
 ```
 
 ## Related Patterns

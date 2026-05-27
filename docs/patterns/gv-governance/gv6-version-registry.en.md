@@ -6,8 +6,8 @@ pattern_id: GV-6
 facet: governance
 requires: ["OB-1"]
 required_by: []
-applies_when: [continuously_operated_agents_with_regular_model_updates_and_prompt_improvements, regulated_compliance_work_requiring_reproduction_of_past_behavior, multi_agent_configurations_requiring_version_combination_management]
-not_applicable_when: [short_term_throwaway_experimental_poc, completely_stateless_simple_tasks_with_no_quality_management_needed]
+applies_when: [continuous_updates, prod_deployment, audit_required, multi_agent]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [2, 3, 4]
 key_technologies: [Git, MLflow Model Registry, "LaunchDarkly (Feature Flag)", Canary Deploy Infrastructure, Eval Dataset, "GV-7 Evaluation Pipeline"]
 ---
@@ -113,6 +113,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface VersionTagPerExecutionRequest {
+          executionId: string;
+          modelVersion: string;
+          promptCommitHash: string;
+          toolVersion: string;
+        }
+        interface VersionTagPerExecutionResponse {
+          versionTag: object;
+          taggedAt: Date;
+        }
+        interface VersionTagPerExecution {
+          versionTagPerExecution(req: VersionTagPerExecutionRequest): Promise<VersionTagPerExecutionResponse>;
+        }
+      python: |
+        @dataclass
+        class VersionTagPerExecutionRequest:
+            execution_id: str
+            model_version: str
+            prompt_commit_hash: str
+            tool_version: str
+        
+        @dataclass
+        class VersionTagPerExecutionResponse:
+            version_tag: dict
+            tagged_at: datetime
+        
+        class VersionTagPerExecution(Protocol):
+            async def version_tag_per_execution(self, req: VersionTagPerExecutionRequest) -> VersionTagPerExecutionResponse: ...
   - name: PR-Gated Change Flow
     description: "All changes to model/prompt/tool/policy/index must pass automated GV-7 evaluation before merge; failed evaluations block the PR."
     input:
@@ -125,6 +155,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PrGatedChangeFlowRequest {
+          prId: string;
+          changedArtifacts: string[];
+          evaluationSuiteId: string;
+        }
+        interface PrGatedChangeFlowResponse {
+          passed: boolean;
+          scores: object;
+          blockingReason: string;
+        }
+        interface PrGatedChangeFlow {
+          prGatedChangeFlow(req: PrGatedChangeFlowRequest): Promise<PrGatedChangeFlowResponse>;
+        }
+      python: |
+        @dataclass
+        class PrGatedChangeFlowRequest:
+            pr_id: str
+            changed_artifacts: list[str]
+            evaluation_suite_id: str
+        
+        @dataclass
+        class PrGatedChangeFlowResponse:
+            passed: bool
+            scores: dict
+            blocking_reason: str
+        
+        class PrGatedChangeFlow(Protocol):
+            async def pr_gated_change_flow(self, req: PrGatedChangeFlowRequest) -> PrGatedChangeFlowResponse: ...
   - name: Canary + Auto-Rollback
     description: "Staged rollout (1%→5%→25%→100%) with continuous quality/cost/error monitoring; auto-rollback to previous version on threshold breach."
     input:
@@ -137,6 +197,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CanaryAutoRollbackRequest {
+          deploymentId: string;
+          targetVersion: string;
+          rolloutPercent: number;
+        }
+        interface CanaryAutoRollbackResponse {
+          stage: string;
+          qualityOk: boolean;
+          rolledBackTo: string;
+        }
+        interface CanaryAutoRollback {
+          canaryAutoRollback(req: CanaryAutoRollbackRequest): Promise<CanaryAutoRollbackResponse>;
+        }
+      python: |
+        @dataclass
+        class CanaryAutoRollbackRequest:
+            deployment_id: str
+            target_version: str
+            rollout_percent: int
+        
+        @dataclass
+        class CanaryAutoRollbackResponse:
+            stage: str
+            quality_ok: bool
+            rolled_back_to: str
+        
+        class CanaryAutoRollback(Protocol):
+            async def canary_auto_rollback(self, req: CanaryAutoRollbackRequest) -> CanaryAutoRollbackResponse: ...
 ```
 
 ## Related Patterns

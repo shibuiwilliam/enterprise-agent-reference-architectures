@@ -6,8 +6,8 @@ pattern_id: RT-11
 facet: runtime
 requires: ["KM-1", "KM-4", "ID-4"]
 required_by: []
-applies_when: [multi_tool_project_teams_five_to_fifty_members, project_duration_weeks_or_more_with_decision_history_reference_needed, member_turnover_with_onboarding_cost_reduction_needed]
-not_applicable_when: [one_off_short_tasks_where_workspace_overhead_not_worth_it, one_to_two_person_personal_projects, fully_integrated_erp_with_no_information_silos]
+applies_when: [project_team, cross_saas_search, persistent_memory, frequent_perm_chg]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [2, 3]
 key_technologies: ["Neo4j (GraphRAG)", Slack Bot, "Dynamic RBAC (Okta Groups / Azure AD Groups)", PostgreSQL Decision Log, Asana API, Jira REST API, Box API, SharePoint]
 ---
@@ -16,16 +16,16 @@ key_technologies: ["Neo4j (GraphRAG)", Slack Bot, "Dynamic RBAC (Okta Groups / A
 
 ## 概要
 
-プロジェクトの文脈は Slack・Notion・Jira・会議録・メールに散らばり、新メンバーが追いつくのに何日もかかる。このパターンは、エージェントを個人アシスタントではなく「プロジェクトに紐づく共有メンバー」として設計する。プロジェクト開始時に GraphRAG ベースの共有メモリ・Slack チャンネル・Jira ボード・Box フォルダを自動プロビジョニングし、`@Project-X-Agent` で誰でも対話できるようにする。毎朝 Jira と Slack を突き合わせて仕様の不整合を警告するなど、能動的に振る舞う点も特徴だ。プロジェクト終了時にはメモリと権限を自動で失効させる。
+プロジェクトの文脈は Slack・Notion・Jira・会議録・メールに散らばり、新メンバーが追いつくのに何日もかかる。このパターンはエージェントを個人アシスタントではなく「プロジェクトに紐づく共有メンバー」として設計する。プロジェクト開始時に GraphRAG ベースの共有メモリ・Slack チャンネル・Jira ボード・Box フォルダを自動プロビジョニングし、`@Project-X-Agent` で誰でも対話できるようにする。毎朝 Jira と Slack を突き合わせて仕様の不整合を警告するなど、能動的に振る舞う点も特徴だ。プロジェクト終了時にはメモリと権限を自動で失効させる。
 
 ## 解決する企業課題
 
-プロジェクトの文脈が Slack・Notion・Jira・会議メモ・メールに散在し、誰も全体を把握できない状態はエンタープライズの典型的な問題だ。情報サイロは新規参加者のオンボーディング遅延・意思決定理由の消失・仕様の乖離検知の失敗という形で業務コストに直結する。
+プロジェクトの文脈が Slack・Notion・Jira・会議メモ・メールに散在し、誰も全体を把握できない状態はエンタープライズの典型的な問題だ。情報サイロは新規参加者のオンボーディング遅延・意思決定理由の消失・仕様乖離の検知失敗という形で業務コストに直結する。
 
 !!! tip "最小成立条件（MVP）"
     まず Slack チャンネル＋Jira ボードの自動プロビジョニングと、メンション応答による Q&A を実装する。GraphRAG は初期段階ではシンプルなベクトル検索で代替し、プロアクティブ監視は仕様不整合チェック1本に絞る。
 
-特にマトリクス組織・アジャイル・長期大型プロジェクトでは、メンバーの入れ替えが頻繁に発生し、「誰がなぜその設計を選んだか」という文脈が個人の記憶に依存する。担当者の異動・退職によりその文脈が組織から失われる問題は、「言った言わない」の温床となる。
+特にマトリクス組織・アジャイル・長期大型プロジェクトでは、メンバーの入れ替えが頻繁に発生し、「誰がなぜその設計を選んだか」という文脈が個人の記憶に依存しがちだ。担当者の異動・退職によりその文脈が組織から失われると、「言った言わない」の温床となる。
 
 セキュリティの観点でも課題がある。プロジェクト終了後もメモリと権限が残存すると、異動した元メンバーが旧プロジェクトの機密情報に継続アクセスできる状態が生じる。個人アシスタント型のエージェントではライフサイクル管理が設計に含まれないため、この問題を構造的に解決できない。
 
@@ -35,7 +35,7 @@ key_technologies: ["Neo4j (GraphRAG)", Slack Bot, "Dynamic RBAC (Okta Groups / A
 
 ## 解決策と設計
 
-解決策の核心は「プロジェクトを一つの認識主体として扱い、その全情報源を横断するエージェントをプロジェクトメンバーとして参加させること」だ。エージェントはプロジェクトの記憶・監視・問い合わせ窓口を一手に担い、人間メンバーの認知負荷を低減する。動的 RBAC により、メンバーの権限変更・追加・削除がエージェントのアクション権限に即時反映される。
+解決策の核心は「プロジェクトを一つの認識主体として扱い、全情報源を横断するエージェントをプロジェクトメンバーとして参加させること」だ。エージェントはプロジェクトの記憶・監視・問い合わせ窓口を一手に担い、人間メンバーの認知負荷を低減する。動的 RBAC により、メンバーの権限変更・追加・削除がエージェントのアクション権限に即時反映される。
 
 プロジェクトワークスペースはプロジェクト作成時にプロビジョニングされ、メンバーの RBAC により参照範囲が制御される。エージェントはワークスペース内の全情報源をコンテキストとして持ち、各ツール呼び出しはメンバーの権限に縮退させて実行する。
 
@@ -69,7 +69,7 @@ flowchart TD
     END[プロジェクト終了] --> EXP["メモリ・権限<br/>アーカイブ・失効"]
 ```
 
-GraphRAGはプロジェクト内の「人・決定・成果物・タスク」の関係グラフを保持し、「なぜその設計になったか」「誰がその決定をしたか」といった関係性クエリに答える。意思決定ログは「決定内容・決定者・却下した選択肢・根拠」を構造化して記録し、振り返りと監査の基盤となる。
+GraphRAG はプロジェクト内の「人・決定・成果物・タスク」の関係グラフを保持し、「なぜその設計になったか」「誰がその決定をしたか」といった関係性クエリに答える。意思決定ログは「決定内容・決定者・却下した選択肢・根拠」を構造化して記録し、振り返りと監査の基盤となる。
 
 プロジェクト終了時のライフサイクル処理として、メモリのアーカイブ（読み取り専用化）、動的 RBAC グループの解除、Slack チャンネルのアーカイブ、タスクボードのクローズを自動実行する。
 
@@ -124,6 +124,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ProjectWorkspaceProvisionerRequest {
+          projectId: string;
+          projectName: string;
+          memberIds: string[];
+          action: string;
+        }
+        interface ProjectWorkspaceProvisionerResponse {
+          slackChannelId: string;
+          jiraBoardId: string;
+          boxFolderId: string;
+          rbacGroupId: string;
+        }
+        interface ProjectWorkspaceProvisioner {
+          projectWorkspaceProvisioner(req: ProjectWorkspaceProvisionerRequest): Promise<ProjectWorkspaceProvisionerResponse>;
+        }
+      python: |
+        @dataclass
+        class ProjectWorkspaceProvisionerRequest:
+            project_id: str
+            project_name: str
+            member_ids: list[str]
+            action: str
+        
+        @dataclass
+        class ProjectWorkspaceProvisionerResponse:
+            slack_channel_id: str
+            jira_board_id: str
+            box_folder_id: str
+            rbac_group_id: str
+        
+        class ProjectWorkspaceProvisioner(Protocol):
+            async def project_workspace_provisioner(self, req: ProjectWorkspaceProvisionerRequest) -> ProjectWorkspaceProvisionerResponse: ...
   - name: GraphRAG Memory
     description: "Maintains a knowledge graph of people, decisions, artifacts, and tasks within the project, filtered by each member's RBAC permissions at read time."
     input:
@@ -136,6 +170,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface GraphragMemoryRequest {
+          projectId: string;
+          query: string;
+          userId: string;
+        }
+        interface GraphragMemoryResponse {
+          nodes: object[];
+          relationships: object[];
+          filteredByRbac: boolean;
+        }
+        interface GraphragMemory {
+          graphragMemory(req: GraphragMemoryRequest): Promise<GraphragMemoryResponse>;
+        }
+      python: |
+        @dataclass
+        class GraphragMemoryRequest:
+            project_id: str
+            query: str
+            user_id: str
+        
+        @dataclass
+        class GraphragMemoryResponse:
+            nodes: list[dict]
+            relationships: list[dict]
+            filtered_by_rbac: bool
+        
+        class GraphragMemory(Protocol):
+            async def graphrag_memory(self, req: GraphragMemoryRequest) -> GraphragMemoryResponse: ...
   - name: Decision Log Store
     description: "Structured record of decisions made, rejected alternatives, and rationale for retrospective and audit use."
     input:
@@ -148,6 +212,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DecisionLogStoreRequest {
+          projectId: string;
+          decisionText: string;
+          alternatives: string[];
+          rationale: string;
+          authorId: string;
+        }
+        interface DecisionLogStoreResponse {
+          decisionId: string;
+          recordedAt: Date;
+        }
+        interface DecisionLogStore {
+          decisionLogStore(req: DecisionLogStoreRequest): Promise<DecisionLogStoreResponse>;
+        }
+      python: |
+        @dataclass
+        class DecisionLogStoreRequest:
+            project_id: str
+            decision_text: str
+            alternatives: list[str]
+            rationale: str
+            author_id: str
+        
+        @dataclass
+        class DecisionLogStoreResponse:
+            decision_id: str
+            recorded_at: datetime
+        
+        class DecisionLogStore(Protocol):
+            async def decision_log_store(self, req: DecisionLogStoreRequest) -> DecisionLogStoreResponse: ...
 ```
 
 ## 関連パターン

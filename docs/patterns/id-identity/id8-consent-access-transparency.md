@@ -6,8 +6,8 @@ pattern_id: ID-8
 facet: identity
 requires: ["ID-2", "ID-4", "ID-5"]
 required_by: []
-applies_when: [agents_accessing_personal_data_email_calendar_documents, privacy_regulations_gdpr_appi_requiring_user_consent_and_revocation, trust_building_needed_through_scope_visibility]
-not_applicable_when: [agent_handles_only_system_data_with_no_personal_data, fully_autonomous_batch_processing_with_no_human_operation_origin_id3_is_appropriate, poc_where_consent_flow_implementation_cost_cannot_be_justified]
+applies_when: [personal_data, privacy_regulation, adoption_challenge]
+not_applicable_when: [autonomous_exec, poc_phase, public_data_only]
 risk_tiers: [2, 3, 4]
 key_technologies: [Okta Consent, Microsoft Entra ID Admin/User Consent, OAuth 2.0 Scope Management, RFC 7009 Token Revocation, "Consent Registry (DB / Policy Store)", Internal Consent Portal]
 ---
@@ -20,9 +20,9 @@ key_technologies: [Okta Consent, Microsoft Entra ID Admin/User Consent, OAuth 2.
 
 ## 解決する企業課題
 
-エージェントが自分の ID で動いているとき、ユーザーは「エージェントが自分の権限でいつ・何に・どの範囲でアクセスしているか」を知らないのが標準状態である。この不透明さは、エージェント採用の障壁になると同時に、コンプライアンス上の問題を生む。
+エージェントが自分の ID で動いているとき、ユーザーは「エージェントが自分の権限でいつ・何に・どの範囲でアクセスしているか」を知らないのが標準状態だ。この不透明さは、エージェント採用の障壁になると同時に、コンプライアンス上の問題を生む。
 
-まず不信の問題から述べる。「エージェントが自分の ID で勝手に何でもできる状態になっている」という感覚は現実に生まれる。初回の業務依頼時に付与した委譲スコープが何ヶ月も有効なまま残り、エージェントがいつでもメール・カレンダー・ドライブにアクセスできる——ユーザーはこれを把握できていない。委譲スコープが目に見えなければ、ユーザーはエージェントの使用を控えるか、IT 部門が全エージェントを停止する判断を下すことになる。
+まず不信の問題から述べる。「エージェントが自分の ID で勝手に何でもできる状態になっている」という感覚は現実に生まれる。初回の業務依頼時に付与した委譲スコープが何か月も有効なまま残り、エージェントがいつでもメール・カレンダー・ドライブにアクセスできる——ユーザーはこれを把握できていない。委譲スコープが目に見えなければ、ユーザーはエージェントの使用を控えるか、IT 部門が全エージェントを停止する判断を下すことになる。
 
 動的文脈の問題もある。業務の内容が変わったとき、当初の委譲スコープが過剰になることがある。「契約書レビューのために Docusign にアクセスさせた」という同意が、そのプロジェクト終了後も有効なまま残るのは、ユーザーの意図とかけ離れている。
 
@@ -43,9 +43,9 @@ key_technologies: [Okta Consent, Microsoft Entra ID Admin/User Consent, OAuth 2.
 
 ## 解決策と設計
 
-解決策はユーザーをアクセス管理の主体として設計することである。エージェントが初めてユーザーの代理でリソースにアクセスする際、スコープ・目的・有効期間を明示して同意を取得する。同意後はコンセントレジストリに記録し、ユーザーがいつでも確認・取り消しできるダッシュボードを提供する。
+解決策はユーザーをアクセス管理の主体として設計することだ。エージェントが初めてユーザーの代理でリソースにアクセスする際、スコープ・目的・有効期間を明示して同意を取得する。同意後はコンセントレジストリに記録し、ユーザーがいつでも確認・取り消しできるダッシュボードを提供する。
 
-エージェントが初めてユーザーの代理でリソースにアクセスする際、IdP の同意画面または内部ポータルでスコープ・目的・有効期間を明示してユーザーの同意を取得する。同意後はコンセントレジストリに記録する。ユーザーはダッシュボードで付与済み同意の一覧を確認でき、任意の同意を取り消すと即座にトークンが失効する。
+エージェントが初めてユーザーの代理でリソースにアクセスする際、IdP の同意画面または内部ポータルでスコープ・目的・有効期間を明示してユーザーの同意を取得する。同意後はコンセントレジストリに記録する。ユーザーはダッシュボードで付与済み同意の一覧を確認でき、任意の同意を取り消すと即座にトークンが失効する仕組みになっている。
 
 ```mermaid
 flowchart TB
@@ -79,7 +79,7 @@ flowchart TB
     GW -- トークン失効 --> TOOLS
 ```
 
-同意は一度取れば永続ではなく、目的ごと・スコープごとに個別管理する。「契約書レビュー業務のための Box 読み取り」と「顧客フォローアップのための Salesforce 書き込み」は、別個の同意エントリとして記録することになる。
+同意は一度取れば永続ではなく、目的ごと・スコープごとに個別管理する。「契約書レビュー業務のための Box 読み取り」と「顧客フォローアップのための Salesforce 書き込み」は別個の同意エントリとして記録される。
 
 ## 向き／不向き
 
@@ -106,7 +106,7 @@ flowchart TB
 !!! warning "取り消しが即時に反映されない実装"
     ユーザーがダッシュボードで取り消しを操作しても、キャッシュされたトークンが有効期限まで使い続けられる実装は同意制御として機能しない。取り消しはトークン失効（Revocation）と結びつけ、Gateway・ツール呼び出し時に同意状態を再検証する。
 
-- 同意画面を「全部許可」の確認ボタン1つにすると意味をなさない。スコープを個別に選択できるようにし、各スコープにユーザーが理解できる説明文を添えること。
+- 同意画面を「全部許可」の確認ボタン1つにすると意味をなさない。スコープを個別に選択できるようにし、各スコープにユーザーが理解できる説明文を添える。
 - 同意ログ自体も改ざん不能な形で保管し、監査・コンプライアンス調査に利用できるようにしておく。
 
 ## Interfaces
@@ -127,6 +127,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ConsentScreenRequest {
+          userId: string;
+          agentId: string;
+          scope: string[];
+          purpose: string;
+          expiryDate: Date;
+        }
+        interface ConsentScreenResponse {
+          consentId: string;
+          granted: boolean;
+          recordedAt: Date;
+        }
+        interface ConsentScreen {
+          consentScreen(req: ConsentScreenRequest): Promise<ConsentScreenResponse>;
+        }
+      python: |
+        @dataclass
+        class ConsentScreenRequest:
+            user_id: str
+            agent_id: str
+            scope: list[str]
+            purpose: str
+            expiry_date: datetime
+        
+        @dataclass
+        class ConsentScreenResponse:
+            consent_id: str
+            granted: bool
+            recorded_at: datetime
+        
+        class ConsentScreen(Protocol):
+            async def consent_screen(self, req: ConsentScreenRequest) -> ConsentScreenResponse: ...
   - name: Consent Registry
     description: "Stores per-purpose consent entries (subject, scope, purpose, expiry); PDP checks registry before any delegated action proceeds."
     input:
@@ -139,6 +173,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ConsentRegistryRequest {
+          subject: string;
+          scope: string[];
+          purpose: string;
+          expiry: Date;
+        }
+        interface ConsentRegistryResponse {
+          consentId: string;
+          valid: boolean;
+          expiresAt: Date;
+        }
+        interface ConsentRegistry {
+          consentRegistry(req: ConsentRegistryRequest): Promise<ConsentRegistryResponse>;
+        }
+      python: |
+        @dataclass
+        class ConsentRegistryRequest:
+            subject: str
+            scope: list[str]
+            purpose: str
+            expiry: datetime
+        
+        @dataclass
+        class ConsentRegistryResponse:
+            consent_id: str
+            valid: bool
+            expires_at: datetime
+        
+        class ConsentRegistry(Protocol):
+            async def consent_registry(self, req: ConsentRegistryRequest) -> ConsentRegistryResponse: ...
   - name: Revocation & Instant Token Invalidation
     description: "User revocation in the dashboard immediately invalidates cached tokens via RFC 7009; Gateway re-checks consent state on each subsequent call."
     input:
@@ -151,6 +217,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface RevocationInstantTokenInvalidationRequest {
+          userId: string;
+          consentId: string;
+          reason: string;
+        }
+        interface RevocationInstantTokenInvalidationResponse {
+          revoked: boolean;
+          revokedAt: Date;
+          tokensInvalidated: number;
+        }
+        interface RevocationInstantTokenInvalidation {
+          revocationInstantTokenInvalidation(req: RevocationInstantTokenInvalidationRequest): Promise<RevocationInstantTokenInvalidationResponse>;
+        }
+      python: |
+        @dataclass
+        class RevocationInstantTokenInvalidationRequest:
+            user_id: str
+            consent_id: str
+            reason: str
+        
+        @dataclass
+        class RevocationInstantTokenInvalidationResponse:
+            revoked: bool
+            revoked_at: datetime
+            tokens_invalidated: int
+        
+        class RevocationInstantTokenInvalidation(Protocol):
+            async def revocation_instant_token_invalidation(self, req: RevocationInstantTokenInvalidationRequest) -> RevocationInstantTokenInvalidationResponse: ...
 ```
 
 ## 関連パターン

@@ -31,7 +31,7 @@ rules:
     tier: 3
     autonomy: require_approval_with_dual_sign
     reason: "Irreversible operations with financial, contractual, or external impact require multi-approver sign-off and human-in-the-loop"
-  - condition: "deployment_phase == 'initial' OR eval_not_complete == true"
+  - condition: "deployment_phase == 'initial' OR eval_complete == false"
     tier: 2
     autonomy: require_approval
     reason: "Initial deployment: set broadly conservative (require-approval) and expand automation range incrementally as GV-7 eval confirms safety"

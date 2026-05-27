@@ -20,10 +20,10 @@ decision_rules:
   - condition: "information_type IN ['shared_knowledge', 'project_documents', 'team_decisions']"
     recommendation: project_workspace
     reason: "Project knowledge and team decisions belong in shared workspace with ACL following the organizational graph"
-  - condition: "single_store_for_all == true"
+  - condition: "memory_scope == 'personal' AND memory_scope == 'project'"
     recommendation: hybrid_separated
     reason: "Anti-pattern: single store mixes personal confidential data with shared workspace, causing leaks and cross-project contamination"
-  - condition: "user_transfers_team == true OR project_ends == true"
+  - condition: "lifecycle_event IN ['employee_departure', 'role_change', 'project_end']"
     recommendation: hybrid_separated
     reason: "Member changes and project endings require scoped memory invalidation; org graph sync ensures auto-revocation"
   - condition: "information_type == 'hr_performance_salary_medical'"

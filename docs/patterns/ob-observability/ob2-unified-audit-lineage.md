@@ -6,7 +6,7 @@ pattern_id: OB-2
 facet: observability
 requires: ["GV-1", "RT-8"]
 required_by: ["GV-9"]
-applies_when: [all_production_ai_deployments, regulated_industries_requiring_full_action_traceability]
+applies_when: [prod_deployment, audit_required, regulated_industry]
 not_applicable_when: []
 risk_tiers: [0, 1, 2, 3, 4, 5]
 key_technologies: [Splunk, Microsoft Sentinel, Salesforce Shield, Google Workspace Audit, Okta System Log, OpenTelemetry Trace ID / Span ID, "Event Store (append-only / WORM)"]
@@ -20,9 +20,9 @@ key_technologies: [Splunk, Microsoft Sentinel, Salesforce Shield, Google Workspa
 
 ## 解決する企業課題
 
-従来のシステムでは「誰が操作したか（人間の ID）」が監査の基本単位だった。エージェントが介在すると、操作者はエージェントであり、その背後に人間がいるという二層構造になる。「エージェントが Salesforce を更新した」という記録だけでは、誰の依頼によるものか、どの権限に基づくものかが不明になる。
+従来のシステムでは「誰が操作したか（人間の ID）」が監査の基本単位だった。エージェントが介在すると、操作者はエージェントであり、その背後に人間がいるという二層構造になる。「エージェントが Salesforce を更新した」という記録だけでは、誰の依頼によるものか、どの権限に基づくものかが不明だ。
 
-金融・医療・製造など規制対象業界では、インシデント時に「誰が・何を・なぜ・どの権限で・いつ」実行したかを規制当局に説明しなければならない。エージェント行為が人間の直接操作と混在してログに残ると、後から分離して追跡することが困難になる。エージェント内の監査と各 SaaS の監査が分断されると、横断的な調査が不可能になる。三者帰責（human + agent + system）という記録フォーマットと相関 ID による横断追跡が、これらの課題を構造的に解決する。
+金融・医療・製造など規制対象業界では、インシデント時に「誰が・何を・なぜ・どの権限で・いつ」実行したかを規制当局に説明しなければならない。エージェント行為が人間の直接操作と混在してログに残ると、後から分離して追跡することが困難になる。エージェント内の監査と各 SaaS の監査が分断されると、横断的な調査は不可能になる。三者帰責（human + agent + system）という記録フォーマットと相関 ID による横断追跡が、これらの課題を構造的に解決してくれる。
 
 !!! tip "最小成立条件（MVP）"
     エージェントの全アクションに principal（人間 ID）・workload（エージェント ID）・tool（対象システム）の3項目と相関 ID を付与して append-only ログに記録する。SIEM 連携や委譲チェーンの完全記録は後続でよい。
@@ -73,7 +73,7 @@ flowchart TB
     Audit --> CID
 ```
 
-相関 ID（OpenTelemetry の Trace ID / Span ID を流用）でエージェント内監査と各 SaaS 監査を貫き、SoR（System of Record）の変更との突合を可能にする。委譲チェーン（user → agent → tool）を記録することで、「このツール呼び出しは誰の依頼から始まったか」を確実に追跡できる。入出力ハッシュで改ざんを検知し、監査の整合性を保証する。インシデント時はリプレイ（[GV-9](../gv-governance/gv9-incident-response-kill-switch.md)）で過去実行を再現して原因を特定する。
+相関 ID（OpenTelemetry の Trace ID / Span ID を流用）でエージェント内監査と各 SaaS 監査を貫き、SoR（System of Record）の変更との突合を可能にする。委譲チェーン（user → agent → tool）を記録することで、「このツール呼び出しは誰の依頼から始まったか」を確実に追跡できる。入出力ハッシュで改ざんを検知し、監査の整合性を保つ。インシデント時はリプレイ（[GV-9](../gv-governance/gv9-incident-response-kill-switch.md)）で過去実行を再現し、原因を特定する。
 
 ## 向き／不向き
 
@@ -96,8 +96,8 @@ flowchart TB
     エージェント側の監査と各 SaaS の監査が分断されて横断追跡できないのが最大の落とし穴である。相関 ID で一本化し、SoR の変更と突合可能にする。「エージェント側のログには記録があるが SaaS 側には残っていない」または逆の状況は、調査を致命的に困難にする。
 
 - 監査ログは改ざん不能なストレージに保管する（append-only、WORM）。エージェントやアプリケーション層から書き換えられないよう、書き込み専用の権限設計にする。
-- 人間の直接操作とエージェント経由の操作を同一フォーマットで記録し、横断検索を可能にする。フォーマットが分かれると SIEM での相関分析が複雑になる。
-- ログの保持期間は規制要件に合わせる（金融：7年、医療：10年等）。エージェントの利用が本格化する前に保持ポリシーを確定しておく。
+- 人間の直接操作とエージェント経由の操作は同一フォーマットで記録し、横断検索を可能にする。フォーマットが分かれると SIEM での相関分析が複雑になる。
+- ログの保持期間は規制要件に合わせる（金融：7年、医療：10年等）。エージェントの利用が本格化する前に保持ポリシーを確定しておくこと。
 
 !!! note "極秘処理（KM-7）との両立"
     [KM-7 Ephemeral Secure Context Bus](../km-knowledge/km7-ephemeral-secure-context-bus.md) はプロンプト/レスポンス本文を一切残さない設計だが、「全行為を再構成可能にする」本パターンの要件と矛盾するわけではない。KM-7 の処理でも、**封緘（sealed）された判断証跡**——「誰が・いつ・どの分類のデータを・どのポリシー判断で処理したか」のメタデータと入出力ハッシュ——は改ざん不能ストレージに記録される。本文の再構成はできないが、行為の事実・帰責・ポリシー判断は追跡可能である。封緘証跡の開示は二者承認（CISO ＋ 法務責任者等）を要件とし、通常運用ではアクセスできない。人事評価・内部通報など、後日の証跡保持が法的に要件化されうる領域では、保持期間を規制要件に合わせて設計する。
@@ -120,6 +120,42 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ThreePartyAuditRecordRequest {
+          principalId: string;
+          agentId: string;
+          toolId: string;
+          inputHash: string;
+          outputHash: string;
+          policyDecision: string;
+          delegationChain: string[];
+        }
+        interface ThreePartyAuditRecordResponse {
+          auditId: string;
+          appendedAt: Date;
+        }
+        interface ThreePartyAuditRecord {
+          threePartyAuditRecord(req: ThreePartyAuditRecordRequest): Promise<ThreePartyAuditRecordResponse>;
+        }
+      python: |
+        @dataclass
+        class ThreePartyAuditRecordRequest:
+            principal_id: str
+            agent_id: str
+            tool_id: str
+            input_hash: str
+            output_hash: str
+            policy_decision: str
+            delegation_chain: list[str]
+        
+        @dataclass
+        class ThreePartyAuditRecordResponse:
+            audit_id: str
+            appended_at: datetime
+        
+        class ThreePartyAuditRecord(Protocol):
+            async def three_party_audit_record(self, req: ThreePartyAuditRecordRequest) -> ThreePartyAuditRecordResponse: ...
   - name: Correlation ID Stitcher
     description: "Uses OpenTelemetry Trace ID / Span ID to join agent-side audit records with SaaS-side audit logs (Salesforce Shield, Okta System Log) enabling cross-system investigation."
     input:
@@ -132,6 +168,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface CorrelationIdStitcherRequest {
+          traceId: string;
+          spanId: string;
+          saasName: string;
+          timeWindowStart: Date;
+          timeWindowEnd: Date;
+        }
+        interface CorrelationIdStitcherResponse {
+          stitchedEvents: object[];
+          crossSystemView: object;
+        }
+        interface CorrelationIdStitcher {
+          correlationIdStitcher(req: CorrelationIdStitcherRequest): Promise<CorrelationIdStitcherResponse>;
+        }
+      python: |
+        @dataclass
+        class CorrelationIdStitcherRequest:
+            trace_id: str
+            span_id: str
+            saas_name: str
+            time_window_start: datetime
+            time_window_end: datetime
+        
+        @dataclass
+        class CorrelationIdStitcherResponse:
+            stitched_events: list[dict]
+            cross_system_view: dict
+        
+        class CorrelationIdStitcher(Protocol):
+            async def correlation_id_stitcher(self, req: CorrelationIdStitcherRequest) -> CorrelationIdStitcherResponse: ...
   - name: SIEM Integration
     description: "Forwards normalized audit events to Splunk or Microsoft Sentinel so that agent actions appear alongside human actions in the same correlation queries."
     input:
@@ -144,6 +212,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface SiemIntegrationRequest {
+          auditEvent: object;
+          eventType: string;
+          severity: string;
+        }
+        interface SiemIntegrationResponse {
+          forwarded: boolean;
+          siemEventId: string;
+          forwardedAt: Date;
+        }
+        interface SiemIntegration {
+          siemIntegration(req: SiemIntegrationRequest): Promise<SiemIntegrationResponse>;
+        }
+      python: |
+        @dataclass
+        class SiemIntegrationRequest:
+            audit_event: dict
+            event_type: str
+            severity: str
+        
+        @dataclass
+        class SiemIntegrationResponse:
+            forwarded: bool
+            siem_event_id: str
+            forwarded_at: datetime
+        
+        class SiemIntegration(Protocol):
+            async def siem_integration(self, req: SiemIntegrationRequest) -> SiemIntegrationResponse: ...
 ```
 
 ## 関連パターン

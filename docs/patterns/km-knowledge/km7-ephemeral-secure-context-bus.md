@@ -6,8 +6,8 @@ pattern_id: KM-7
 facet: knowledge
 requires: []
 required_by: []
-applies_when: [highest_classification_data_hr_evaluation_ma_insider_information, regulatory_data_requiring_no_plaintext_in_logs_or_cache, ma_or_insider_related_information_processing]
-not_applicable_when: [low_classification_bulk_processing_over_isolation_cost, development_phase_requiring_plaintext_logs_for_debugging, continuous_context_accumulation_use_cases]
+applies_when: [top_secret_data, privacy_regulation, regulated_industry]
+not_applicable_when: [poc_phase, persistent_memory, public_data_only]
 risk_tiers: [4, 5]
 key_technologies: ["Azure OpenAI (VNet integration / private endpoint)", "AWS Bedrock (VPC endpoint)", Azure Confidential VM, "NVIDIA H100 Confidential Computing (Confidential GPU)", "AMD SEV-SNP", "Redis No-Persistence", Presidio, "DPA (Data Processing Agreement)"]
 ---
@@ -20,9 +20,9 @@ key_technologies: ["Azure OpenAI (VNet integration / private endpoint)", "AWS Be
 
 ## 解決する企業課題
 
-人事評価・M&A 検討・インサイダー情報に関わる処理では、通常の DLP マスキング（[KM-6](km6-dlp-redaction-boundary.md)）では不十分なケースがある。複数の SaaS を横断して文脈を結合すると、単体では非機密のデータが組み合わさって機密情報を生成するリスクがある（モザイク効果／mosaic effect）。例えば、社内座席表＋出張記録＋外部の登記情報を突き合わせると、未公開の M&A 接触先を推測できてしまう。
+人事評価・M&A 検討・インサイダー情報に関わる処理では、通常の DLP マスキング（[KM-6](km6-dlp-redaction-boundary.md)）では不十分なケースがある。複数の SaaS を横断して文脈を結合すると、単体では非機密のデータが組み合わさって機密情報を生成するリスクが生じる（モザイク効果／mosaic effect）。例えば、社内座席表＋出張記録＋外部の登記情報を突き合わせると、未公開の M&A 接触先を推測できてしまう。
 
-外部 LLM ベンダーへのデータ送信、ログ基盤への平文残存、キャッシュからの漏洩——これらを構造的に排除したい場合、「処理後に消す」ではなく「最初から残さない」設計が必要になる。本パターンは KM-6 の「汚染除去」アプローチに対し「揮発」アプローチをとる。処理が終わった時点でコンテキストのメモリが解放・ゼロ化（zeroization）され、痕跡が残らないことを保証する。ログ基盤にはメタデータのみ送信することで、観測性（[OB-1](../ob-observability/ob1-observability-lake.md)）の要件と機密保持の要件を両立する。
+外部 LLM ベンダーへのデータ送信、ログ基盤への平文残存、キャッシュからの漏洩——これらを構造的に排除したい場合、「処理後に消す」ではなく「最初から残さない」設計が必要になる。本パターンは KM-6 の「汚染除去」アプローチに対し、「揮発」アプローチをとる。処理が終わった時点でコンテキストのメモリが解放・ゼロ化（zeroization）され、痕跡が残らないことを保証する仕組みだ。ログ基盤にはメタデータのみ送信することで、観測性（[OB-1](../ob-observability/ob1-observability-lake.md)）の要件と機密保持の要件を両立させる。
 
 !!! note "監査要件との両立（封緘された判断証跡）"
     「本文を一切残さない」設計は [OB-2](../ob-observability/ob2-unified-audit-lineage.md) の「全行為を再構成可能にする」要件と一見矛盾する。両立策として、**封緘（sealed）された判断証跡**を別系統で保持する。具体的には、プロンプト/レスポンスの本文は残さないが、「誰が・いつ・どの分類のデータを・どのポリシー判断で処理したか」のメタデータと入出力ハッシュは改ざん不能ストレージに記録する。この封緘証跡の開示は二者承認（例：CISO ＋ 法務責任者）を要件とし、通常運用ではアクセスできない。人事評価や内部通報など、後日の証跡保持が法的に要件化されうる領域では、この封緘メタデータの保持期間を規制要件に合わせて設計する。
@@ -33,7 +33,7 @@ key_technologies: ["Azure OpenAI (VNet integration / private endpoint)", "AWS Be
 
 ## 解決策と設計
 
-各 SaaS から収集したデータを DLP Proxy でマスキングし、隔離された推論環境で LLM 処理を行い、応答後にコンテキストのメモリを解放・ゼロ化する。プロンプト/レスポンス本文はログ基盤に一切送らず、レイテンシ・トークン数等のメタデータと入出力ハッシュ（封緘証跡）のみを送信する。
+各 SaaS から収集したデータを DLP Proxy でマスキングし、隔離された推論環境で LLM 処理を行う。応答後はコンテキストのメモリを解放・ゼロ化する。プロンプト/レスポンス本文はログ基盤に一切送らず、レイテンシ・トークン数等のメタデータと入出力ハッシュ（封緘証跡）のみを送信する。
 
 ```mermaid
 flowchart LR
@@ -110,10 +110,10 @@ flowchart LR
 !!! danger "隔離の一貫性"
     性能のため隔離を緩めたり、デバッグ目的で本文をログに残すことは、極振り用途では禁忌である。「一部だけ平文ログに残す」は全体の保証を壊す。極秘処理では一貫して破棄する。
 
-- 「一部だけ平文ログに残す」はメタのみの原則を破る。その場合はそのユースケース自体を揮発バスから外し、通常の三層分離（[OB-1](../ob-observability/ob1-observability-lake.md)）に移す。
-- 機密計算はレイテンシとコストが高い。全処理をこのパターンに通すのではなく、データ分類に基づき極秘処理のみに適用する。適用範囲をデータ分類で自動決定する仕組みを作る。
-- LLM ベンダーの学習オプトアウト設定を確認し、契約（DPA: Data Processing Agreement）でも保証を取る。設定の確認だけでは不十分で、契約上の義務として文書化する。
-- このパターンでは過去の文脈を参照できないため、継続的な対話が必要な業務には不向きである。必要であれば、機密計算の外で暗号化された外部メモリを使う設計を検討する（ただし保証は弱まる）。
+- 「一部だけ平文ログに残す」はメタのみの原則を破る。そうなる場合は、そのユースケース自体を揮発バスから外して通常の三層分離（[OB-1](../ob-observability/ob1-observability-lake.md)）に移す。
+- 機密計算はレイテンシとコストが高い。全処理をこのパターンに通すのではなく、データ分類に基づき極秘処理のみに適用する。適用範囲はデータ分類で自動決定する仕組みを設けると管理しやすい。
+- LLM ベンダーの学習オプトアウト設定を確認し、契約（DPA: Data Processing Agreement）でも保証を取ること。設定確認だけでは不十分で、契約上の義務として文書化する。
+- このパターンでは過去の文脈を参照できないため、継続的な対話が必要な業務には不向きだ。必要であれば、機密計算の外で暗号化された外部メモリを使う設計を検討する（ただし保証は弱まる）。
 
 ## Interfaces
 
@@ -133,6 +133,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DlpProxyRequest {
+          rawData: object;
+          sourceSystem: string;
+          classification: string;
+        }
+        interface DlpProxyResponse {
+          maskedData: object;
+          classificationLabel: string;
+        }
+        interface DlpProxy {
+          dlpProxy(req: DlpProxyRequest): Promise<DlpProxyResponse>;
+        }
+      python: |
+        @dataclass
+        class DlpProxyRequest:
+            raw_data: dict
+            source_system: str
+            classification: str
+        
+        @dataclass
+        class DlpProxyResponse:
+            masked_data: dict
+            classification_label: str
+        
+        class DlpProxy(Protocol):
+            async def dlp_proxy(self, req: DlpProxyRequest) -> DlpProxyResponse: ...
   - name: Isolated Inference Environment
     description: "VPC-hosted LLM (or Confidential GPU) with learning opt-out; context lives in-memory only and is zeroed immediately after the session completes."
     input:
@@ -145,6 +173,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface IsolatedInferenceEnvironmentRequest {
+          contextPackage: object;
+          modelId: string;
+          sessionId: string;
+        }
+        interface IsolatedInferenceEnvironmentResponse {
+          response: string;
+          tokensUsed: number;
+          sessionCleared: boolean;
+        }
+        interface IsolatedInferenceEnvironment {
+          isolatedInferenceEnvironment(req: IsolatedInferenceEnvironmentRequest): Promise<IsolatedInferenceEnvironmentResponse>;
+        }
+      python: |
+        @dataclass
+        class IsolatedInferenceEnvironmentRequest:
+            context_package: dict
+            model_id: str
+            session_id: str
+        
+        @dataclass
+        class IsolatedInferenceEnvironmentResponse:
+            response: str
+            tokens_used: int
+            session_cleared: bool
+        
+        class IsolatedInferenceEnvironment(Protocol):
+            async def isolated_inference_environment(self, req: IsolatedInferenceEnvironmentRequest) -> IsolatedInferenceEnvironmentResponse: ...
   - name: Sealed Audit Metadata Sink
     description: "Sends only metadata (latency, token count, cost) and hashed input/output to the observability lake; full content is never persisted."
     input:
@@ -157,6 +215,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface SealedAuditMetadataSinkRequest {
+          sessionId: string;
+          latencyMs: number;
+          tokenCount: number;
+          cost: number;
+          inputHash: string;
+          outputHash: string;
+        }
+        interface SealedAuditMetadataSinkResponse {
+          sinkId: string;
+          recordedAt: Date;
+        }
+        interface SealedAuditMetadataSink {
+          sealedAuditMetadataSink(req: SealedAuditMetadataSinkRequest): Promise<SealedAuditMetadataSinkResponse>;
+        }
+      python: |
+        @dataclass
+        class SealedAuditMetadataSinkRequest:
+            session_id: str
+            latency_ms: int
+            token_count: int
+            cost: float
+            input_hash: str
+            output_hash: str
+        
+        @dataclass
+        class SealedAuditMetadataSinkResponse:
+            sink_id: str
+            recorded_at: datetime
+        
+        class SealedAuditMetadataSink(Protocol):
+            async def sealed_audit_metadata_sink(self, req: SealedAuditMetadataSinkRequest) -> SealedAuditMetadataSinkResponse: ...
 ```
 
 ## 関連パターン

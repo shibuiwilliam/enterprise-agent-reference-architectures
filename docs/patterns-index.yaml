@@ -21,13 +21,13 @@ patterns:
   - ID-6
   required_by: []
   applies_when:
-  - multiple_channels_and_large_scale_enterprise_deployment
-  - governance_and_audit_requirements_exist
-  - workforce_and_customer_channel_separation_required
+  - enterprise_scale
+  - multi_channel
+  - audit_required
+  - customer_facing
   not_applicable_when:
-  - single_poc_with_one_channel_only
-  - completely_isolated_experimental_environment
-  - single_channel_small_scale_usage
+  - poc_phase
+  - single_team
   risk_tiers:
   - 1
   - 2
@@ -79,13 +79,13 @@ patterns:
   - EX-3
   required_by: []
   applies_when:
-  - slack_teams_salesforce_are_the_central_daily_tools
-  - cross_system_long_running_or_approval_workflows_are_common
-  - incremental_ui_expansion_starting_with_embedded_then_adding_workbench
+  - multi_channel
+  - enterprise_scale
+  - long_running
+  - hitl_approval
   not_applicable_when:
-  - business_tools_are_fragmented_with_too_many_embedding_targets
-  - all_tasks_are_short_and_single_system_no_standalone_portal_needed
-  - poc_stage_where_ui_shape_should_not_be_fixed
+  - poc_phase
+  - single_team
   risk_tiers:
   - 1
   - 2
@@ -137,13 +137,12 @@ patterns:
   - ID-2
   required_by: []
   applies_when:
-  - incrementally_adding_channels_to_an_existing_agent
-  - cross_channel_session_continuity_required
-  - unified_permission_history_and_audit_management_needed
+  - multi_channel
+  - audit_required
+  - enterprise_scale
   not_applicable_when:
-  - permanently_using_single_channel_only
-  - channels_are_completely_independent_services_with_no_session_sharing
-  - cross_channel_session_sharing_not_needed_for_independent_tasks
+  - single_team
+  - poc_phase
   risk_tiers:
   - 1
   - 2
@@ -191,12 +190,12 @@ patterns:
   - RT-3
   required_by: []
   applies_when:
-  - enterprise_wide_rollout_phase_where_adoption_rate_is_a_challenge
-  - agent_output_used_as_basis_for_business_decisions
-  - initial_deployment_requiring_employee_trust_building
+  - enterprise_scale
+  - adoption_challenge
+  - prod_deployment
   not_applicable_when:
-  - poc_stage_with_only_a_few_power_users
-  - fully_automated_backend_processing_with_no_human_review_of_results
+  - poc_phase
+  - autonomous_exec
   risk_tiers:
   - 1
   - 2
@@ -243,13 +242,13 @@ patterns:
   - GV-8
   - OB-2
   applies_when:
-  - agents_exceed_three_and_multiple_teams_are_using_them
-  - enterprise_wide_deployment_as_common_platform
-  - audit_and_compliance_requirements_exist
+  - multi_department
+  - enterprise_scale
+  - audit_required
+  - prod_deployment
   not_applicable_when:
-  - individual_poc_or_experimental_phase
-  - single_department_with_only_one_or_two_agents
-  - isolated_research_environment
+  - poc_phase
+  - single_team
   risk_tiers:
   - 2
   - 3
@@ -292,12 +291,13 @@ patterns:
   - GV-1
   required_by: []
   applies_when:
-  - agents_deployed_across_multiple_departments
-  - discovery_duplication_and_unreviewed_usage_are_problematic
-  - platform_team_exists_for_centralized_access_request_approval_and_permission_management
+  - multi_department
+  - enterprise_scale
+  - prod_deployment
   not_applicable_when:
-  - single_team_single_purpose_internal_operation_only
-  - poc_stage_with_only_a_few_agents_gv1_registry_alone_is_sufficient
+  - single_team
+  - poc_phase
+  - poc_phase
   risk_tiers:
   - 2
   - 3
@@ -345,12 +345,12 @@ patterns:
   - GV-4
   required_by: []
   applies_when:
-  - ai_coe_or_platform_team_responsible_for_multi_department_deployment
-  - thousands_of_users_requiring_systematic_per_department_agent_management
-  - frequent_joiner_mover_leaver_cycles_where_auto_permission_tracking_reduces_ops_cost
+  - multi_department
+  - enterprise_scale
+  - frequent_perm_chg
   not_applicable_when:
-  - small_org_where_single_shared_agent_suffices
-  - single_team_poc_phase
+  - single_team
+  - poc_phase
   risk_tiers:
   - 2
   - 3
@@ -400,12 +400,13 @@ patterns:
   - ID-7
   required_by: []
   applies_when:
-  - strictly_regulated_industries_with_regular_external_audits
-  - global_enterprises_requiring_simultaneous_multi_regulation_compliance
-  - many_use_cases_requiring_consistent_regulatory_compliance
+  - regulated_industry
+  - multi_department
+  - enterprise_scale
+  - audit_required
   not_applicable_when:
-  - internal_support_ai_only_with_minimal_regulatory_impact
-  - single_team_limited_use_case_where_manual_check_is_more_practical
+  - single_team
+  - public_data_only
   risk_tiers:
   - 3
   - 4
@@ -450,13 +451,13 @@ patterns:
   - GV-1
   required_by: []
   applies_when:
-  - multiple_vendors_and_models_used_in_combination
-  - data_classification_based_routing_required
-  - enterprise_wide_ai_platform_requiring_cost_visibility_and_compliance
+  - enterprise_scale
+  - confidential_data
+  - external_llm_api
+  - cost_mgmt_needed
   not_applicable_when:
-  - single_application_with_lightweight_configuration
-  - completely_offline_air_gapped_environment
-  - single_model_poc
+  - poc_phase
+  - single_team
   risk_tiers:
   - 1
   - 2
@@ -503,12 +504,13 @@ patterns:
   - OB-1
   required_by: []
   applies_when:
-  - continuously_operated_agents_with_regular_model_updates_and_prompt_improvements
-  - regulated_compliance_work_requiring_reproduction_of_past_behavior
-  - multi_agent_configurations_requiring_version_combination_management
+  - continuous_updates
+  - prod_deployment
+  - audit_required
+  - multi_agent
   not_applicable_when:
-  - short_term_throwaway_experimental_poc
-  - completely_stateless_simple_tasks_with_no_quality_management_needed
+  - poc_phase
+  - single_team
   risk_tiers:
   - 2
   - 3
@@ -552,12 +554,12 @@ patterns:
   - OB-1
   required_by: []
   applies_when:
-  - all_production_agent_deployments
-  - continuously_operated_environments_with_regular_model_or_prompt_updates
-  - regulated_industries_requiring_continuous_gv4_policy_compliance_verification
+  - prod_deployment
+  - continuous_updates
+  - regulated_industry
   not_applicable_when:
-  - temporary_poc_or_experimental_phase
-  - extremely_simple_tasks_where_rubric_design_is_not_warranted
+  - poc_phase
+  - single_team
   risk_tiers:
   - 1
   - 2
@@ -604,12 +606,12 @@ patterns:
   - GV-5
   required_by: []
   applies_when:
-  - thousands_of_users_operating_agents_where_cost_allocation_is_a_management_issue
-  - enterprises_providing_ai_features_commercially_requiring_per_customer_profitability
-  - multi_agent_configurations_with_high_inference_cost_explosion_risk
+  - enterprise_scale
+  - cost_mgmt_needed
+  - multi_agent
   not_applicable_when:
-  - small_poc_or_single_team_where_cost_measurement_overhead_exceeds_value
-  - monthly_costs_are_negligible_and_department_allocation_unnecessary
+  - poc_phase
+  - single_team
   risk_tiers:
   - 1
   - 2
@@ -657,9 +659,9 @@ patterns:
   - GV-5
   required_by: []
   applies_when:
-  - all_production_ai_deployments
-  not_applicable_when:
-  - no_practical_cases_kill_switch_design_cost_is_negligible_vs_operational_risk
+  - prod_deployment
+  - enterprise_scale
+  not_applicable_when: []
   risk_tiers:
   - 0
   - 1
@@ -712,12 +714,13 @@ patterns:
   - OB-1
   required_by: []
   applies_when:
-  - enterprise_wide_rollout_phase_requiring_management_approval
-  - enterprises_needing_to_justify_ai_investment_to_business_units
-  - multiple_agents_running_in_parallel_requiring_investment_prioritization
+  - enterprise_scale
+  - roi_justification
+  - multi_agent
+  - prod_deployment
   not_applicable_when:
-  - initial_poc_or_validation_phase
-  - use_cases_where_linking_to_business_outcomes_is_structurally_difficult
+  - poc_phase
+  - single_team
   risk_tiers:
   - 1
   - 2
@@ -766,13 +769,12 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - all_enterprises_with_customer_touchpoints
-  - b2b_b2c_requiring_strict_separation_of_customer_and_internal_data
-  - multi_tenant_b2b_saas_where_cross_customer_data_mixing_is_fatal
+  - customer_facing
+  - confidential_data
+  - enterprise_scale
   not_applicable_when:
-  - internal_only_no_customer_facing_surface
-  - completely_closed_internal_tool_operations
-  - poc_phase_where_dual_separation_design_is_cost_prohibitive
+  - poc_phase
+  - public_data_only
   risk_tiers:
   - 2
   - 3
@@ -826,13 +828,14 @@ patterns:
   - KM-1
   - KM-2
   applies_when:
-  - cross_saas_operations_with_strict_audit_requirements
-  - personal_business_support_employee_copilot_requiring_own_permissions
-  - high_risk_workflows_including_write_operations
+  - cross_saas
+  - audit_required
+  - write_operations
+  - high_risk_ops
   not_applicable_when:
-  - completely_public_information_only
-  - delegation_unsupported_legacy_saas_use_id4_permission_mirror
-  - autonomous_batch_processing_id3_workload_identity_is_more_appropriate
+  - public_data_only
+  - autonomous_exec
+  - legacy_saas_mix
   risk_tiers:
   - 2
   - 3
@@ -885,13 +888,12 @@ patterns:
   - ID-6
   required_by: []
   applies_when:
-  - scheduled_batch_or_system_triggered_autonomous_execution_exists
-  - audit_separation_of_autonomous_and_human_delegated_agent_operations_required
-  - workloads_dynamically_scale_on_kubernetes_or_cloud
+  - autonomous_exec
+  - audit_required
+  - kubernetes_cloud
   not_applicable_when:
-  - all_agent_operations_originate_from_explicit_human_requests_id2_sufficient
-  - poc_with_immature_id_infrastructure
-  - small_single_fixed_server_batch_certificate_rotation_overhead_not_justified
+  - poc_phase
+  - single_team
   risk_tiers:
   - 2
   - 3
@@ -935,13 +937,13 @@ patterns:
   required_by:
   - KM-1
   applies_when:
-  - enterprise_rag_or_cross_system_search_agents
-  - frequent_permission_changes_from_departures_or_transfers
-  - obo_delegation_unsupported_legacy_saas_or_custom_systems_in_mix
+  - cross_saas_search
+  - frequent_perm_chg
+  - legacy_saas_mix
+  - confidential_data
   not_applicable_when:
-  - extremely_simple_permission_small_environment
-  - public_information_only_use_cases
-  - single_saas_completable_with_obo_obo_is_preferred
+  - public_data_only
+  - single_team
   risk_tiers:
   - 2
   - 3
@@ -992,13 +994,14 @@ patterns:
   - ID-6
   required_by: []
   applies_when:
-  - agents_spanning_multiple_saas_systems
-  - high_risk_operations_including_writes_deletes_or_pii_access
-  - existing_vault_or_sts_secret_management_infrastructure
+  - cross_saas
+  - high_risk_ops
+  - vault_sts_infra
+  - audit_required
   not_applicable_when:
-  - single_system_internal_api_only_poc
-  - broker_introduction_cost_not_justified_at_small_scale
-  - legacy_saas_with_external_idp_jit_unsupported_combine_with_id4
+  - poc_phase
+  - single_team
+  - legacy_saas_mix
   risk_tiers:
   - 2
   - 3
@@ -1047,13 +1050,13 @@ patterns:
   - ID-5
   - IN-1
   applies_when:
-  - multi_saas_environments_handling_confidential_data
-  - multi_cloud_multi_tenant_configurations
-  - regulated_industries_requiring_financial_or_healthcare_compliance
+  - confidential_data
+  - cross_saas
+  - regulated_industry
+  - multi_agent
   not_applicable_when:
-  - completely_isolated_experimental_environment
-  - single_user_personal_poc
-  - public_information_only_processing_without_authorization_needs
+  - poc_phase
+  - public_data_only
   risk_tiers:
   - 2
   - 3
@@ -1101,13 +1104,14 @@ patterns:
   - RT-4
   - GV-4
   applies_when:
-  - complex_regulatory_and_internal_rules_in_large_enterprises
-  - regulated_industries_finance_healthcare_legal_public
-  - multiple_agents_required_to_follow_common_rules
+  - regulated_industry
+  - enterprise_scale
+  - multi_agent
+  - high_risk_ops
   not_applicable_when:
-  - simple_text_generation_only_use_cases
-  - internal_faq_without_permission_control
-  - personal_experimental_use
+  - poc_phase
+  - public_data_only
+  - single_team
   risk_tiers:
   - 2
   - 3
@@ -1155,13 +1159,13 @@ patterns:
   - ID-5
   required_by: []
   applies_when:
-  - agents_accessing_personal_data_email_calendar_documents
-  - privacy_regulations_gdpr_appi_requiring_user_consent_and_revocation
-  - trust_building_needed_through_scope_visibility
+  - personal_data
+  - privacy_regulation
+  - adoption_challenge
   not_applicable_when:
-  - agent_handles_only_system_data_with_no_personal_data
-  - fully_autonomous_batch_processing_with_no_human_operation_origin_id3_is_appropriate
-  - poc_where_consent_flow_implementation_cost_cannot_be_justified
+  - autonomous_exec
+  - poc_phase
+  - public_data_only
   risk_tiers:
   - 2
   - 3
@@ -1204,13 +1208,13 @@ patterns:
   - ID-4
   required_by: []
   applies_when:
-  - large_org_with_department_permission_boundaries
-  - cross_domain_requests_are_frequent
-  - teams_develop_spokes_independently
+  - multi_department
+  - enterprise_scale
+  - multi_agent
+  - cross_saas
   not_applicable_when:
-  - only_one_or_two_domains
-  - nearly_all_requests_span_all_spokes
-  - tightly_coupled_inter_spoke_shared_state
+  - single_team
+  - real_time_latency
   risk_tiers:
   - 2
   - 3
@@ -1257,13 +1261,13 @@ patterns:
   - OB-2
   required_by: []
   applies_when:
-  - cross_department_decision_flows_with_multiple_accountable_parties
-  - high_risk_tasks_requiring_approval_and_escalation
-  - compliance_domains_requiring_raci_audit_trail
+  - multi_department
+  - high_risk_ops
+  - hitl_approval
+  - audit_required
   not_applicable_when:
-  - simple_tasks_contained_in_single_department
-  - real_time_interactive_low_latency_required
-  - raci_matrix_does_not_exist_for_the_process
+  - single_team
+  - real_time_latency
   risk_tiers:
   - 3
   - 4
@@ -1306,13 +1310,13 @@ patterns:
   - ID-7
   required_by: []
   applies_when:
-  - diverse_operation_types_from_read_only_to_financial_transactions
-  - enterprise_systems_involving_money_hr_customer_data
-  - org_with_varying_risk_tolerance_per_department
+  - write_operations
+  - high_risk_ops
+  - enterprise_scale
+  - multi_department
   not_applicable_when:
-  - all_operations_are_simple_read_only
-  - no_resources_to_design_tier_boundary_policies
-  - deterministic_rpa_sufficient
+  - poc_phase
+  - public_data_only
   risk_tiers:
   - 0
   - 1
@@ -1359,13 +1363,13 @@ patterns:
   - ID-7
   required_by: []
   applies_when:
-  - irreversible_high_risk_operations_like_fund_transfer_or_permission_grant
-  - org_chart_is_maintained_and_approvers_can_be_resolved_by_role
-  - existing_approval_workflow_tools_already_deployed
+  - high_risk_ops
+  - hitl_approval
+  - org_chart_maintained
+  - write_operations
   not_applicable_when:
-  - strict_real_time_latency_requirements
-  - low_risk_tier_0_1_operations
-  - org_chart_not_maintained
+  - real_time_latency
+  - poc_phase
   risk_tiers:
   - 3
   - 4
@@ -1412,12 +1416,13 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - multi_saas_write_automation
-  - strict_policy_check_approval_and_audit_requirements
-  - multiple_agents_operating_the_same_saas
+  - cross_saas
+  - write_operations
+  - audit_required
+  - multi_agent
   not_applicable_when:
-  - read_only_query_agents_without_write_risk
-  - prototype_stage_where_schema_design_cost_too_high
+  - poc_phase
+  - public_data_only
   risk_tiers:
   - 2
   - 3
@@ -1462,12 +1467,13 @@ patterns:
   - RT-5
   required_by: []
   applies_when:
-  - systems_holding_master_data_like_hr_accounting_customers
-  - multiple_agents_accessing_same_sor_with_consistency_requirements
-  - sox_or_internal_control_requiring_approval_and_audit_trail
+  - sor_writes
+  - sox_internal_ctrl
+  - multi_agent
+  - audit_required
   not_applicable_when:
-  - low_risk_stores_like_logs_or_temporary_data
-  - immediate_update_required_real_time_use_cases
+  - real_time_latency
+  - public_data_only
   risk_tiers:
   - 3
   - 4
@@ -1510,13 +1516,13 @@ patterns:
   - RT-8
   required_by: []
   applies_when:
-  - sequential_multi_saas_writes_requiring_partial_rollback_on_failure
-  - compensation_actions_can_be_defined_per_step
-  - each_step_has_independent_api_supporting_idempotent_calls
+  - multi_saas_saga
+  - cross_saas
+  - write_operations
+  - async_processing
   not_applicable_when:
-  - strict_acid_required_like_financial_debit_credit
-  - only_one_or_two_steps_in_a_single_system
-  - compensation_cannot_be_defined_for_external_system
+  - single_team
+  - real_time_latency
   risk_tiers:
   - 3
   - 4
@@ -1566,12 +1572,13 @@ patterns:
   - RT-7
   - OB-2
   applies_when:
-  - processes_taking_minutes_to_hours_including_human_approval_wait
-  - high_availability_requirements_where_worker_failures_must_not_lose_work
-  - strict_idempotency_and_audit_trail_requirements_in_regulated_industries
+  - long_running
+  - hitl_approval
+  - audit_required
+  - regulated_industry
   not_applicable_when:
-  - real_time_responses_required_within_one_to_three_seconds
-  - small_projects_where_workflow_engine_infrastructure_cost_not_justified
+  - real_time_latency
+  - poc_phase
   risk_tiers:
   - 2
   - 3
@@ -1616,13 +1623,12 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - existing_itsm_or_customer_support_system_with_volume_growth_or_after_hours_need
-  - unified_sla_and_ticket_history_management_required
-  - agent_scope_is_clearly_definable_with_escalation_logic_implementable
+  - itsm_queue
+  - enterprise_scale
+  - async_processing
   not_applicable_when:
-  - no_defined_tasks_and_general_purpose_assistant_preferred
-  - sla_does_not_exist_and_priority_management_not_needed
-  - no_human_escalation_target_exists
+  - single_team
+  - real_time_latency
   risk_tiers:
   - 1
   - 2
@@ -1670,13 +1676,13 @@ patterns:
   - RT-8
   required_by: []
   applies_when:
-  - saas_standard_events_trigger_multi_system_workflows
-  - copy_paste_work_across_systems_to_be_eliminated
-  - majority_of_processing_is_async_and_does_not_require_real_time_human_wait
+  - event_driven
+  - async_processing
+  - cross_saas
+  - autonomous_exec
   not_applicable_when:
-  - interactive_processing_requiring_immediate_user_response
-  - event_frequency_too_high_for_agent_startup_cost
-  - trigger_conditions_cannot_be_defined
+  - real_time_latency
+  - single_team
   risk_tiers:
   - 2
   - 3
@@ -1731,13 +1737,13 @@ patterns:
   - ID-4
   required_by: []
   applies_when:
-  - multi_tool_project_teams_five_to_fifty_members
-  - project_duration_weeks_or_more_with_decision_history_reference_needed
-  - member_turnover_with_onboarding_cost_reduction_needed
+  - project_team
+  - cross_saas_search
+  - persistent_memory
+  - frequent_perm_chg
   not_applicable_when:
-  - one_off_short_tasks_where_workspace_overhead_not_worth_it
-  - one_to_two_person_personal_projects
-  - fully_integrated_erp_with_no_information_silos
+  - single_team
+  - poc_phase
   risk_tiers:
   - 2
   - 3
@@ -1788,13 +1794,13 @@ patterns:
   - ID-4
   required_by: []
   applies_when:
-  - cross_saas_document_ticket_crm_chat_search
-  - frequent_access_changes_from_departures_or_transfers
-  - multiple_saas_integrated_search_required
+  - cross_saas_search
+  - frequent_perm_chg
+  - confidential_data
+  - enterprise_scale
   not_applicable_when:
-  - data_sources_where_acl_cannot_be_controlled
-  - real_time_db_master_requiring_direct_query
-  - public_information_only_no_acl_needed
+  - public_data_only
+  - real_time_latency
   risk_tiers:
   - 1
   - 2
@@ -1845,13 +1851,13 @@ patterns:
   - ID-2
   required_by: []
   applies_when:
-  - confidentiality_priority_and_data_residency_regulations_important
-  - cross_saas_confidential_data_needed_transversally
-  - avoiding_audit_complexity_from_data_copies
+  - confidential_data
+  - data_residency
+  - cross_saas
+  - audit_required
   not_applicable_when:
-  - public_data_only_with_no_permission_requirements
-  - extreme_low_latency_requirements_federation_too_slow
-  - bulk_statistical_bi_analysis_where_central_lake_better
+  - public_data_only
+  - real_time_latency
   risk_tiers:
   - 2
   - 3
@@ -1900,13 +1906,12 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - many_systems_with_scattered_data_for_cross_department_ai
-  - customer_person_entity_deduplication_needed
-  - org_graph_used_as_cross_cutting_axis
+  - multi_department
+  - cross_saas
+  - enterprise_scale
   not_applicable_when:
-  - single_saas_workflow_with_no_cross_system_need
-  - roi_insufficient_for_small_scale_data_integration
-  - saas_proprietary_vocabulary_sufficient
+  - single_team
+  - poc_phase
   risk_tiers:
   - 2
   - 3
@@ -1953,13 +1958,13 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - continuous_use_spanning_multiple_departments_or_projects
-  - agents_handling_customer_information
-  - long_term_projects_where_context_accumulation_is_important
+  - persistent_memory
+  - multi_department
+  - personal_data
+  - project_team
   not_applicable_when:
-  - completely_stateless_one_off_use
-  - read_only_reference_ai_without_memory_needed
-  - one_time_question_answer_sessions
+  - single_team
+  - poc_phase
   risk_tiers:
   - 2
   - 3
@@ -2002,13 +2007,14 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - multiple_business_purposes_reusing_same_agent
-  - high_classification_data_pii_hr_contracts_involved
-  - gdpr_or_similar_data_purpose_restriction_compliance
+  - multi_purpose_agent
+  - confidential_data
+  - privacy_regulation
+  - personal_data
   not_applicable_when:
-  - agent_specialized_for_single_purpose_with_fixed_data_scope
-  - prototype_stage_with_undetermined_purpose
-  - low_risk_internal_tools_handling_only_technical_docs
+  - single_team
+  - poc_phase
+  - public_data_only
   risk_tiers:
   - 2
   - 3
@@ -2054,13 +2060,13 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - any_enterprise_use_case_with_possible_pii_secrets_or_contract_data
-  - external_llm_api_in_use
-  - gdpr_appi_or_similar_pii_processing_control_audit_required
+  - personal_data
+  - external_llm_api
+  - privacy_regulation
+  - confidential_data
   not_applicable_when:
-  - public_information_only_internal_tool_no_pii
-  - completely_air_gapped_on_premise_no_external_transmission_possible
-  - extremely_strict_real_time_latency_requirements_dlp_scan_bottleneck
+  - public_data_only
+  - real_time_latency
   risk_tiers:
   - 2
   - 3
@@ -2107,13 +2113,13 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - highest_classification_data_hr_evaluation_ma_insider_information
-  - regulatory_data_requiring_no_plaintext_in_logs_or_cache
-  - ma_or_insider_related_information_processing
+  - top_secret_data
+  - privacy_regulation
+  - regulated_industry
   not_applicable_when:
-  - low_classification_bulk_processing_over_isolation_cost
-  - development_phase_requiring_plaintext_logs_for_debugging
-  - continuous_context_accumulation_use_cases
+  - poc_phase
+  - persistent_memory
+  - public_data_only
   risk_tiers:
   - 4
   - 5
@@ -2160,13 +2166,14 @@ patterns:
   - ID-6
   required_by: []
   applies_when:
-  - multiple_tool_integrations_or_multiple_agents_sharing_common_tools
-  - multiple_mcp_servers_in_the_environment
-  - audit_and_authorization_required_for_tool_calls
+  - multi_agent
+  - cross_saas
+  - audit_required
+  - enterprise_scale
   not_applicable_when:
-  - single_llm_chat_without_tool_use
-  - single_tool_proof_of_concept
-  - fully_isolated_experimental_environment
+  - poc_phase
+  - single_team
+  - public_data_only
   risk_tiers:
   - 1
   - 2
@@ -2215,13 +2222,12 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - multiple_saas_crosscutting_or_future_replacement_possible
-  - common_business_vocabulary_across_multiple_saas_needed
-  - agent_prompts_should_remain_saas_agnostic
+  - cross_saas
+  - multi_agent
+  - enterprise_scale
   not_applicable_when:
-  - single_saas_with_deep_dependency_and_no_replacement_need
-  - full_use_of_saas_proprietary_features
-  - adapter_layer_overhead_not_justified
+  - single_team
+  - poc_phase
   risk_tiers:
   - 1
   - 2
@@ -2268,13 +2274,12 @@ patterns:
   requires: []
   required_by: []
   applies_when:
-  - more_than_1000_users_sharing_same_saas_via_agents
-  - batch_jobs_and_interactive_use_coexisting
-  - monthly_saas_api_request_quota_exists
+  - high_api_volume
+  - enterprise_scale
+  - async_processing
   not_applicable_when:
-  - poc_small_scale_with_ample_api_quota
-  - agents_only_call_internal_apis_with_no_rate_limits
-  - no_rate_limited_saas_in_use
+  - poc_phase
+  - single_team
   risk_tiers:
   - 1
   - 2
@@ -2321,13 +2326,12 @@ patterns:
   - IN-1
   required_by: []
   applies_when:
-  - mulesoftworkato_boomi_or_esb_already_running_with_many_integration_flows
-  - integration_team_and_ai_team_separate_with_difficult_knowledge_transfer
-  - gradual_migration_needed_keeping_existing_flows_while_adding_agent_capability
+  - existing_ipaas
+  - cross_saas
+  - enterprise_scale
   not_applicable_when:
-  - first_integration_project_with_no_existing_ipaas
-  - existing_flow_quality_too_low_and_rebuild_more_rational
-  - only_a_few_saas_connections_with_low_mcp_direct_implementation_effort
+  - poc_phase
+  - single_team
   risk_tiers:
   - 1
   - 2
@@ -2378,9 +2382,9 @@ patterns:
   - GV-9
   - GV-6
   applies_when:
-  - all_production_ai_deployments
-  not_applicable_when:
-  - unlimited_plaintext_logging_of_all_prompts_is_never_appropriate
+  - prod_deployment
+  - enterprise_scale
+  not_applicable_when: []
   risk_tiers:
   - 0
   - 1
@@ -2434,8 +2438,9 @@ patterns:
   required_by:
   - GV-9
   applies_when:
-  - all_production_ai_deployments
-  - regulated_industries_requiring_full_action_traceability
+  - prod_deployment
+  - audit_required
+  - regulated_industry
   not_applicable_when: []
   risk_tiers:
   - 0

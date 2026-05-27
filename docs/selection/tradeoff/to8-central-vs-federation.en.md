@@ -14,19 +14,19 @@ If a central AI CoE tries to build every agent, it cannot keep up with front-lin
 ```yaml
 id: TO-8
 decision_rules:
-  - condition: "concern == 'authentication_or_audit_or_model_control_or_cost'"
+  - condition: "governance_concern IN ['authentication', 'audit', 'model_control', 'cost']"
     recommendation: two_layer_governance
     reason: "Auth, audit, model approval, cost tracking, and policy-as-code must always be centrally controlled regardless of federation level"
-  - condition: "concern == 'domain_knowledge_or_use_case_or_agent_content'"
+  - condition: "governance_concern IN ['domain_knowledge', 'use_case', 'agent_content']"
     recommendation: two_layer_governance
     reason: "Business domain logic, use case definitions, and prompts should be delegated to departments via template-constrained self-service"
-  - condition: "central_builds_all_agents == true"
+  - condition: "responsibility_spans_multiple_departments == false AND deployment_phase == 'initial'"
     recommendation: two_layer_governance
     reason: "Anti-pattern: central team cannot scale to all departmental needs, causing departments to spin up ungoverned shadow agents"
-  - condition: "departments_fully_autonomous == true"
+  - condition: "responsibility_spans_multiple_departments == true AND infrastructure_readiness == 'incomplete'"
     recommendation: two_layer_governance
     reason: "Anti-pattern: uncontrolled department autonomy leads to inconsistent security policies, information leaks, and compliance violations"
-  - condition: "setup_phase == 'initial'"
+  - condition: "deployment_phase == 'initial'"
     recommendation: two_layer_governance
     reason: "Establish central platform (GV-1 Control Plane + ID-7 Policy-as-Code) first, then provide GV-3 department templates"
 ```

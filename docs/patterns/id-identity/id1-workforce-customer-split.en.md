@@ -6,8 +6,8 @@ pattern_id: ID-1
 facet: identity
 requires: []
 required_by: []
-applies_when: [all_enterprises_with_customer_touchpoints, b2b_b2c_requiring_strict_separation_of_customer_and_internal_data, multi_tenant_b2b_saas_where_cross_customer_data_mixing_is_fatal]
-not_applicable_when: [internal_only_no_customer_facing_surface, completely_closed_internal_tool_operations, poc_phase_where_dual_separation_design_is_cost_prohibitive]
+applies_when: [customer_facing, confidential_data, enterprise_scale]
+not_applicable_when: [poc_phase, public_data_only]
 risk_tiers: [2, 3, 4, 5]
 key_technologies: [Okta, Microsoft Entra ID, Google Workspace, Auth0, "Okta Customer Identity (CIAM)", Tenant Isolation, Namespace Isolation, Output Guardrail, PII Filter, Human Handoff]
 ---
@@ -129,6 +129,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DualIdpBoundaryRequest {
+          identityToken: string;
+          boundaryType: string;
+        }
+        interface DualIdpBoundaryResponse {
+          validated: boolean;
+          idpDomain: string;
+          principalId: string;
+        }
+        interface DualIdpBoundary {
+          dualIdpBoundary(req: DualIdpBoundaryRequest): Promise<DualIdpBoundaryResponse>;
+        }
+      python: |
+        @dataclass
+        class DualIdpBoundaryRequest:
+            identity_token: str
+            boundary_type: str
+        
+        @dataclass
+        class DualIdpBoundaryResponse:
+            validated: bool
+            idp_domain: str
+            principal_id: str
+        
+        class DualIdpBoundary(Protocol):
+            async def dual_idp_boundary(self, req: DualIdpBoundaryRequest) -> DualIdpBoundaryResponse: ...
   - name: Explicit Cross-Boundary Gate
     description: "The only permitted path for data to move from workforce to customer side; enforces classification, approval, and KM-6 DLP masking."
     input:
@@ -141,6 +169,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ExplicitCrossBoundaryGateRequest {
+          dataPayload: object;
+          classification: string;
+          approverId: string;
+          purpose: string;
+        }
+        interface ExplicitCrossBoundaryGateResponse {
+          allowed: boolean;
+          maskedPayload: object;
+          gateId: string;
+        }
+        interface ExplicitCrossBoundaryGate {
+          explicitCrossBoundaryGate(req: ExplicitCrossBoundaryGateRequest): Promise<ExplicitCrossBoundaryGateResponse>;
+        }
+      python: |
+        @dataclass
+        class ExplicitCrossBoundaryGateRequest:
+            data_payload: dict
+            classification: str
+            approver_id: str
+            purpose: str
+        
+        @dataclass
+        class ExplicitCrossBoundaryGateResponse:
+            allowed: bool
+            masked_payload: dict
+            gate_id: str
+        
+        class ExplicitCrossBoundaryGate(Protocol):
+            async def explicit_cross_boundary_gate(self, req: ExplicitCrossBoundaryGateRequest) -> ExplicitCrossBoundaryGateResponse: ...
   - name: Tenant Isolation
     description: "In multi-tenant B2B SaaS, prevents one customer's session context from mixing into another customer's agent execution."
     input:
@@ -153,6 +213,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface TenantIsolationRequest {
+          tenantId: string;
+          sessionId: string;
+          requestPayload: object;
+        }
+        interface TenantIsolationResponse {
+          isolated: boolean;
+          tenantContext: object;
+        }
+        interface TenantIsolation {
+          tenantIsolation(req: TenantIsolationRequest): Promise<TenantIsolationResponse>;
+        }
+      python: |
+        @dataclass
+        class TenantIsolationRequest:
+            tenant_id: str
+            session_id: str
+            request_payload: dict
+        
+        @dataclass
+        class TenantIsolationResponse:
+            isolated: bool
+            tenant_context: dict
+        
+        class TenantIsolation(Protocol):
+            async def tenant_isolation(self, req: TenantIsolationRequest) -> TenantIsolationResponse: ...
 ```
 
 ## Related Patterns

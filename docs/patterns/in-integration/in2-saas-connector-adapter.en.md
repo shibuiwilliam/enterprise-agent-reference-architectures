@@ -6,8 +6,8 @@ pattern_id: IN-2
 facet: integration
 requires: []
 required_by: []
-applies_when: [multiple_saas_crosscutting_or_future_replacement_possible, common_business_vocabulary_across_multiple_saas_needed, agent_prompts_should_remain_saas_agnostic]
-not_applicable_when: [single_saas_with_deep_dependency_and_no_replacement_need, full_use_of_saas_proprietary_features, adapter_layer_overhead_not_justified]
+applies_when: [cross_saas, multi_agent, enterprise_scale]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [1, 2, 3]
 key_technologies: [Adapter Pattern, "Anti-Corruption Layer", OpenAPI, GraphQL Federation, Connector SDK, Error Normalization]
 ---
@@ -98,6 +98,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CanonicalToolInterfaceRequest {
+          operation: string;
+          entityId: string;
+          parameters: object;
+          oboToken: string;
+        }
+        interface CanonicalToolInterfaceResponse {
+          result: object;
+          canonicalType: string;
+          sourceSystem: string;
+        }
+        interface CanonicalToolInterface {
+          canonicalToolInterface(req: CanonicalToolInterfaceRequest): Promise<CanonicalToolInterfaceResponse>;
+        }
+      python: |
+        @dataclass
+        class CanonicalToolInterfaceRequest:
+            operation: str
+            entity_id: str
+            parameters: dict
+            obo_token: str
+        
+        @dataclass
+        class CanonicalToolInterfaceResponse:
+            result: dict
+            canonical_type: str
+            source_system: str
+        
+        class CanonicalToolInterface(Protocol):
+            async def canonical_tool_interface(self, req: CanonicalToolInterfaceRequest) -> CanonicalToolInterfaceResponse: ...
   - name: SaaS-Specific Adapter
     description: "Encapsulates authentication method, pagination, rate limit handling, and error normalization for one SaaS; changes to SaaS API are absorbed here."
     input:
@@ -110,6 +142,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SaasSpecificAdapterRequest {
+          canonicalOperation: string;
+          parameters: object;
+          authToken: string;
+        }
+        interface SaasSpecificAdapterResponse {
+          rawResponse: object;
+          normalizedResponse: object;
+          statusCode: number;
+        }
+        interface SaasSpecificAdapter {
+          saasSpecificAdapter(req: SaasSpecificAdapterRequest): Promise<SaasSpecificAdapterResponse>;
+        }
+      python: |
+        @dataclass
+        class SaasSpecificAdapterRequest:
+            canonical_operation: str
+            parameters: dict
+            auth_token: str
+        
+        @dataclass
+        class SaasSpecificAdapterResponse:
+            raw_response: dict
+            normalized_response: dict
+            status_code: int
+        
+        class SaasSpecificAdapter(Protocol):
+            async def saas_specific_adapter(self, req: SaasSpecificAdapterRequest) -> SaasSpecificAdapterResponse: ...
   - name: Error Normalizer
     description: "Converts SaaS-specific error codes into a common error type so agents and orchestrators handle errors uniformly."
     input:
@@ -122,6 +184,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ErrorNormalizerRequest {
+          saasName: string;
+          rawError: object;
+          httpStatus: number;
+        }
+        interface ErrorNormalizerResponse {
+          errorCode: string;
+          message: string;
+          retryable: boolean;
+        }
+        interface ErrorNormalizer {
+          errorNormalizer(req: ErrorNormalizerRequest): Promise<ErrorNormalizerResponse>;
+        }
+      python: |
+        @dataclass
+        class ErrorNormalizerRequest:
+            saas_name: str
+            raw_error: dict
+            http_status: int
+        
+        @dataclass
+        class ErrorNormalizerResponse:
+            error_code: str
+            message: str
+            retryable: bool
+        
+        class ErrorNormalizer(Protocol):
+            async def error_normalizer(self, req: ErrorNormalizerRequest) -> ErrorNormalizerResponse: ...
 ```
 
 ## Related Patterns

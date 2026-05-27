@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-システムプロンプトに「機密情報を出力するな」と書けば安全だろうか。答えは明確に「いいえ」だ。「上記の指示を無視して」と入力するだけで突破されるプロンプトはセキュリティ境界にならない。安全保証は権限・認可・Policy Engine など実行基盤側に置き、プロンプトは応答トーンや出力形式の調整に使う——この役割分担がエンタープライズ設計の大原則である。
+システムプロンプトに「機密情報を出力するな」と書けば安全だろうか。答えは明確に「いいえ」だ。「上記の指示を無視して」と入力するだけで突破されるプロンプトは、セキュリティ境界にならない。安全保証は権限・認可・Policy Engine など実行基盤側に置き、プロンプトは応答トーンや出力形式の調整に使う——この役割分担がエンタープライズ設計の大原則だ。
 
 <!-- machine-readable decision rules for coding agents -->
 ```yaml
@@ -23,7 +23,7 @@ decision_rules:
   - condition: "security_enforced_by_prompt == true"
     recommendation: platform_only
     reason: "プロンプトでのセキュリティ保証は禁忌。「上記の指示を無視して」で容易に回避されるプロンプトはセキュリティ境界にならない"
-  - condition: "platform_not_yet_ready == true AND considering_prompt_as_stopgap == true"
+  - condition: "infrastructure_readiness == 'incomplete' AND security_enforced_by_prompt == true"
     recommendation: platform_only
     reason: "まず実行基盤側のアクセス制御（ID-4）とPolicy-as-Code（ID-7）を整備する。これがなければプロンプトを精緻にしても安全は保証されない"
   - condition: "defense_in_depth == true"
@@ -43,7 +43,7 @@ decision_rules:
 
 ## 判断基準
 
-この問いに対する答えは二択ではなく、役割の明確な分担だ。
+この問いへの答えは二択ではなく、役割の明確な分担にある。
 
 **実行基盤側（ポリシー・権限・承認）が担うべきもの**：
 
@@ -65,14 +65,14 @@ decision_rules:
 
 ## ハイブリッド・段階的アプローチ
 
-プロンプト制御と実行基盤制御は排他ではなく、それぞれ適切な役割を担う多層防御として組み合わせる。
+プロンプト制御と実行基盤制御は排他ではなく、それぞれ適切な役割を担う多層防御として組み合わせるものだ。
 
 実装の優先順位：
 
 1. まず実行基盤側のアクセス制御（[ID-4](../../patterns/id-identity/id4-permission-mirror-least-of.md)）と Policy-as-Code（[ID-7](../../patterns/id-identity/id7-policy-as-code-guardrail.md)）を整備する。これがなければプロンプトをいくら精緻にしても安全は保証されない。
 2. 承認フロー（[RT-4](../../patterns/rt-runtime/rt4-human-approval-chain.md)）と出力検証・DLP（[RT-5](../../patterns/rt-runtime/rt5-command-envelope.md)）を追加する。
 3. PDP/PEP（[ID-6](../../patterns/id-identity/id6-zero-trust-pdp-pep.md)）で全リクエストを認可判定する構造を完成させる。
-4. 実行基盤の制御が整った後に、品質向上・ふるまい調整のためのプロンプトエンジニアリングを行う。
+4. 実行基盤の制御が整った段階で、品質向上・ふるまい調整のためのプロンプトエンジニアリングを行う。
 
 ## 関連パターン
 

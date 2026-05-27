@@ -6,8 +6,8 @@ pattern_id: GV-1
 facet: governance
 requires: ["ID-7"]
 required_by: ["GV-2", "GV-8", "OB-2"]
-applies_when: [agents_exceed_three_and_multiple_teams_are_using_them, enterprise_wide_deployment_as_common_platform, audit_and_compliance_requirements_exist]
-not_applicable_when: [individual_poc_or_experimental_phase, single_department_with_only_one_or_two_agents, isolated_research_environment]
+applies_when: [multi_department, enterprise_scale, audit_required, prod_deployment]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [2, 3, 4]
 key_technologies: [Agent Registry, ServiceNow CMDB Extension, "Policy-as-Code (ID-7)", "Model Gateway (GV-5)"]
 ---
@@ -117,6 +117,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AgentRegistryRequest {
+          agentId: string;
+          owner: string;
+          businessPurpose: string;
+          allowedTools: string[];
+          riskTier: number;
+        }
+        interface AgentRegistryResponse {
+          registered: boolean;
+          registrationId: string;
+          version: string;
+        }
+        interface AgentRegistry {
+          agentRegistry(req: AgentRegistryRequest): Promise<AgentRegistryResponse>;
+        }
+      python: |
+        @dataclass
+        class AgentRegistryRequest:
+            agent_id: str
+            owner: str
+            business_purpose: str
+            allowed_tools: list[str]
+            risk_tier: int
+        
+        @dataclass
+        class AgentRegistryResponse:
+            registered: bool
+            registration_id: str
+            version: str
+        
+        class AgentRegistry(Protocol):
+            async def agent_registry(self, req: AgentRegistryRequest) -> AgentRegistryResponse: ...
   - name: Lifecycle Review Gate
     description: "Routes new and changed agent registrations through security, legal, and data protection review; adjusts review depth by risk tier."
     input:
@@ -129,6 +163,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface LifecycleReviewGateRequest {
+          agentId: string;
+          changeType: string;
+          riskTier: number;
+          reviewers: string[];
+        }
+        interface LifecycleReviewGateResponse {
+          approved: boolean;
+          reviewId: string;
+          conditions: string[];
+        }
+        interface LifecycleReviewGate {
+          lifecycleReviewGate(req: LifecycleReviewGateRequest): Promise<LifecycleReviewGateResponse>;
+        }
+      python: |
+        @dataclass
+        class LifecycleReviewGateRequest:
+            agent_id: str
+            change_type: str
+            risk_tier: int
+            reviewers: list[str]
+        
+        @dataclass
+        class LifecycleReviewGateResponse:
+            approved: bool
+            review_id: str
+            conditions: list[str]
+        
+        class LifecycleReviewGate(Protocol):
+            async def lifecycle_review_gate(self, req: LifecycleReviewGateRequest) -> LifecycleReviewGateResponse: ...
   - name: Execution Enforcement
     description: "Connects to Model Gateway (GV-5) and Agent Gateway (EX-1) so unregistered agents are physically blocked from executing."
     input:
@@ -141,6 +207,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ExecutionEnforcementRequest {
+          agentId: string;
+          modelId: string;
+          requestType: string;
+        }
+        interface ExecutionEnforcementResponse {
+          permitted: boolean;
+          reason: string;
+        }
+        interface ExecutionEnforcement {
+          executionEnforcement(req: ExecutionEnforcementRequest): Promise<ExecutionEnforcementResponse>;
+        }
+      python: |
+        @dataclass
+        class ExecutionEnforcementRequest:
+            agent_id: str
+            model_id: str
+            request_type: str
+        
+        @dataclass
+        class ExecutionEnforcementResponse:
+            permitted: bool
+            reason: str
+        
+        class ExecutionEnforcement(Protocol):
+            async def execution_enforcement(self, req: ExecutionEnforcementRequest) -> ExecutionEnforcementResponse: ...
 ```
 
 ## Related Patterns

@@ -6,8 +6,8 @@ pattern_id: RT-5
 facet: runtime
 requires: []
 required_by: []
-applies_when: [multi_saas_write_automation, strict_policy_check_approval_and_audit_requirements, multiple_agents_operating_the_same_saas]
-not_applicable_when: [read_only_query_agents_without_write_risk, prototype_stage_where_schema_design_cost_too_high]
+applies_when: [cross_saas, write_operations, audit_required, multi_agent]
+not_applicable_when: [poc_phase, public_data_only]
 risk_tiers: [2, 3, 4]
 key_technologies: [JSON Schema, Command Bus, DDD Command Pattern, OPA, Cedar]
 ---
@@ -119,6 +119,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface IntentParserEntityExtractorRequest {
+          naturalLanguageInput: string;
+          userId: string;
+          context: object;
+        }
+        interface IntentParserEntityExtractorResponse {
+          commandEnvelope: object;
+          intent: string;
+          entities: object;
+          validated: boolean;
+        }
+        interface IntentParserEntityExtractor {
+          intentParserEntityExtractor(req: IntentParserEntityExtractorRequest): Promise<IntentParserEntityExtractorResponse>;
+        }
+      python: |
+        @dataclass
+        class IntentParserEntityExtractorRequest:
+            natural_language_input: str
+            user_id: str
+            context: dict
+        
+        @dataclass
+        class IntentParserEntityExtractorResponse:
+            command_envelope: dict
+            intent: str
+            entities: dict
+            validated: bool
+        
+        class IntentParserEntityExtractor(Protocol):
+            async def intent_parser_entity_extractor(self, req: IntentParserEntityExtractorRequest) -> IntentParserEntityExtractorResponse: ...
   - name: Policy Engine (ID-7)
     description: "Evaluates the Envelope fields including actor permissions, risk_tier, and target_system combination independently of agent self-reporting."
     input:
@@ -131,6 +163,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PolicyEngineRequest {
+          inputId: string;
+          policyVersion: string;
+          attributes: object;
+        }
+        interface PolicyEngineResponse {
+          verdict: string;
+          reason: string;
+          requiresApproval: boolean;
+          redact: boolean;
+        }
+        interface PolicyEngine {
+          policyEngine(req: PolicyEngineRequest): Promise<PolicyEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyEngineRequest:
+            input_id: str
+            policy_version: str
+            attributes: dict
+        
+        @dataclass
+        class PolicyEngineResponse:
+            verdict: str
+            reason: str
+            requires_approval: bool
+            redact: bool
+        
+        class PolicyEngine(Protocol):
+            async def policy_engine(self, req: PolicyEngineRequest) -> PolicyEngineResponse: ...
   - name: SaaS Adapter (IN-2)
     description: "Receives the approved Envelope and translates it into the target SaaS API call, shielding agents from SaaS-specific schemas."
     input:
@@ -143,6 +207,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SaasAdapterRequest {
+          commandEnvelope: object;
+          saasTarget: string;
+          authToken: string;
+        }
+        interface SaasAdapterResponse {
+          apiResult: object;
+          saasAuditId: string;
+          executedAt: Date;
+        }
+        interface SaasAdapter {
+          saasAdapter(req: SaasAdapterRequest): Promise<SaasAdapterResponse>;
+        }
+      python: |
+        @dataclass
+        class SaasAdapterRequest:
+            command_envelope: dict
+            saas_target: str
+            auth_token: str
+        
+        @dataclass
+        class SaasAdapterResponse:
+            api_result: dict
+            saas_audit_id: str
+            executed_at: datetime
+        
+        class SaasAdapter(Protocol):
+            async def saas_adapter(self, req: SaasAdapterRequest) -> SaasAdapterResponse: ...
 ```
 
 ## Related Patterns

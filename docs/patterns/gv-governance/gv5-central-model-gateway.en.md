@@ -6,8 +6,8 @@ pattern_id: GV-5
 facet: governance
 requires: ["GV-1"]
 required_by: []
-applies_when: [multiple_vendors_and_models_used_in_combination, data_classification_based_routing_required, enterprise_wide_ai_platform_requiring_cost_visibility_and_compliance]
-not_applicable_when: [single_application_with_lightweight_configuration, completely_offline_air_gapped_environment, single_model_poc]
+applies_when: [enterprise_scale, confidential_data, external_llm_api, cost_mgmt_needed]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4, 5]
 key_technologies: [LiteLLM, Portkey Proxy, Amazon Bedrock, "Azure OpenAI (VNet integration)", vLLM, "TGI (Text Generation Inference)", "KM-6 DLP & Redaction Boundary"]
 ---
@@ -109,6 +109,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ModelApprovalCheckRequest {
+          modelId: string;
+          agentId: string;
+          requestedVersion: string;
+        }
+        interface ModelApprovalCheckResponse {
+          approved: boolean;
+          allowlistedVersion: string;
+          reason: string;
+        }
+        interface ModelApprovalCheck {
+          modelApprovalCheck(req: ModelApprovalCheckRequest): Promise<ModelApprovalCheckResponse>;
+        }
+      python: |
+        @dataclass
+        class ModelApprovalCheckRequest:
+            model_id: str
+            agent_id: str
+            requested_version: str
+        
+        @dataclass
+        class ModelApprovalCheckResponse:
+            approved: bool
+            allowlisted_version: str
+            reason: str
+        
+        class ModelApprovalCheck(Protocol):
+            async def model_approval_check(self, req: ModelApprovalCheckRequest) -> ModelApprovalCheckResponse: ...
   - name: Data Classification Router
     description: "Routes top-secret classified requests to VPC/on-premises inference and general data requests to external API providers."
     input:
@@ -121,6 +151,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DataClassificationRouterRequest {
+          dataClassification: string;
+          requestPayload: object;
+          agentId: string;
+        }
+        interface DataClassificationRouterResponse {
+          routedTo: string;
+          inferenceEndpoint: string;
+        }
+        interface DataClassificationRouter {
+          dataClassificationRouter(req: DataClassificationRouterRequest): Promise<DataClassificationRouterResponse>;
+        }
+      python: |
+        @dataclass
+        class DataClassificationRouterRequest:
+            data_classification: str
+            request_payload: dict
+            agent_id: str
+        
+        @dataclass
+        class DataClassificationRouterResponse:
+            routed_to: str
+            inference_endpoint: str
+        
+        class DataClassificationRouter(Protocol):
+            async def data_classification_router(self, req: DataClassificationRouterRequest) -> DataClassificationRouterResponse: ...
   - name: Token & Cost Meter
     description: "Records per-request token counts and cost with cost_center tag; feeds GV-8 Cost Quota & Chargeback for department-level aggregation."
     input:
@@ -133,6 +191,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface TokenCostMeterRequest {
+          agentId: string;
+          costCenter: string;
+          modelId: string;
+          tokenCount: number;
+        }
+        interface TokenCostMeterResponse {
+          cost: number;
+          currency: string;
+          recordedAt: Date;
+        }
+        interface TokenCostMeter {
+          tokenCostMeter(req: TokenCostMeterRequest): Promise<TokenCostMeterResponse>;
+        }
+      python: |
+        @dataclass
+        class TokenCostMeterRequest:
+            agent_id: str
+            cost_center: str
+            model_id: str
+            token_count: int
+        
+        @dataclass
+        class TokenCostMeterResponse:
+            cost: float
+            currency: str
+            recorded_at: datetime
+        
+        class TokenCostMeter(Protocol):
+            async def token_cost_meter(self, req: TokenCostMeterRequest) -> TokenCostMeterResponse: ...
 ```
 
 ## Related Patterns

@@ -6,8 +6,8 @@ pattern_id: GV-10
 facet: governance
 requires: ["GV-8", "OB-1"]
 required_by: []
-applies_when: [enterprise_wide_rollout_phase_requiring_management_approval, enterprises_needing_to_justify_ai_investment_to_business_units, multiple_agents_running_in_parallel_requiring_investment_prioritization]
-not_applicable_when: [initial_poc_or_validation_phase, use_cases_where_linking_to_business_outcomes_is_structurally_difficult]
+applies_when: [enterprise_scale, roi_justification, multi_agent, prod_deployment]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [Looker, Tableau, Power BI, "OB-1 Observability Lake", "GV-8 Cost Attribution", Salesforce, Zendesk, Workday]
 ---
@@ -20,7 +20,7 @@ key_technologies: [Looker, Tableau, Power BI, "OB-1 Observability Lake", "GV-8 C
 
 ## 解決する企業課題
 
-エージェントを導入したあと、技術チームはトークン数・レイテンシ・稼働率を報告するが、経営陣は「それで売上がいくら増えたか、コストがいくら減ったか」を問う。この二つが噛み合わないため、経営承認が得られず全社展開が止まるケースが多い。「導入したが価値を説明できない」という状態は、技術的な成功と事業的な評価が分断していることが原因だ。複数のエージェントが並走する段階では、どれに投資を集中すべきかを判断するための客観的な比較軸も必要になる。トークン消費量や利用回数を報告するだけでは、経営が求める投資対効果の説明にならない。
+エージェントを導入したあと、技術チームはトークン数・レイテンシ・稼働率を報告するが、経営陣は「それで売上がいくら増えたか、コストがいくら減ったか」を問う。この二つが噛み合わないため、経営承認が得られず全社展開が止まるケースが多い。「導入したが価値を説明できない」という状態は、技術的な成功と事業的な評価が分断していることによる。複数のエージェントが並走する段階では、どれに投資を集中すべきかを判断するための客観的な比較軸も必要になる。トークン消費量や利用回数を報告するだけでは、経営が求める投資対効果の説明にはならない。
 
 !!! tip "最小成立条件（MVP）"
     1つの業務指標（例：タスク完了時間）をエージェント利用ログと突合し、導入前後の差分を BI で可視化する。経営 KPI との紐づけは後から拡張できるが、「利用と成果が対になった1枚のダッシュボード」が最小の出発点である。
@@ -31,7 +31,7 @@ key_technologies: [Looker, Tableau, Power BI, "OB-1 Observability Lake", "GV-8 C
 
 ## 解決策と設計
 
-計測は三層構造で設計する。第0層（採用・定着）は利用の前提条件を、第1層（個人/チーム）は日常業務の改善効果を、第2層（経営）は事業KPIへの貢献を定量化する。3層を繋ぐのは「利用率→効率→事業成果」の因果連鎖と、エージェントの利用ログと業務システム（Salesforce・Zendesk・Workday 等）のデータの結合である。
+計測は三層構造で設計する。第0層（採用・定着）は利用の前提条件を、第1層（個人/チーム）は日常業務の改善効果を、第2層（経営）は事業 KPI への貢献をそれぞれ定量化する。3層を繋ぐのは「利用率→効率→事業成果」の因果連鎖と、エージェントの利用ログと業務システム（Salesforce・Zendesk・Workday 等）のデータの結合である。
 
 ```mermaid
 flowchart TD
@@ -81,7 +81,7 @@ flowchart TD
 !!! warning "利用率なきROIは幻想"
     第2層の経営KPI（売上影響・コスト削減）は、第0層の利用率×第1層の効果量で決まる。効果量が高くても利用率が低ければ全社インパクトは小さい。第0層は ROI の「分母」を可視化する。
 
-利用ログを GV-8（コスト配賦）のコスト計測データと組み合わせることで、「単位コストあたりの業務成果」を算出できる。BI ツールで部門別・エージェント別・ユースケース別に集計し、展開優先度の判断材料として活用する。
+利用ログを GV-8（コスト配賦）のコスト計測データと組み合わせると、「単位コストあたりの業務成果」を算出できる。BI ツールで部門別・エージェント別・ユースケース別に集計し、展開優先度の判断材料として活用する。
 
 ## 向き／不向き
 
@@ -180,6 +180,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface Layer0AdoptionMetricsRequest {
+          startDate: Date;
+          endDate: Date;
+          agentIds: string[];
+        }
+        interface Layer0AdoptionMetricsResponse {
+          adoptionRate: number;
+          dauMau: number;
+          cohortRetention: number;
+        }
+        interface Layer0AdoptionMetrics {
+          layer0AdoptionMetrics(req: Layer0AdoptionMetricsRequest): Promise<Layer0AdoptionMetricsResponse>;
+        }
+      python: |
+        @dataclass
+        class Layer0AdoptionMetricsRequest:
+            start_date: datetime
+            end_date: datetime
+            agent_ids: list[str]
+        
+        @dataclass
+        class Layer0AdoptionMetricsResponse:
+            adoption_rate: float
+            dau_mau: float
+            cohort_retention: float
+        
+        class Layer0AdoptionMetrics(Protocol):
+            async def layer_0_adoption_metrics(self, req: Layer0AdoptionMetricsRequest) -> Layer0AdoptionMetricsResponse: ...
   - name: Layer 1 & 2 Business KPI Joiner
     description: "Time-series joins agent usage logs with Salesforce lead time, Zendesk CSAT/AHT, and Workday HR KPIs to compute business impact."
     input:
@@ -192,6 +222,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface Layer12BusinessKpiJoinerRequest {
+          agentId: string;
+          period: string;
+          kpiSources: string[];
+        }
+        interface Layer12BusinessKpiJoinerResponse {
+          businessKpis: object;
+          timeSavedHours: number;
+          impactScore: number;
+        }
+        interface Layer12BusinessKpiJoiner {
+          layer12BusinessKpiJoiner(req: Layer12BusinessKpiJoinerRequest): Promise<Layer12BusinessKpiJoinerResponse>;
+        }
+      python: |
+        @dataclass
+        class Layer12BusinessKpiJoinerRequest:
+            agent_id: str
+            period: str
+            kpi_sources: list[str]
+        
+        @dataclass
+        class Layer12BusinessKpiJoinerResponse:
+            business_kpis: dict
+            time_saved_hours: float
+            impact_score: float
+        
+        class Layer12BusinessKpiJoiner(Protocol):
+            async def layer_1_2_business_kpi_joiner(self, req: Layer12BusinessKpiJoinerRequest) -> Layer12BusinessKpiJoinerResponse: ...
   - name: ROI Dashboard
     description: "Executive-facing report combining cost (GV-8) as denominator and business outcomes as numerator; supports investment expand/improve/retire decisions."
     input:
@@ -204,6 +264,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface RoiDashboardRequest {
+          userId: string;
+          period: string;
+        }
+        interface RoiDashboardResponse {
+          timeSavedMinutes: number;
+          taskCount: number;
+          weeklyTrend: object;
+        }
+        interface RoiDashboard {
+          roiDashboard(req: RoiDashboardRequest): Promise<RoiDashboardResponse>;
+        }
+      python: |
+        @dataclass
+        class RoiDashboardRequest:
+            user_id: str
+            period: str
+        
+        @dataclass
+        class RoiDashboardResponse:
+            time_saved_minutes: float
+            task_count: int
+            weekly_trend: dict
+        
+        class RoiDashboard(Protocol):
+            async def roi_dashboard(self, req: RoiDashboardRequest) -> RoiDashboardResponse: ...
 ```
 
 ## 関連パターン

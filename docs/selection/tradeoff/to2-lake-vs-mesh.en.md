@@ -23,7 +23,7 @@ decision_rules:
   - condition: "pre_indexed == true AND acl_required == true"
     recommendation: central_lake
     reason: "Pre-indexed data is acceptable if ACL is embedded with every chunk (KM-1 Access-Controlled RAG)"
-  - condition: "mix_of_public_and_confidential == true"
+  - condition: "data_sensitivity == 'public' AND confidential_data_in_result == true"
     recommendation: hybrid
     reason: "Public data via central lake for speed; confidential data via federated Mesh for permission fidelity; route via Knowledge Graph"
 ```

@@ -19,52 +19,52 @@ description: "Single-file digest aggregating all 46 patterns, selection criteria
 
 | ID | Name | Facet | Requires | Applies When (representative) | Key Interfaces |
 |---|---|---|---|---|---|
-| EX-1 | Enterprise Agent Gateway | experience | ID-1, ID-2, ID-6 | Multi-channel, large-scale enterprise deployment | Authentication & Risk Classification, Rate Control, Audit Entry Point |
-| EX-2 | Embedded Workbench Channel Placement | experience | EX-1, EX-3 | Slack/Teams/Salesforce are central daily tools | Embedded UI, Standalone Workbench, Channel Adapter |
-| EX-3 | Channel-Agnostic Frontdoor | experience | EX-1, ID-2 | Incrementally adding channels to an existing agent | Channel Adapter, Unified Session Store, Unified Audit Logger |
-| EX-4 | Trust & Value UX | experience | EX-1, KM-1, RT-3 | Enterprise-wide rollout where adoption rate is a challenge | Citation & Confidence Layer, Progressive Confirmation UI, Value Feedback Dashboard |
-| GV-1 | Enterprise Agent Control Plane | governance | ID-7 | Agents exceed three and multiple teams are using them | Agent Registry, Lifecycle Review Gate, Execution Enforcement |
-| GV-2 | Agent Catalog & Marketplace | governance | GV-1 | Agents deployed across multiple departments | Catalog UI/API, Access Request Workflow, Usage Analytics & Quality Score |
-| GV-3 | Department Agent Factory | governance | GV-1, GV-2, ID-4, GV-4 | AI CoE responsible for multi-department deployment | Role-Based Template Store, Low-Code Builder, IdP Role Change Listener |
-| GV-4 | Industry Policy Pack | governance | ID-6, ID-7 | Strictly regulated industries with regular external audits | Policy Pack Definition, Policy Engine Deployment, Evaluation Rubric |
-| GV-5 | Central Model Gateway | governance | GV-1 | Multiple vendors and models used in combination | Model Approval Check, Data Classification Router, Token & Cost Meter |
-| GV-6 | Version Registry | governance | OB-1 | Continuously operated agents with regular model updates | Version Tag per Execution, PR-Gated Change Flow, Canary + Auto-Rollback |
-| GV-7 | Evaluation & Governance Pipeline | governance | OB-1 | All production agent deployments | Offline Evaluation Gate, Security Evaluation, Production Drift Monitor |
-| GV-8 | Cost Quota & Chargeback | governance | GV-1, GV-5 | Thousands of users operating agents where cost allocation is a management issue | cost_center Tag Attribution, Budget Alert & Degradation, ROI Dashboard |
-| GV-9 | Incident Response & Kill Switch | governance | OB-1, OB-2, GV-1, GV-5 | All production AI deployments | Granular Kill Switch, Trace Preservation, Incident Response Runbook |
-| GV-10 | Three-Layer Value Measurement | governance | GV-8, OB-1 | Enterprise-wide rollout requiring management approval | Layer 0 Adoption Metrics, Layer 1 & 2 Business KPI Joiner, ROI Dashboard |
-| ID-1 | Workforce/Customer Split | identity | — | All enterprises with customer touchpoints | Dual IdP Boundary, Explicit Cross-Boundary Gate, Tenant Isolation |
-| ID-2 | Identity Federation & OBO | identity | — | Cross-SaaS operations with strict audit requirements | Token Broker, SaaS Native Authorization, Audit Delegation Chain |
-| ID-3 | Workload Agent Identity | identity | ID-5, ID-6 | Scheduled batch or system-triggered autonomous execution exists | Workload Certificate Issuer, Dual Representation Audit Record, Least-Privilege Workload Scope |
-| ID-4 | Permission Mirror & Least-of Faithful Access | identity | — | Enterprise RAG or cross-system search agents | ACL Sync Pipeline, Effective Permission Calculator, Stale-Access Monitor |
-| ID-5 | JIT Scoped Credentials | identity | ID-6 | Agents spanning multiple SaaS systems | Credential Broker, PDP Pre-Issuance Check, Credential Audit Trail |
-| ID-6 | Zero-Trust PDP/PEP | identity | — | Multi-SaaS environments handling confidential data | Central PDP, Distributed PEP, Org Graph Attribute Feed |
-| ID-7 | Policy-as-Code Guardrail | identity | ID-6 | Complex regulatory and internal rules in large enterprises | Structured Policy Input, Policy Engine, Policy Version & Test Gate |
-| ID-8 | Consent & Access Transparency | identity | ID-2, ID-4, ID-5 | Agents accessing personal data (email, calendar, documents) | Consent Screen, Consent Registry, Revocation & Instant Token Invalidation |
-| RT-1 | Org-Hierarchical Hub & Spoke | runtime | ID-4 | Large org with department permission boundaries | Hub Agent, Domain Spoke Agent, Capability Registry |
-| RT-2 | RACI-based Multi-Agent Orchestration | runtime | OB-2 | Cross-department decision flows with multiple accountable parties | Orchestrator, Decision Log, Approval Gate |
-| RT-3 | Risk-Tiered Autonomy | runtime | ID-7 | Diverse operations from read-only to financial transactions | Risk Scoring Engine, Policy Engine, Approval Workflow |
-| RT-4 | Human Approval Chain | runtime | RT-8, ID-7 | Irreversible high-risk operations like fund transfer or permission grant | Approver Resolution Engine, Workflow Tool Notification, Decision Log |
-| RT-5 | Intent-to-Enterprise Command Envelope | runtime | — | Multi-SaaS write automation | Intent Parser + Entity Extractor, Policy Engine, SaaS Adapter |
-| RT-6 | System-of-Record Write Boundary | runtime | RT-5 | Systems holding master data like HR, accounting, customers | Domain Service, SoE Draft Store, Audit Trail |
-| RT-7 | Enterprise Saga Agent | runtime | RT-8 | Sequential multi-SaaS writes requiring partial rollback on failure | Saga Orchestrator, Idempotency Key Manager, Compensation Action Library |
-| RT-8 | Durable Enterprise Agent Workflow | runtime | OB-1 | Processes taking minutes to hours including human approval wait | Workflow Definition, Activity Function, Budget / Step Limit Guard |
-| RT-9 | Enterprise Work Queue Agent | runtime | — | Existing ITSM or customer support system with volume growth or after-hours need | Queue Consumer, Escalation Handler, SLA Monitor |
-| RT-10 | Event-Driven Enterprise Orchestrator | runtime | RT-7, RT-8 | SaaS standard events trigger multi-system workflows | Event Gateway, Debounce / Rate Limiter, Durable Workflow Engine |
-| RT-11 | Project Workspace / Digital Twin Agent | runtime | KM-1, KM-4, ID-4 | Multi-tool project teams of 5–50 members | Project Workspace Provisioner, GraphRAG Memory, Decision Log Store |
-| KM-1 | Access-Controlled Enterprise RAG | knowledge | ID-2, ID-4 | Cross-SaaS document, ticket, CRM, chat search | Ingest Pipeline with ACL Embedding, Permission Filter, Hybrid Search + Reranker |
-| KM-2 | Access-Controlled Context Mesh | knowledge | ID-2 | Confidentiality priority and data residency regulations important | Context Router, Context Provider, Context Package Builder |
-| KM-3 | Canonical Enterprise Object Model & Knowledge Graph | knowledge | — | Many systems with scattered data for cross-department AI | Entity Resolution Engine, Knowledge Graph, Graph Traversal API |
-| KM-4 | Scoped Memory Hierarchy | knowledge | — | Continuous use spanning multiple departments or projects | Memory Scope Partitioner, Lifecycle Event Handler, Memory Review UI |
-| KM-5 | Purpose-Bound Context Package | knowledge | — | Multiple business purposes reusing the same agent | Purpose Policy Store, Context Builder, DLP / Classification Filter |
-| KM-6 | DLP & Redaction Boundary | knowledge | — | Any enterprise use case with possible PII, secrets, or contract data | Input DLP Gate, Output DLP Gate, Log Filter |
-| KM-7 | Ephemeral Secure Context Bus | knowledge | — | Highest-classification data: HR evaluation, M&A, insider information | DLP Proxy, Isolated Inference Environment, Sealed Audit Metadata Sink |
-| IN-1 | Enterprise Tool / MCP Gateway | integration | ID-6 | Multiple tool integrations or multiple agents sharing common tools | Tool Catalog, Auth / Authz Layer, Audit Recorder |
-| IN-2 | SaaS Connector Adapter | integration | — | Multiple SaaS crosscutting or future replacement possible | Canonical Tool Interface, SaaS-Specific Adapter, Error Normalizer |
-| IN-3 | Rate / Quota Broker | integration | — | More than 1,000 users sharing the same SaaS via agents | Token Bucket per SaaS, Priority Queue, Centralized Retry Handler |
-| IN-4 | Existing iPaaS Reuse | integration | IN-1 | MuleSoft/Workato/Boomi/ESB already running with many integration flows | MCP Adapter, iPaaS Flow, Contract Test Suite |
-| OB-1 | Enterprise Agent Observability Lake | observability | — | All production AI deployments | OTel Instrumentation Layer, Three-Layer Storage, Replay Tool |
-| OB-2 | Unified Audit & Lineage | observability | GV-1, RT-8 | All production AI deployments, regulated industries | Three-Party Audit Record, Correlation ID Stitcher, SIEM Integration |
+| EX-1 | Enterprise Agent Gateway | experience | ID-1, ID-2, ID-6 | enterprise_scale, multi_channel, audit_required | Authentication & Risk Classification, Rate Control, Audit Entry Point |
+| EX-2 | Embedded Workbench Channel Placement | experience | EX-1, EX-3 | multi_channel, enterprise_scale, long_running | Embedded UI, Standalone Workbench, Channel Adapter |
+| EX-3 | Channel-Agnostic Frontdoor | experience | EX-1, ID-2 | multi_channel, audit_required, enterprise_scale | Channel Adapter, Unified Session Store, Unified Audit Logger |
+| EX-4 | Trust & Value UX | experience | EX-1, KM-1, RT-3 | enterprise_scale, adoption_challenge, prod_deployment | Citation & Confidence Layer, Progressive Confirmation UI, Value Feedback Dashboard |
+| GV-1 | Enterprise Agent Control Plane | governance | ID-7 | multi_department, enterprise_scale, audit_required | Agent Registry, Lifecycle Review Gate, Execution Enforcement |
+| GV-2 | Agent Catalog & Marketplace | governance | GV-1 | multi_department, enterprise_scale, prod_deployment | Catalog UI/API, Access Request Workflow, Usage Analytics & Quality Score |
+| GV-3 | Department Agent Factory | governance | GV-1, GV-2, ID-4, GV-4 | multi_department, enterprise_scale, frequent_perm_chg | Role-Based Template Store, Low-Code Builder, IdP Role Change Listener |
+| GV-4 | Industry Policy Pack | governance | ID-6, ID-7 | regulated_industry, multi_department, enterprise_scale | Policy Pack Definition, Policy Engine Deployment, Evaluation Rubric |
+| GV-5 | Central Model Gateway | governance | GV-1 | enterprise_scale, confidential_data, external_llm_api | Model Approval Check, Data Classification Router, Token & Cost Meter |
+| GV-6 | Version Registry | governance | OB-1 | continuous_updates, prod_deployment, audit_required | Version Tag per Execution, PR-Gated Change Flow, Canary + Auto-Rollback |
+| GV-7 | Evaluation & Governance Pipeline | governance | OB-1 | prod_deployment, continuous_updates, regulated_industry | Offline Evaluation Gate, Security Evaluation, Production Drift Monitor |
+| GV-8 | Cost Quota & Chargeback | governance | GV-1, GV-5 | enterprise_scale, cost_mgmt_needed, multi_agent | cost_center Tag Attribution, Budget Alert & Degradation, ROI Dashboard |
+| GV-9 | Incident Response & Kill Switch | governance | OB-1, OB-2, GV-1, GV-5 | prod_deployment, enterprise_scale | Granular Kill Switch, Trace Preservation, Incident Response Runbook |
+| GV-10 | Three-Layer Value Measurement | governance | GV-8, OB-1 | enterprise_scale, roi_justification, multi_agent | Layer 0 Adoption Metrics, Layer 1 & 2 Business KPI Joiner, ROI Dashboard |
+| ID-1 | Workforce/Customer Split | identity | — | customer_facing, confidential_data, enterprise_scale | Dual IdP Boundary, Explicit Cross-Boundary Gate, Tenant Isolation |
+| ID-2 | Identity Federation & OBO | identity | — | cross_saas, audit_required, write_operations | Token Broker, SaaS Native Authorization, Audit Delegation Chain |
+| ID-3 | Workload Agent Identity | identity | ID-5, ID-6 | autonomous_exec, audit_required, kubernetes_cloud | Workload Certificate Issuer, Dual Representation Audit Record, Least-Privilege Workload Scope |
+| ID-4 | Permission Mirror & Least-of Faithful Access | identity | — | cross_saas_search, frequent_perm_chg, legacy_saas_mix | ACL Sync Pipeline, Effective Permission Calculator, Stale-Access Monitor |
+| ID-5 | JIT Scoped Credentials | identity | ID-6 | cross_saas, high_risk_ops, vault_sts_infra | Credential Broker, PDP Pre-Issuance Check, Credential Audit Trail |
+| ID-6 | Zero-Trust PDP/PEP | identity | — | confidential_data, cross_saas, regulated_industry | Central PDP, Distributed PEP, Org Graph Attribute Feed |
+| ID-7 | Policy-as-Code Guardrail | identity | ID-6 | regulated_industry, enterprise_scale, multi_agent | Structured Policy Input, Policy Engine, Policy Version & Test Gate |
+| ID-8 | Consent & Access Transparency | identity | ID-2, ID-4, ID-5 | personal_data, privacy_regulation, adoption_challenge | Consent Screen, Consent Registry, Revocation & Instant Token Invalidation |
+| RT-1 | Org-Hierarchical Hub & Spoke | runtime | ID-4 | multi_department, enterprise_scale, multi_agent | Hub Agent, Domain Spoke Agent, Capability Registry |
+| RT-2 | RACI-based Multi-Agent Orchestration | runtime | OB-2 | multi_department, high_risk_ops, hitl_approval | Orchestrator, Decision Log, Approval Gate |
+| RT-3 | Risk-Tiered Autonomy | runtime | ID-7 | write_operations, high_risk_ops, enterprise_scale | Risk Scoring Engine, Policy Engine, Approval Workflow |
+| RT-4 | Human Approval Chain | runtime | RT-8, ID-7 | high_risk_ops, hitl_approval, org_chart_maintained | Approver Resolution Engine, Workflow Tool Notification, Decision Log |
+| RT-5 | Intent-to-Enterprise Command Envelope | runtime | — | cross_saas, write_operations, audit_required | Intent Parser + Entity Extractor, Policy Engine, SaaS Adapter |
+| RT-6 | System-of-Record Write Boundary | runtime | RT-5 | sor_writes, sox_internal_ctrl, multi_agent | Domain Service, SoE Draft Store, Audit Trail |
+| RT-7 | Enterprise Saga Agent | runtime | RT-8 | multi_saas_saga, cross_saas, write_operations | Saga Orchestrator, Idempotency Key Manager, Compensation Action Library |
+| RT-8 | Durable Enterprise Agent Workflow | runtime | OB-1 | long_running, hitl_approval, audit_required | Workflow Definition, Activity Function, Budget / Step Limit Guard |
+| RT-9 | Enterprise Work Queue Agent | runtime | — | itsm_queue, enterprise_scale, async_processing | Queue Consumer, Escalation Handler, SLA Monitor |
+| RT-10 | Event-Driven Enterprise Orchestrator | runtime | RT-7, RT-8 | event_driven, async_processing, cross_saas | Event Gateway, Debounce / Rate Limiter, Durable Workflow Engine |
+| RT-11 | Project Workspace / Digital Twin Agent | runtime | KM-1, KM-4, ID-4 | project_team, cross_saas_search, persistent_memory | Project Workspace Provisioner, GraphRAG Memory, Decision Log Store |
+| KM-1 | Access-Controlled Enterprise RAG | knowledge | ID-2, ID-4 | cross_saas_search, frequent_perm_chg, confidential_data | Ingest Pipeline with ACL Embedding, Permission Filter, Hybrid Search + Reranker |
+| KM-2 | Access-Controlled Context Mesh | knowledge | ID-2 | confidential_data, data_residency, cross_saas | Context Router, Context Provider, Context Package Builder |
+| KM-3 | Canonical Enterprise Object Model & Knowledge Graph | knowledge | — | multi_department, cross_saas, enterprise_scale | Entity Resolution Engine, Knowledge Graph, Graph Traversal API |
+| KM-4 | Scoped Memory Hierarchy | knowledge | — | persistent_memory, multi_department, personal_data | Memory Scope Partitioner, Lifecycle Event Handler, Memory Review UI |
+| KM-5 | Purpose-Bound Context Package | knowledge | — | multi_purpose_agent, confidential_data, privacy_regulation | Purpose Policy Store, Context Builder, DLP / Classification Filter |
+| KM-6 | DLP & Redaction Boundary | knowledge | — | personal_data, external_llm_api, privacy_regulation | Input DLP Gate, Output DLP Gate, Log Filter |
+| KM-7 | Ephemeral Secure Context Bus | knowledge | — | top_secret_data, privacy_regulation, regulated_industry | DLP Proxy, Isolated Inference Environment, Sealed Audit Metadata Sink |
+| IN-1 | Enterprise Tool / MCP Gateway | integration | ID-6 | multi_agent, cross_saas, audit_required | Tool Catalog, Auth / Authz Layer, Audit Recorder |
+| IN-2 | SaaS Connector Adapter | integration | — | cross_saas, multi_agent, enterprise_scale | Canonical Tool Interface, SaaS-Specific Adapter, Error Normalizer |
+| IN-3 | Rate / Quota Broker | integration | — | high_api_volume, enterprise_scale, async_processing | Token Bucket per SaaS, Priority Queue, Centralized Retry Handler |
+| IN-4 | Existing iPaaS Reuse | integration | IN-1 | existing_ipaas, cross_saas, enterprise_scale | MCP Adapter, iPaaS Flow, Contract Test Suite |
+| OB-1 | Enterprise Agent Observability Lake | observability | — | prod_deployment, enterprise_scale | OTel Instrumentation Layer, Three-Layer Storage, Replay Tool |
+| OB-2 | Unified Audit & Lineage | observability | GV-1, RT-8 | prod_deployment, audit_required, regulated_industry | Three-Party Audit Record, Correlation ID Stitcher, SIEM Integration |
 
 ## Selection Quick Reference (Tradeoffs)
 

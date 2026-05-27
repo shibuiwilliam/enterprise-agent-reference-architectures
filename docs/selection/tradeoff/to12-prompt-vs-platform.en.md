@@ -23,7 +23,7 @@ decision_rules:
   - condition: "security_enforced_by_prompt == true"
     recommendation: platform_only
     reason: "Anti-pattern: prompt-only security is bypassed by prompt injection ('ignore above instructions...'); never use prompts as security boundary"
-  - condition: "platform_not_yet_ready == true AND considering_prompt_as_stopgap == true"
+  - condition: "infrastructure_readiness == 'incomplete' AND security_enforced_by_prompt == true"
     recommendation: platform_only
     reason: "First establish platform access control (ID-4) and Policy-as-Code (ID-7); no prompt is a valid substitute for missing infrastructure"
   - condition: "defense_in_depth == true"

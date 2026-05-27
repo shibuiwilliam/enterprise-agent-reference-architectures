@@ -8,25 +8,25 @@ status: done
 
 ## 概要
 
-経営層は「エージェントに業務を任せきりにして人件費を削減したい」と考えがちだ。しかし確率的に動作する LLM が Workday の給与データや SAP の発注を自律的に書き換え始めたら、たった1回の誤動作で取り返しがつかない。「情報を探して提案する」（Copilot）と「判断して実行まで完了する」（Autopilot）は明確に分けるべきだ。その分離線は「参照系か更新系か」で引く。
+経営層は「エージェントに業務を任せきりにして人件費を削減したい」と考えがちだ。しかし確率的に動作する LLM が Workday の給与データや SAP の発注を自律的に書き換え始めたら、たった1回の誤動作で取り返しがつかない。「情報を探して提案する」（Copilot）と「判断して実行まで完了する」（Autopilot）は明確に分けるべきだ。その分離線は「参照系か更新系か」という一点で引く。
 
 <!-- machine-readable decision rules for coding agents -->
 ```yaml
 id: TO-5
 decision_rules:
-  - condition: "operation_type == 'read_only' AND eval_complete == true AND canary_passed == true"
+  - condition: "operation_type == 'read' AND eval_complete == true AND canary_passed == true"
     recommendation: autopilot
     reason: "操作が読み取り専用で誤動作しても不可逆な被害が生じず、eval・カナリア・監査証跡が整備されていればAutopilot適切"
-  - condition: "operation_type IN ['update', 'delete', 'approve'] OR target_system IN ['erp', 'crm', 'hr']"
+  - condition: "operation_type IN ['write', 'delete', 'approve'] OR system_of_record == 'erp_crm_hr'"
     recommendation: copilot
     reason: "更新・削除・承認といった不可逆な操作や基幹業務システムへの書き込みはHitLのCopilotを維持する"
-  - condition: "approval_rate_historically_high == true AND risk_level == 'low' AND kill_switch_available == true"
+  - condition: "operation_risk == 'low' AND canary_passed == true AND kill_switch_available == true"
     recommendation: autopilot
     reason: "承認率が高く低リスクな操作にevalとカナリアを適用し、kill switchと監査証跡が整備された状態でAutopilot化する"
-  - condition: "infrastructure_readiness == 'incomplete' OR autopilot_expansion_too_fast == true"
+  - condition: "infrastructure_readiness == 'incomplete'"
     recommendation: copilot
     reason: "「整備が追いつく前にAutopilotにする」という判断が最大のリスク。全操作をCopilotで開始し段階的に拡張する"
-  - condition: "same_agent_mixed_operations == true"
+  - condition: "operation_has_side_effects == true AND irreversibility == 'reversible'"
     recommendation: hybrid_per_operation
     reason: "同一エージェントでも操作種別ごとにCopilot/Autopilotを使い分けるハイブリッドが現実的"
 ```
@@ -57,17 +57,17 @@ Copilot（HitL）を維持すべき条件：
 - 基幹業務システム（ERP・CRM・HRシステム等）への書き込みを行う
 - 操作ミスの影響が広範囲に及び、ロールバックが困難または不可能
 
-Autopilot化の拡張は焦らず段階的に進めること。「整備が追いつく前にAutopilotにする」という判断が最大のリスクだ。
+Autopilot 化は焦らず段階的に進める。「整備が追いつく前に Autopilot にする」という判断が最大のリスクだ。
 
 ## ハイブリッド・段階的アプローチ
 
-同一エージェントでも操作種別ごとにCopilot/Autopilotを使い分けるハイブリッドが現実的だ。
+同一エージェントでも操作種別ごとに Copilot/Autopilot を使い分けるハイブリッドが現実的だ。
 
-1. 全操作をCopilotモードで開始し、人間の承認パターンを観測する。
+1. まず全操作を Copilot モードで開始し、人間の承認パターンを観測する。
 2. 承認率が高く（ほぼ必ず承認される）、かつ低リスクな操作を特定する。
-3. 特定した操作にevalとカナリアを適用し、Autopilot化の候補を絞り込む。
-4. kill switch（[GV-9](../../patterns/gv-governance/gv9-incident-response-kill-switch.md)）と監査証跡（[GV-7](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)）が整備された状態でAutopilot化する。
-5. 定期的にevalを再実行し、動作の劣化があればCopilotに戻す。
+3. 特定した操作に eval とカナリアを適用し、Autopilot 化の候補を絞り込む。
+4. kill switch（[GV-9](../../patterns/gv-governance/gv9-incident-response-kill-switch.md)）と監査証跡（[GV-7](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)）が整備された状態で Autopilot 化する。
+5. 定期的に eval を再実行し、動作に劣化があれば Copilot に戻す。
 
 ## 関連パターン
 

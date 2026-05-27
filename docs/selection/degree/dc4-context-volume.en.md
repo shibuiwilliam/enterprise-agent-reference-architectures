@@ -15,7 +15,7 @@ Just because 50 internal documents were retrieved with RAG does not mean stuffin
 id: DC-4
 parameter: context_volume
 rules:
-  - condition: "task_type == 'qa' AND expected_answer_is_factual"
+  - condition: "task_type == 'qa' AND data_type == 'public_knowledge'"
     recommended_top_k: 3
     token_budget_fraction: 0.25
     reason: "Factual Q&A needs only highly-relevant top chunks; over-stuffing causes 'lost in the middle' quality degradation"
@@ -24,13 +24,13 @@ rules:
     token_budget_fraction: 0.5
     reranking: required
     reason: "Multi-source analysis benefits from broader context; use reranker to filter to most relevant subset within budget"
-  - condition: "data_classification IN ['confidential', 'top_secret'] AND context_contains_sensitive_fields == true"
+  - condition: "data_classification IN ['department_confidential', 'top_secret'] AND context_contains_sensitive_fields == true"
     action: dlp_mask_before_inject
     reason: "Apply DLP/redaction (KM-6) to mask sensitive fields before injecting into context; do not inject raw confidential data"
-  - condition: "context_injection_maximized == true"
+  - condition: "cost_constraint == true AND data_classification == 'public'"
     action: reduce_to_purpose_bound_minimum
     reason: "Anti-pattern: injecting all available data wastes tokens, raises cost, increases latency, and may expose unnecessary confidential data"
-  - condition: "quality_vs_cost_optimum_unknown == true"
+  - condition: "eval_complete == false"
     action: ab_test_top_k_values
     reason: "A/B test different top-k and token budget values; measure quality score vs. cost ratio via GV-7 evaluation pipeline"
 ```

@@ -6,8 +6,8 @@ pattern_id: KM-2
 facet: knowledge
 requires: ["ID-2"]
 required_by: []
-applies_when: [confidentiality_priority_and_data_residency_regulations_important, cross_saas_confidential_data_needed_transversally, avoiding_audit_complexity_from_data_copies]
-not_applicable_when: [public_data_only_with_no_permission_requirements, extreme_low_latency_requirements_federation_too_slow, bulk_statistical_bi_analysis_where_central_lake_better]
+applies_when: [confidential_data, data_residency, cross_saas, audit_required]
+not_applicable_when: [public_data_only, real_time_latency]
 risk_tiers: [2, 3, 4]
 key_technologies: [Federated Search, Context Router, Retrieval Proxy, Embedding Index per Scope, JIT Retrieval]
 ---
@@ -99,6 +99,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ContextRouterRequest {
+          query: string;
+          userId: string;
+          providers: string[];
+          timeoutMs: number;
+        }
+        interface ContextRouterResponse {
+          providerResults: object;
+          timedOut: string[];
+        }
+        interface ContextRouter {
+          contextRouter(req: ContextRouterRequest): Promise<ContextRouterResponse>;
+        }
+      python: |
+        @dataclass
+        class ContextRouterRequest:
+            query: str
+            user_id: str
+            providers: list[str]
+            timeout_ms: int
+        
+        @dataclass
+        class ContextRouterResponse:
+            provider_results: dict
+            timed_out: list[str]
+        
+        class ContextRouter(Protocol):
+            async def context_router(self, req: ContextRouterRequest) -> ContextRouterResponse: ...
   - name: Context Provider (per SaaS)
     description: "Calls the target SaaS with the requester's OBO token (ID-2) and returns only the data the requester is permitted to see."
     input:
@@ -111,6 +141,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ContextProviderRequest {
+          query: string;
+          oboToken: string;
+          saasTarget: string;
+        }
+        interface ContextProviderResponse {
+          data: object[];
+          retrievedAt: Date;
+          permissionBased: boolean;
+        }
+        interface ContextProvider {
+          contextProvider(req: ContextProviderRequest): Promise<ContextProviderResponse>;
+        }
+      python: |
+        @dataclass
+        class ContextProviderRequest:
+            query: str
+            obo_token: str
+            saas_target: str
+        
+        @dataclass
+        class ContextProviderResponse:
+            data: list[dict]
+            retrieved_at: datetime
+            permission_based: bool
+        
+        class ContextProvider(Protocol):
+            async def context_provider(self, req: ContextProviderRequest) -> ContextProviderResponse: ...
   - name: Context Package Builder
     description: "Assembles the collected provider results and passes them through KM-5 purpose policy for final filtering before sending to the LLM."
     input:
@@ -123,6 +183,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ContextPackageBuilderRequest {
+          providerResults: object;
+          purpose: string;
+          tokenBudget: number;
+        }
+        interface ContextPackageBuilderResponse {
+          contextPackage: object;
+          tokenCount: number;
+          purposeTag: string;
+        }
+        interface ContextPackageBuilder {
+          contextPackageBuilder(req: ContextPackageBuilderRequest): Promise<ContextPackageBuilderResponse>;
+        }
+      python: |
+        @dataclass
+        class ContextPackageBuilderRequest:
+            provider_results: dict
+            purpose: str
+            token_budget: int
+        
+        @dataclass
+        class ContextPackageBuilderResponse:
+            context_package: dict
+            token_count: int
+            purpose_tag: str
+        
+        class ContextPackageBuilder(Protocol):
+            async def context_package_builder(self, req: ContextPackageBuilderRequest) -> ContextPackageBuilderResponse: ...
 ```
 
 ## Related Patterns

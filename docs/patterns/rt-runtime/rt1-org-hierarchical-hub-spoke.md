@@ -6,8 +6,8 @@ pattern_id: RT-1
 facet: runtime
 requires: ["ID-4"]
 required_by: []
-applies_when: [large_org_with_department_permission_boundaries, cross_domain_requests_are_frequent, teams_develop_spokes_independently]
-not_applicable_when: [only_one_or_two_domains, nearly_all_requests_span_all_spokes, tightly_coupled_inter_spoke_shared_state]
+applies_when: [multi_department, enterprise_scale, multi_agent, cross_saas]
+not_applicable_when: [single_team, real_time_latency]
 risk_tiers: [2, 3, 4]
 key_technologies: [Semantic Router, LangGraph, AutoGen, CrewAI, Pinecone, Weaviate, pgvector, Capability Registry]
 ---
@@ -16,15 +16,15 @@ key_technologies: [Semantic Router, LangGraph, AutoGen, CrewAI, Pinecone, Weavia
 
 ## 概要
 
-従業員は「有給の残日数を教えて」とも「この商談のステータスを更新して」とも聞く。そのすべてを万能エージェントに任せると、コンテキストは膨れ、権限も一カ所に集中してしまう。このパターンでは、従業員は全社ポータル（Hub）に話しかけるだけでよい。Hub が意図を判別して HR・Engineering・Sales などの専門エージェント（Spoke）に処理を委譲する。各 Spoke は自分の担当 SaaS だけを扱い、権限は Hub → Spoke の方向にのみ減衰して渡される。
+従業員は「有給の残日数を教えて」とも「この商談のステータスを更新して」とも問いかける。そのすべてを万能エージェントに任せると、コンテキストは膨れ、権限も一カ所に集中してしまう。このパターンでは、従業員は全社ポータル（Hub）に話しかけるだけでよい。Hub が意図を判別し、HR・Engineering・Sales などの専門エージェント（Spoke）に処理を委譲する。各 Spoke は自分の担当 SaaS だけを扱い、権限は Hub → Spoke の方向にのみ減衰して渡される。
 
 ## 解決する企業課題
 
-エンタープライズのエージェント基盤では、単一のプロンプトに全部門のツール・ポリシー・データを詰め込む設計が頻出する。コンテキストウィンドウの枯渇だけでなく、「Sales エージェントが HR データにアクセスできる」「HR の API 変更が Sales 機能を壊す」という影響の連鎖が実害につながる。
+エンタープライズのエージェント基盤では、単一のプロンプトに全部門のツール・ポリシー・データを詰め込む設計が頻出する。コンテキストウィンドウの枯渇だけにとどまらず、「Sales エージェントが HR データにアクセスできる」「HR の API 変更が Sales 機能を壊す」という影響の連鎖が実害につながる。
 
-権限の観点でも問題は深刻だ。部門ごとに異なるデータ分類・アクセスポリシーが存在するにもかかわらず、単一エージェントに全ツールを持たせると、権限を部門ごとに分離する仕組みが設計上なくなる。最小権限原則・職務分離というエンタープライズのガバナンス要件に直接違反する形だ。
+権限の観点でも問題は深刻だ。部門ごとに異なるデータ分類・アクセスポリシーが存在するにもかかわらず、単一エージェントに全ツールを持たせると、権限を部門ごとに分離する仕組みが設計上なくなる。最小権限原則・職務分離というガバナンス要件に正面から違反する形だ。
 
-変更管理の面でも同様の課題がある。特定 SaaS の API 変更がシステム全体に波及する構造は、CI/CD サイクルと組織の自律性を著しく損なう。HR 部門が Workday の API バージョンをアップグレードしても、Sales や Engineering の機能に影響が及ぶべきではない。
+変更管理の面でも同様の問題がある。特定 SaaS の API 変更がシステム全体に波及する構造は、CI/CD サイクルと組織の自律性を著しく損なう。HR 部門が Workday の API バージョンをアップグレードしても、Sales や Engineering の機能に影響が及ぶべきではない。
 
 このパターンはコンテキスト分割・権限縮退・変更局所化の3つを一つの設計で解決する。
 
@@ -37,9 +37,9 @@ key_technologies: [Semantic Router, LangGraph, AutoGen, CrewAI, Pinecone, Weavia
 
 ## 解決策と設計
 
-解決策の核心は「組織の責任境界をエージェントのトポロジに写像すること」だ。部門という組織単位が権限境界・ツール所有・SaaS 連携の単位でもある企業では、エージェント構成をその境界に揃えるのが最も自然な設計になる。ハブは意図分類とルーティングのみを担い、ドメイン固有の知識は各スポークが保持する。
+解決策の核心は「組織の責任境界をエージェントのトポロジに写像すること」だ。部門が権限境界・ツール所有・SaaS 連携の単位でもある企業では、エージェント構成をその境界に揃えるのが最も自然な設計になる。ハブは意図分類とルーティングのみを担い、ドメイン固有の知識は各スポークが保持する。
 
-ハブはセマンティックルーターとして機能し、リクエストのドメインを分類する。分類結果に基づいて対象スポークを選択し、権限縮退トークン（OBO トークン）を付けて呼び出す。各スポークは自身のドメインに特化したツール・ベクトル DB・ケイパビリティを持つ。処理が完了するとスポークはサマリをハブへ返し、ハブがユーザへ最終応答を組み立てる。
+ハブはセマンティックルーターとして機能し、リクエストのドメインを分類する。分類結果に基づいて対象スポークを選択し、権限縮退トークン（OBO トークン）を付けて呼び出す。各スポークは自身のドメインに特化したツール・ベクトル DB・ケイパビリティを保有する。処理が完了するとスポークはサマリをハブへ返し、ハブがユーザへ最終応答を組み立てる。
 
 ```mermaid
 flowchart TD
@@ -56,9 +56,9 @@ flowchart TD
     SALES --- VDB_SALES[(Sales ベクトルDB)]
 ```
 
-権限の減衰（permission attenuation）は全ルートで強制される。ハブは呼び出し元ユーザの権限を委譲トークンに変換してスポークに渡すため、スポークはその権限スコープを超えた操作を要求できない。Sales スポークが HR データに無認可でアクセスするような構造的欠陥を、設計として防げる。
+権限の減衰（permission attenuation）は全ルートで強制される。ハブは呼び出し元ユーザの権限を委譲トークンに変換してスポークに渡すため、スポークはその権限スコープを超えた操作を要求できない。Sales スポークが HR データに無認可でアクセスするような構造的欠陥を、設計として防ぐことができる。
 
-スポークはサマリを返すだけなので、ハブのコンテキストウィンドウに全ドメインの生データが蓄積されることもない。各スポークは独立してスケール・バージョンアップでき、ハブへの影響は局所化される。
+スポークはサマリを返すだけなので、ハブのコンテキストウィンドウに全ドメインの生データが蓄積されることもない。各スポークは独立してスケールアップ・バージョンアップでき、ハブへの影響は局所化される。
 
 ## 向き／不向き
 
@@ -80,13 +80,13 @@ flowchart TD
 
 ## 落とし穴／選定の勘所
 
-**単一メガエージェント化**。「とりあえず1エージェントに全ツール・全ポリシーを持たせる」構成は、コンテキスト汚染・権限過多・変更影響の広域化を引き起こす典型的アンチパターンだ。規模が小さいうちは問題が見えにくいが、ドメイン数・ツール数の増加とともに破綻する。
+**単一メガエージェント化**。「とりあえず1エージェントに全ツール・全ポリシーを持たせる」構成は、コンテキスト汚染・権限過多・変更影響の広域化を引き起こす典型的なアンチパターンだ。規模が小さいうちは問題が見えにくいが、ドメイン数・ツール数が増えるにつれて破綻する。
 
-**セマンティックルーターの精度不足**。ルーティングの誤分類は、リクエストが誤ったドメインのスポークに届くことを意味する。ルーターのテストカバレッジを確保しておき、低信頼度のときのフォールバック（人間確認、複数スポーク並列呼び出し）も設計に組み込んでおきたい。
+**セマンティックルーターの精度不足**。ルーティングの誤分類は、リクエストが誤ったドメインのスポークに届くことを意味する。ルーターのテストカバレッジを確保し、低信頼度時のフォールバック（人間確認、複数スポーク並列呼び出し）も設計に組み込んでおきたい。
 
-**スポーク間の暗黙的な権限依存**。あるスポークが別スポークのデータを必要とする場合、ハブを経由せず直接呼び出す設計が生まれやすい。これは権限縮退の一貫性を破壊する。スポーク間の連携は必ずハブを中継し、権限チェックを通過させること。
+**スポーク間の暗黙的な権限依存**。あるスポークが別スポークのデータを必要とする場合、ハブを経由せず直接呼び出す設計が生まれやすい。これは権限縮退の一貫性を破壊する。スポーク間の連携は必ずハブを中継させ、権限チェックを通過させること。
 
-**ケイパビリティレジストリの放棄**。スポークが増えるにつれ、どのスポークがどのツールを持つかの管理が散漫になる。レジストリを中央管理し、GV-2 Agent Catalog と統合しておくことで崩壊を防ぐ。
+**ケイパビリティレジストリの放棄**。スポークが増えるにつれ、どのスポークがどのツールを持つかの管理が散漫になりがちだ。レジストリを中央管理し、GV-2 Agent Catalog と統合しておくことで崩壊を防げる。
 
 **従業員面・顧客面の混在**。スポークが従業員向けと顧客向けの両方のリクエストを処理する設計は、[ID-1 二面分離](../id-identity/id1-workforce-customer-split.md)に違反する。従業員面と顧客面はハブの段階で分離し、スポークは片面のみを担当させること。
 
@@ -108,6 +108,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface HubAgentRequest {
+          userRequest: string;
+          principalId: string;
+          oboToken: string;
+        }
+        interface HubAgentResponse {
+          targetSpoke: string;
+          attenuatedToken: string;
+          intent: string;
+        }
+        interface HubAgent {
+          hubAgent(req: HubAgentRequest): Promise<HubAgentResponse>;
+        }
+      python: |
+        @dataclass
+        class HubAgentRequest:
+            user_request: str
+            principal_id: str
+            obo_token: str
+        
+        @dataclass
+        class HubAgentResponse:
+            target_spoke: str
+            attenuated_token: str
+            intent: str
+        
+        class HubAgent(Protocol):
+            async def hub_agent(self, req: HubAgentRequest) -> HubAgentResponse: ...
   - name: Domain Spoke Agent
     description: "Handles domain-specific tools and vector DB; returns a summary to the hub rather than raw data."
     input:
@@ -120,6 +150,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DomainSpokeAgentRequest {
+          query: string;
+          oboToken: string;
+          domain: string;
+        }
+        interface DomainSpokeAgentResponse {
+          summary: string;
+          toolsUsed: string[];
+          sourceRefs: string[];
+        }
+        interface DomainSpokeAgent {
+          domainSpokeAgent(req: DomainSpokeAgentRequest): Promise<DomainSpokeAgentResponse>;
+        }
+      python: |
+        @dataclass
+        class DomainSpokeAgentRequest:
+            query: str
+            obo_token: str
+            domain: str
+        
+        @dataclass
+        class DomainSpokeAgentResponse:
+            summary: str
+            tools_used: list[str]
+            source_refs: list[str]
+        
+        class DomainSpokeAgent(Protocol):
+            async def domain_spoke_agent(self, req: DomainSpokeAgentRequest) -> DomainSpokeAgentResponse: ...
   - name: Capability Registry
     description: "Central catalog that manages the list of tools each spoke exposes, integrated with GV-2 Agent Catalog."
     input:
@@ -132,6 +192,30 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface CapabilityRegistryRequest {
+          spokeId: string;
+        }
+        interface CapabilityRegistryResponse {
+          tools: object[];
+          updatedAt: Date;
+        }
+        interface CapabilityRegistry {
+          capabilityRegistry(req: CapabilityRegistryRequest): Promise<CapabilityRegistryResponse>;
+        }
+      python: |
+        @dataclass
+        class CapabilityRegistryRequest:
+            spoke_id: str
+        
+        @dataclass
+        class CapabilityRegistryResponse:
+            tools: list[dict]
+            updated_at: datetime
+        
+        class CapabilityRegistry(Protocol):
+            async def capability_registry(self, req: CapabilityRegistryRequest) -> CapabilityRegistryResponse: ...
 ```
 
 ## 関連パターン

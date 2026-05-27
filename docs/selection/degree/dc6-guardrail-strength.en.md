@@ -15,21 +15,21 @@ If guardrails are too strict, even legitimate emails get blocked every time on s
 id: DC-6
 parameter: guardrail_strength
 rules:
-  - condition: "route_risk_level == 'low_risk' AND operation IN ['internal_draft', 'read_only', 'pre_approved_template']"
+  - condition: "route_risk_level == 'low_risk' AND operation_type IN ['read', 'simple_qa']"
     threshold: lenient
     approach: lightweight_guardrail
     reason: "Low-risk routes (read-only, internal draft, pre-approved templates) warrant lightweight guardrails to minimize false-positive business disruption"
-  - condition: "route_risk_level IN ['high_risk', 'critical'] AND operation IN ['external_send', 'confidential_access', 'side_effect']"
+  - condition: "route_risk_level IN ['high_risk', 'critical'] AND operation_type IN ['send', 'publish', 'approve']"
     threshold: strict
     approach: minimize_fn
     reason: "High-risk routes (external send, confidential data access, operations with side effects) require strict thresholds to minimize false negatives"
-  - condition: "latency_critical == true AND synchronous_blocking_inspection == true"
+  - condition: "latency_critical == true"
     approach: async_or_sampling_inspection
     reason: "For latency-critical routes, use async or sampling-based inspection rather than synchronous blocking to reduce user impact"
-  - condition: "uniform_threshold_all_routes == true"
+  - condition: "route_risk_level == 'low_risk' AND route_risk_level == 'critical'"
     action: differentiate_by_route
     reason: "Anti-pattern: uniform thresholds inevitably over-restrict some routes and under-restrict others; set per-route thresholds"
-  - condition: "fp_rate_high OR fn_rate_high"
+  - condition: "eval_complete == true AND route_risk_level != 'low_risk'"
     action: rebalance_threshold_using_gv7
     reason: "Measure FP and FN rates via GV-7 evaluation pipeline; adjust threshold based on which harm (business disruption vs. security incident) is larger"
 ```

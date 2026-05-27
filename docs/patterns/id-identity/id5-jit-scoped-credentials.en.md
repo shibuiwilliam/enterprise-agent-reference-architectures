@@ -6,8 +6,8 @@ pattern_id: ID-5
 facet: identity
 requires: ["ID-6"]
 required_by: []
-applies_when: [agents_spanning_multiple_saas_systems, high_risk_operations_including_writes_deletes_or_pii_access, existing_vault_or_sts_secret_management_infrastructure]
-not_applicable_when: [single_system_internal_api_only_poc, broker_introduction_cost_not_justified_at_small_scale, legacy_saas_with_external_idp_jit_unsupported_combine_with_id4]
+applies_when: [cross_saas, high_risk_ops, vault_sts_infra, audit_required]
+not_applicable_when: [poc_phase, single_team, legacy_saas_mix]
 risk_tiers: [2, 3, 4]
 key_technologies: ["HashiCorp Vault (Dynamic Secrets)", "AWS STS (AssumeRole / GetSessionToken)", Azure Managed Identity / Entra Workload Identity, Google Workload Identity Federation, "OAuth 2.0 Token Exchange (RFC 8693)"]
 ---
@@ -107,6 +107,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CredentialBrokerRequest {
+          agentId: string;
+          scope: string[];
+          targetResource: string;
+          ttlSeconds: number;
+        }
+        interface CredentialBrokerResponse {
+          credential: string;
+          expiresAt: Date;
+          credentialId: string;
+        }
+        interface CredentialBroker {
+          credentialBroker(req: CredentialBrokerRequest): Promise<CredentialBrokerResponse>;
+        }
+      python: |
+        @dataclass
+        class CredentialBrokerRequest:
+            agent_id: str
+            scope: list[str]
+            target_resource: str
+            ttl_seconds: int
+        
+        @dataclass
+        class CredentialBrokerResponse:
+            credential: str
+            expires_at: datetime
+            credential_id: str
+        
+        class CredentialBroker(Protocol):
+            async def credential_broker(self, req: CredentialBrokerRequest) -> CredentialBrokerResponse: ...
   - name: PDP Pre-Issuance Check
     description: "Broker consults ID-6 PDP to confirm the requesting agent is authorized before issuing the credential; sets minimum permitted scope."
     input:
@@ -119,6 +151,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PdpPreIssuanceCheckRequest {
+          agentId: string;
+          requestedScope: string[];
+          targetResource: string;
+        }
+        interface PdpPreIssuanceCheckResponse {
+          authorized: boolean;
+          permittedScope: string[];
+          reason: string;
+        }
+        interface PdpPreIssuanceCheck {
+          pdpPreIssuanceCheck(req: PdpPreIssuanceCheckRequest): Promise<PdpPreIssuanceCheckResponse>;
+        }
+      python: |
+        @dataclass
+        class PdpPreIssuanceCheckRequest:
+            agent_id: str
+            requested_scope: list[str]
+            target_resource: str
+        
+        @dataclass
+        class PdpPreIssuanceCheckResponse:
+            authorized: bool
+            permitted_scope: list[str]
+            reason: str
+        
+        class PdpPreIssuanceCheck(Protocol):
+            async def pdp_pre_issuance_check(self, req: PdpPreIssuanceCheckRequest) -> PdpPreIssuanceCheckResponse: ...
   - name: Credential Audit Trail
     description: "Each issued credential record includes agent_id, purpose, scope, TTL, and target_resource for full forensic traceability."
     input:
@@ -131,6 +193,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CredentialAuditTrailRequest {
+          actorId: string;
+          agentId: string;
+          correlationId: string;
+          action: string;
+          resource: string;
+        }
+        interface CredentialAuditTrailResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface CredentialAuditTrail {
+          credentialAuditTrail(req: CredentialAuditTrailRequest): Promise<CredentialAuditTrailResponse>;
+        }
+      python: |
+        @dataclass
+        class CredentialAuditTrailRequest:
+            actor_id: str
+            agent_id: str
+            correlation_id: str
+            action: str
+            resource: str
+        
+        @dataclass
+        class CredentialAuditTrailResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class CredentialAuditTrail(Protocol):
+            async def credential_audit_trail(self, req: CredentialAuditTrailRequest) -> CredentialAuditTrailResponse: ...
 ```
 
 ## Related Patterns

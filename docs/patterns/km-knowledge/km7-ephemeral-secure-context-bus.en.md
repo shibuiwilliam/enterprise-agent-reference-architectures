@@ -6,8 +6,8 @@ pattern_id: KM-7
 facet: knowledge
 requires: []
 required_by: []
-applies_when: [highest_classification_data_hr_evaluation_ma_insider_information, regulatory_data_requiring_no_plaintext_in_logs_or_cache, ma_or_insider_related_information_processing]
-not_applicable_when: [low_classification_bulk_processing_over_isolation_cost, development_phase_requiring_plaintext_logs_for_debugging, continuous_context_accumulation_use_cases]
+applies_when: [top_secret_data, privacy_regulation, regulated_industry]
+not_applicable_when: [poc_phase, persistent_memory, public_data_only]
 risk_tiers: [4, 5]
 key_technologies: ["Azure OpenAI (VNet integration / private endpoint)", "AWS Bedrock (VPC endpoint)", Azure Confidential VM, "NVIDIA H100 Confidential Computing (Confidential GPU)", "AMD SEV-SNP", "Redis No-Persistence", Presidio, "DPA (Data Processing Agreement)"]
 ---
@@ -133,6 +133,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DlpProxyRequest {
+          rawData: object;
+          sourceSystem: string;
+          classification: string;
+        }
+        interface DlpProxyResponse {
+          maskedData: object;
+          classificationLabel: string;
+        }
+        interface DlpProxy {
+          dlpProxy(req: DlpProxyRequest): Promise<DlpProxyResponse>;
+        }
+      python: |
+        @dataclass
+        class DlpProxyRequest:
+            raw_data: dict
+            source_system: str
+            classification: str
+        
+        @dataclass
+        class DlpProxyResponse:
+            masked_data: dict
+            classification_label: str
+        
+        class DlpProxy(Protocol):
+            async def dlp_proxy(self, req: DlpProxyRequest) -> DlpProxyResponse: ...
   - name: Isolated Inference Environment
     description: "VPC-hosted LLM (or Confidential GPU) with learning opt-out; context lives in-memory only and is zeroed immediately after the session completes."
     input:
@@ -145,6 +173,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface IsolatedInferenceEnvironmentRequest {
+          contextPackage: object;
+          modelId: string;
+          sessionId: string;
+        }
+        interface IsolatedInferenceEnvironmentResponse {
+          response: string;
+          tokensUsed: number;
+          sessionCleared: boolean;
+        }
+        interface IsolatedInferenceEnvironment {
+          isolatedInferenceEnvironment(req: IsolatedInferenceEnvironmentRequest): Promise<IsolatedInferenceEnvironmentResponse>;
+        }
+      python: |
+        @dataclass
+        class IsolatedInferenceEnvironmentRequest:
+            context_package: dict
+            model_id: str
+            session_id: str
+        
+        @dataclass
+        class IsolatedInferenceEnvironmentResponse:
+            response: str
+            tokens_used: int
+            session_cleared: bool
+        
+        class IsolatedInferenceEnvironment(Protocol):
+            async def isolated_inference_environment(self, req: IsolatedInferenceEnvironmentRequest) -> IsolatedInferenceEnvironmentResponse: ...
   - name: Sealed Audit Metadata Sink
     description: "Sends only metadata (latency, token count, cost) and hashed input/output to the observability lake; full content is never persisted."
     input:
@@ -157,6 +215,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SealedAuditMetadataSinkRequest {
+          sessionId: string;
+          latencyMs: number;
+          tokenCount: number;
+          cost: number;
+          inputHash: string;
+          outputHash: string;
+        }
+        interface SealedAuditMetadataSinkResponse {
+          sinkId: string;
+          recordedAt: Date;
+        }
+        interface SealedAuditMetadataSink {
+          sealedAuditMetadataSink(req: SealedAuditMetadataSinkRequest): Promise<SealedAuditMetadataSinkResponse>;
+        }
+      python: |
+        @dataclass
+        class SealedAuditMetadataSinkRequest:
+            session_id: str
+            latency_ms: int
+            token_count: int
+            cost: float
+            input_hash: str
+            output_hash: str
+        
+        @dataclass
+        class SealedAuditMetadataSinkResponse:
+            sink_id: str
+            recorded_at: datetime
+        
+        class SealedAuditMetadataSink(Protocol):
+            async def sealed_audit_metadata_sink(self, req: SealedAuditMetadataSinkRequest) -> SealedAuditMetadataSinkResponse: ...
 ```
 
 ## Related Patterns

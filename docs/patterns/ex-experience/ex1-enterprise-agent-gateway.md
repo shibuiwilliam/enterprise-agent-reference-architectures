@@ -6,8 +6,8 @@ pattern_id: EX-1
 facet: experience
 requires: ["ID-1", "ID-2", "ID-6"]
 required_by: []
-applies_when: [multiple_channels_and_large_scale_enterprise_deployment, governance_and_audit_requirements_exist, workforce_and_customer_channel_separation_required]
-not_applicable_when: [single_poc_with_one_channel_only, completely_isolated_experimental_environment, single_channel_small_scale_usage]
+applies_when: [enterprise_scale, multi_channel, audit_required, customer_facing]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [Kong, Apigee, AWS API Gateway, OIDC, SAML 2.0, Risk Scoring, OpenTelemetry Trace ID, Token Bucket]
 ---
@@ -16,11 +16,11 @@ key_technologies: [Kong, Apigee, AWS API Gateway, OIDC, SAML 2.0, Risk Scoring, 
 
 ## 概要
 
-従業員が Slack からエージェントに話しかけても、Web ポータルから使っても、Salesforce の画面内で呼び出しても、すべてのリクエストが通る「たった1つの入口」を置く。この入口で本人確認・リスク判定・流量制御・監査ログの記録をまとめて済ませるため、チャネルが増えてもセキュリティと統制の品質が下がらない。数万人が一斉に使う朝のピーク時のバースト吸収も、このゲートウェイが引き受ける。
+従業員が Slack からエージェントに話しかけても、Web ポータルから使っても、Salesforce の画面内で呼び出しても、すべてのリクエストが通る「たった1つの入口」を置く。この入口で本人確認・リスク判定・流量制御・監査ログの記録をまとめて済ませる。チャネルが増えてもセキュリティと統制の品質が下がらないのは、この一元化があるからだ。数万人が一斉に使う朝のピーク時のバースト吸収も、このゲートウェイが引き受ける。
 
 ## 解決する企業課題
 
-エンタープライズ AI が複数チャネル（Slack/Web/SaaS 埋め込み/API）から呼ばれるようになると、入口が分散し統制・監査・容量管理が崩れていく。チャネルごとに認証方式が異なれば権限チェックの網羅性を保証できないし、監査ログも分断されて事後調査が難しくなる。数万人規模のバースト（業務時間帯の全社一斉利用）を個々のエージェントで吸収しようとすれば、バックエンドに過負荷がかかる。チャネルごとに個別の統制ロジックを実装すると保守コストが乗数的に増大し、ガバナンスの穴も生じやすい。単一入口を置くことで、これらの問題を構造的にまとめて封じる。
+エンタープライズ AI が複数チャネル（Slack/Web/SaaS 埋め込み/API）から呼ばれるようになると、入口が分散して統制・監査・容量管理が崩れていく。チャネルごとに認証方式が異なれば権限チェックの網羅性を保証できない。監査ログも分断され、事後調査が難しくなる。数万人規模のバースト（業務時間帯の全社一斉利用）を個々のエージェントで吸収しようとすれば、バックエンドに過負荷がかかる。チャネルごとに個別の統制ロジックを実装すると保守コストが乗数的に増大し、ガバナンスの穴も生じやすい。単一入口を置くことで、これらの問題を構造的にまとめて封じられる。
 
 !!! tip "最小成立条件（MVP）"
     単一のリバースプロキシで全チャネルのリクエストを受け、OIDC 認証・相関 ID 付与・監査ログ出力の3点を実装する。リスク分類やレート制御は後段階で追加すればよい。
@@ -31,9 +31,9 @@ key_technologies: [Kong, Apigee, AWS API Gateway, OIDC, SAML 2.0, Risk Scoring, 
 
 ## 解決策と設計
 
-Gateway を「実行面への唯一の通路」として位置づけ、すべての統制をここで一括実施する。個別エージェントは認証・リスク判定・監査エントリを持たず、Gateway が保証した本人 ID と相関 ID を受け取るだけでよい。新しいエージェントやチャネルが追加されても、統制ロジックを再実装する必要はない。
+Gateway を「実行面への唯一の通路」として位置づけ、すべての統制をここで一括実施する。個別エージェントは認証・リスク判定・監査エントリを持たない。Gateway が保証した本人 ID と相関 ID を受け取るだけでよい。新しいエージェントやチャネルが追加されても、統制ロジックを再実装する必要がない。
 
-Gateway はチャネル（Slack/Web/SaaS埋め込み）からのリクエストをすべて吸収し、本人 ID と相関 ID を後段へ伝播する。認証・分類・リスク判定・レート制御・監査を一手に引き受け、実行面への最初の PEP（[ID-6](../id-identity/id6-zero-trust-pdp-pep.md)）として機能する。
+Gateway はチャネル（Slack/Web/SaaS埋め込み）からのリクエストをすべて吸収し、本人 ID と相関 ID を後段へ伝播する。認証・分類・リスク判定・レート制御・監査を一手に引き受け、実行面への最初の PEP（[ID-6](../id-identity/id6-zero-trust-pdp-pep.md)）として働く。
 
 ```mermaid
 flowchart TB
@@ -105,6 +105,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface AuthenticationRiskClassificationRequest {
+          idToken: string;
+          channel: string;
+          requestPayload: object;
+        }
+        interface AuthenticationRiskClassificationResponse {
+          principalId: string;
+          correlationId: string;
+          riskTier: number;
+          intent: string;
+        }
+        interface AuthenticationRiskClassification {
+          authenticationRiskClassification(req: AuthenticationRiskClassificationRequest): Promise<AuthenticationRiskClassificationResponse>;
+        }
+      python: |
+        @dataclass
+        class AuthenticationRiskClassificationRequest:
+            id_token: str
+            channel: str
+            request_payload: dict
+        
+        @dataclass
+        class AuthenticationRiskClassificationResponse:
+            principal_id: str
+            correlation_id: str
+            risk_tier: int
+            intent: str
+        
+        class AuthenticationRiskClassification(Protocol):
+            async def authentication_risk_classification(self, req: AuthenticationRiskClassificationRequest) -> AuthenticationRiskClassificationResponse: ...
   - name: Rate Control & Burst Absorption
     description: "Token-bucket rate limiter that absorbs enterprise-wide peak bursts and coordinates with IN-3 Rate/Quota Broker for SaaS-side quota limits."
     input:
@@ -117,6 +149,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface RateControlBurstAbsorptionRequest {
+          agentId: string;
+          saasTarget: string;
+          requestCount: number;
+        }
+        interface RateControlBurstAbsorptionResponse {
+          allowed: boolean;
+          remainingQuota: number;
+          retryAfterMs: number;
+        }
+        interface RateControlBurstAbsorption {
+          rateControlBurstAbsorption(req: RateControlBurstAbsorptionRequest): Promise<RateControlBurstAbsorptionResponse>;
+        }
+      python: |
+        @dataclass
+        class RateControlBurstAbsorptionRequest:
+            agent_id: str
+            saas_target: str
+            request_count: int
+        
+        @dataclass
+        class RateControlBurstAbsorptionResponse:
+            allowed: bool
+            remaining_quota: int
+            retry_after_ms: int
+        
+        class RateControlBurstAbsorption(Protocol):
+            async def rate_control_burst_absorption(self, req: RateControlBurstAbsorptionRequest) -> RateControlBurstAbsorptionResponse: ...
   - name: Audit Entry Point
     description: "Emits a structured audit record per request (actor ID, channel, intent, risk tier, correlation ID) to OB-1 Observability Lake."
     input:
@@ -129,6 +191,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface AuditEntryPointRequest {
+          actorId: string;
+          agentId: string;
+          correlationId: string;
+          action: string;
+          resource: string;
+        }
+        interface AuditEntryPointResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface AuditEntryPoint {
+          auditEntryPoint(req: AuditEntryPointRequest): Promise<AuditEntryPointResponse>;
+        }
+      python: |
+        @dataclass
+        class AuditEntryPointRequest:
+            actor_id: str
+            agent_id: str
+            correlation_id: str
+            action: str
+            resource: str
+        
+        @dataclass
+        class AuditEntryPointResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class AuditEntryPoint(Protocol):
+            async def audit_entry_point(self, req: AuditEntryPointRequest) -> AuditEntryPointResponse: ...
 ```
 
 ## 関連パターン

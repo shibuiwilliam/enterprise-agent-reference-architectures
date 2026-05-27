@@ -14,13 +14,13 @@ The damage from "retrieving a record" and "updating a record" are completely dif
 ```yaml
 id: TO-4
 decision_rules:
-  - condition: "operation_type == 'read' AND human_review_before_use == true"
+  - condition: "operation_type == 'read' AND audit_required == true"
     recommendation: read_only
     reason: "Information retrieval, reporting, and analysis are safe for autopilot; humans review output before acting on it"
-  - condition: "operation_type == 'write' AND irreversible == false AND operation_frequency == 'high' AND eval_complete == true"
+  - condition: "operation_type == 'write' AND irreversibility == 'reversible' AND operation_frequency == 'high' AND eval_complete == true"
     recommendation: auto_write_low_risk
     reason: "Low-risk, high-frequency, reversible write operations can be automated once eval and canary validation are complete"
-  - condition: "operation_type == 'write' AND irreversible == true AND approval_workflow_available == true"
+  - condition: "operation_type == 'write' AND irreversibility == 'irreversible' AND approval_workflow_available == true"
     recommendation: approved_write
     reason: "Irreversible write operations require human approval; use SoR write boundary with approval chain"
   - condition: "system_of_record == 'erp_crm_hr' OR financial_impact == true"

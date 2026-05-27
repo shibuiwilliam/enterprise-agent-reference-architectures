@@ -6,8 +6,8 @@ pattern_id: RT-9
 facet: runtime
 requires: []
 required_by: []
-applies_when: [existing_itsm_or_customer_support_system_with_volume_growth_or_after_hours_need, unified_sla_and_ticket_history_management_required, agent_scope_is_clearly_definable_with_escalation_logic_implementable]
-not_applicable_when: [no_defined_tasks_and_general_purpose_assistant_preferred, sla_does_not_exist_and_priority_management_not_needed, no_human_escalation_target_exists]
+applies_when: [itsm_queue, enterprise_scale, async_processing]
+not_applicable_when: [single_team, real_time_latency]
 risk_tiers: [1, 2, 3]
 key_technologies: [ServiceNow, Zendesk, Jira Service Management, LangGraph, LangChain Agents]
 ---
@@ -16,15 +16,15 @@ key_technologies: [ServiceNow, Zendesk, Jira Service Management, LangGraph, Lang
 
 ## 概要
 
-エージェントを「話しかけると答えるチャットボット」ではなく、ServiceNow や Zendesk の業務キューからチケットを取って処理する「もう一人のオペレーター」として設計する。人間と同じキューに並び、自律的に処理を試みて、できないタスクは人間にエスカレーションする。SLA 管理・負荷分散・優先度付けは既存のキュー基盤がそのまま担うため、AI のための特別な仕組みを作る必要がない。
+エージェントを「話しかけると答えるチャットボット」ではなく、ServiceNow や Zendesk の業務キューからチケットを取って処理する「もう一人のオペレーター」として設計する。人間と同じキューに並び、自律的に処理を試みて、できないタスクは人間にエスカレーションする。SLA 管理・負荷分散・優先度付けは既存のキュー基盤がそのまま担うため、AI のために特別な仕組みを用意する必要がない。
 
 ## 解決する企業課題
 
-AI 処理と人間業務ワークフローの断絶が、このパターンが解決する中心的な課題だ。「AI 専用チャット画面」を別途設けると、既存業務フロー（ServiceNow/Zendesk/Jira で管理されている SLA・優先度・担当割り当て）から切り離された孤立した処理が生まれる。AI が処理したかどうか、SLA が守られたかどうかを追跡できなくなる。
+AI 処理と人間業務ワークフローの断絶——これがこのパターンが解決する中心的な課題だ。「AI 専用チャット画面」を別途設けると、既存業務フロー（ServiceNow/Zendesk/Jira で管理されている SLA・優先度・担当割り当て）から切り離された孤立した処理が生まれる。AI が処理したかどうか、SLA が守られたかどうかを追跡できなくなる。
 
 組織は時間外対応や処理量の増加に対して、新規チャンネルではなく既存業務フローの延長として自動化を求める。既存の ITSM プロセス（ServiceNow/Zendesk/Jira）には SLA 管理・エスカレーションルール・負荷分散のロジックがすでに組み込まれており、エージェントが別系統の処理を持つことはその資産を無駄にする。
 
-監査の観点でも重要だ。「誰（AI か人間か）がいつ何を処理したか」をチケット履歴として一元管理することが規制対応や品質保証の前提になる。AI 専用チャネルでは、この情報が既存の ITSM 記録と分断される。
+監査の観点でも重要だ。「誰（AI か人間か）がいつ何を処理したか」をチケット履歴として一元管理することが、規制対応や品質保証の前提になる。AI 専用チャネルでは、この情報が既存の ITSM 記録と分断されてしまう。
 
 !!! tip "最小成立条件（MVP）"
     既存のチケットシステム（ServiceNow や Zendesk）の1カテゴリに対してエージェントをコンシューマとして接続し、処理可能なら完了・不可能なら即エスカレーションする最小ワーカーを1体稼働させる構成。
@@ -54,7 +54,7 @@ flowchart TD
     P --> LOG
 ```
 
-タスク取得時にエージェントは自身の処理スコープ（対応可能なカテゴリ・リスクレベル・権限範囲）を評価する。スコープ外・高リスク・判断困難なケースは即座に人間にエスカレーションする。SLA 残時間が一定値を下回った場合も自動でエスカレーションする。部分処理を行った場合は、調査結果・試行内容をチケットにコメントとして記録してから引き継ぐ——担当者が引き継ぎ時に経緯をすぐ把握できるようにするためだ。
+タスク取得時にエージェントは自身の処理スコープ（対応可能なカテゴリ・リスクレベル・権限範囲）を評価する。スコープ外・高リスク・判断困難なケースは即座に人間にエスカレーションする。SLA 残時間が一定値を下回った場合も自動でエスカレーションする。部分処理を行った場合は、調査結果・試行内容をチケットにコメントとして記録してから引き継ぐ。担当者が経緯をすぐ把握できるようにするためだ。
 
 ## 向き／不向き
 
@@ -105,6 +105,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface QueueConsumerRequest {
+          queueId: string;
+          agentId: string;
+          maxConcurrent: number;
+        }
+        interface QueueConsumerResponse {
+          taskId: string;
+          task: object;
+          assignedAt: Date;
+        }
+        interface QueueConsumer {
+          queueConsumer(req: QueueConsumerRequest): Promise<QueueConsumerResponse>;
+        }
+      python: |
+        @dataclass
+        class QueueConsumerRequest:
+            queue_id: str
+            agent_id: str
+            max_concurrent: int
+        
+        @dataclass
+        class QueueConsumerResponse:
+            task_id: str
+            task: dict
+            assigned_at: datetime
+        
+        class QueueConsumer(Protocol):
+            async def queue_consumer(self, req: QueueConsumerRequest) -> QueueConsumerResponse: ...
   - name: Escalation Handler
     description: "Evaluates whether a task is within scope; if not, documents findings and attempts to date in ticket comments before reassigning to a human."
     input:
@@ -117,6 +147,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface EscalationHandlerRequest {
+          taskId: string;
+          agentId: string;
+          inScopeCheck: boolean;
+          findings: string;
+        }
+        interface EscalationHandlerResponse {
+          escalated: boolean;
+          assignedTo: string;
+          escalationReason: string;
+        }
+        interface EscalationHandler {
+          escalationHandler(req: EscalationHandlerRequest): Promise<EscalationHandlerResponse>;
+        }
+      python: |
+        @dataclass
+        class EscalationHandlerRequest:
+            task_id: str
+            agent_id: str
+            in_scope_check: bool
+            findings: str
+        
+        @dataclass
+        class EscalationHandlerResponse:
+            escalated: bool
+            assigned_to: str
+            escalation_reason: str
+        
+        class EscalationHandler(Protocol):
+            async def escalation_handler(self, req: EscalationHandlerRequest) -> EscalationHandlerResponse: ...
   - name: SLA Monitor
     description: "Triggers automatic escalation to a human when SLA remaining time falls below threshold or processing cannot proceed."
     input:
@@ -129,6 +191,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface SlaMonitorRequest {
+          taskId: string;
+          slaThresholdMs: number;
+          currentElapsedMs: number;
+        }
+        interface SlaMonitorResponse {
+          slaBreached: boolean;
+          alertSent: boolean;
+          escalatedTo: string;
+        }
+        interface SlaMonitor {
+          slaMonitor(req: SlaMonitorRequest): Promise<SlaMonitorResponse>;
+        }
+      python: |
+        @dataclass
+        class SlaMonitorRequest:
+            task_id: str
+            sla_threshold_ms: int
+            current_elapsed_ms: int
+        
+        @dataclass
+        class SlaMonitorResponse:
+            sla_breached: bool
+            alert_sent: bool
+            escalated_to: str
+        
+        class SlaMonitor(Protocol):
+            async def sla_monitor(self, req: SlaMonitorRequest) -> SlaMonitorResponse: ...
 ```
 
 ## 関連パターン

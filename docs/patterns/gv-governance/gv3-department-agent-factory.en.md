@@ -6,8 +6,8 @@ pattern_id: GV-3
 facet: governance
 requires: ["GV-1", "GV-2", "ID-4", "GV-4"]
 required_by: []
-applies_when: [ai_coe_or_platform_team_responsible_for_multi_department_deployment, thousands_of_users_requiring_systematic_per_department_agent_management, frequent_joiner_mover_leaver_cycles_where_auto_permission_tracking_reduces_ops_cost]
-not_applicable_when: [small_org_where_single_shared_agent_suffices, single_team_poc_phase]
+applies_when: [multi_department, enterprise_scale, frequent_perm_chg]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [2, 3, 4]
 key_technologies: [YAML/JSON Template Store, "Git (GV-6)", "Low-Code Builder", "Policy Pack (ID-7)", Connector Pack, "Evaluation Pack (GV-7)", Okta, Workday]
 ---
@@ -110,6 +110,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface RoleBasedTemplateStoreRequest {
+          role: string;
+          department: string;
+          version: string;
+        }
+        interface RoleBasedTemplateStoreResponse {
+          template: object;
+          policyPack: string;
+          connectors: string[];
+        }
+        interface RoleBasedTemplateStore {
+          roleBasedTemplateStore(req: RoleBasedTemplateStoreRequest): Promise<RoleBasedTemplateStoreResponse>;
+        }
+      python: |
+        @dataclass
+        class RoleBasedTemplateStoreRequest:
+            role: str
+            department: str
+            version: str
+        
+        @dataclass
+        class RoleBasedTemplateStoreResponse:
+            template: dict
+            policy_pack: str
+            connectors: list[str]
+        
+        class RoleBasedTemplateStore(Protocol):
+            async def role_based_template_store(self, req: RoleBasedTemplateStoreRequest) -> RoleBasedTemplateStoreResponse: ...
   - name: Low-Code Builder
     description: "Allows only derivative configuration from templates; blocks any settings outside the AI CoE-defined guardrails."
     input:
@@ -122,6 +152,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface LowCodeBuilderRequest {
+          templateId: string;
+          customizations: object;
+          agentOwnerId: string;
+        }
+        interface LowCodeBuilderResponse {
+          agentConfig: object;
+          validationErrors: string[];
+        }
+        interface LowCodeBuilder {
+          lowCodeBuilder(req: LowCodeBuilderRequest): Promise<LowCodeBuilderResponse>;
+        }
+      python: |
+        @dataclass
+        class LowCodeBuilderRequest:
+            template_id: str
+            customizations: dict
+            agent_owner_id: str
+        
+        @dataclass
+        class LowCodeBuilderResponse:
+            agent_config: dict
+            validation_errors: list[str]
+        
+        class LowCodeBuilder(Protocol):
+            async def low_code_builder(self, req: LowCodeBuilderRequest) -> LowCodeBuilderResponse: ...
   - name: IdP Role Change Listener
     description: "Receives Okta/Workday role-change events and triggers automatic permission grant/revoke in GV-1 Control Plane within a defined SLA."
     input:
@@ -134,6 +192,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface IdpRoleChangeListenerRequest {
+          userId: string;
+          oldRole: string;
+          newRole: string;
+          eventTimestamp: Date;
+        }
+        interface IdpRoleChangeListenerResponse {
+          permissionsUpdated: boolean;
+          agentsAffected: string[];
+        }
+        interface IdpRoleChangeListener {
+          idpRoleChangeListener(req: IdpRoleChangeListenerRequest): Promise<IdpRoleChangeListenerResponse>;
+        }
+      python: |
+        @dataclass
+        class IdpRoleChangeListenerRequest:
+            user_id: str
+            old_role: str
+            new_role: str
+            event_timestamp: datetime
+        
+        @dataclass
+        class IdpRoleChangeListenerResponse:
+            permissions_updated: bool
+            agents_affected: list[str]
+        
+        class IdpRoleChangeListener(Protocol):
+            async def idp_role_change_listener(self, req: IdpRoleChangeListenerRequest) -> IdpRoleChangeListenerResponse: ...
 ```
 
 ## Related Patterns

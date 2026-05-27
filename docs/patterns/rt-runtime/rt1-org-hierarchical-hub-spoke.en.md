@@ -6,8 +6,8 @@ pattern_id: RT-1
 facet: runtime
 requires: ["ID-4"]
 required_by: []
-applies_when: [large_org_with_department_permission_boundaries, cross_domain_requests_are_frequent, teams_develop_spokes_independently]
-not_applicable_when: [only_one_or_two_domains, nearly_all_requests_span_all_spokes, tightly_coupled_inter_spoke_shared_state]
+applies_when: [multi_department, enterprise_scale, multi_agent, cross_saas]
+not_applicable_when: [single_team, real_time_latency]
 risk_tiers: [2, 3, 4]
 key_technologies: [Semantic Router, LangGraph, AutoGen, CrewAI, Pinecone, Weaviate, pgvector, Capability Registry]
 ---
@@ -108,6 +108,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface HubAgentRequest {
+          userRequest: string;
+          principalId: string;
+          oboToken: string;
+        }
+        interface HubAgentResponse {
+          targetSpoke: string;
+          attenuatedToken: string;
+          intent: string;
+        }
+        interface HubAgent {
+          hubAgent(req: HubAgentRequest): Promise<HubAgentResponse>;
+        }
+      python: |
+        @dataclass
+        class HubAgentRequest:
+            user_request: str
+            principal_id: str
+            obo_token: str
+        
+        @dataclass
+        class HubAgentResponse:
+            target_spoke: str
+            attenuated_token: str
+            intent: str
+        
+        class HubAgent(Protocol):
+            async def hub_agent(self, req: HubAgentRequest) -> HubAgentResponse: ...
   - name: Domain Spoke Agent
     description: "Handles domain-specific tools and vector DB; returns a summary to the hub rather than raw data."
     input:
@@ -120,6 +150,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DomainSpokeAgentRequest {
+          query: string;
+          oboToken: string;
+          domain: string;
+        }
+        interface DomainSpokeAgentResponse {
+          summary: string;
+          toolsUsed: string[];
+          sourceRefs: string[];
+        }
+        interface DomainSpokeAgent {
+          domainSpokeAgent(req: DomainSpokeAgentRequest): Promise<DomainSpokeAgentResponse>;
+        }
+      python: |
+        @dataclass
+        class DomainSpokeAgentRequest:
+            query: str
+            obo_token: str
+            domain: str
+        
+        @dataclass
+        class DomainSpokeAgentResponse:
+            summary: str
+            tools_used: list[str]
+            source_refs: list[str]
+        
+        class DomainSpokeAgent(Protocol):
+            async def domain_spoke_agent(self, req: DomainSpokeAgentRequest) -> DomainSpokeAgentResponse: ...
   - name: Capability Registry
     description: "Central catalog that manages the list of tools each spoke exposes, integrated with GV-2 Agent Catalog."
     input:
@@ -132,6 +192,30 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CapabilityRegistryRequest {
+          spokeId: string;
+        }
+        interface CapabilityRegistryResponse {
+          tools: object[];
+          updatedAt: Date;
+        }
+        interface CapabilityRegistry {
+          capabilityRegistry(req: CapabilityRegistryRequest): Promise<CapabilityRegistryResponse>;
+        }
+      python: |
+        @dataclass
+        class CapabilityRegistryRequest:
+            spoke_id: str
+        
+        @dataclass
+        class CapabilityRegistryResponse:
+            tools: list[dict]
+            updated_at: datetime
+        
+        class CapabilityRegistry(Protocol):
+            async def capability_registry(self, req: CapabilityRegistryRequest) -> CapabilityRegistryResponse: ...
 ```
 
 ## Related Patterns

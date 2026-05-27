@@ -6,8 +6,8 @@ pattern_id: GV-5
 facet: governance
 requires: ["GV-1"]
 required_by: []
-applies_when: [multiple_vendors_and_models_used_in_combination, data_classification_based_routing_required, enterprise_wide_ai_platform_requiring_cost_visibility_and_compliance]
-not_applicable_when: [single_application_with_lightweight_configuration, completely_offline_air_gapped_environment, single_model_poc]
+applies_when: [enterprise_scale, confidential_data, external_llm_api, cost_mgmt_needed]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4, 5]
 key_technologies: [LiteLLM, Portkey Proxy, Amazon Bedrock, "Azure OpenAI (VNet integration)", vLLM, "TGI (Text Generation Inference)", "KM-6 DLP & Redaction Boundary"]
 ---
@@ -20,7 +20,7 @@ key_technologies: [LiteLLM, Portkey Proxy, Amazon Bedrock, "Azure OpenAI (VNet i
 
 ## 解決する企業課題
 
-各チームが独自に外部 LLM API を直接呼び出す運用が定着すると、機密データが承認なしに外部へ送信される事故が起きる。どのチームがどのモデルを使っているか把握できず、ベンダーが乱立してコストも不可視になる。データ所在地（リージョン）要件や DPA（データ処理契約）が守られているかを確認する手段もなくなっていく。プロバイダが無告知でモデルを更新すると挙動の変化を検知できないし、LLM 呼び出しのコストを部門別に集計できなければコスト配賦（GV-8）も ROI 計測（GV-10）も成立しない。これらをすべて個別管理しようとすると統制コストが爆発する——Gateway を唯一の通路にすることで、まとめて解決する。
+各チームが独自に外部 LLM API を直接呼び出す運用が定着すると、機密データが承認なしに外部へ送信される事故が起きる。どのチームがどのモデルを使っているか把握できず、ベンダーが乱立してコストも不可視になる。データ所在地（リージョン）要件や DPA（データ処理契約）が守られているかを確認する手段もなくなっていく。プロバイダが無告知でモデルを更新すると挙動の変化を検知できない。LLM 呼び出しのコストを部門別に集計できなければ、コスト配賦（GV-8）も ROI 計測（GV-10）も成立しない。これらをすべて個別管理しようとすると統制コストが爆発する——Gateway を唯一の通路にすることで、まとめて解決できる。
 
 !!! tip "最小成立条件（MVP）"
     LiteLLM 等のプロキシを1台立て、承認済みモデルのホワイトリストと egress 制御による直接 API 呼び出しの遮断を設定する。PII 検出やデータ分類ルーティングは段階的に追加すればよい。
@@ -88,8 +88,8 @@ flowchart TB
     Gateway を設置しても、開発者が直接外部 API を叩く迂回ルートを放置すれば意味をなさない。egress 制御（ネットワークポリシー/ファイアウォール）で LLM API への直接通信を遮断する。
 
 - 本文をログ基盤に直接入れると容量大・高コスト・PII リスクになる。本文はストレージに退避し、メタデータのみ監査に送る（三層分離）。
-- モデルベンダーのサイレントアップデートに対応するため、[GV-6 Version Registry](gv6-version-registry.md) と連携してモデル版を記録しておく。
-- Gateway のレイテンシが業務に影響しないよう、接続プール・キャッシュ・非同期処理を適切に設計することも忘れずに。
+- モデルベンダーのサイレントアップデートに備えて、[GV-6 Version Registry](gv6-version-registry.md) と連携してモデル版を記録しておく。
+- Gateway のレイテンシが業務に影響しないよう、接続プール・キャッシュ・非同期処理を適切に設計する。
 
 ## Interfaces
 
@@ -109,6 +109,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ModelApprovalCheckRequest {
+          modelId: string;
+          agentId: string;
+          requestedVersion: string;
+        }
+        interface ModelApprovalCheckResponse {
+          approved: boolean;
+          allowlistedVersion: string;
+          reason: string;
+        }
+        interface ModelApprovalCheck {
+          modelApprovalCheck(req: ModelApprovalCheckRequest): Promise<ModelApprovalCheckResponse>;
+        }
+      python: |
+        @dataclass
+        class ModelApprovalCheckRequest:
+            model_id: str
+            agent_id: str
+            requested_version: str
+        
+        @dataclass
+        class ModelApprovalCheckResponse:
+            approved: bool
+            allowlisted_version: str
+            reason: str
+        
+        class ModelApprovalCheck(Protocol):
+            async def model_approval_check(self, req: ModelApprovalCheckRequest) -> ModelApprovalCheckResponse: ...
   - name: Data Classification Router
     description: "Routes top-secret classified requests to VPC/on-premises inference and general data requests to external API providers."
     input:
@@ -121,6 +151,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DataClassificationRouterRequest {
+          dataClassification: string;
+          requestPayload: object;
+          agentId: string;
+        }
+        interface DataClassificationRouterResponse {
+          routedTo: string;
+          inferenceEndpoint: string;
+        }
+        interface DataClassificationRouter {
+          dataClassificationRouter(req: DataClassificationRouterRequest): Promise<DataClassificationRouterResponse>;
+        }
+      python: |
+        @dataclass
+        class DataClassificationRouterRequest:
+            data_classification: str
+            request_payload: dict
+            agent_id: str
+        
+        @dataclass
+        class DataClassificationRouterResponse:
+            routed_to: str
+            inference_endpoint: str
+        
+        class DataClassificationRouter(Protocol):
+            async def data_classification_router(self, req: DataClassificationRouterRequest) -> DataClassificationRouterResponse: ...
   - name: Token & Cost Meter
     description: "Records per-request token counts and cost with cost_center tag; feeds GV-8 Cost Quota & Chargeback for department-level aggregation."
     input:
@@ -133,6 +191,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface TokenCostMeterRequest {
+          agentId: string;
+          costCenter: string;
+          modelId: string;
+          tokenCount: number;
+        }
+        interface TokenCostMeterResponse {
+          cost: number;
+          currency: string;
+          recordedAt: Date;
+        }
+        interface TokenCostMeter {
+          tokenCostMeter(req: TokenCostMeterRequest): Promise<TokenCostMeterResponse>;
+        }
+      python: |
+        @dataclass
+        class TokenCostMeterRequest:
+            agent_id: str
+            cost_center: str
+            model_id: str
+            token_count: int
+        
+        @dataclass
+        class TokenCostMeterResponse:
+            cost: float
+            currency: str
+            recorded_at: datetime
+        
+        class TokenCostMeter(Protocol):
+            async def token_cost_meter(self, req: TokenCostMeterRequest) -> TokenCostMeterResponse: ...
 ```
 
 ## 関連パターン

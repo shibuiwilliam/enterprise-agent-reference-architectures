@@ -3,6 +3,406 @@
 # Generated from docs/selection/tradeoff/ and docs/selection/degree/ pages
 ---
 
+input_schema:
+  variables:
+    - name: purpose
+      type: enum
+      values: [personal_assistance, department_service, company_batch, customer_support, event_driven, project_collaboration]
+      description: "Primary purpose or usage pattern of the agent"
+      description_ja: "エージェントの主な目的・利用形態"
+
+    - name: operation_type
+      type: enum
+      values: [read, write, delete, approve, send, publish, simple_qa, document_analysis, multi_step_workflow, multi_agent]
+      description: "Category of operation the agent performs"
+      description_ja: "エージェントが実行する操作の種類"
+
+    - name: data_classification
+      type: ordinal
+      values: [public, internal_general, department_confidential, top_secret]
+      description: "Sensitivity classification of data involved in the operation"
+      description_ja: "操作対象データの機密度分類"
+
+    - name: irreversibility
+      type: ordinal
+      values: [reversible, partially_reversible, irreversible]
+      description: "Degree to which the operation can be undone"
+      description_ja: "操作の不可逆性の度合い"
+
+    - name: impact_scope
+      type: ordinal
+      values: [personal, team, department, company_wide, external]
+      description: "Organizational scope of the operation's impact"
+      description_ja: "操作の影響が及ぶ組織範囲"
+
+    - name: impact_type
+      type: enum
+      values: [informational, financial, contractual, external_publish, permission_escalation, hr]
+      description: "Nature of the business impact"
+      description_ja: "ビジネスインパクトの性質"
+
+    - name: operation_risk
+      type: ordinal
+      values: [low, medium, high, critical]
+      description: "Overall risk level of the operation, combining reversibility, impact, and data sensitivity"
+      description_ja: "不可逆性・影響範囲・機密度を総合したリスクレベル"
+
+    - name: deployment_phase
+      type: enum
+      values: [initial, stable, mature]
+      description: "Current maturity phase of the agent deployment"
+      description_ja: "エージェント展開の成熟フェーズ"
+
+    - name: eval_complete
+      type: boolean
+      description: "Whether evaluation and canary validation have been completed"
+      description_ja: "eval・カナリア検証が完了しているか"
+
+    - name: saas_supports_token_exchange
+      type: boolean
+      description: "Whether the target SaaS supports RFC 8693 token exchange for User OBO"
+      description_ja: "対象SaaSがRFC 8693 Token Exchange（User OBO）に対応しているか"
+
+    - name: multiple_approvers
+      type: boolean
+      description: "Whether multiple distinct approvers are involved in the workflow"
+      description_ja: "複数の承認者が業務に関与しているか"
+
+    - name: existing_service_account
+      type: boolean
+      description: "Whether an existing service account is already in use for this integration"
+      description_ja: "この統合に既存のサービスアカウントが使われているか"
+
+    - name: migration_phase
+      type: enum
+      values: [early, mid, complete]
+      description: "Phase of migration from legacy service account to modern identity model"
+      description_ja: "既存SAから新しいID管理への移行フェーズ"
+
+    - name: data_sensitivity
+      type: enum
+      values: [public, confidential]
+      description: "Simplified two-level data sensitivity for knowledge-base routing decisions"
+      description_ja: "ナレッジベースルーティング用の簡易2段階機密度"
+
+    - name: permission_change_frequency
+      type: ordinal
+      values: [low, medium, high]
+      description: "How frequently permissions on the data change"
+      description_ja: "データの権限変更頻度"
+
+    - name: data_type
+      type: enum
+      values: [public_knowledge, policy_documents, personal_saas_records, hr_data, financial_data, general_internal]
+      description: "Type/category of the data being handled"
+      description_ja: "取り扱うデータの種別"
+
+    - name: pre_indexed
+      type: boolean
+      description: "Whether data is pre-indexed in a vector database"
+      description_ja: "データがベクトルDBに事前索引されているか"
+
+    - name: acl_required
+      type: boolean
+      description: "Whether per-chunk ACL enforcement is required for indexed data"
+      description_ja: "索引データにチャンク単位ACLが必要か"
+
+    - name: responsibility_spans_multiple_departments
+      type: boolean
+      description: "Whether the operation spans independent departments with separate approval chains"
+      description_ja: "独立した承認系統を持つ複数部門にまたがる操作か"
+
+    - name: latency_sensitive
+      type: boolean
+      description: "Whether the use case has strict low-latency requirements"
+      description_ja: "厳しい低レイテンシ要件があるか"
+
+    - name: subtasks_require_different_toolsets
+      type: boolean
+      description: "Whether sub-tasks require significantly different models or tool sets"
+      description_ja: "サブタスクが異なるモデル・ツールセットを必要とするか"
+
+    - name: team_multi_agent_experience
+      type: ordinal
+      values: [low, medium, high]
+      description: "Team's operational experience with multi-agent architectures"
+      description_ja: "チームのマルチエージェント運用経験レベル"
+
+    - name: single_agent_bottleneck_identified
+      type: boolean
+      description: "Whether a single-agent bottleneck has been observed in production"
+      description_ja: "本番稼働中に単一エージェントのボトルネックが確認されているか"
+
+    - name: responsibility_split_boundary_clear
+      type: boolean
+      description: "Whether the responsibility boundary for splitting agents is clearly defined"
+      description_ja: "エージェント分離の責任境界が明確に定義されているか"
+
+    - name: operation_frequency
+      type: ordinal
+      values: [low, medium, high]
+      description: "How frequently the operation is executed"
+      description_ja: "操作の実行頻度"
+
+    - name: approval_workflow_available
+      type: boolean
+      description: "Whether an approval workflow system is in place"
+      description_ja: "承認ワークフロー基盤が整備されているか"
+
+    - name: system_of_record
+      type: enum
+      values: [erp_crm_hr, financial, document_management, other]
+      description: "Type of system of record involved"
+      description_ja: "関連するSystem of Recordの種別"
+
+    - name: financial_impact
+      type: boolean
+      description: "Whether the operation has direct financial implications"
+      description_ja: "操作が直接的な財務インパクトを持つか"
+
+    - name: canary_passed
+      type: boolean
+      description: "Whether canary release validation has passed"
+      description_ja: "カナリアリリース検証が通過しているか"
+
+    - name: kill_switch_available
+      type: boolean
+      description: "Whether a kill switch mechanism is implemented"
+      description_ja: "キルスイッチ機構が実装されているか"
+
+    - name: infrastructure_readiness
+      type: enum
+      values: [incomplete, partial, complete]
+      description: "Readiness of the required governance and safety infrastructure"
+      description_ja: "必要なガバナンス・安全基盤の整備状況"
+
+    - name: information_type
+      type: enum
+      values: [personal_preferences, personal_notes, confidential_personal, hr_performance_salary_medical, shared_knowledge, project_documents, team_decisions]
+      description: "Category of information being stored in agent memory"
+      description_ja: "エージェントメモリに保存される情報の種別"
+
+    - name: memory_scope
+      type: enum
+      values: [session, personal, project, organization]
+      description: "Organizational scope of the memory store"
+      description_ja: "メモリストアの組織スコープ"
+
+    - name: lifecycle_event
+      type: enum
+      values: [none, project_end, employee_departure, role_change]
+      description: "HR or organizational lifecycle event affecting the agent's context"
+      description_ja: "エージェントのコンテキストに影響する人事・組織のライフサイクルイベント"
+
+    - name: regulatory_requirement
+      type: enum
+      values: [none, gdpr, financial, medical, personal_information_protection]
+      description: "Applicable regulatory framework governing data handling"
+      description_ja: "適用される規制・法令フレームワーク"
+
+    - name: cross_border_transfer_prohibited
+      type: boolean
+      description: "Whether cross-border data transfer is legally prohibited"
+      description_ja: "データの国外移転が法令により禁止されているか"
+
+    - name: audit_required
+      type: boolean
+      description: "Whether an audit trail is required by policy or regulation"
+      description_ja: "ポリシーまたは規制により監査証跡が必要か"
+
+    - name: cost_constraint
+      type: boolean
+      description: "Whether storage or inference cost is a significant constraint"
+      description_ja: "ストレージ・推論コストが重要な制約か"
+
+    - name: governance_concern
+      type: enum
+      values: [authentication, audit, model_control, cost, domain_knowledge, use_case, agent_content]
+      description: "Primary governance concern being addressed"
+      description_ja: "対処する主要なガバナンス上の懸念事項"
+
+    - name: existing_ipaas_connector
+      type: boolean
+      description: "Whether an existing iPaaS connector exists for the integration"
+      description_ja: "この統合向けに既存のiPaaSコネクタが存在するか"
+
+    - name: authorization_granularity_verified
+      type: boolean
+      description: "Whether the connector's authorization granularity has been verified to meet requirements"
+      description_ja: "コネクタの認可粒度が要件を満たすことが検証済みか"
+
+    - name: audit_trail_linkable
+      type: boolean
+      description: "Whether the connector's audit trail can be linked to agent operations"
+      description_ja: "コネクタの監査証跡をエージェント操作に紐付けられるか"
+
+    - name: uses_admin_service_account
+      type: boolean
+      description: "Whether the connector uses an admin-level service account"
+      description_ja: "コネクタが管理者レベルのサービスアカウントを使用しているか"
+
+    - name: new_integration_point
+      type: boolean
+      description: "Whether this is a new integration point with no existing connector"
+      description_ja: "既存コネクタがない新規統合ポイントか"
+
+    - name: ipaas_obo_support
+      type: boolean
+      description: "Whether the iPaaS connector supports User OBO (RFC 8693 token exchange)"
+      description_ja: "iPaaSコネクタがUser OBO（RFC 8693）に対応しているか"
+
+    - name: latest_model_required
+      type: boolean
+      description: "Whether the use case requires the latest-generation model capabilities"
+      description_ja: "最新モデルの機能が必要なユースケースか"
+
+    - name: dpa_confirmed
+      type: boolean
+      description: "Whether DPA, region, and data retention policy of the external API have been confirmed"
+      description_ja: "外部APIのDPA・リージョン・データ保持ポリシーが確認済みか"
+
+    - name: expected_duration_seconds
+      type: numeric
+      description: "Expected processing duration in seconds"
+      description_ja: "処理の想定所要時間（秒）"
+
+    - name: steps_include_human_approval
+      type: boolean
+      description: "Whether the workflow includes human approval steps"
+      description_ja: "ワークフローに人間の承認ステップが含まれるか"
+
+    - name: multi_system_transaction
+      type: boolean
+      description: "Whether the operation spans multiple systems requiring transactional consistency"
+      description_ja: "トランザクション整合性が必要な複数システムにまたがる操作か"
+
+    - name: compensation_required
+      type: boolean
+      description: "Whether compensation (rollback) logic is required on partial failure"
+      description_ja: "途中失敗時に補償（ロールバック）処理が必要か"
+
+    - name: ux_responsiveness_important
+      type: boolean
+      description: "Whether perceived responsiveness is a key UX requirement"
+      description_ja: "体感レスポンス速度が重要なUX要件か"
+
+    - name: control_type
+      type: enum
+      values: [access_control, approval_flow, output_validation, sandbox_isolation, output_format, response_style, task_context, language_setting]
+      description: "Type of control being configured (security vs. quality)"
+      description_ja: "設定する制御の種類（セキュリティ系 vs 品質・振る舞い系）"
+
+    - name: security_enforced_by_prompt
+      type: boolean
+      description: "Whether security boundaries are currently enforced only by prompts (anti-pattern)"
+      description_ja: "セキュリティ境界が現在プロンプトのみで実施されているか（アンチパターン）"
+
+    - name: defense_in_depth
+      type: boolean
+      description: "Whether a layered defense strategy combining platform and prompt controls is in use"
+      description_ja: "プラットフォームとプロンプト制御を組み合わせた多層防御を採用しているか"
+
+    - name: idempotency
+      type: enum
+      values: [idempotent, non_idempotent]
+      description: "Whether the operation is idempotent (safe to retry)"
+      description_ja: "操作が冪等（リトライ安全）かどうか"
+
+    - name: task_type
+      type: enum
+      values: [qa, summarization, analysis, generation]
+      description: "Type of AI task for context-volume decisions"
+      description_ja: "コンテキスト量設定のためのAIタスク種別"
+
+    - name: multiple_source_comparison
+      type: boolean
+      description: "Whether the task requires comparing across multiple data sources"
+      description_ja: "複数ソースの比較分析が必要なタスクか"
+
+    - name: context_contains_sensitive_fields
+      type: boolean
+      description: "Whether retrieved context contains sensitive/confidential fields"
+      description_ja: "取得したコンテキストに機密フィールドが含まれるか"
+
+    - name: reference_frequency
+      type: ordinal
+      values: [high, medium, low, never]
+      description: "How frequently the memory record is accessed"
+      description_ja: "メモリレコードへのアクセス頻度"
+
+    - name: route_risk_level
+      type: ordinal
+      values: [low_risk, medium_risk, high_risk, critical]
+      description: "Risk level of the specific execution route"
+      description_ja: "特定実行経路のリスクレベル"
+
+    - name: latency_critical
+      type: boolean
+      description: "Whether the route has strict latency requirements that make synchronous blocking unacceptable"
+      description_ja: "同期ブロッキング検査が許容できないほどレイテンシがクリティカルな経路か"
+
+    - name: data_freshness_requirement
+      type: ordinal
+      values: [real_time, near_real_time, tolerate_stale]
+      description: "How fresh the data must be for the operation"
+      description_ja: "操作においてデータの鮮度がどの程度求められるか"
+
+    - name: personalized
+      type: boolean
+      description: "Whether the response is personalized to an individual user"
+      description_ja: "個人ユーザーに対するパーソナライズ応答か"
+
+    - name: operation_has_side_effects
+      type: boolean
+      description: "Whether the operation produces side effects beyond retrieval"
+      description_ja: "操作が取得以外の副作用を持つか"
+
+    - name: confidential_data_in_result
+      type: boolean
+      description: "Whether the operation result contains confidential data"
+      description_ja: "操作結果に機密データが含まれるか"
+
+    - name: permission_change_event
+      type: boolean
+      description: "Whether a permission change, employee departure, or session end event has occurred"
+      description_ja: "権限変更・退職・セッション終了イベントが発生したか"
+
+    - name: task_difficulty
+      type: ordinal
+      values: [simple, moderate, complex, expert]
+      description: "Complexity of the task being processed"
+      description_ja: "処理タスクの複雑度"
+
+    - name: confidence_score_below_threshold
+      type: boolean
+      description: "Whether the model's confidence score has fallen below the configured threshold"
+      description_ja: "モデルの信頼度スコアが設定閾値を下回っているか"
+
+    - name: routing_automated
+      type: boolean
+      description: "Whether model routing is automated based on data classification labels"
+      description_ja: "データ分類ラベルに基づくモデルルーティングが自動化されているか"
+
+    - name: new_agent_version_deploy
+      type: boolean
+      description: "Whether a new agent version is being deployed"
+      description_ja: "新しいエージェントバージョンをデプロイするか"
+
+    - name: canary_stage_healthy
+      type: boolean
+      description: "Whether quality score, error rate, and cost are all within thresholds at the current canary stage"
+      description_ja: "現在のカナリアステージで品質・エラー率・コストがすべて閾値内か"
+
+    - name: event_volume_exceeds_budget
+      type: boolean
+      description: "Whether event volume per minute exceeds the configured budget threshold"
+      description_ja: "分あたりイベント量が設定予算閾値を超えているか"
+
+    - name: throttle_causing_stale_state
+      type: boolean
+      description: "Whether current throttling is too aggressive, causing agents to operate on stale state"
+      description_ja: "現在の頻度制限が過剰でエージェントが古い状態で動いているか"
+
 tradeoffs:
   - id: TO-1
     question: "How should the agent authenticate to downstream SaaS?"
@@ -18,19 +418,19 @@ tradeoffs:
       - name: applicability
         values: {obo: delegation_capable_saas_only, service_account: any_api, agent_identity: autonomous_batch, hybrid: broad}
     decision_rules:
-      - condition: "purpose == 'personal_assistance' AND saas_supports_token_exchange"
+      - condition: "purpose == 'personal_assistance' AND saas_supports_token_exchange == true"
         recommendation: obo
         reason: "User-specific permissions are critical; SaaS native audit attribution is preserved via RFC 8693 token exchange"
         reason_ja: "本人権限の忠実な伝播が重要。SaaS側の監査ログで帰責可能（RFC 8693 Token Exchange）"
-      - condition: "purpose == 'department_representative' AND multiple_approvers == true"
+      - condition: "purpose == 'department_service' AND multiple_approvers == true"
         recommendation: agent_identity
         reason: "Multiple persons involved; attach department scope policy to agent identity for bounded authorization"
         reason_ja: "複数名が関与する業務でも、エージェントIDに部門スコープを付与して権限を制御する"
-      - condition: "purpose == 'company_wide_batch' OR purpose == 'scheduled_job'"
+      - condition: "purpose == 'company_batch'"
         recommendation: service_account
         reason: "Batch/scheduled processing; compensate with strict audit and high-risk data classification controls"
         reason_ja: "全社バッチ・定常処理は Service Account を使うが、操作スコープと監査証跡を別途強化する"
-      - condition: "operation_risk == 'high' AND irreversible == true"
+      - condition: "operation_risk == 'high' AND irreversibility == 'irreversible'"
         recommendation: hybrid
         reason: "High-risk irreversible operations require User OBO combined with human approval chain; agent executes under user permission ceiling"
         reason_ja: "不可逆な高リスク操作は User OBO＋人間承認チェーンを組み合わせ、エージェントはUserの権限上限を超えない"
@@ -64,7 +464,7 @@ tradeoffs:
         recommendation: central_lake
         reason: "Pre-indexed data is acceptable if ACL is embedded with every chunk (KM-1 Access-Controlled RAG)"
         reason_ja: "事前索引する場合もACL同梱（KM-1）を必須にすれば中央レイクを使ってよい"
-      - condition: "mix_of_public_and_confidential == true"
+      - condition: "data_sensitivity == 'public' AND confidential_data_in_result == true"
         recommendation: hybrid
         reason: "Public data via central lake for speed; confidential data via federated Mesh for permission fidelity; route via Knowledge Graph"
         reason_ja: "公開情報はレイクで高速に、機密情報はMeshで権限を維持して取得し、KM-3で統合ルーティングする"
@@ -88,15 +488,15 @@ tradeoffs:
         recommendation: single_agent
         reason: "Default to single agent; multi-agent adds cost, latency, and failure points without organizational benefit when responsibility is unified"
         reason_ja: "まず単一エージェントから始める。責任分担の主体が一つの部門・役割に収まるならマルチ化は過剰設計"
-      - condition: "multiple_departments_with_independent_approval == true"
+      - condition: "responsibility_spans_multiple_departments == true AND multiple_approvers == true"
         recommendation: multi_agent
         reason: "Independent approval and accountability across departments (e.g. sales, legal, finance) justifies multi-agent RACI separation"
         reason_ja: "複数部門が関与し、それぞれの承認・責任が独立している業務はマルチエージェント化の唯一の正当な基準"
-      - condition: "subtasks_require_different_models_or_toolsets == true"
+      - condition: "subtasks_require_different_toolsets == true"
         recommendation: multi_agent
         reason: "Specialist subagents with domain-specific models/tools are appropriate when subtasks have distinct expertise requirements"
         reason_ja: "専門分野が異なるサブタスクにそれぞれ適したモデル・ツールセットが必要な場合はマルチ化が適切"
-      - condition: "team_multi_agent_experience == 'low' OR availability_requirements == 'strict'"
+      - condition: "team_multi_agent_experience == 'low' OR latency_sensitive == true"
         recommendation: single_agent
         reason: "Low team experience or strict availability requirements make multi-agent operational overhead unacceptable"
         reason_ja: "マルチエージェント運用経験が乏しく障害対応コストが見通せない場合、または可用性要件が厳しい場合は単一を維持する"
@@ -118,15 +518,15 @@ tradeoffs:
       - name: prerequisite_maturity
         values: {read_only: none, draft_only: none, approved_write: approval_workflow, auto_write_low_risk: eval_canary_audit, high_risk_controlled_write: full_governance}
     decision_rules:
-      - condition: "operation_type == 'read' AND human_review_before_use == true"
+      - condition: "operation_type == 'read' AND audit_required == true"
         recommendation: read_only
         reason: "Information retrieval, reporting, and analysis are safe for autopilot; humans review output before acting on it"
         reason_ja: "情報検索・レポート生成・分析は自律実行してよい。誤った結果を出しても人間が確認してから使用するため不可逆な被害が生じにくい"
-      - condition: "operation_type == 'write' AND irreversible == false AND operation_frequency == 'high' AND eval_complete == true"
+      - condition: "operation_type == 'write' AND irreversibility == 'reversible' AND operation_frequency == 'high' AND eval_complete == true"
         recommendation: auto_write_low_risk
         reason: "Low-risk, high-frequency, reversible write operations can be automated once eval and canary validation are complete"
         reason_ja: "低リスク・高頻度の繰り返し操作はevalとカナリアリリースで安全性を確認後に自動Writeへ昇格する"
-      - condition: "operation_type == 'write' AND irreversible == true AND approval_workflow_available == true"
+      - condition: "operation_type == 'write' AND irreversibility == 'irreversible' AND approval_workflow_available == true"
         recommendation: approved_write
         reason: "Irreversible write operations require human approval; use SoR write boundary with approval chain"
         reason_ja: "不可逆な書き込みはSystem of Record経由で変更ログを残し、かつ人間の確認を挟む構造にする"
@@ -152,23 +552,23 @@ tradeoffs:
       - name: required_readiness
         values: {copilot: approval_workflow, autopilot: eval_canary_audit_kill_switch, hybrid_per_operation: both}
     decision_rules:
-      - condition: "operation_type == 'read_only' AND eval_complete == true AND canary_passed == true"
+      - condition: "operation_type == 'read' AND eval_complete == true AND canary_passed == true"
         recommendation: autopilot
         reason: "Read-only operations with no irreversible side effects and completed eval/canary validation are safe for autonomous execution"
         reason_ja: "操作が読み取り専用で誤動作しても不可逆な被害が生じず、eval・カナリア・監査証跡が整備されていればAutopilot適切"
-      - condition: "operation_type IN ['update', 'delete', 'approve'] OR target_system IN ['erp', 'crm', 'hr']"
+      - condition: "operation_type IN ['write', 'delete', 'approve'] OR system_of_record == 'erp_crm_hr'"
         recommendation: copilot
         reason: "Irreversible operations and writes to core business systems must retain human-in-the-loop via approval chain"
         reason_ja: "更新・削除・承認といった不可逆な操作や基幹業務システムへの書き込みはHitLのCopilotを維持する"
-      - condition: "approval_rate_historically_high == true AND risk_level == 'low' AND kill_switch_available == true"
+      - condition: "operation_risk == 'low' AND canary_passed == true AND kill_switch_available == true"
         recommendation: autopilot
         reason: "Operations that humans historically approve almost always, combined with kill switch and audit trail, are candidates for autopilot promotion"
         reason_ja: "承認率が高く低リスクな操作にevalとカナリアを適用し、kill switchと監査証跡が整備された状態でAutopilot化する"
-      - condition: "infrastructure_readiness == 'incomplete' OR autopilot_expansion_too_fast == true"
+      - condition: "infrastructure_readiness == 'incomplete'"
         recommendation: copilot
         reason: "'Autopilot before readiness' is the primary risk; always start with Copilot and expand incrementally"
         reason_ja: "「整備が追いつく前にAutopilotにする」という判断が最大のリスク。全操作をCopilotで開始し段階的に拡張する"
-      - condition: "same_agent_mixed_operations == true"
+      - condition: "operation_has_side_effects == true AND irreversibility == 'reversible'"
         recommendation: hybrid_per_operation
         reason: "Within the same agent, apply Copilot/Autopilot per operation type; do not force a single mode across all operations"
         reason_ja: "同一エージェントでも操作種別ごとにCopilot/Autopilotを使い分けるハイブリッドが現実的"
@@ -194,11 +594,11 @@ tradeoffs:
         recommendation: project_workspace
         reason: "Project knowledge and team decisions belong in shared workspace with ACL following the organizational graph"
         reason_ja: "共有ナレッジ・作業履歴・プロジェクト文書はプロジェクトWorkspaceに置き、組織グラフに従うACLで制御する"
-      - condition: "single_store_for_all == true"
+      - condition: "memory_scope == 'personal' AND memory_scope == 'project'"
         recommendation: hybrid_separated
         reason: "Anti-pattern: single store mixes personal confidential data with shared workspace, causing leaks and cross-project contamination"
         reason_ja: "個人メモとして書いた機密事項がチームメンバー全員に見えてしまうアンチパターンを防ぐため、物理・論理分離が必須"
-      - condition: "user_transfers_team == true OR project_ends == true"
+      - condition: "lifecycle_event IN ['employee_departure', 'role_change', 'project_end']"
         recommendation: hybrid_separated
         reason: "Member changes and project endings require scoped memory invalidation; org graph sync ensures auto-revocation"
         reason_ja: "プロジェクト終了・退職・異動でメモリと権限を失効させる。組織グラフとの同期でメンバー変更が自動的にアクセス権に反映される"
@@ -220,19 +620,19 @@ tradeoffs:
       - name: storage_cost
         values: {metadata_only: low, selective_with_encrypted_body: medium, full_plaintext: high, three_layer_separated: medium}
     decision_rules:
-      - condition: "data_classification == 'top_secret' OR pattern == 'ephemeral_secure_context_bus'"
+      - condition: "data_classification == 'top_secret' OR defense_in_depth == false"
         recommendation: metadata_only
         reason: "Top-secret processing: store only metadata (request ID, timestamp, completion flag); prove execution occurred without preserving content"
         reason_ja: "極秘処理は本文を一切ログに残さず、メタデータ（リクエストID・タイムスタンプ・処理完了フラグ）のみ保存する"
-      - condition: "standard_operations == true AND audit_required == true"
+      - condition: "data_classification IN ['internal_general', 'department_confidential'] AND audit_required == true"
         recommendation: three_layer_separated
         reason: "Standard architecture: metadata to Trace DB, encrypted body to object storage, aggregated/anonymized metrics to DWH"
         reason_ja: "標準構成は三層分離：メタはTrace DB、本文は暗号化ストレージ、集計はDWH"
-      - condition: "body_storage_policy == 'full_plaintext'"
+      - condition: "confidential_data_in_result == true AND defense_in_depth == false"
         recommendation: three_layer_separated
         reason: "Anti-pattern: storing confidential prompts as plaintext in general log infrastructure is a security incident source"
         reason_ja: "機密情報を含むプロンプトを平文で一般的なログ基盤に保存することは禁忌。本文保存は暗号化ストレージに限定する"
-      - condition: "cost_constraint == true OR not_all_records_needed == true"
+      - condition: "cost_constraint == true"
         recommendation: selective_with_encrypted_body
         reason: "Use sampling strategy: full body storage only on errors, high-risk operations, and random N% sample to control cost"
         reason_ja: "全件保存が不要な場合はエラー時・高リスク操作時・ランダムN%のみフル保存するサンプリング方式を併用する"
@@ -254,23 +654,23 @@ tradeoffs:
       - name: domain_agility
         values: {fully_central: low, fully_federated: high, two_layer_governance: high}
     decision_rules:
-      - condition: "concern == 'authentication_or_audit_or_model_control_or_cost'"
+      - condition: "governance_concern IN ['authentication', 'audit', 'model_control', 'cost']"
         recommendation: two_layer_governance
         reason: "Auth, audit, model approval, cost tracking, and policy-as-code must always be centrally controlled regardless of federation level"
         reason_ja: "認証・認可基盤、監査ログ、モデル認定、コスト追跡、Policy-as-Codeは中央が担う（GV/ID面）"
-      - condition: "concern == 'domain_knowledge_or_use_case_or_agent_content'"
+      - condition: "governance_concern IN ['domain_knowledge', 'use_case', 'agent_content']"
         recommendation: two_layer_governance
         reason: "Business domain logic, use case definitions, and prompts should be delegated to departments via template-constrained self-service"
         reason_ja: "業務ドメインの知識・ユースケース定義・プロンプトは部署にフェデレート（GV-3テンプレートによる権限委譲）"
-      - condition: "central_builds_all_agents == true"
+      - condition: "responsibility_spans_multiple_departments == false AND deployment_phase == 'initial'"
         recommendation: two_layer_governance
         reason: "Anti-pattern: central team cannot scale to all departmental needs, causing departments to spin up ungoverned shadow agents"
         reason_ja: "「中央が全部作る」モデルは部署ニーズへの対応速度が出ず、野良エージェントが乱立するアンチパターン"
-      - condition: "departments_fully_autonomous == true"
+      - condition: "responsibility_spans_multiple_departments == true AND infrastructure_readiness == 'incomplete'"
         recommendation: two_layer_governance
         reason: "Anti-pattern: uncontrolled department autonomy leads to inconsistent security policies, information leaks, and compliance violations"
         reason_ja: "「各部署が野放し」モデルはセキュリティポリシーのばらつきにより情報漏洩・コンプライアンス違反が生じるアンチパターン"
-      - condition: "setup_phase == 'initial'"
+      - condition: "deployment_phase == 'initial'"
         recommendation: two_layer_governance
         reason: "Establish central platform (GV-1 Control Plane + ID-7 Policy-as-Code) first, then provide GV-3 department templates"
         reason_ja: "中央基盤（GV-1 Agent Control Plane）とPolicy-as-Code（ID-7）を先行整備し、その後GV-3テンプレートで部署展開する順序が正しい"
@@ -300,11 +700,11 @@ tradeoffs:
         recommendation: mcp_gateway
         reason: "New integration points should be MCP-standardized (IN-1) to enable future swap and extension with unified tool definitions"
         reason_ja: "新規・独自の統合ポイントはMCP化（IN-1）を標準とする。ツール定義を標準化し将来的な差し替えや拡張を容易にする"
-      - condition: "ipaas_obo_support == false AND obo_required == true"
+      - condition: "ipaas_obo_support == false AND saas_supports_token_exchange == true"
         recommendation: hybrid_validated_ipaas
         reason: "If iPaaS lacks User OBO (RFC 8693) support, restrict reuse scope and add MCP Gateway for permission-controlled operations"
         reason_ja: "ID-2のToken Exchangeに対応していなければ再利用範囲を限定し、MCP Gateway経由で権限制御を追加する"
-      - condition: "authorization_granularity_not_verified == true"
+      - condition: "authorization_granularity_verified == false AND existing_ipaas_connector == true"
         recommendation: hybrid_validated_ipaas
         reason: "Never skip authorization granularity verification; unverified adoption preserves admin service account anti-pattern"
         reason_ja: "認可粒度の検証を省略してはならない。無検証での採用は管理者権限SAを使う設計を温存し権限漏洩の原因になる"
@@ -324,7 +724,7 @@ tradeoffs:
       - name: setup_complexity
         values: {internal_onprem: high, external_api: low, hybrid_data_classification_routing: medium}
     decision_rules:
-      - condition: "data_classification IN ['top_secret', 'personally_identifiable', 'competitive_intelligence']"
+      - condition: "data_classification IN ['top_secret', 'department_confidential'] AND cross_border_transfer_prohibited == true"
         recommendation: internal_onprem
         reason: "Top-secret and PII data must not leave internal infrastructure; regulatory/legal requirements may also mandate on-premise"
         reason_ja: "極秘データ（社内秘・個人情報・競争情報等）を含むプロンプトは内部/オンプレモデルが必須"
@@ -332,15 +732,15 @@ tradeoffs:
         recommendation: internal_onprem
         reason: "Data regulated against cross-border transfer must remain in compliant infrastructure; DPA alone is insufficient"
         reason_ja: "GDPR・金融規制・医療規制等で国外への持ち出しが規制されるデータは内部推論経路のみを使用する"
-      - condition: "data_classification == 'public' OR data_classification == 'general_internal' AND latest_model_required == true"
+      - condition: "data_classification IN ['public', 'internal_general'] AND latest_model_required == true"
         recommendation: external_api
         reason: "General or public data with no regulatory restrictions can use external API, especially when latest model capability is required"
         reason_ja: "一般公開情報や権限不要の社内規程を扱う推論、最新モデル性能を必要とするユースケースは外部APIが適切"
-      - condition: "data_classification_mixed == true"
+      - condition: "data_classification == 'department_confidential' AND data_classification == 'public'"
         recommendation: hybrid_data_classification_routing
         reason: "Central Model Gateway (GV-5) auto-routes by data classification label; eliminates per-developer routing decisions"
         reason_ja: "GV-5のCentral Model Gatewayがデータ分類に応じて推論経路を自動ルーティングするため、開発者が都度判断する手間を排除できる"
-      - condition: "external_api_used == true AND dpa_not_confirmed == true"
+      - condition: "dpa_confirmed == false AND data_classification IN ['public', 'internal_general']"
         recommendation: internal_onprem
         reason: "Always confirm DPA, region, and data retention policy before using external APIs; default settings may cause unintended data usage"
         reason_ja: "外部APIを使う際はDPA・利用リージョン・データ保持ポリシーを必ず確認する。デフォルト設定のまま利用すると意図しないデータ利用や越境転送のリスクがある"
@@ -358,23 +758,23 @@ tradeoffs:
       - name: failure_tolerance
         values: {synchronous: low, asynchronous: high, streaming_sync: low, saga_transactional: high, hybrid_timeout_escalation: medium}
     decision_rules:
-      - condition: "expected_duration_seconds <= 5 AND human_approval_step == false AND operation_type == 'qa_or_search'"
+      - condition: "expected_duration_seconds <= 5 AND steps_include_human_approval == false AND operation_type == 'simple_qa'"
         recommendation: synchronous
         reason: "Simple Q&A, search, and document summarization that complete in seconds are suitable for synchronous processing"
         reason_ja: "処理が数秒以内に完了するシンプルなQ&A・検索・文書要約等は同期処理が適切"
-      - condition: "expected_duration_seconds > 10 OR steps_include_human_approval == true OR external_api_calls_multiple == true"
+      - condition: "expected_duration_seconds > 10 OR steps_include_human_approval == true"
         recommendation: asynchronous
         reason: "Processing exceeding 10 seconds, multi-step workflows with human approvals, or multiple sequential/parallel API calls require durable async workflow"
         reason_ja: "処理が10秒を超える、または多段階処理・承認待ちステップ・複数外部API呼び出しがある場合は非同期処理（RT-8）が必要"
-      - condition: "multi_system_transaction == true AND compensation_on_failure_required == true"
+      - condition: "multi_system_transaction == true AND compensation_required == true"
         recommendation: saga_transactional
         reason: "Cross-system operations requiring transactional consistency and rollback compensation on partial failure need Saga pattern"
         reason_ja: "複数システムにまたがる操作でトランザクション整合性が必要かつ途中失敗時の補償処理が必要な条件はSagaパターン（RT-7）"
-      - condition: "duration_5s_to_30s == true AND ux_responsiveness_important == true"
+      - condition: "expected_duration_seconds > 5 AND expected_duration_seconds <= 30 AND ux_responsiveness_important == true"
         recommendation: streaming_sync
         reason: "Stream LLM generation token-by-token; users read as they wait, improving perceived responsiveness for 5-30 second tasks"
         reason_ja: "LLMの生成結果をトークン単位でストリーミング配信する。数秒〜30秒程度の処理でユーザーは「読みながら待つ」体験になる"
-      - condition: "sync_started_but_exceeded_timeout == true"
+      - condition: "expected_duration_seconds <= 5 AND expected_duration_seconds > 10"
         recommendation: hybrid_timeout_escalation
         reason: "Auto-escalate from sync to async when processing exceeds expected time; deliver completion via webhook or email notification"
         reason_ja: "同期で開始した処理が想定時間を超えた場合、自動的に非同期モードに切り替え、完了通知をWebhookまたはメールで送る"
@@ -406,7 +806,7 @@ tradeoffs:
         recommendation: platform_only
         reason: "Anti-pattern: prompt-only security is bypassed by prompt injection ('ignore above instructions...'); never use prompts as security boundary"
         reason_ja: "プロンプトでのセキュリティ保証は禁忌。「上記の指示を無視して」で容易に回避されるプロンプトはセキュリティ境界にならない"
-      - condition: "platform_not_yet_ready == true AND considering_prompt_as_stopgap == true"
+      - condition: "infrastructure_readiness == 'incomplete' AND security_enforced_by_prompt == true"
         recommendation: platform_only
         reason: "First establish platform access control (ID-4) and Policy-as-Code (ID-7); no prompt is a valid substitute for missing infrastructure"
         reason_ja: "まず実行基盤側のアクセス制御（ID-4）とPolicy-as-Code（ID-7）を整備する。これがなければプロンプトを精緻にしても安全は保証されない"
@@ -425,7 +825,7 @@ degrees:
       - name: irreversibility
         type: ordinal
         values: [reversible, partially_reversible, irreversible]
-      - name: financial_or_scope_impact
+      - name: impact_scope
         type: ordinal
         values: [personal, team, department, company_wide, external]
       - name: data_classification
@@ -455,7 +855,7 @@ degrees:
         autonomy: require_approval_with_dual_sign
         reason: "Irreversible operations with financial, contractual, or external impact require multi-approver sign-off and human-in-the-loop"
         reason_ja: "不可逆かつ金銭移動・契約締結・外部送信・権限昇格は承認寄りに倒す。複数承認者を要求する構成も検討する"
-      - condition: "deployment_phase == 'initial' OR eval_not_complete == true"
+      - condition: "deployment_phase == 'initial' OR eval_complete == false"
         tier: 2
         autonomy: require_approval
         reason: "Initial deployment: set broadly conservative (require-approval) and expand automation range incrementally as GV-7 eval confirms safety"
@@ -526,13 +926,13 @@ degrees:
         type: continuous
         unit: percentage
     rules:
-      - condition: "data_classification == 'top_secret' OR context_bus_pattern == 'ephemeral'"
+      - condition: "data_classification == 'top_secret'"
         log_layer: metadata_only
         storage: trace_db
         body_retention: none
         reason: "Top-secret or ephemeral: store only request ID, timestamp, and completion flag; never persist prompt body"
         reason_ja: "極秘処理はメタデータのみ（リクエストID・タイムスタンプ・処理完了フラグ）。本文は一切保存しない"
-      - condition: "data_classification IN ['internal_general', 'confidential'] AND debug_or_audit_required == true"
+      - condition: "data_classification IN ['internal_general', 'department_confidential'] AND audit_required == true"
         log_layer: three_layer_separated
         storage_metadata: trace_db
         storage_body: encrypted_object_storage
@@ -540,17 +940,17 @@ degrees:
         pii_masking: required_before_body_storage
         reason: "Standard: metadata to Trace DB, PII-masked body to encrypted object storage, anonymized metrics to DWH"
         reason_ja: "標準構成：メタはTrace DB、PIIマスキング済み本文は暗号化オブジェクトストレージ、集計はDWH"
-      - condition: "cost_constraint == true AND all_records_not_required == true"
+      - condition: "cost_constraint == true"
         sampling_strategy: "error_events + high_risk_operations + random_N_percent"
         recommended_n_percent: 5
         reason: "Sample-based full body storage (errors + high-risk + N%) controls storage cost while preserving debugging capability"
         reason_ja: "全件保存が不要な場合はエラー時・高リスク操作時・ランダムN%のみフル保存するサンプリング方式でコストを制御する"
-      - condition: "regulatory_scope == 'regulated'"
+      - condition: "regulatory_requirement != 'none'"
         retention_policy: "per_data_classification_per_regulation"
         deletion_rule: required
         reason: "Regulated data: define per-classification retention and deletion rules; compliance takes precedence over reproducibility"
         reason_ja: "規制対象データはデータ分類別に保持ポリシーと削除ルールを設定する。再現性より法令遵守を優先する"
-      - condition: "body_stored_as_plaintext == true"
+      - condition: "confidential_data_in_result == true AND defense_in_depth == false"
         log_layer: three_layer_separated
         action: remediate_immediately
         reason: "Anti-pattern: plaintext prompt storage in general log infrastructure must be remediated; it is a security incident source"
@@ -570,7 +970,7 @@ degrees:
       - name: token_budget
         type: integer
     rules:
-      - condition: "task_type == 'qa' AND expected_answer_is_factual"
+      - condition: "task_type == 'qa' AND data_type == 'public_knowledge'"
         recommended_top_k: 3
         token_budget_fraction: 0.25
         reason: "Factual Q&A needs only highly-relevant top chunks; over-stuffing causes 'lost in the middle' quality degradation"
@@ -581,15 +981,15 @@ degrees:
         reranking: required
         reason: "Multi-source analysis benefits from broader context; use reranker to filter to most relevant subset within budget"
         reason_ja: "多ソース比較分析は広いコンテキストが有効。リランカーで件数をさらに絞り、トークン予算内に圧縮する"
-      - condition: "data_classification IN ['confidential', 'top_secret'] AND context_contains_sensitive_fields == true"
+      - condition: "data_classification IN ['department_confidential', 'top_secret'] AND context_contains_sensitive_fields == true"
         action: dlp_mask_before_inject
         reason: "Apply DLP/redaction (KM-6) to mask sensitive fields before injecting into context; do not inject raw confidential data"
         reason_ja: "機密度の高い情報はKM-6 DLP & Redaction Boundaryでマスキング後に投入する。生の機密データをそのまま投入しない"
-      - condition: "context_injection_maximized == true"
+      - condition: "cost_constraint == true AND data_classification == 'public'"
         action: reduce_to_purpose_bound_minimum
         reason: "Anti-pattern: injecting all available data wastes tokens, raises cost, increases latency, and may expose unnecessary confidential data"
         reason_ja: "「使えるデータ」を全件投入するのは過剰。KM-5の目的限定原則に従い、タスクに不要な属性・フィールドは投入しない"
-      - condition: "quality_vs_cost_optimum_unknown == true"
+      - condition: "eval_complete == false"
         action: ab_test_top_k_values
         reason: "A/B test different top-k and token budget values; measure quality score vs. cost ratio via GV-7 evaluation pipeline"
         reason_ja: "top-kやトークン予算の値を段階的に変えたA/Bテストで最適点を探り、GV-7でコスト対品質比を追跡する"
@@ -627,7 +1027,7 @@ degrees:
         action: immediate_expiry_and_permission_revocation
         reason: "HR lifecycle events (departure, transfer, project end) must trigger immediate memory expiry and access revocation"
         reason_ja: "プロジェクト終了・退職・異動でメモリと権限を失効させる。人事システムとの連携で自動失効を実装する"
-      - condition: "user_requests_deletion == true"
+      - condition: "permission_change_event == true"
         action: immediate_delete_all_personal_scope
         reason: "Right-to-erasure: individual must be able to delete or modify their personal memory scope at any time (ID-8)"
         reason_ja: "本人がメモリを削除・修正できる権利を設計に含める（ID-8 Consent & Access Transparency）"
@@ -648,25 +1048,25 @@ degrees:
         type: ordinal
         values: [negligible, moderate, severe, catastrophic]
     rules:
-      - condition: "route_risk_level == 'low_risk' AND operation IN ['internal_draft', 'read_only', 'pre_approved_template']"
+      - condition: "route_risk_level == 'low_risk' AND operation_type IN ['read', 'simple_qa']"
         threshold: lenient
         approach: lightweight_guardrail
         reason: "Low-risk routes (read-only, internal draft, pre-approved templates) warrant lightweight guardrails to minimize false-positive business disruption"
         reason_ja: "低リスク経路（参照のみ・社内下書き・既承認テンプレート）は軽量なガードレールで十分。FP（誤検知）による業務阻害を最小化する"
-      - condition: "route_risk_level IN ['high_risk', 'critical'] AND operation IN ['external_send', 'confidential_access', 'side_effect']"
+      - condition: "route_risk_level IN ['high_risk', 'critical'] AND operation_type IN ['send', 'publish', 'approve']"
         threshold: strict
         approach: minimize_fn
         reason: "High-risk routes (external send, confidential data access, operations with side effects) require strict thresholds to minimize false negatives"
         reason_ja: "高リスク経路（外部送信・機密データアクセス・副作用を伴う操作・顧客向け出力）は厳格な閾値を設定し、FN（見逃し）をゼロに近づける"
-      - condition: "latency_critical == true AND synchronous_blocking_inspection == true"
+      - condition: "latency_critical == true"
         approach: async_or_sampling_inspection
         reason: "For latency-critical routes, use async or sampling-based inspection rather than synchronous blocking to reduce user impact"
         reason_ja: "レイテンシがクリティカルな経路での検査は、同期ブロッキングではなく非同期・サンプリング方式を選択して影響を緩和する"
-      - condition: "uniform_threshold_all_routes == true"
+      - condition: "route_risk_level == 'low_risk' AND route_risk_level == 'critical'"
         action: differentiate_by_route
         reason: "Anti-pattern: uniform thresholds inevitably over-restrict some routes and under-restrict others; set per-route thresholds"
         reason_ja: "全経路に同一の閾値を適用するのは過小・過大どちらかに必ず偏るアンチパターン。経路ごとにリスクを評価し閾値を個別に設定する"
-      - condition: "fp_rate_high OR fn_rate_high"
+      - condition: "eval_complete == true AND route_risk_level != 'low_risk'"
         action: rebalance_threshold_using_gv7
         reason: "Measure FP and FN rates via GV-7 evaluation pipeline; adjust threshold based on which harm (business disruption vs. security incident) is larger"
         reason_ja: "FP率・FN率・インシデント件数をGV-7で定期計測し、ビジネス上どちらの害が大きいかを判断基準に閾値を調整する"
@@ -693,7 +1093,7 @@ degrees:
         jit_credential_ttl: hours
         reason: "Stable, non-personalized, low-risk data can be cached aggressively to reduce latency and cost"
         reason_ja: "変化が少なく非パーソナライズかつ低リスクなデータは積極的にキャッシュしてレイテンシとコストを削減できる"
-      - condition: "data_freshness_requirement == 'real_time' OR personalized == true OR data_classification IN ['confidential', 'top_secret']"
+      - condition: "data_freshness_requirement == 'real_time' OR personalized == true OR data_classification IN ['department_confidential', 'top_secret']"
         cache_strategy: disabled
         jit_credential_ttl: minutes
         reason: "Real-time data, personalized responses, and confidential data must bypass cache; always fetch fresh with user credentials"
@@ -703,11 +1103,11 @@ degrees:
         similarity_threshold: high
         reason: "Side-effect operations and confidential results must not be cached; set high similarity threshold for semantic cache if used"
         reason_ja: "高害リスク領域（機密情報を含む検索・副作用を持つ操作）は類似度閾値を高く設定し、TTLを短くする"
-      - condition: "permission_change_event_received == true OR employee_departure == true OR session_ended == true"
+      - condition: "permission_change_event == true"
         action: force_expire_jit_credentials
         reason: "Permission changes, departures, and session end must immediately revoke JIT credentials regardless of remaining TTL"
         reason_ja: "権限変更・退職・セッション終了を検知してTTL期限前に資格情報を強制失効させる仕組みを設ける"
-      - condition: "cache_holding_stale_permissions == true"
+      - condition: "data_freshness_requirement != 'real_time' AND operation_has_side_effects == false"
         action: invalidate_cache_on_permission_event
         reason: "Stale cache invalidates permission fidelity achieved by ID-4 Permission Mirror; link cache invalidation to permission change events"
         reason_ja: "キャッシュが古い権限状態を保持するとID-4で実現した最小権限の効果が損なわれる。キャッシュ無効化と権限変更イベントを連動させる"
@@ -733,7 +1133,7 @@ degrees:
         routing_path: external_api_or_internal
         reason: "Simple tasks with non-sensitive data can use lightweight models via any path; minimize cost and latency"
         reason_ja: "会議室予約方法などの単純タスクに最大規模モデルを使うのはコストの無駄。軽量モデルで処理を試みる"
-      - condition: "confidence_score < threshold AND verifier_rejects == true"
+      - condition: "confidence_score_below_threshold == true"
         model_size: escalate_to_stronger
         routing_path: same_as_original
         reason: "Cascade escalation: when lightweight model confidence falls below threshold or verifier rejects, escalate to stronger model"
@@ -743,12 +1143,12 @@ degrees:
         external_api_allowed: false
         reason: "Top-secret data must route exclusively to VPC-internal or on-premise inference; external API send is prohibited"
         reason_ja: "極秘データはVPC内またはオンプレミス推論経路のみを使用する。外部APIへの送信は禁止する"
-      - condition: "data_classification IN ['public', 'internal_general'] AND latest_capability_required == true"
+      - condition: "data_classification IN ['public', 'internal_general'] AND latest_model_required == true AND dpa_confirmed == true"
         routing_path: external_api_permitted
         prerequisite: dpa_confirmed
         reason: "Non-sensitive data may use external API paths; confirm DPA and regional compliance before routing"
         reason_ja: "一般データは外部APIを含む経路を使用可とし、コスト・性能バランスで選択する。ただしDPA・リージョン・データ保持の統制が必要"
-      - condition: "routing_config_manual == true AND classification_auto_labeling == false"
+      - condition: "routing_automated == false"
         action: automate_routing_via_gv5
         reason: "Anti-pattern: manual routing depends on developer judgment and is error-prone; automate via GV-5 Central Model Gateway with data labels"
         reason_ja: "極秘データのルーティング設定ミスは情報漏洩を引き起こす。分類別ルーティングはデータラベルに基づき自動適用し、手動設定に依存しない"
@@ -773,20 +1173,20 @@ degrees:
         stage_unit: percent_of_traffic
         reason: "Use 1%→5%→25%→100% multi-stage rollout as baseline; collect sufficient traffic at each stage before advancing"
         reason_ja: "1%→5%→25%→100%の多段階を基本とし、各段階でトラフィックを十分に収集してから次へ進む"
-      - condition: "quality_score_below_threshold OR error_rate_above_threshold OR cost_spike == true"
+      - condition: "canary_stage_healthy == false"
         action: auto_rollback_via_gv6
         reason: "If quality score, error rate, or cost exceeds threshold at any canary stage, trigger GV-6 automatic rollback immediately"
         reason_ja: "品質スコア・コスト・エラー率のいずれかが閾値を下回った段階でGV-6の自動ロールバックを発動する"
-      - condition: "traffic_volume_too_low_for_statistical_significance == true"
+      - condition: "latency_sensitive == false AND eval_complete == false"
         action: supplement_with_offline_eval
         reason: "When live traffic is insufficient for statistical significance, supplement with offline evaluation (GV-7) before advancing to next stage"
         reason_ja: "トラフィック量が少なく統計的有意差が得にくい場合は、オフライン評価（GV-7）で補完してから次段階へ進む"
-      - condition: "event_storm_detected == true OR event_volume_per_minute > budget_threshold"
+      - condition: "event_volume_exceeds_budget == true"
         throttle_action: queue_or_sample
         mechanisms: [debounce, rate_limit, session_budget_cap]
         reason: "Combine debounce, rate limit, and session budget cap to prevent event storms from causing cost spikes and downstream overload"
         reason_ja: "デバウンス・頻度上限・予算上限の3つを組み合わせてイベントストームによるコスト急騰と依存システム過負荷を防ぐ"
-      - condition: "event_throttle_too_aggressive == true AND event_gaps_causing_stale_state == true"
+      - condition: "throttle_causing_stale_state == true"
         action: loosen_throttle_per_event_type
         reason: "Over-throttling causes agents to operate on stale state; tune throttle parameters per event type based on business criticality and inference cost"
         reason_ja: "頻度制限が厳しすぎると必要なイベントが欠落しエージェントが古い状態で判断を続ける。イベントの業務重要度と推論コストを考慮して種別ごとに設定する"

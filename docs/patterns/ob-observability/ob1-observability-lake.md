@@ -6,8 +6,8 @@ pattern_id: OB-1
 facet: observability
 requires: []
 required_by: ["GV-7", "GV-9", "GV-6"]
-applies_when: [all_production_ai_deployments]
-not_applicable_when: [unlimited_plaintext_logging_of_all_prompts_is_never_appropriate]
+applies_when: [prod_deployment, enterprise_scale]
+not_applicable_when: []
 risk_tiers: [0, 1, 2, 3, 4, 5]
 key_technologies: ["OpenTelemetry (GenAI semantic conventions)", Jaeger, Tempo, Datadog APM, "S3 (encrypted)", GCS, BigQuery, Snowflake, Redshift, Grafana, Prompt Store + Replay Tool]
 ---
@@ -20,9 +20,9 @@ key_technologies: ["OpenTelemetry (GenAI semantic conventions)", Jaeger, Tempo, 
 
 ## 解決する企業課題
 
-エージェントが本番環境で問題を起こしたとき、「なぜその判断をしたか」を追跡できない状況は企業にとって深刻なリスクだ。どのプロンプトが使われたか、どのデータが検索で取得されたか、どのツールが呼ばれたか——これらが記録されていなければ、インシデントの原因究明も規制当局への説明も不可能になる。
+エージェントが本番環境で問題を起こしたとき、「なぜその判断をしたか」を追跡できない状況は企業にとって深刻なリスクだ。どのプロンプトが使われたか、どのデータが検索で取得されたか、どのツールが呼ばれたか——これらが記録されていなければ、インシデントの原因究明も規制当局への説明も不可能になってしまう。
 
-コスト面でも観測基盤は不可欠だ。LLM の API 利用料・SaaS API 呼び出し数・ベクトル DB のクエリ数を部門・プロジェクト・エージェント単位で把握できなければ、チャージバックも予算計画も成立しない。品質改善の観点では、どのプロンプトバージョンで回答精度が上がったか、どのユーザーセグメントで評価が低いかを計測する手段がなければ、継続的な改善が行き当たりばったりになる。観測基盤の不在はこれらすべての問題の根本原因だ。
+コスト面でも観測基盤は不可欠だ。LLM の API 利用料・SaaS API 呼び出し数・ベクトル DB のクエリ数を部門・プロジェクト・エージェント単位で把握できなければ、チャージバックも予算計画も成立しない。品質改善の観点では、どのプロンプトバージョンで回答精度が上がったか、どのユーザーセグメントで評価が低いかを計測できなければ、継続的な改善が行き当たりばったりになる。観測基盤の不在はこれらすべての問題の根本原因だ。
 
 !!! tip "最小成立条件（MVP）"
     OpenTelemetry SDK でエージェントの各実行に run_id・user_id・token_usage・latency を記録し、既存の Trace Store（Jaeger / Datadog 等）に送信する。三層分離やフル保存は後続でよく、まず「何が起きたか追跡できる」状態を作る。
@@ -70,7 +70,7 @@ flowchart LR
     TRACE --> DWH
 ```
 
-OpenTelemetry GenAI semantic conventions に準拠し、エージェント・モデル・ツール呼び出しを標準的な方法で計測する。第1層（メタデータ）は高速クエリ用の Trace DB に格納し、run_id や相関 ID での横断検索を可能にする。第2層（本文）は PII マスキング済みで暗号化オブジェクトストレージに保存し、参照リンクで第1層と結合する。第3層（集計）は DWH で品質スコアや ROI 指標を集計する。極秘処理（[KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)）は本文をログに残さずメタのみ送信する点に注意すること。
+OpenTelemetry GenAI semantic conventions に準拠し、エージェント・モデル・ツール呼び出しを標準的な方法で計測する。第1層（メタデータ）は高速クエリ用の Trace DB に格納し、run_id や相関 ID での横断検索を可能にする。第2層（本文）は PII マスキング済みで暗号化オブジェクトストレージに保存し、参照リンクで第1層と結合する形だ。第3層（集計）は DWH で品質スコアや ROI 指標を集計する。極秘処理（[KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)）は本文をログに残さずメタのみ送信する点に注意する。
 
 ## 向き／不向き
 
@@ -93,9 +93,9 @@ OpenTelemetry GenAI semantic conventions に準拠し、エージェント・モ
 !!! warning "全プロンプトのログ直接投入"
     全プロンプトをログ基盤に直接入れると巨大・高コスト・PII リスクになる。三層分離（メタ→Trace DB、本文→暗号化ストレージ、集計→DWH）を徹底する。メタデータと本文を混在させると、メタ検索のコストと機密管理コストが同時に上昇する。
 
-- エラー時・低評価時・ランダム N% のみフル保存するサンプリングも併用し、コストと網羅性のバランスを取る。
-- 極秘処理（[KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)）ではメタのみに限定する。本文層を廃止してメタ層のみ残すことで、機密保持と観測性を両立する。
-- 相関 ID（run_id/session_id）で各 SaaS の監査ログと横断追跡を可能にする。エージェント内の trace と SaaS 側の audit log を同一 ID で突合できる設計が、障害調査の効率を決定的に変える。
+- エラー時・低評価時・ランダム N% のみフル保存するサンプリングも併用し、コストと網羅性のバランスをとる。
+- 極秘処理（[KM-7](../km-knowledge/km7-ephemeral-secure-context-bus.md)）ではメタのみに限定する。本文層を廃してメタ層だけを残すことで、機密保持と観測性を両立できる。
+- 相関 ID（run_id/session_id）で各 SaaS の監査ログと横断追跡を可能にする。エージェント内の trace と SaaS 側の audit log を同一 ID で突合できる設計が、障害調査の効率を決定的に変えることになる。
 
 ## Interfaces
 
@@ -115,6 +115,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface OtelInstrumentationLayerRequest {
+          runId: string;
+          sessionId: string;
+          userId: string;
+          agentId: string;
+          modelId: string;
+        }
+        interface OtelInstrumentationLayerResponse {
+          traceId: string;
+          spanId: string;
+          recordedAt: Date;
+        }
+        interface OtelInstrumentationLayer {
+          otelInstrumentationLayer(req: OtelInstrumentationLayerRequest): Promise<OtelInstrumentationLayerResponse>;
+        }
+      python: |
+        @dataclass
+        class OtelInstrumentationLayerRequest:
+            run_id: str
+            session_id: str
+            user_id: str
+            agent_id: str
+            model_id: str
+        
+        @dataclass
+        class OtelInstrumentationLayerResponse:
+            trace_id: str
+            span_id: str
+            recorded_at: datetime
+        
+        class OtelInstrumentationLayer(Protocol):
+            async def otel_instrumentation_layer(self, req: OtelInstrumentationLayerRequest) -> OtelInstrumentationLayerResponse: ...
   - name: Three-Layer Storage
     description: "Layer 1 (Trace DB) for fast metadata queries; Layer 2 (encrypted object store, PII-masked) for full content keyed by run_id; Layer 3 (DWH) for quality scores and ROI aggregations."
     input:
@@ -127,6 +161,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ThreeLayerStorageRequest {
+          runId: string;
+          traceData: object;
+          fullContent: object;
+          qualityScores: object;
+        }
+        interface ThreeLayerStorageResponse {
+          stored: boolean;
+          layer1Id: string;
+          layer2Key: string;
+        }
+        interface ThreeLayerStorage {
+          threeLayerStorage(req: ThreeLayerStorageRequest): Promise<ThreeLayerStorageResponse>;
+        }
+      python: |
+        @dataclass
+        class ThreeLayerStorageRequest:
+            run_id: str
+            trace_data: dict
+            full_content: dict
+            quality_scores: dict
+        
+        @dataclass
+        class ThreeLayerStorageResponse:
+            stored: bool
+            layer1_id: str
+            layer2_key: str
+        
+        class ThreeLayerStorage(Protocol):
+            async def three_layer_storage(self, req: ThreeLayerStorageRequest) -> ThreeLayerStorageResponse: ...
   - name: Replay Tool
     description: "Reconstructs past executions from stored metadata and content for incident investigation and quality regression testing."
     input:
@@ -139,6 +205,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ReplayToolRequest {
+          runId: string;
+          replayMode: string;
+        }
+        interface ReplayToolResponse {
+          reconstructedExecution: object;
+          replayedAt: Date;
+          differences: object[];
+        }
+        interface ReplayTool {
+          replayTool(req: ReplayToolRequest): Promise<ReplayToolResponse>;
+        }
+      python: |
+        @dataclass
+        class ReplayToolRequest:
+            run_id: str
+            replay_mode: str
+        
+        @dataclass
+        class ReplayToolResponse:
+            reconstructed_execution: dict
+            replayed_at: datetime
+            differences: list[dict]
+        
+        class ReplayTool(Protocol):
+            async def replay_tool(self, req: ReplayToolRequest) -> ReplayToolResponse: ...
 ```
 
 ## 関連パターン

@@ -6,8 +6,8 @@ pattern_id: KM-1
 facet: knowledge
 requires: ["ID-2", "ID-4"]
 required_by: []
-applies_when: [cross_saas_document_ticket_crm_chat_search, frequent_access_changes_from_departures_or_transfers, multiple_saas_integrated_search_required]
-not_applicable_when: [data_sources_where_acl_cannot_be_controlled, real_time_db_master_requiring_direct_query, public_information_only_no_acl_needed]
+applies_when: [cross_saas_search, frequent_perm_chg, confidential_data, enterprise_scale]
+not_applicable_when: [public_data_only, real_time_latency]
 risk_tiers: [1, 2, 3]
 key_technologies: ["Hybrid Search (BM25 + Vector)", Reranker, Pinecone, Weaviate, Qdrant, Elasticsearch, Freshness Ranking, Citation]
 ---
@@ -16,13 +16,13 @@ key_technologies: ["Hybrid Search (BM25 + Vector)", Reranker, Pinecone, Weaviate
 
 ## 概要
 
-全社文書をベクトル DB に入れて「何でも検索できる AI」を作ると、本来そのユーザーには見えないはずの文書まで回答に含まれてしまう。インデックスにコピーした瞬間に元のアクセス権限が消える——これが企業 RAG 最大の落とし穴だ。このパターンは取り込み時に各チャンクへソースの ACL・分類・鮮度を同梱し、検索のたびに依頼者の最新権限で再評価する。退職者・異動者に「見えてはいけないものが見える」問題を根本から防ぐ。
+全社文書をベクトル DB に入れて「何でも検索できる AI」を作ると、本来そのユーザーには見えないはずの文書まで回答に含まれてしまう。インデックスにコピーした瞬間に元のアクセス権限が消える——これが企業 RAG 最大の落とし穴だ。このパターンは取り込み時に各チャンクへソースの ACL・分類・鮮度を同梱し、検索のたびに依頼者の最新権限で再評価する。退職者・異動者に「見えてはいけないものが見える」問題を根本から防ぐためのパターンだ。
 
 ## 解決する企業課題
 
-エンタープライズ RAG の根本的な危険は、ドキュメントをベクトル DB にコピーした時点で元のアクセス制御が失われることだ。SharePoint の閲覧権限、Box のフォルダ権限、Confluence のスペース制限——これらはインデックス作成時に考慮されなければ意味をなさない。退職者・異動者が以前の職責に関わる文書を参照し続ける問題も、この「ACL 剥奪が伝播しない」構造から生じる。
+エンタープライズ RAG の根本的な危険は、ドキュメントをベクトル DB にコピーした時点で元のアクセス制御が失われることだ。SharePoint の閲覧権限・Box のフォルダ権限・Confluence のスペース制限——これらはインデックス作成時に考慮されなければ意味をなさない。退職者・異動者が以前の職責に関わる文書を参照し続ける問題も、この「ACL 剥奪が伝播しない」構造から生じる。
 
-古い文書への参照（鮮度問題）、根拠不明の回答（引用なし）、複数 SaaS 横断での権限不一致——これらはすべて「コピー先で権限と鮮度を管理していない」ことに起因する。企業の情報ガバナンスは、検索インフラがアクセス制御を忠実に継承することを前提として成立するものだ。
+古い文書への参照（鮮度問題）・根拠不明の回答（引用なし）・複数 SaaS 横断での権限不一致——これらはすべて「コピー先で権限と鮮度を管理していない」ことに起因する。企業の情報ガバナンスは、検索インフラがアクセス制御を忠実に継承することを前提に成立するものだ。
 
 !!! tip "最小成立条件（MVP）"
     単一データ源（例：SharePoint）のチャンクに ACL メタデータを付与し、検索時にユーザーの所属グループで pre-filter する構成。鮮度やリランクは後回しでよいが、ACL 同梱と検索時フィルタの2点は初日から必須である。
@@ -33,7 +33,7 @@ key_technologies: ["Hybrid Search (BM25 + Vector)", Reranker, Pinecone, Weaviate
 
 ## 解決策と設計
 
-取り込み時にソースの ACL・分類・鮮度をチャンクに同梱し、検索時点の最新エンタイトルメントで評価する。ACL はキャッシュではなく都度判定を基本とし、権限剥奪をリアルタイムに反映させる。
+取り込み時にソースの ACL・分類・鮮度をチャンクに同梱し、検索時点の最新エンタイトルメントで評価する。ACL はキャッシュではなく都度判定を基本とし、権限剥奪をリアルタイムに反映させることが重要だ。
 
 ```mermaid
 flowchart LR
@@ -58,7 +58,7 @@ flowchart LR
     VDB --> HYB
 ```
 
-Permission Filter は [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) と連携し、依頼者のエンタイトルメントを検索時に評価する。ハイブリッド検索（BM25＋ベクトル）でキーワード適合と意味的類似を組み合わせ、リランカーが最終スコアを算出する。回答には出典 Citation を必ず含め、根拠の透明性を確保する。鮮度ランキングにより古いドキュメントの優先度を自動的に下げる。
+Permission Filter は [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) と連携し、依頼者のエンタイトルメントを検索時に評価する。ハイブリッド検索（BM25＋ベクトル）でキーワード適合と意味的類似を組み合わせ、リランカーが最終スコアを算出する。回答には出典 Citation を必ず含め、根拠の透明性を確保する。鮮度ランキングにより古いドキュメントの優先度は自動的に下がる。
 
 ## 向き／不向き
 
@@ -104,6 +104,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface IngestPipelineWithAclEmbeddingRequest {
+          documentId: string;
+          content: string;
+          sourceAcl: object;
+          classificationLabel: string;
+        }
+        interface IngestPipelineWithAclEmbeddingResponse {
+          chunkIds: string[];
+          embeddedAt: Date;
+          freshnessTimestamp: Date;
+        }
+        interface IngestPipelineWithAclEmbedding {
+          ingestPipelineWithAclEmbedding(req: IngestPipelineWithAclEmbeddingRequest): Promise<IngestPipelineWithAclEmbeddingResponse>;
+        }
+      python: |
+        @dataclass
+        class IngestPipelineWithAclEmbeddingRequest:
+            document_id: str
+            content: str
+            source_acl: dict
+            classification_label: str
+        
+        @dataclass
+        class IngestPipelineWithAclEmbeddingResponse:
+            chunk_ids: list[str]
+            embedded_at: datetime
+            freshness_timestamp: datetime
+        
+        class IngestPipelineWithAclEmbedding(Protocol):
+            async def ingest_pipeline_with_acl_embedding(self, req: IngestPipelineWithAclEmbeddingRequest) -> IngestPipelineWithAclEmbeddingResponse: ...
   - name: Permission Filter (ID-4)
     description: "Evaluates the requester's current entitlements against chunk ACLs at query time, filtering inaccessible documents before ranking."
     input:
@@ -116,6 +148,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface PermissionFilterRequest {
+          userId: string;
+          candidateChunkIds: string[];
+          queryContext: string;
+        }
+        interface PermissionFilterResponse {
+          permittedChunkIds: string[];
+          filteredCount: number;
+        }
+        interface PermissionFilter {
+          permissionFilter(req: PermissionFilterRequest): Promise<PermissionFilterResponse>;
+        }
+      python: |
+        @dataclass
+        class PermissionFilterRequest:
+            user_id: str
+            candidate_chunk_ids: list[str]
+            query_context: str
+        
+        @dataclass
+        class PermissionFilterResponse:
+            permitted_chunk_ids: list[str]
+            filtered_count: int
+        
+        class PermissionFilter(Protocol):
+            async def permission_filter(self, req: PermissionFilterRequest) -> PermissionFilterResponse: ...
   - name: Hybrid Search + Reranker
     description: "Combines BM25 keyword matching with vector similarity; reranker produces final scored results including freshness penalty for stale documents."
     input:
@@ -128,6 +188,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface HybridSearchRerankerRequest {
+          query: string;
+          vectorQuery: object;
+          topK: number;
+          userId: string;
+        }
+        interface HybridSearchRerankerResponse {
+          results: object[];
+          scores: number[];
+          staleFiltered: number;
+        }
+        interface HybridSearchReranker {
+          hybridSearchReranker(req: HybridSearchRerankerRequest): Promise<HybridSearchRerankerResponse>;
+        }
+      python: |
+        @dataclass
+        class HybridSearchRerankerRequest:
+            query: str
+            vector_query: dict
+            top_k: int
+            user_id: str
+        
+        @dataclass
+        class HybridSearchRerankerResponse:
+            results: list[dict]
+            scores: list[float]
+            stale_filtered: int
+        
+        class HybridSearchReranker(Protocol):
+            async def hybrid_search_reranker(self, req: HybridSearchRerankerRequest) -> HybridSearchRerankerResponse: ...
 ```
 
 ## 関連パターン

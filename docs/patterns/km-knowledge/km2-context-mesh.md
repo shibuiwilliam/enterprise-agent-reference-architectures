@@ -6,8 +6,8 @@ pattern_id: KM-2
 facet: knowledge
 requires: ["ID-2"]
 required_by: []
-applies_when: [confidentiality_priority_and_data_residency_regulations_important, cross_saas_confidential_data_needed_transversally, avoiding_audit_complexity_from_data_copies]
-not_applicable_when: [public_data_only_with_no_permission_requirements, extreme_low_latency_requirements_federation_too_slow, bulk_statistical_bi_analysis_where_central_lake_better]
+applies_when: [confidential_data, data_residency, cross_saas, audit_required]
+not_applicable_when: [public_data_only, real_time_latency]
 risk_tiers: [2, 3, 4]
 key_technologies: [Federated Search, Context Router, Retrieval Proxy, Embedding Index per Scope, JIT Retrieval]
 ---
@@ -16,11 +16,11 @@ key_technologies: [Federated Search, Context Router, Retrieval Proxy, Embedding 
 
 ## 概要
 
-Salesforce の案件情報も Workday の人事データも「一箇所に集めれば便利」に見える。だがコピーした時点で元の権限モデルは崩れる。このパターンはデータを集約せず、本人の OBO トークンで各 SaaS に分散問い合わせ（フェデレーション）してリアルタイムに文脈を取得する。公開情報は中央ベクトル DB でインデックス化し、機密 SaaS データは JIT 取得するハイブリッド構成が実務的な解だ。データ所在地規制への対応もしやすい。
+Salesforce の案件情報も Workday の人事データも「一箇所に集めれば便利」に見える。だがコピーした時点で元の権限モデルは崩れる。このパターンはデータを集約せず、本人の OBO トークンで各 SaaS に分散問い合わせ（フェデレーション）してリアルタイムに文脈を取得する。公開情報は中央ベクトル DB でインデックス化し、機密 SaaS データは JIT 取得するハイブリッド構成が実務的な解だ。データ所在地規制への対応もしやすくなる。
 
 ## 解決する企業課題
 
-全社データレイクや統一ベクトル DB に機密データを集約すると、複数の問題が同時に発生する。まずデータをコピーした時点で元の権限モデルが失われる（[KM-1](km1-access-controlled-rag.md) の ACL 問題）。次に、Salesforce の案件情報・Workday の人事データが一つのインデックスに混在すると、ユーザーの所属や役職に関係なく全データが参照対象になりうる。コピーが増えるほど監査・データカタログ・変更追跡も複雑になる。
+全社データレイクや統一ベクトル DB に機密データを集約すると、複数の問題が同時に発生する。データをコピーした時点で元の権限モデルが失われる（[KM-1](km1-access-controlled-rag.md) の ACL 問題）。さらに Salesforce の案件情報・Workday の人事データが一つのインデックスに混在すると、ユーザーの所属や役職に関係なく全データが参照対象になりうる。コピーが増えるほど監査・データカタログ・変更追跡も複雑になる。
 
 データ所在地規制（GDPR、個人情報保護法）の観点でも、データを本国外インフラにコピーすることが制約となるケースがある。フェデレーション型は「集約しない」を設計原則とし、権限・規制・監査の三課題を一度に解決する。KM-1 との使い分けとしては、ACL を確実に同梱できる文書系は KM-1 でインデックス化し、機密 SaaS データは本パターンで JIT 取得するハイブリッドが実務的な解だ。
 
@@ -33,7 +33,7 @@ Salesforce の案件情報も Workday の人事データも「一箇所に集め
 
 ## 解決策と設計
 
-Context Router がクエリを各 Context Provider に分散し、各プロバイダが ACL-aware な取得で権限を維持したまま結果を収集する。機密データは集約せず、本人の OBO トークンで都度取得する。
+Context Router がクエリを各 Context Provider に分散し、各プロバイダが ACL-aware な取得で権限を維持したまま結果を収集する。機密データは集約せずに、本人の OBO トークンで都度取得する。
 
 ```mermaid
 flowchart LR
@@ -54,7 +54,7 @@ flowchart LR
     PKG --> LLM[LLM処理]
 ```
 
-各 Context Provider は本人の OBO トークン（[ID-2](../id-identity/id2-identity-federation-obo.md)）で SaaS を呼び、見てよいデータのみを返す。OBO 非対応の SaaS では [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) で権限フィルタを適用する。Context Router は各プロバイダへの問い合わせを並列実行し、プロバイダごとに独立したタイムアウトで応答を待つ。取得した結果は Context Package にまとめ、[KM-5](km5-purpose-bound-context.md) の目的ポリシーで最終フィルタリングしてから LLM に渡す。
+各 Context Provider は本人の OBO トークン（[ID-2](../id-identity/id2-identity-federation-obo.md)）で SaaS を呼び、見てよいデータのみを返す。OBO 非対応の SaaS では [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) で権限フィルタを適用する。Context Router は各プロバイダへの問い合わせを並列実行し、プロバイダごとに独立したタイムアウトで応答を待つ。取得した結果は Context Package にまとめ、[KM-5](km5-purpose-bound-context.md) の目的ポリシーで最終フィルタリングしてから LLM に渡す形だ。
 
 ## 向き／不向き
 
@@ -99,6 +99,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ContextRouterRequest {
+          query: string;
+          userId: string;
+          providers: string[];
+          timeoutMs: number;
+        }
+        interface ContextRouterResponse {
+          providerResults: object;
+          timedOut: string[];
+        }
+        interface ContextRouter {
+          contextRouter(req: ContextRouterRequest): Promise<ContextRouterResponse>;
+        }
+      python: |
+        @dataclass
+        class ContextRouterRequest:
+            query: str
+            user_id: str
+            providers: list[str]
+            timeout_ms: int
+        
+        @dataclass
+        class ContextRouterResponse:
+            provider_results: dict
+            timed_out: list[str]
+        
+        class ContextRouter(Protocol):
+            async def context_router(self, req: ContextRouterRequest) -> ContextRouterResponse: ...
   - name: Context Provider (per SaaS)
     description: "Calls the target SaaS with the requester's OBO token (ID-2) and returns only the data the requester is permitted to see."
     input:
@@ -111,6 +141,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ContextProviderRequest {
+          query: string;
+          oboToken: string;
+          saasTarget: string;
+        }
+        interface ContextProviderResponse {
+          data: object[];
+          retrievedAt: Date;
+          permissionBased: boolean;
+        }
+        interface ContextProvider {
+          contextProvider(req: ContextProviderRequest): Promise<ContextProviderResponse>;
+        }
+      python: |
+        @dataclass
+        class ContextProviderRequest:
+            query: str
+            obo_token: str
+            saas_target: str
+        
+        @dataclass
+        class ContextProviderResponse:
+            data: list[dict]
+            retrieved_at: datetime
+            permission_based: bool
+        
+        class ContextProvider(Protocol):
+            async def context_provider(self, req: ContextProviderRequest) -> ContextProviderResponse: ...
   - name: Context Package Builder
     description: "Assembles the collected provider results and passes them through KM-5 purpose policy for final filtering before sending to the LLM."
     input:
@@ -123,6 +183,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ContextPackageBuilderRequest {
+          providerResults: object;
+          purpose: string;
+          tokenBudget: number;
+        }
+        interface ContextPackageBuilderResponse {
+          contextPackage: object;
+          tokenCount: number;
+          purposeTag: string;
+        }
+        interface ContextPackageBuilder {
+          contextPackageBuilder(req: ContextPackageBuilderRequest): Promise<ContextPackageBuilderResponse>;
+        }
+      python: |
+        @dataclass
+        class ContextPackageBuilderRequest:
+            provider_results: dict
+            purpose: str
+            token_budget: int
+        
+        @dataclass
+        class ContextPackageBuilderResponse:
+            context_package: dict
+            token_count: int
+            purpose_tag: str
+        
+        class ContextPackageBuilder(Protocol):
+            async def context_package_builder(self, req: ContextPackageBuilderRequest) -> ContextPackageBuilderResponse: ...
 ```
 
 ## 関連パターン

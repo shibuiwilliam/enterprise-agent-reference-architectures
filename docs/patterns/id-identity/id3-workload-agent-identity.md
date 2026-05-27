@@ -6,8 +6,8 @@ pattern_id: ID-3
 facet: identity
 requires: ["ID-5", "ID-6"]
 required_by: []
-applies_when: [scheduled_batch_or_system_triggered_autonomous_execution_exists, audit_separation_of_autonomous_and_human_delegated_agent_operations_required, workloads_dynamically_scale_on_kubernetes_or_cloud]
-not_applicable_when: [all_agent_operations_originate_from_explicit_human_requests_id2_sufficient, poc_with_immature_id_infrastructure, small_single_fixed_server_batch_certificate_rotation_overhead_not_justified]
+applies_when: [autonomous_exec, audit_required, kubernetes_cloud]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [2, 3, 4]
 key_technologies: [SPIFFE/SPIRE, "SVID (Short-lived Certificate)", AWS IAM Roles Anywhere / IRSA, Microsoft Entra Workload Identity, Google Workload Identity Federation, mTLS]
 ---
@@ -24,9 +24,9 @@ key_technologies: [SPIFFE/SPIRE, "SVID (Short-lived Certificate)", AWS IAM Roles
 
 第一は「操作主体の曖昧さ」だ。監査ログに「サービスアカウント X が操作した」とのみ記録されていても、それが人間 A の依頼によるものか深夜バッチによるものかが判別できない。インシデント発生時の調査・原因特定が著しく困難になる。
 
-第二は「権限の過剰付与」だ。人間代理と自律実行に同一アカウントを使うと、自律エージェントが人間の業務に必要な広い権限をそのまま持つ状態になる。自律エージェントが誤動作・侵害された場合のダメージが組織全体に広がる。
+第二は「権限の過剰付与」だ。人間代理と自律実行に同一アカウントを使うと、自律エージェントが人間の業務に必要な広い権限をそのまま持つことになる。自律エージェントが誤動作・侵害された場合のダメージが組織全体に広がる。
 
-第三は「動的スケールへの対応不能」である。コンテナ・Kubernetes 環境ではエージェントが動的に生成・削除される。静的なサービスアカウントでは ID ライフサイクル管理が追いつかず、使用されていない ID が長期間残存するリスクが生まれる。
+第三は「動的スケールへの対応不能」だ。コンテナ・Kubernetes 環境ではエージェントが動的に生成・削除される。静的なサービスアカウントでは ID ライフサイクル管理が追いつかず、使用されていない ID が長期間残存するリスクが生まれる。
 
 このパターンは、自律エージェントに検証可能な短命マシン ID を付与し、動作種別ごとに ID を分離することでこれらを解決する。
 
@@ -41,7 +41,7 @@ key_technologies: [SPIFFE/SPIRE, "SVID (Short-lived Certificate)", AWS IAM Roles
 
 自律エージェントには人間の ID とは独立した Workload Identity を付与する。この ID は SPIFFE/SVID 規格に基づく短命証明書、またはクラウドプロバイダーのマネージド ID として実装され、自動ローテーションされる。
 
-自律エージェントは起動時に SPIRE（SPIFFE Runtime Environment）またはクラウドプロバイダーの ID 基盤からワークロード証明書を取得する。この証明書は短命（例：1時間）で自動ローテーションされる。下流 API の呼び出しにはこの証明書・トークンを用い、呼び出し元がエージェントであることを明示する。
+自律エージェントは起動時に SPIRE（SPIFFE Runtime Environment）またはクラウドプロバイダーの ID 基盤からワークロード証明書を取得する。証明書は短命（例：1 時間）で自動ローテーションされる。下流 API の呼び出しにはこの証明書・トークンを用い、呼び出し元がエージェントであることを明示する。
 
 ```mermaid
 sequenceDiagram
@@ -62,7 +62,7 @@ sequenceDiagram
     GW-->>AGENT: レスポンス
 ```
 
-人間の依頼を起点とする場合（例：承認後に自律処理が走る場合）は、元の人間 ID を subject として保持し、ワークロード ID を actor として記録する。完全自律バッチで人間の起点がない場合は、ワークロード ID のみを記録し、その実行根拠（ポリシー・スケジュール定義）を監査に紐付ける。
+人間の依頼を起点とする場合（例：承認後に自律処理が走るケース）は、元の人間 ID を subject として保持し、ワークロード ID を actor として記録する。完全自律バッチで人間の起点がない場合は、ワークロード ID のみを記録し、その実行根拠（ポリシー・スケジュール定義）を監査に紐づける。
 
 ## 向き／不向き
 
@@ -87,7 +87,7 @@ sequenceDiagram
 !!! danger "自律エージェントへの管理者権限付与"
     自律動作するほど最小権限を厳格にすべきである。「バッチだから広めに取っておく」は最も危険な設計であり、誤動作・侵害時の影響範囲を企業全体に広げる。ワークロード ID は用途ごとに分割し、各 ID に必要な権限だけを与える。
 
-- 長命の SVID・トークンをキャッシュして使い回すのは短命化の目的を損なう。[ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md) と組み合わせ、ツール呼び出し直前に都度取得すること。
+- 長命の SVID・トークンをキャッシュして使い回すのは短命化の目的を損なう。[ID-5 JIT Scoped Credentials](id5-jit-scoped-credentials.md) と組み合わせ、ツール呼び出し直前に都度取得する。
 - ワークロード ID の発行数が増えると管理が形骸化する。ID ライフサイクル（発行・失効・棚卸し）を自動化し、定期的に未使用 ID を削除しておく。
 - 自律バッチが複数エージェントをチェーンする場合、各段で権限が縮退していることを確認する。末端エージェントが元の権限を引き継いでいないかを [ID-6 Zero-Trust PDP/PEP](id6-zero-trust-pdp-pep.md) で検証することが欠かせない。
 
@@ -109,6 +109,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface WorkloadCertificateIssuerRequest {
+          workloadId: string;
+          agentType: string;
+          requestedTtlSeconds: number;
+        }
+        interface WorkloadCertificateIssuerResponse {
+          certificate: string;
+          expiresAt: Date;
+          workloadIdentity: string;
+        }
+        interface WorkloadCertificateIssuer {
+          workloadCertificateIssuer(req: WorkloadCertificateIssuerRequest): Promise<WorkloadCertificateIssuerResponse>;
+        }
+      python: |
+        @dataclass
+        class WorkloadCertificateIssuerRequest:
+            workload_id: str
+            agent_type: str
+            requested_ttl_seconds: int
+        
+        @dataclass
+        class WorkloadCertificateIssuerResponse:
+            certificate: str
+            expires_at: datetime
+            workload_identity: str
+        
+        class WorkloadCertificateIssuer(Protocol):
+            async def workload_certificate_issuer(self, req: WorkloadCertificateIssuerRequest) -> WorkloadCertificateIssuerResponse: ...
   - name: Dual Representation Audit Record
     description: "Records workload_id as actor and human_id as subject (if present) per call; purely autonomous batches record only workload_id with policy/schedule reference."
     input:
@@ -121,6 +151,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DualRepresentationAuditRecordRequest {
+          workloadId: string;
+          humanId: string | null;
+          action: string;
+          resource: string;
+        }
+        interface DualRepresentationAuditRecordResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface DualRepresentationAuditRecord {
+          dualRepresentationAuditRecord(req: DualRepresentationAuditRecordRequest): Promise<DualRepresentationAuditRecordResponse>;
+        }
+      python: |
+        @dataclass
+        class DualRepresentationAuditRecordRequest:
+            workload_id: str
+            human_id: str | None
+            action: str
+            resource: str
+        
+        @dataclass
+        class DualRepresentationAuditRecordResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class DualRepresentationAuditRecord(Protocol):
+            async def dual_representation_audit_record(self, req: DualRepresentationAuditRecordRequest) -> DualRepresentationAuditRecordResponse: ...
   - name: Least-Privilege Workload Scope
     description: "Each autonomous agent's workload identity carries only the minimum permissions needed for its specific job; broader permissions are never inherited."
     input:
@@ -133,6 +193,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface LeastPrivilegeWorkloadScopeRequest {
+          workloadId: string;
+          jobType: string;
+          requiredScopes: string[];
+        }
+        interface LeastPrivilegeWorkloadScopeResponse {
+          grantedScopes: string[];
+          permissionToken: string;
+          expiresAt: Date;
+        }
+        interface LeastPrivilegeWorkloadScope {
+          leastPrivilegeWorkloadScope(req: LeastPrivilegeWorkloadScopeRequest): Promise<LeastPrivilegeWorkloadScopeResponse>;
+        }
+      python: |
+        @dataclass
+        class LeastPrivilegeWorkloadScopeRequest:
+            workload_id: str
+            job_type: str
+            required_scopes: list[str]
+        
+        @dataclass
+        class LeastPrivilegeWorkloadScopeResponse:
+            granted_scopes: list[str]
+            permission_token: str
+            expires_at: datetime
+        
+        class LeastPrivilegeWorkloadScope(Protocol):
+            async def least_privilege_workload_scope(self, req: LeastPrivilegeWorkloadScopeRequest) -> LeastPrivilegeWorkloadScopeResponse: ...
 ```
 
 ## 関連パターン

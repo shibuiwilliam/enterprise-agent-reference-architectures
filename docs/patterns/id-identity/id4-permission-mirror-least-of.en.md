@@ -6,8 +6,8 @@ pattern_id: ID-4
 facet: identity
 requires: []
 required_by: ["KM-1"]
-applies_when: [enterprise_rag_or_cross_system_search_agents, frequent_permission_changes_from_departures_or_transfers, obo_delegation_unsupported_legacy_saas_or_custom_systems_in_mix]
-not_applicable_when: [extremely_simple_permission_small_environment, public_information_only_use_cases, single_saas_completable_with_obo_obo_is_preferred]
+applies_when: [cross_saas_search, frequent_perm_chg, legacy_saas_mix, confidential_data]
+not_applicable_when: [public_data_only, single_team]
 risk_tiers: [2, 3, 4]
 key_technologies: [ACL Sync, SCIM Group Sync, SaaS Admin API, "Zanzibar-based ReBAC", ABAC, "PDP (ID-6)"]
 ---
@@ -128,6 +128,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AclSyncPipelineRequest {
+          saasSource: string;
+          entityIds: string[];
+          syncMode: string;
+        }
+        interface AclSyncPipelineResponse {
+          syncedAt: Date;
+          entitiesUpdated: number;
+          errors: string[];
+        }
+        interface AclSyncPipeline {
+          aclSyncPipeline(req: AclSyncPipelineRequest): Promise<AclSyncPipelineResponse>;
+        }
+      python: |
+        @dataclass
+        class AclSyncPipelineRequest:
+            saas_source: str
+            entity_ids: list[str]
+            sync_mode: str
+        
+        @dataclass
+        class AclSyncPipelineResponse:
+            synced_at: datetime
+            entities_updated: int
+            errors: list[str]
+        
+        class AclSyncPipeline(Protocol):
+            async def acl_sync_pipeline(self, req: AclSyncPipelineRequest) -> AclSyncPipelineResponse: ...
   - name: Effective Permission Calculator
     description: "Computes agent_capability ∩ user_entitlement ∩ policy_constraint before each RAG query or tool call; records which factor was the limiting constraint in audit."
     input:
@@ -140,6 +170,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface EffectivePermissionCalculatorRequest {
+          agentId: string;
+          userId: string;
+          resource: string;
+          action: string;
+        }
+        interface EffectivePermissionCalculatorResponse {
+          effectivePermission: string;
+          limitingFactor: string;
+          calculatedAt: Date;
+        }
+        interface EffectivePermissionCalculator {
+          effectivePermissionCalculator(req: EffectivePermissionCalculatorRequest): Promise<EffectivePermissionCalculatorResponse>;
+        }
+      python: |
+        @dataclass
+        class EffectivePermissionCalculatorRequest:
+            agent_id: str
+            user_id: str
+            resource: str
+            action: str
+        
+        @dataclass
+        class EffectivePermissionCalculatorResponse:
+            effective_permission: str
+            limiting_factor: str
+            calculated_at: datetime
+        
+        class EffectivePermissionCalculator(Protocol):
+            async def effective_permission_calculator(self, req: EffectivePermissionCalculatorRequest) -> EffectivePermissionCalculatorResponse: ...
   - name: Stale-Access Monitor
     description: "Detects and alerts when Mirror-to-source divergence exceeds threshold; triggers forced re-sync on departure/transfer events."
     input:
@@ -152,6 +214,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface StaleAccessMonitorRequest {
+          mirrorId: string;
+          divergenceThresholdHours: number;
+        }
+        interface StaleAccessMonitorResponse {
+          staleDetected: boolean;
+          divergenceHours: number;
+          resyncTriggered: boolean;
+        }
+        interface StaleAccessMonitor {
+          staleAccessMonitor(req: StaleAccessMonitorRequest): Promise<StaleAccessMonitorResponse>;
+        }
+      python: |
+        @dataclass
+        class StaleAccessMonitorRequest:
+            mirror_id: str
+            divergence_threshold_hours: int
+        
+        @dataclass
+        class StaleAccessMonitorResponse:
+            stale_detected: bool
+            divergence_hours: float
+            resync_triggered: bool
+        
+        class StaleAccessMonitor(Protocol):
+            async def stale_access_monitor(self, req: StaleAccessMonitorRequest) -> StaleAccessMonitorResponse: ...
 ```
 
 ## Related Patterns

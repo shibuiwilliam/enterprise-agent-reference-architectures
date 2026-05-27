@@ -6,8 +6,8 @@ pattern_id: GV-2
 facet: governance
 requires: ["GV-1"]
 required_by: []
-applies_when: [agents_deployed_across_multiple_departments, discovery_duplication_and_unreviewed_usage_are_problematic, platform_team_exists_for_centralized_access_request_approval_and_permission_management]
-not_applicable_when: [single_team_single_purpose_internal_operation_only, poc_stage_with_only_a_few_agents_gv1_registry_alone_is_sufficient]
+applies_when: [multi_department, enterprise_scale, prod_deployment]
+not_applicable_when: [single_team, poc_phase, poc_phase]
 risk_tiers: [2, 3, 4]
 key_technologies: ["Backstage (Internal Developer Portal)", ServiceNow, Jira Service Management, Usage Analytics, Quality Rating]
 ---
@@ -106,6 +106,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CatalogUiApiRequest {
+          query: string;
+          filters: object;
+          page: number;
+        }
+        interface CatalogUiApiResponse {
+          agents: object[];
+          total: number;
+          pageSize: number;
+        }
+        interface CatalogUiApi {
+          catalogUiApi(req: CatalogUiApiRequest): Promise<CatalogUiApiResponse>;
+        }
+      python: |
+        @dataclass
+        class CatalogUiApiRequest:
+            query: str
+            filters: dict
+            page: int
+        
+        @dataclass
+        class CatalogUiApiResponse:
+            agents: list[dict]
+            total: int
+            page_size: int
+        
+        class CatalogUiApi(Protocol):
+            async def catalog_ui_api(self, req: CatalogUiApiRequest) -> CatalogUiApiResponse: ...
   - name: Access Request Workflow
     description: "Structured access request requiring purpose, expiry, and data access scope; integrates with existing approval systems (ServiceNow, Jira SM)."
     input:
@@ -118,6 +148,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AccessRequestWorkflowRequest {
+          agentId: string;
+          requesterId: string;
+          purpose: string;
+          expiry: Date;
+          dataAccessScope: string[];
+        }
+        interface AccessRequestWorkflowResponse {
+          requestId: string;
+          status: string;
+          approvalUrl: string;
+        }
+        interface AccessRequestWorkflow {
+          accessRequestWorkflow(req: AccessRequestWorkflowRequest): Promise<AccessRequestWorkflowResponse>;
+        }
+      python: |
+        @dataclass
+        class AccessRequestWorkflowRequest:
+            agent_id: str
+            requester_id: str
+            purpose: str
+            expiry: datetime
+            data_access_scope: list[str]
+        
+        @dataclass
+        class AccessRequestWorkflowResponse:
+            request_id: str
+            status: str
+            approval_url: str
+        
+        class AccessRequestWorkflow(Protocol):
+            async def access_request_workflow(self, req: AccessRequestWorkflowRequest) -> AccessRequestWorkflowResponse: ...
   - name: Usage Analytics & Quality Score
     description: "Aggregates execution logs, token consumption, and error rates into a quality score updated on each GV-7 evaluation run."
     input:
@@ -130,6 +194,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface UsageAnalyticsQualityScoreRequest {
+          agentId: string;
+          evaluationRunId: string;
+        }
+        interface UsageAnalyticsQualityScoreResponse {
+          qualityScore: number;
+          tokenUsage: number;
+          errorRate: number;
+        }
+        interface UsageAnalyticsQualityScore {
+          usageAnalyticsQualityScore(req: UsageAnalyticsQualityScoreRequest): Promise<UsageAnalyticsQualityScoreResponse>;
+        }
+      python: |
+        @dataclass
+        class UsageAnalyticsQualityScoreRequest:
+            agent_id: str
+            evaluation_run_id: str
+        
+        @dataclass
+        class UsageAnalyticsQualityScoreResponse:
+            quality_score: float
+            token_usage: int
+            error_rate: float
+        
+        class UsageAnalyticsQualityScore(Protocol):
+            async def usage_analytics_quality_score(self, req: UsageAnalyticsQualityScoreRequest) -> UsageAnalyticsQualityScoreResponse: ...
 ```
 
 ## Related Patterns

@@ -6,8 +6,8 @@ pattern_id: KM-4
 facet: knowledge
 requires: []
 required_by: []
-applies_when: [continuous_use_spanning_multiple_departments_or_projects, agents_handling_customer_information, long_term_projects_where_context_accumulation_is_important]
-not_applicable_when: [completely_stateless_one_off_use, read_only_reference_ai_without_memory_needed, one_time_question_answer_sessions]
+applies_when: [persistent_memory, multi_department, personal_data, project_team]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [2, 3]
 key_technologies: [Memory Store, "Vector DB (Namespace isolation)", ACL, TTL, Memory Review UI]
 ---
@@ -20,9 +20,9 @@ key_technologies: [Memory Store, "Vector DB (Namespace isolation)", ACL, TTL, Me
 
 ## 解決する企業課題
 
-エージェントにメモリを持たせると過去の文脈を再利用できる反面、「誰がどの記憶を参照できるか」を管理しなければ情報漏洩の経路になる。個人メモリがチーム全体に見える、A プロジェクトで得た顧客情報が B プロジェクトのエージェントに参照される、退職した担当者が持っていた文脈が後任に見える——これらはスコープなし設計で発生する典型的な問題だ。
+エージェントにメモリを持たせると過去の文脈を再利用できる。その反面、「誰がどの記憶を参照できるか」を管理しなければ情報漏洩の経路になる。個人メモリがチーム全体に見える、A プロジェクトで得た顧客情報が B プロジェクトのエージェントに参照される、退職した担当者が持っていた文脈が後任に見える——これらはスコープなし設計で発生する典型的な問題だ。
 
-企業の組織構造はそれ自体が情報共有の権威ある基準だ。「同じチームのメンバーは同じ情報を見てよい」「部門長は部門内のプロジェクト情報を見てよい」という組織の論理をメモリ階層に反映させることで、権限管理を組織グラフという既存の権威ソースに委ねられる。プロジェクト終了・退職・異動といったライフサイクルイベントに連動してメモリを失効させることで、陳腐化した文脈の誤用も防げる。
+企業の組織構造は、それ自体が情報共有の権威ある基準となる。「同じチームのメンバーは同じ情報を見てよい」「部門長は部門内のプロジェクト情報を見てよい」という組織の論理をメモリ階層に反映させることで、権限管理を組織グラフという既存の権威ソースに委ねられる。プロジェクト終了・退職・異動といったライフサイクルイベントに連動してメモリを失効させることで、陳腐化した文脈の誤用も防げる。
 
 !!! tip "最小成立条件（MVP）"
     Vector DB の Namespace を Personal / Team / Company の3層に分け、書き込み時にスコープを付与する。組織グラフ連動や自動失効は後続フェーズでよいが、スコープ分離だけは初期から入れる。
@@ -33,7 +33,7 @@ key_technologies: [Memory Store, "Vector DB (Namespace isolation)", ACL, TTL, Me
 
 ## 解決策と設計
 
-各スコープを物理的・論理的に分離し、書き込みはゲート（分類・重複検知・承認）を通す。サブプロジェクトは親の非機密情報のみ継承し、承認者は種別ごとに異なる（PM / 部門責任者 / 顧客情報管理者）。
+各スコープを物理的・論理的に分離し、書き込みはゲート（分類・重複検知・承認）を経由させる。サブプロジェクトは親の非機密情報のみ継承し、承認者は種別ごとに分ける（PM / 部門責任者 / 顧客情報管理者）。
 
 ```mermaid
 flowchart TB
@@ -83,9 +83,9 @@ flowchart TB
 !!! warning "全社共有メモリの罠"
     すべてを「全社共有メモリ」にし機密と雑多を混在させるのは最大のアンチパターンである。スコープを分離し、共有範囲を組織グラフに従わせる。「速く作れるから全部共有」は技術負債ではなくセキュリティ上の欠陥である。
 
-- 本人が自分のメモリを確認・消去できる権利（Right to Erasure）を設計に含める。規制要件（GDPR 等）への対応だけでなく、誤った情報が蓄積した場合の修正手段としても必要である。
-- プロジェクト終了時のメモリアーカイブ/失効を自動化する。放置すると異動者経由で元のプロジェクト情報が漏洩する。
-- メモリの保持・忘却は「重要度 × 鮮度 × 参照頻度」で選別し、古い詳細は要約へ圧縮する。無限に蓄積するとノイズが増え、有用な文脈の検索精度が下がる。
+- 本人が自分のメモリを確認・消去できる権利（Right to Erasure）を設計に含める。規制要件（GDPR 等）への対応だけでなく、誤った情報が蓄積した場合の修正手段としても欠かせない。
+- プロジェクト終了時のメモリアーカイブ/失効を自動化する。放置すると、異動者経由で元のプロジェクト情報が漏洩するリスクがある。
+- メモリの保持・忘却は「重要度 × 鮮度 × 参照頻度」で選別し、古い詳細は要約へ圧縮する。無限に蓄積するとノイズが増え、有用な文脈の検索精度が低下する。
 
 ## Interfaces
 
@@ -105,6 +105,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface MemoryScopePartitionerRequest {
+          scope: string;
+          userId: string;
+          projectId: string;
+          classification: string;
+        }
+        interface MemoryScopePartitionerResponse {
+          namespaceId: string;
+          encryptionKeyId: string;
+          partitionedAt: Date;
+        }
+        interface MemoryScopePartitioner {
+          memoryScopePartitioner(req: MemoryScopePartitionerRequest): Promise<MemoryScopePartitionerResponse>;
+        }
+      python: |
+        @dataclass
+        class MemoryScopePartitionerRequest:
+            scope: str
+            user_id: str
+            project_id: str
+            classification: str
+        
+        @dataclass
+        class MemoryScopePartitionerResponse:
+            namespace_id: str
+            encryption_key_id: str
+            partitioned_at: datetime
+        
+        class MemoryScopePartitioner(Protocol):
+            async def memory_scope_partitioner(self, req: MemoryScopePartitionerRequest) -> MemoryScopePartitionerResponse: ...
   - name: Lifecycle Event Handler
     description: "Listens for org events (project closed, employee departed, transfer) and triggers memory archive/expiry and RBAC group removal automatically."
     input:
@@ -117,6 +149,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface LifecycleEventHandlerRequest {
+          eventType: string;
+          entityId: string;
+          userId: string;
+          timestamp: Date;
+        }
+        interface LifecycleEventHandlerResponse {
+          memoryArchived: boolean;
+          rbacGroupsRemoved: string[];
+          processedAt: Date;
+        }
+        interface LifecycleEventHandler {
+          lifecycleEventHandler(req: LifecycleEventHandlerRequest): Promise<LifecycleEventHandlerResponse>;
+        }
+      python: |
+        @dataclass
+        class LifecycleEventHandlerRequest:
+            event_type: str
+            entity_id: str
+            user_id: str
+            timestamp: datetime
+        
+        @dataclass
+        class LifecycleEventHandlerResponse:
+            memory_archived: bool
+            rbac_groups_removed: list[str]
+            processed_at: datetime
+        
+        class LifecycleEventHandler(Protocol):
+            async def lifecycle_event_handler(self, req: LifecycleEventHandlerRequest) -> LifecycleEventHandlerResponse: ...
   - name: Memory Review UI
     description: "Allows individuals to inspect, correct, and erase their personal memory scope to satisfy Right to Erasure requirements."
     input:
@@ -129,6 +193,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface MemoryReviewUiRequest {
+          userId: string;
+          memoryScope: string;
+          action: string;
+        }
+        interface MemoryReviewUiResponse {
+          entries: object[];
+          erasedCount: number;
+          updatedAt: Date;
+        }
+        interface MemoryReviewUi {
+          memoryReviewUi(req: MemoryReviewUiRequest): Promise<MemoryReviewUiResponse>;
+        }
+      python: |
+        @dataclass
+        class MemoryReviewUiRequest:
+            user_id: str
+            memory_scope: str
+            action: str
+        
+        @dataclass
+        class MemoryReviewUiResponse:
+            entries: list[dict]
+            erased_count: int
+            updated_at: datetime
+        
+        class MemoryReviewUi(Protocol):
+            async def memory_review_ui(self, req: MemoryReviewUiRequest) -> MemoryReviewUiResponse: ...
 ```
 
 ## 関連パターン

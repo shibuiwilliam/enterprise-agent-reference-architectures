@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エンタープライズAIエージェントの価値は一夜にして出るものではない。本ロードマップは、Executive の「価値の階段」・[定着・アダプション](adoption.md)のチェンジマネジメント・ロードマップ（0-30 / 30-90 / 90日〜）・[TO-4 Read-only vs Write-capable](../selection/tradeoff/to4-readonly-vs-write.md) の段階拡張・[RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) のリスク階層を**全社共通の1枚**に統合したものだ。「いつ・何の価値が・どの統制の上に出るか」を経営層に示すことを目的としている。
+エンタープライズAIエージェントの価値は一夜にして出るものではない。本ロードマップは、Executive の「価値の階段」・[定着・アダプション](adoption.md)のチェンジマネジメント・ロードマップ（0-30 / 30-90 / 90日〜）・[TO-4 Read-only vs Write-capable](../selection/tradeoff/to4-readonly-vs-write.md) の段階拡張・[RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) のリスク階層を**全社共通の1枚**に統合したものだ。「いつ・何の価値が・どの統制の上に出るか」を経営層に示すことを主目的としている。
 
 ## 4段階の価値成熟度
 
@@ -80,11 +80,11 @@ flowchart LR
 ```
 
 !!! tip "価値成熟度と安全成熟度は並走する"
-    Stage 1 の最小統制（ID-2 読み取り版 ＋ OB-1 ログ）で価値を早期に出し、段階が進むにつれて統制を厚くしていく。「全基盤が揃ってから価値を出す」のではなく「価値を見せながら基盤を育てる」設計である。詳細は[組み合わせレシピの価値早期実現トラック](recipe.md)を参照。
+    Stage 1 の最小統制（ID-2 読み取り版 ＋ OB-1 ログ）で価値を早期に出し、段階が進むにつれて統制を厚くしていく。「全基盤が揃ってから価値を出す」のではなく「価値を見せながら基盤を育てる」設計だ。詳細は[組み合わせレシピの価値早期実現トラック](recipe.md)を参照。
 
 ## 各部門への適用
 
-本ロードマップは全社共通のフレームワークだ。各部門の具体的なユースケース・KPIは以下を参照する。
+本ロードマップは全社共通のフレームワークだ。各部門の具体的なユースケース・KPIは以下で参照できる。
 
 - [Sales Agent](departments/sales.md) — 受注率・案件サイクル・パイプライン健全性
 - [HR Agent](departments/hr.md) — 採用リードタイム・離職率・自己解決率

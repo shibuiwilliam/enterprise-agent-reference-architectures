@@ -6,8 +6,8 @@ pattern_id: GV-4
 facet: governance
 requires: ["ID-6", "ID-7"]
 required_by: []
-applies_when: [strictly_regulated_industries_with_regular_external_audits, global_enterprises_requiring_simultaneous_multi_regulation_compliance, many_use_cases_requiring_consistent_regulatory_compliance]
-not_applicable_when: [internal_support_ai_only_with_minimal_regulatory_impact, single_team_limited_use_case_where_manual_check_is_more_practical]
+applies_when: [regulated_industry, multi_department, enterprise_scale, audit_required]
+not_applicable_when: [single_team, public_data_only]
 risk_tiers: [3, 4, 5]
 key_technologies: ["OPA (Open Policy Agent) / Rego", YAML Policy Definition, Git, "GV-7 Evaluation Pipeline", ServiceNow GRC, OneTrust, "GV-6 Version Registry"]
 ---
@@ -117,6 +117,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PolicyPackDefinitionRequest {
+          industry: string;
+          regulation: string;
+          version: string;
+        }
+        interface PolicyPackDefinitionResponse {
+          policyPack: object;
+          prohibitedOps: string[];
+          retentionPeriodDays: number;
+        }
+        interface PolicyPackDefinition {
+          policyPackDefinition(req: PolicyPackDefinitionRequest): Promise<PolicyPackDefinitionResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyPackDefinitionRequest:
+            industry: str
+            regulation: str
+            version: str
+        
+        @dataclass
+        class PolicyPackDefinitionResponse:
+            policy_pack: dict
+            prohibited_ops: list[str]
+            retention_period_days: int
+        
+        class PolicyPackDefinition(Protocol):
+            async def policy_pack_definition(self, req: PolicyPackDefinitionRequest) -> PolicyPackDefinitionResponse: ...
   - name: Policy Engine Deployment (ID-7)
     description: "Deploys pack rules to the ID-7 Policy Engine so they are enforced at runtime independently of agent prompts."
     input:
@@ -129,6 +159,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PolicyEngineDeploymentRequest {
+          policyPackId: string;
+          targetEngineId: string;
+          version: string;
+        }
+        interface PolicyEngineDeploymentResponse {
+          deployed: boolean;
+          deployedAt: Date;
+          rulesCount: number;
+        }
+        interface PolicyEngineDeployment {
+          policyEngineDeployment(req: PolicyEngineDeploymentRequest): Promise<PolicyEngineDeploymentResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyEngineDeploymentRequest:
+            policy_pack_id: str
+            target_engine_id: str
+            version: str
+        
+        @dataclass
+        class PolicyEngineDeploymentResponse:
+            deployed: bool
+            deployed_at: datetime
+            rules_count: int
+        
+        class PolicyEngineDeployment(Protocol):
+            async def policy_engine_deployment(self, req: PolicyEngineDeploymentRequest) -> PolicyEngineDeploymentResponse: ...
   - name: Evaluation Rubric (GV-7)
     description: "Pack-bundled evaluation rubrics and red-team scenarios loaded into the GV-7 CI pipeline to continuously measure regulatory compliance."
     input:
@@ -141,6 +201,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface EvaluationRubricRequest {
+          policyPackId: string;
+          agentId: string;
+          ciRunId: string;
+        }
+        interface EvaluationRubricResponse {
+          complianceScore: number;
+          failedChecks: string[];
+          redTeamResults: object;
+        }
+        interface EvaluationRubric {
+          evaluationRubric(req: EvaluationRubricRequest): Promise<EvaluationRubricResponse>;
+        }
+      python: |
+        @dataclass
+        class EvaluationRubricRequest:
+            policy_pack_id: str
+            agent_id: str
+            ci_run_id: str
+        
+        @dataclass
+        class EvaluationRubricResponse:
+            compliance_score: float
+            failed_checks: list[str]
+            red_team_results: dict
+        
+        class EvaluationRubric(Protocol):
+            async def evaluation_rubric(self, req: EvaluationRubricRequest) -> EvaluationRubricResponse: ...
 ```
 
 ## Related Patterns

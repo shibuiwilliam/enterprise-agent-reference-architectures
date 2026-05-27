@@ -6,8 +6,8 @@ pattern_id: GV-2
 facet: governance
 requires: ["GV-1"]
 required_by: []
-applies_when: [agents_deployed_across_multiple_departments, discovery_duplication_and_unreviewed_usage_are_problematic, platform_team_exists_for_centralized_access_request_approval_and_permission_management]
-not_applicable_when: [single_team_single_purpose_internal_operation_only, poc_stage_with_only_a_few_agents_gv1_registry_alone_is_sufficient]
+applies_when: [multi_department, enterprise_scale, prod_deployment]
+not_applicable_when: [single_team, poc_phase, poc_phase]
 risk_tiers: [2, 3, 4]
 key_technologies: ["Backstage (Internal Developer Portal)", ServiceNow, Jira Service Management, Usage Analytics, Quality Rating]
 ---
@@ -20,7 +20,7 @@ key_technologies: ["Backstage (Internal Developer Portal)", ServiceNow, Jira Ser
 
 ## 解決する企業課題
 
-組織でエージェントが増えてくると「どんなエージェントが存在するか分からない」という発見の問題が生じる。各部門が同等の機能を重複開発し、無審査のエージェントが使われ、利用申請が口頭・メール・属人的経路で処理されるようになる。エージェントへのアクセス経路が不明確なこと自体、ガバナンスの空白を生む直接的な原因にもなる——どのエージェントが使われているか追跡できなければ、コスト管理も監査対応も機能しない。GV-2 はカタログという単一窓口を置くことで、重複開発の抑制・審査済みエージェントへの誘導・申請プロセスの標準化を一度に実現する。
+組織でエージェントが増えてくると、「どんなエージェントが存在するか分からない」という発見の問題が生じる。各部門が同等の機能を重複開発し、無審査のエージェントが使われ、利用申請が口頭・メール・属人的経路で処理されるようになる。エージェントへのアクセス経路が不明確なこと自体、ガバナンスの空白を生む直接的な原因にもなる。どのエージェントが使われているか追跡できなければ、コスト管理も監査対応も機能しない。GV-2 はカタログという単一窓口を置くことで、重複開発の抑制・審査済みエージェントへの誘導・申請プロセスの標準化を一度に実現する。
 
 !!! tip "最小成立条件（MVP）"
     GV-1 レジストリの情報を一覧表示する読み取り専用のカタログページと、用途・期限を記録する簡易申請フォームを1つ用意する。品質スコアや利用分析は後から追加すればよい。
@@ -31,7 +31,7 @@ key_technologies: ["Backstage (Internal Developer Portal)", ServiceNow, Jira Ser
 
 ## 解決策と設計
 
-カタログは GV-1 レジストリ上に構築される UI/API 層である。各エントリには目的・所有者・アクセスデータ種別・リスク階層・推定コスト・品質スコア・バージョン・承認状態が付与される。部門はカタログ内のテンプレート（GV-3）から派生することで、ゼロから開発せずに安全なエージェントを調達できる。利用申請ワークフローはアクセス権の付与・剥奪と連動し、承認者・期限・用途を記録する。
+カタログは GV-1 レジストリ上に構築される UI/API 層である。各エントリには目的・所有者・アクセスデータ種別・リスク階層・推定コスト・品質スコア・バージョン・承認状態が付与される。部門はカタログ内のテンプレート（GV-3）から派生することで、ゼロから開発せずに安全なエージェントを調達できる。利用申請ワークフローはアクセス権の付与・剥奪と連動し、承認者・期限・用途を記録に残す。
 
 ```mermaid
 flowchart TD
@@ -59,7 +59,7 @@ flowchart TD
     Analytics -->|品質フィードバック| Detail
 ```
 
-利用申請が承認されると Control Plane がアクセス権を付与し、監査ログに記録する。Usage Analytics は利用状況・エラー率・コストを集計して品質スコアに反映する。品質スコアはルーブリック・利用者評価・GV-7 の評価パイプライン結果を組み合わせて算出する。
+利用申請が承認されると Control Plane がアクセス権を付与し、監査ログに記録する。Usage Analytics は利用状況・エラー率・コストを集計して品質スコアに反映する。品質スコアはルーブリック・利用者評価・GV-7 の評価パイプライン結果を組み合わせて算出するため、登録後も継続的に更新される。
 
 ## 向き／不向き
 
@@ -106,6 +106,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface CatalogUiApiRequest {
+          query: string;
+          filters: object;
+          page: number;
+        }
+        interface CatalogUiApiResponse {
+          agents: object[];
+          total: number;
+          pageSize: number;
+        }
+        interface CatalogUiApi {
+          catalogUiApi(req: CatalogUiApiRequest): Promise<CatalogUiApiResponse>;
+        }
+      python: |
+        @dataclass
+        class CatalogUiApiRequest:
+            query: str
+            filters: dict
+            page: int
+        
+        @dataclass
+        class CatalogUiApiResponse:
+            agents: list[dict]
+            total: int
+            page_size: int
+        
+        class CatalogUiApi(Protocol):
+            async def catalog_ui_api(self, req: CatalogUiApiRequest) -> CatalogUiApiResponse: ...
   - name: Access Request Workflow
     description: "Structured access request requiring purpose, expiry, and data access scope; integrates with existing approval systems (ServiceNow, Jira SM)."
     input:
@@ -118,6 +148,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface AccessRequestWorkflowRequest {
+          agentId: string;
+          requesterId: string;
+          purpose: string;
+          expiry: Date;
+          dataAccessScope: string[];
+        }
+        interface AccessRequestWorkflowResponse {
+          requestId: string;
+          status: string;
+          approvalUrl: string;
+        }
+        interface AccessRequestWorkflow {
+          accessRequestWorkflow(req: AccessRequestWorkflowRequest): Promise<AccessRequestWorkflowResponse>;
+        }
+      python: |
+        @dataclass
+        class AccessRequestWorkflowRequest:
+            agent_id: str
+            requester_id: str
+            purpose: str
+            expiry: datetime
+            data_access_scope: list[str]
+        
+        @dataclass
+        class AccessRequestWorkflowResponse:
+            request_id: str
+            status: str
+            approval_url: str
+        
+        class AccessRequestWorkflow(Protocol):
+            async def access_request_workflow(self, req: AccessRequestWorkflowRequest) -> AccessRequestWorkflowResponse: ...
   - name: Usage Analytics & Quality Score
     description: "Aggregates execution logs, token consumption, and error rates into a quality score updated on each GV-7 evaluation run."
     input:
@@ -130,6 +194,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface UsageAnalyticsQualityScoreRequest {
+          agentId: string;
+          evaluationRunId: string;
+        }
+        interface UsageAnalyticsQualityScoreResponse {
+          qualityScore: number;
+          tokenUsage: number;
+          errorRate: number;
+        }
+        interface UsageAnalyticsQualityScore {
+          usageAnalyticsQualityScore(req: UsageAnalyticsQualityScoreRequest): Promise<UsageAnalyticsQualityScoreResponse>;
+        }
+      python: |
+        @dataclass
+        class UsageAnalyticsQualityScoreRequest:
+            agent_id: str
+            evaluation_run_id: str
+        
+        @dataclass
+        class UsageAnalyticsQualityScoreResponse:
+            quality_score: float
+            token_usage: int
+            error_rate: float
+        
+        class UsageAnalyticsQualityScore(Protocol):
+            async def usage_analytics_quality_score(self, req: UsageAnalyticsQualityScoreRequest) -> UsageAnalyticsQualityScoreResponse: ...
 ```
 
 ## 関連パターン

@@ -91,6 +91,7 @@ plugins:
             面6 統合・ツール: "Facet 6: Integration & Tools"
             面7 観測・評価・監査: "Facet 7: Observability & Audit"
             選定基準: Selection Criteria
+            パターン選定ウィザード: Pattern Selection Wizard
             「程度」の選定基準: Degree Criteria
             「相反する仕組み」の選定基準: Tradeoff Criteria
             用語集: Glossary
@@ -261,6 +262,7 @@ nav:
           - "OB-1 Enterprise Agent Observability Lake": patterns/ob-observability/ob1-observability-lake.md
           - "OB-2 Unified Audit & Lineage（三者帰責）": patterns/ob-observability/ob2-unified-audit-lineage.md
   - 選定基準:
+      - パターン選定ウィザード: wizard.md
       - 「程度」の選定基準:
           - selection/degree/index.md
           - "DC-1 自律度のティア境界（Risk-Tier の引き方）": selection/degree/dc1-risk-tier-boundary.md

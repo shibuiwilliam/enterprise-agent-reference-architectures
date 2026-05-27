@@ -6,8 +6,8 @@ pattern_id: GV-4
 facet: governance
 requires: ["ID-6", "ID-7"]
 required_by: []
-applies_when: [strictly_regulated_industries_with_regular_external_audits, global_enterprises_requiring_simultaneous_multi_regulation_compliance, many_use_cases_requiring_consistent_regulatory_compliance]
-not_applicable_when: [internal_support_ai_only_with_minimal_regulatory_impact, single_team_limited_use_case_where_manual_check_is_more_practical]
+applies_when: [regulated_industry, multi_department, enterprise_scale, audit_required]
+not_applicable_when: [single_team, public_data_only]
 risk_tiers: [3, 4, 5]
 key_technologies: ["OPA (Open Policy Agent) / Rego", YAML Policy Definition, Git, "GV-7 Evaluation Pipeline", ServiceNow GRC, OneTrust, "GV-6 Version Registry"]
 ---
@@ -20,7 +20,7 @@ key_technologies: ["OPA (Open Policy Agent) / Rego", YAML Policy Definition, Git
 
 ## 解決する企業課題
 
-規制への対応をエージェントごとのプロンプトに記述すると、抜け漏れ・表現ブレ・更新の属人化が避けられない。プロンプトベースの規制対応は担当者が変わると形骸化し、監査時に「規制がどこで強制されているか」を説明できなくなる。プロンプトに書かれた規制文言は、プロンプトインジェクション攻撃で無効化できるという根本的な脆弱性も抱えている。新しいエージェントを追加するたびに規制対応を再実装すれば導入審査のリードタイムが延び、規制改正時に全エージェントのプロンプトを個別更新することも現実的ではない。GV-4 は規制を実行基盤レベルで強制することで、プロンプト依存の脆弱な対応から脱却する。
+規制への対応をエージェントごとのプロンプトに記述すると、抜け漏れ・表現ブレ・更新の属人化が避けられない。プロンプトベースの規制対応は担当者が変わると形骸化し、監査時に「規制がどこで強制されているか」を説明できなくなる。さらに、プロンプトに書かれた規制文言はプロンプトインジェクション攻撃で無効化できるという根本的な脆弱性がある。新しいエージェントを追加するたびに規制対応を再実装すれば導入審査のリードタイムが延び、規制改正時に全エージェントのプロンプトを個別更新することも現実的ではない。GV-4 は規制を実行基盤レベルで強制することで、プロンプト依存の脆弱な対応から脱却する。
 
 !!! tip "最小成立条件（MVP）"
     自社の主要規制（例：金融なら FISC、医療なら HIPAA）に対応する禁止操作ルールとデータ分類基準を OPA/YAML で1パック定義し、ID-7 Policy Engine に適用する。
@@ -31,7 +31,7 @@ key_technologies: ["OPA (Open Policy Agent) / Rego", YAML Policy Definition, Git
 
 ## 解決策と設計
 
-ポリシーパックは業界・規制体系ごとに独立したパッケージとして管理される。各パックは禁止操作ルール・データ分類基準・保持期間・承認要件・監査証跡要件・評価ルーブリックで構成される。デプロイ時にパックを ID-7 の Policy Engine・GV-7 の評価 CI・GV-1 の Control Plane へ同時に適用することで、全エージェントに規制が反映される。
+ポリシーパックは業界・規制体系ごとに独立したパッケージとして管理される。各パックは禁止操作ルール・データ分類基準・保持期間・承認要件・監査証跡要件・評価ルーブリックで構成されている。デプロイ時にパックを ID-7 の Policy Engine・GV-7 の評価 CI・GV-1 の Control Plane へ同時に適用することで、全エージェントに規制が反映される。
 
 ```mermaid
 flowchart TD
@@ -69,7 +69,7 @@ flowchart TD
     EvalPipeline --> Compliance
 ```
 
-パックはバージョン管理（GV-6）の対象だ。規制改正時にパック単体を更新するだけで変更が全展開先へ伝播する。GV-3（Department Agent Factory）のテンプレートは、デプロイ対象の業界に応じて該当パックを自動で選択する。
+パックはバージョン管理（GV-6）の対象である。規制改正時にパック単体を更新するだけで変更が全展開先へ伝播する。GV-3（Department Agent Factory）のテンプレートは、デプロイ対象の業界に応じて該当パックを自動で選択する仕組みになっている。
 
 ## 向き／不向き
 
@@ -117,6 +117,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface PolicyPackDefinitionRequest {
+          industry: string;
+          regulation: string;
+          version: string;
+        }
+        interface PolicyPackDefinitionResponse {
+          policyPack: object;
+          prohibitedOps: string[];
+          retentionPeriodDays: number;
+        }
+        interface PolicyPackDefinition {
+          policyPackDefinition(req: PolicyPackDefinitionRequest): Promise<PolicyPackDefinitionResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyPackDefinitionRequest:
+            industry: str
+            regulation: str
+            version: str
+        
+        @dataclass
+        class PolicyPackDefinitionResponse:
+            policy_pack: dict
+            prohibited_ops: list[str]
+            retention_period_days: int
+        
+        class PolicyPackDefinition(Protocol):
+            async def policy_pack_definition(self, req: PolicyPackDefinitionRequest) -> PolicyPackDefinitionResponse: ...
   - name: Policy Engine Deployment (ID-7)
     description: "Deploys pack rules to the ID-7 Policy Engine so they are enforced at runtime independently of agent prompts."
     input:
@@ -129,6 +159,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface PolicyEngineDeploymentRequest {
+          policyPackId: string;
+          targetEngineId: string;
+          version: string;
+        }
+        interface PolicyEngineDeploymentResponse {
+          deployed: boolean;
+          deployedAt: Date;
+          rulesCount: number;
+        }
+        interface PolicyEngineDeployment {
+          policyEngineDeployment(req: PolicyEngineDeploymentRequest): Promise<PolicyEngineDeploymentResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyEngineDeploymentRequest:
+            policy_pack_id: str
+            target_engine_id: str
+            version: str
+        
+        @dataclass
+        class PolicyEngineDeploymentResponse:
+            deployed: bool
+            deployed_at: datetime
+            rules_count: int
+        
+        class PolicyEngineDeployment(Protocol):
+            async def policy_engine_deployment(self, req: PolicyEngineDeploymentRequest) -> PolicyEngineDeploymentResponse: ...
   - name: Evaluation Rubric (GV-7)
     description: "Pack-bundled evaluation rubrics and red-team scenarios loaded into the GV-7 CI pipeline to continuously measure regulatory compliance."
     input:
@@ -141,6 +201,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface EvaluationRubricRequest {
+          policyPackId: string;
+          agentId: string;
+          ciRunId: string;
+        }
+        interface EvaluationRubricResponse {
+          complianceScore: number;
+          failedChecks: string[];
+          redTeamResults: object;
+        }
+        interface EvaluationRubric {
+          evaluationRubric(req: EvaluationRubricRequest): Promise<EvaluationRubricResponse>;
+        }
+      python: |
+        @dataclass
+        class EvaluationRubricRequest:
+            policy_pack_id: str
+            agent_id: str
+            ci_run_id: str
+        
+        @dataclass
+        class EvaluationRubricResponse:
+            compliance_score: float
+            failed_checks: list[str]
+            red_team_results: dict
+        
+        class EvaluationRubric(Protocol):
+            async def evaluation_rubric(self, req: EvaluationRubricRequest) -> EvaluationRubricResponse: ...
 ```
 
 ## 関連パターン

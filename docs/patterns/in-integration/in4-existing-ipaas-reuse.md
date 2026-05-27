@@ -6,8 +6,8 @@ pattern_id: IN-4
 facet: integration
 requires: ["IN-1"]
 required_by: []
-applies_when: [mulesoftworkato_boomi_or_esb_already_running_with_many_integration_flows, integration_team_and_ai_team_separate_with_difficult_knowledge_transfer, gradual_migration_needed_keeping_existing_flows_while_adding_agent_capability]
-not_applicable_when: [first_integration_project_with_no_existing_ipaas, existing_flow_quality_too_low_and_rebuild_more_rational, only_a_few_saas_connections_with_low_mcp_direct_implementation_effort]
+applies_when: [existing_ipaas, cross_saas, enterprise_scale]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3]
 key_technologies: [MuleSoft Anypoint Platform, Workato, Boomi AtomSphere, Apache Camel / IBM MQ, Apigee / Kong, "MCP Adapter (thin wrapper)"]
 ---
@@ -20,9 +20,9 @@ key_technologies: [MuleSoft Anypoint Platform, Workato, Boomi AtomSphere, Apache
 
 ## 解決する企業課題
 
-iPaaS で運用中の統合フローは、接続設定・変換ロジック・エラーハンドリング・監視の4つが作り込まれた資産だ。これをエージェント導入のたびに作り直すと、同じ SaaS 接続を2箇所で保守する状態になり、変更・障害対応・セキュリティパッチの適用がすべて二重化する。
+iPaaS で運用中の統合フローは、接続設定・変換ロジック・エラーハンドリング・監視の4つが作り込まれた資産だ。これをエージェント導入のたびに作り直すと、同じ SaaS 接続を2箇所で保守する状態になり、変更・障害対応・セキュリティパッチの適用がすべて二重化してしまう。
 
-統合チームと AI チームが分離している組織では、既存フローの内部知識（SaaS の挙動の癖、変換ロジックの経緯、エラー処理の特殊ケースなど）が統合チームに集中している。ゼロから再実装すると、その知識を再度習得するコストが発生する。ハイブリッド再利用はこの重複を排除し、既存チームの保守スキルと運用知識を引き継げる。既存フローのセキュリティ監査済みの実績もそのまま継承できる。
+統合チームと AI チームが分離している組織では、既存フローの内部知識（SaaS の挙動の癖、変換ロジックの経緯、エラー処理の特殊ケースなど）が統合チームに集中している。ゼロから再実装すると、その知識を再習得するコストが発生する。ハイブリッド再利用はこの重複を排除し、既存チームの保守スキルと運用知識を引き継げる形だ。既存フローのセキュリティ監査済みの実績もそのまま継承できる。
 
 !!! tip "最小成立条件（MVP）"
     既存 iPaaS の最も利用頻度の高いフロー1本を MCP アダプターでラップし、Tool Gateway 経由で呼び出せるようにする。アダプターはインターフェース変換のみとし、ロジックは iPaaS 側に残す。
@@ -73,7 +73,7 @@ flowchart TB
     MUL & WRK & ESB --> SF & SN & ERP
 ```
 
-既存 iPaaS フローを MCP アダプターでラップする際は、フローの入出力インターフェースのみをエージェント向けに整形し、フロー内部のビジネスロジック・変換・エラーハンドリングは iPaaS 側に残す。アダプターはインターフェース変換のみを担い、ロジックは iPaaS 側に留める。これが二重保守を防ぐ肝心の設計判断だ。
+既存 iPaaS フローを MCP アダプターでラップする際は、フローの入出力インターフェースのみをエージェント向けに整形し、フロー内部のビジネスロジック・変換・エラーハンドリングは iPaaS 側に残す。アダプターはインターフェース変換のみを担い、ロジックは iPaaS 側に留める——これが二重保守を防ぐ肝心の設計判断だ。
 
 ## 向き／不向き
 
@@ -100,8 +100,8 @@ flowchart TB
 !!! warning "iPaaS のスロットリングがエージェントに透過しない"
     既存 iPaaS フローは人間向けの呼び出し頻度を前提に設計されているケースが多い。エージェントによる高頻度呼び出しでフロー側のレート制限や同時実行制限に当たることがある。[IN-3 Rate/Quota Broker](in3-rate-quota-broker.md) で呼び出し頻度を制御する。
 
-- MCP アダプターにビジネスロジックを書き込むと、結局 iPaaS と二重保守になる。アダプターはインターフェース変換のみを担い、ロジックは iPaaS 側に留める。
-- 既存フローの変更（iPaaS 側）がエージェントの動作に影響する。MCP アダプターに契約テスト（Consumer-Driven Contract Test）を設け、フロー変更時の回帰検証を自動化する。
+- MCP アダプターにビジネスロジックを書き込むと、結局 iPaaS と二重保守になる。アダプターはインターフェース変換のみを担い、ロジックは iPaaS 側に留めること。
+- 既存フローの変更（iPaaS 側）がエージェントの動作に影響することがある。MCP アダプターに契約テスト（Consumer-Driven Contract Test）を設け、フロー変更時の回帰検証を自動化する。
 
 ## Interfaces
 
@@ -121,6 +121,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface McpAdapterRequest {
+          mcpToolCall: object;
+          iPaasEndpoint: string;
+          authToken: string;
+        }
+        interface McpAdapterResponse {
+          iPaasResult: object;
+          translatedResponse: object;
+        }
+        interface McpAdapter {
+          mcpAdapter(req: McpAdapterRequest): Promise<McpAdapterResponse>;
+        }
+      python: |
+        @dataclass
+        class McpAdapterRequest:
+            mcp_tool_call: dict
+            i_paas_endpoint: str
+            auth_token: str
+        
+        @dataclass
+        class McpAdapterResponse:
+            i_paas_result: dict
+            translated_response: dict
+        
+        class McpAdapter(Protocol):
+            async def mcp_adapter(self, req: McpAdapterRequest) -> McpAdapterResponse: ...
   - name: iPaaS Flow (existing)
     description: "Existing integration flow with its connection config, transformation logic, error handling, and monitoring retained as-is."
     input:
@@ -133,6 +161,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface IpaasFlowRequest {
+          flowId: string;
+          inputPayload: object;
+          triggerSource: string;
+        }
+        interface IpaasFlowResponse {
+          outputPayload: object;
+          executionId: string;
+          status: string;
+        }
+        interface IpaasFlow {
+          ipaasFlow(req: IpaasFlowRequest): Promise<IpaasFlowResponse>;
+        }
+      python: |
+        @dataclass
+        class IpaasFlowRequest:
+            flow_id: str
+            input_payload: dict
+            trigger_source: str
+        
+        @dataclass
+        class IpaasFlowResponse:
+            output_payload: dict
+            execution_id: str
+            status: str
+        
+        class IpaasFlow(Protocol):
+            async def ipaas_flow(self, req: IpaasFlowRequest) -> IpaasFlowResponse: ...
   - name: Contract Test Suite
     description: "Consumer-driven contract tests on the MCP adapter to auto-detect when iPaaS flow changes break the agent-facing interface."
     input:
@@ -145,6 +203,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ContractTestSuiteRequest {
+          adapterId: string;
+          contractVersion: string;
+          testScenarios: string[];
+        }
+        interface ContractTestSuiteResponse {
+          passed: boolean;
+          failures: string[];
+          testedAt: Date;
+        }
+        interface ContractTestSuite {
+          contractTestSuite(req: ContractTestSuiteRequest): Promise<ContractTestSuiteResponse>;
+        }
+      python: |
+        @dataclass
+        class ContractTestSuiteRequest:
+            adapter_id: str
+            contract_version: str
+            test_scenarios: list[str]
+        
+        @dataclass
+        class ContractTestSuiteResponse:
+            passed: bool
+            failures: list[str]
+            tested_at: datetime
+        
+        class ContractTestSuite(Protocol):
+            async def contract_test_suite(self, req: ContractTestSuiteRequest) -> ContractTestSuiteResponse: ...
 ```
 
 ## 関連パターン

@@ -14,16 +14,16 @@ When an incident occurs, "what was input and what was returned at that time" mus
 ```yaml
 id: TO-7
 decision_rules:
-  - condition: "data_classification == 'top_secret' OR pattern == 'ephemeral_secure_context_bus'"
+  - condition: "data_classification == 'top_secret' OR defense_in_depth == false"
     recommendation: metadata_only
     reason: "Top-secret processing: store only metadata (request ID, timestamp, completion flag); prove execution occurred without preserving content"
-  - condition: "standard_operations == true AND audit_required == true"
+  - condition: "data_classification IN ['internal_general', 'department_confidential'] AND audit_required == true"
     recommendation: three_layer_separated
     reason: "Standard architecture: metadata to Trace DB, encrypted body to object storage, aggregated/anonymized metrics to DWH"
-  - condition: "body_storage_policy == 'full_plaintext'"
+  - condition: "confidential_data_in_result == true AND defense_in_depth == false"
     recommendation: three_layer_separated
     reason: "Anti-pattern: storing confidential prompts as plaintext in general log infrastructure is a security incident source"
-  - condition: "cost_constraint == true OR not_all_records_needed == true"
+  - condition: "cost_constraint == true"
     recommendation: selective_with_encrypted_body
     reason: "Use sampling strategy: full body storage only on errors, high-risk operations, and random N% sample to control cost"
   - condition: "regulatory_requirement IN ['gdpr', 'personal_information_protection']"

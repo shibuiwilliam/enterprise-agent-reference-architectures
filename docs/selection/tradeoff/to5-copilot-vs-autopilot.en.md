@@ -14,19 +14,19 @@ Executives often think "let the agent handle all the work and cut headcount." Bu
 ```yaml
 id: TO-5
 decision_rules:
-  - condition: "operation_type == 'read_only' AND eval_complete == true AND canary_passed == true"
+  - condition: "operation_type == 'read' AND eval_complete == true AND canary_passed == true"
     recommendation: autopilot
     reason: "Read-only operations with no irreversible side effects and completed eval/canary validation are safe for autonomous execution"
-  - condition: "operation_type IN ['update', 'delete', 'approve'] OR target_system IN ['erp', 'crm', 'hr']"
+  - condition: "operation_type IN ['write', 'delete', 'approve'] OR system_of_record == 'erp_crm_hr'"
     recommendation: copilot
     reason: "Irreversible operations and writes to core business systems must retain human-in-the-loop via approval chain"
-  - condition: "approval_rate_historically_high == true AND risk_level == 'low' AND kill_switch_available == true"
+  - condition: "operation_risk == 'low' AND canary_passed == true AND kill_switch_available == true"
     recommendation: autopilot
     reason: "Operations that humans historically approve almost always, combined with kill switch and audit trail, are candidates for autopilot promotion"
-  - condition: "infrastructure_readiness == 'incomplete' OR autopilot_expansion_too_fast == true"
+  - condition: "infrastructure_readiness == 'incomplete'"
     recommendation: copilot
     reason: "'Autopilot before readiness' is the primary risk; always start with Copilot and expand incrementally"
-  - condition: "same_agent_mixed_operations == true"
+  - condition: "operation_has_side_effects == true AND irreversibility == 'reversible'"
     recommendation: hybrid_per_operation
     reason: "Within the same agent, apply Copilot/Autopilot per operation type; do not force a single mode across all operations"
 ```

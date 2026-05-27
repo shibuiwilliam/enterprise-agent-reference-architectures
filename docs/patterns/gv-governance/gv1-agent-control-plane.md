@@ -6,8 +6,8 @@ pattern_id: GV-1
 facet: governance
 requires: ["ID-7"]
 required_by: ["GV-2", "GV-8", "OB-2"]
-applies_when: [agents_exceed_three_and_multiple_teams_are_using_them, enterprise_wide_deployment_as_common_platform, audit_and_compliance_requirements_exist]
-not_applicable_when: [individual_poc_or_experimental_phase, single_department_with_only_one_or_two_agents, isolated_research_environment]
+applies_when: [multi_department, enterprise_scale, audit_required, prod_deployment]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [2, 3, 4]
 key_technologies: [Agent Registry, ServiceNow CMDB Extension, "Policy-as-Code (ID-7)", "Model Gateway (GV-5)"]
 ---
@@ -20,7 +20,7 @@ key_technologies: [Agent Registry, ServiceNow CMDB Extension, "Policy-as-Code (I
 
 ## 解決する企業課題
 
-エージェントが増殖すると「誰が作ったか分からない」「何を実行しているか把握できない」野良エージェント（シャドーAI）が組織に蔓延する。責任者が不明なエージェントはインシデント時に一次対応者を特定できず、事後調査が止まる。複数部門が同等機能を重複開発することも珍しくなく、過剰権限を持つエージェントが承認なしに本番データを操作するリスクも生まれる。変更履歴を追跡できなければ、監査対応に多大な工数がかかる。エージェントが3個を超えて複数チームが使い始めると、台帳なしでは統制不能になる——これが制御プレーンを持つ出発点だ。
+エージェントが増殖すると、「誰が作ったか分からない」「何を実行しているか把握できない」野良エージェント（シャドーAI）が組織に蔓延する。責任者が不明なエージェントはインシデント時に一次対応者を特定できず、事後調査が止まる。複数部門が同等機能を重複開発することも珍しくない。過剰権限を持つエージェントが承認なしに本番データを操作するリスクも生まれる。変更履歴を追跡できなければ、監査対応に多大な工数がかかる。エージェントが3個を超えて複数チームが使い始めると、台帳なしでは統制不能になる——これが制御プレーンを持つ出発点だ。
 
 !!! tip "最小成立条件（MVP）"
     各エージェントに owner・purpose・risk_tier を付与した台帳を1つ作り、未登録エージェントの実行を Model Gateway で遮断する仕組みを入れる。審査フローや版管理は後から追加できるが、「登録しなければ動かない」ゲートが最小の出発点である。
@@ -31,7 +31,7 @@ key_technologies: [Agent Registry, ServiceNow CMDB Extension, "Policy-as-Code (I
 
 ## 解決策と設計
 
-各エージェントを一級オブジェクトとして定義し、登録から廃止までのライフサイクルを制御プレーンが一括管理する。登録を実行許可のゲートとして機能させ、未登録エージェントは実行基盤・モデル Gateway（[GV-5](gv5-central-model-gateway.md)）で物理的に遮断する。
+各エージェントを一級オブジェクトとして定義し、登録から廃止までのライフサイクルを制御プレーンが一括管理する。登録を実行許可のゲートとして位置づけ、未登録エージェントは実行基盤・モデル Gateway（[GV-5](gv5-central-model-gateway.md)）で物理的に遮断する。
 
 各エージェントに以下の属性を付与して管理する。
 
@@ -95,8 +95,8 @@ flowchart LR
 !!! warning "台帳止まりの罠"
     台帳を作っても実行制御と結びつけなければ形骸化する。登録を実行許可のゲートとし、未登録は Model Gateway/Agent Gateway で物理的に遮断する。
 
-- エージェントの「所有者」を明示し、インシデント時の一次対応者を常に特定できる状態を保つ。
-- 審査プロセスが重すぎると回避を招く。リスク階層に応じて審査の深さを変えることが大切だ（Tier 0-1 は軽量セルフサービス、Tier 3 以上は法務・セキュリティレビュー）。
+- エージェントの「所有者」を明示し、インシデント時の一次対応者を常に特定できる状態にしておく。
+- 審査プロセスが重すぎると回避を招く。リスク階層に応じて審査の深さを変えることが大切だ。Tier 0–1 は軽量なセルフサービス、Tier 3 以上は法務・セキュリティレビューという具合に段階を設ける。
 - 廃止時はメモリ・権限・トークンの失効まで含めてライフサイクルをきちんと閉じる。
 
 ## Interfaces
@@ -117,6 +117,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface AgentRegistryRequest {
+          agentId: string;
+          owner: string;
+          businessPurpose: string;
+          allowedTools: string[];
+          riskTier: number;
+        }
+        interface AgentRegistryResponse {
+          registered: boolean;
+          registrationId: string;
+          version: string;
+        }
+        interface AgentRegistry {
+          agentRegistry(req: AgentRegistryRequest): Promise<AgentRegistryResponse>;
+        }
+      python: |
+        @dataclass
+        class AgentRegistryRequest:
+            agent_id: str
+            owner: str
+            business_purpose: str
+            allowed_tools: list[str]
+            risk_tier: int
+        
+        @dataclass
+        class AgentRegistryResponse:
+            registered: bool
+            registration_id: str
+            version: str
+        
+        class AgentRegistry(Protocol):
+            async def agent_registry(self, req: AgentRegistryRequest) -> AgentRegistryResponse: ...
   - name: Lifecycle Review Gate
     description: "Routes new and changed agent registrations through security, legal, and data protection review; adjusts review depth by risk tier."
     input:
@@ -129,6 +163,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface LifecycleReviewGateRequest {
+          agentId: string;
+          changeType: string;
+          riskTier: number;
+          reviewers: string[];
+        }
+        interface LifecycleReviewGateResponse {
+          approved: boolean;
+          reviewId: string;
+          conditions: string[];
+        }
+        interface LifecycleReviewGate {
+          lifecycleReviewGate(req: LifecycleReviewGateRequest): Promise<LifecycleReviewGateResponse>;
+        }
+      python: |
+        @dataclass
+        class LifecycleReviewGateRequest:
+            agent_id: str
+            change_type: str
+            risk_tier: int
+            reviewers: list[str]
+        
+        @dataclass
+        class LifecycleReviewGateResponse:
+            approved: bool
+            review_id: str
+            conditions: list[str]
+        
+        class LifecycleReviewGate(Protocol):
+            async def lifecycle_review_gate(self, req: LifecycleReviewGateRequest) -> LifecycleReviewGateResponse: ...
   - name: Execution Enforcement
     description: "Connects to Model Gateway (GV-5) and Agent Gateway (EX-1) so unregistered agents are physically blocked from executing."
     input:
@@ -141,6 +207,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ExecutionEnforcementRequest {
+          agentId: string;
+          modelId: string;
+          requestType: string;
+        }
+        interface ExecutionEnforcementResponse {
+          permitted: boolean;
+          reason: string;
+        }
+        interface ExecutionEnforcement {
+          executionEnforcement(req: ExecutionEnforcementRequest): Promise<ExecutionEnforcementResponse>;
+        }
+      python: |
+        @dataclass
+        class ExecutionEnforcementRequest:
+            agent_id: str
+            model_id: str
+            request_type: str
+        
+        @dataclass
+        class ExecutionEnforcementResponse:
+            permitted: bool
+            reason: str
+        
+        class ExecutionEnforcement(Protocol):
+            async def execution_enforcement(self, req: ExecutionEnforcementRequest) -> ExecutionEnforcementResponse: ...
 ```
 
 ## 関連パターン

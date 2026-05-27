@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エージェントが「前回の会話の続き」を覚えていればパーソナライズが効く。しかし退職した社員の業務記録や終了したプロジェクトの機密メモをいつまでも保持していれば、漏洩リスクの塊になる。「何をどのくらいの期間覚えておくか」「いつ忘れさせるか」——この設計を、セッション・個人・プロジェクト・組織の各スコープ（[KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md)）ごとに行う方法を扱う。
+エージェントが「前回の会話の続き」を覚えていれば、パーソナライズが効く。一方、退職した社員の業務記録や終了したプロジェクトの機密メモをいつまでも保持し続ければ、漏洩リスクの塊になる。「何をどのくらいの期間覚えておくか」「いつ忘れさせるか」——この設計を、セッション・個人・プロジェクト・組織の各スコープ（[KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md)）ごとに行う方法を扱う。
 
 <!-- machine-readable decision rules for coding agents -->
 ```yaml
@@ -28,7 +28,7 @@ rules:
   - condition: "lifecycle_event IN ['employee_departure', 'role_change', 'project_end']"
     action: immediate_expiry_and_permission_revocation
     reason: "プロジェクト終了・退職・異動でメモリと権限を失効させる。人事システムとの連携で自動失効を実装する"
-  - condition: "user_requests_deletion == true"
+  - condition: "permission_change_event == true"
     action: immediate_delete_all_personal_scope
     reason: "本人がメモリを削除・修正できる権利を設計に含める（ID-8 Consent & Access Transparency）"
 ```
@@ -42,16 +42,16 @@ rules:
 
 ## 判断基準
 
-- **重要度 × 鮮度 × 参照頻度**の3軸で残すものを選別する。古い詳細は要約へ圧縮する
+- **重要度 × 鮮度 × 参照頻度**の3軸で残すものを選別する。古い詳細は要約に圧縮して保持する
 - [KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) のスコープ（セッション・個人・プロジェクト・組織）ごとに TTL と失効条件を設定する
-- **ライフサイクルイベントとの連動**：プロジェクト終了・退職・異動のタイミングでメモリと権限を失効させる
-- **本人の消去権**：本人がメモリを削除・修正できる権利を設計に組み込む（[ID-8](../../patterns/id-identity/id8-consent-access-transparency.md)）
+- **ライフサイクルイベントとの連動**：プロジェクト終了・退職・異動のタイミングでメモリと権限を自動失効させる
+- **本人の消去権**：本人がメモリを削除・修正できる権利を設計に最初から組み込む（[ID-8](../../patterns/id-identity/id8-consent-access-transparency.md)）
 
 ## 調整の仕組み
 
-- メモリの参照頻度・鮮度を [OB-1](../../patterns/ob-observability/ob1-observability-lake.md) で計測し、未参照のメモリを自動アーカイブ・削除する
-- 人事システム（異動・退職）との連携で、不要メモリの自動失効を実装する
-- メモリ量とタスク品質の相関を [GV-7](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) で評価し、保持ポリシーを調整する
+- メモリの参照頻度・鮮度を [OB-1](../../patterns/ob-observability/ob1-observability-lake.md) で計測し、未参照のメモリは自動アーカイブ・削除する
+- 人事システム（異動・退職）と連携し、不要になったメモリを自動失効させる仕組みを整える
+- メモリ量とタスク品質の相関を [GV-7](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) で評価し、保持ポリシーを定期的に見直す
 
 ## 関連パターン
 

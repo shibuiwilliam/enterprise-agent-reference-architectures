@@ -6,8 +6,8 @@ pattern_id: ID-6
 facet: identity
 requires: []
 required_by: ["GV-4", "RT-3", "ID-5", "IN-1"]
-applies_when: [multi_saas_environments_handling_confidential_data, multi_cloud_multi_tenant_configurations, regulated_industries_requiring_financial_or_healthcare_compliance]
-not_applicable_when: [completely_isolated_experimental_environment, single_user_personal_poc, public_information_only_processing_without_authorization_needs]
+applies_when: [confidential_data, cross_saas, regulated_industry, multi_agent]
+not_applicable_when: [poc_phase, public_data_only]
 risk_tiers: [2, 3, 4, 5]
 key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, mTLS, "Workload Identity (ID-3)", "Short-lived Token (ID-5)", Network Policy, Runtime Sandbox]
 ---
@@ -20,7 +20,7 @@ key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, mTLS, "Workload Iden
 
 ## 解決する企業課題
 
-従来のアクセス制御は「一度認証を通過したら信頼する」モデルに基づいていた。VPN 接続中なら社内リソースにアクセスできる、認証済みユーザーのセッションは継続的に信頼する——これが標準的な設計だった。エージェントがこのモデルの上で動くと深刻な問題が発生する。
+従来のアクセス制御は「一度認証を通過したら信頼する」モデルに基づいていた。VPN 接続中なら社内リソースにアクセスできる、認証済みユーザーのセッションは継続的に信頼する——これが標準的な設計だった。エージェントがこのモデルの上で動くと、深刻な問題が発生する。
 
 第一は「内部権限の横展開」だ。一度認可を受けたエージェントが、その後のツール呼び出しや下流 API アクセスを検証なしに実行できると、プロンプトインジェクションで攻撃者がエージェントを乗っ取ったとき、認可済みセッションを悪用して本来アクセスできないデータに到達できてしまう。
 
@@ -39,9 +39,9 @@ ABAC/ReBAC によるコンテキスト評価と組織グラフを属性源とす
 
 ## 解決策と設計
 
-解決策は認可判断を中央化し、実行点を分散させることである。PDP（Policy Decision Point）が「許可か・拒否か・承認要求か」を判断し、Gateway・コネクタ・ランタイムがそれぞれ PEP（Policy Enforcement Point）として判断結果を強制する。エージェントは自律的に「これはやっていいか」を判断せず、常に PDP に問い合わせる形にする。
+解決策は認可判断を中央化し、実行点を分散させることだ。PDP（Policy Decision Point）が「許可か・拒否か・承認要求か」を判断し、Gateway・コネクタ・ランタイムがそれぞれ PEP（Policy Enforcement Point）として判断結果を強制する。エージェントは自律的に「これはやっていいか」を判断せず、常に PDP に問い合わせる形にする。
 
-認可判断を中央 PDP（Policy Decision Point）に集約し、Gateway・コネクタ・ランタイムの各実行点が PEP（Policy Enforcement Point）として強制する。ABAC/ReBAC で主体×リソース×コンテキスト×アクションを評価し、組織グラフを属性源にする。判断結果は監査に記録する。
+認可判断を中央 PDP に集約し、Gateway・コネクタ・ランタイムの各実行点が PEP として強制する。ABAC/ReBAC で主体×リソース×コンテキスト×アクションを評価し、組織グラフを属性源として使う。判断結果は必ず監査に記録する。
 
 ```mermaid
 sequenceDiagram
@@ -98,7 +98,7 @@ PEP の配置は以下の複数箇所に分散する。
 
 - PDP の判断キャッシュは短 TTL で運用する。キャッシュが長いと権限剥奪が反映されない。
 - 「不明なら許可」ではなく「不明なら拒否」を既定にする（fail-closed）。
-- 認可判断のレイテンシが業務に影響する場合は、PDP のレプリカ配置やエッジキャッシュで対処する。PDP を省略するのは論外だ。
+- 認可判断のレイテンシが業務に影響する場合は、PDP のレプリカ配置やエッジキャッシュで対処する。PDP を省略するという選択肢はない。
 - 組織グラフの鮮度は PDP の判断精度に直結する。異動・退職の反映遅延は定期的に監視する。
 
 ## Interfaces
@@ -119,6 +119,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface CentralPdpRequest {
+          principalId: string;
+          agentId: string;
+          action: string;
+          resource: string;
+          attributes: object;
+        }
+        interface CentralPdpResponse {
+          decision: string;
+          reason: string;
+          decisionId: string;
+        }
+        interface CentralPdp {
+          centralPdp(req: CentralPdpRequest): Promise<CentralPdpResponse>;
+        }
+      python: |
+        @dataclass
+        class CentralPdpRequest:
+            principal_id: str
+            agent_id: str
+            action: str
+            resource: str
+            attributes: dict
+        
+        @dataclass
+        class CentralPdpResponse:
+            decision: str
+            reason: str
+            decision_id: str
+        
+        class CentralPdp(Protocol):
+            async def central_pdp(self, req: CentralPdpRequest) -> CentralPdpResponse: ...
   - name: Distributed PEP
     description: "PEPs at Gateway (EX-1), runtime, and connector enforce PDP decisions; no enforcement point bypasses the PDP."
     input:
@@ -131,6 +165,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DistributedPepRequest {
+          pdpDecision: string;
+          requestContext: object;
+          enforcementPoint: string;
+        }
+        interface DistributedPepResponse {
+          enforced: boolean;
+          allowed: boolean;
+          auditId: string;
+        }
+        interface DistributedPep {
+          distributedPep(req: DistributedPepRequest): Promise<DistributedPepResponse>;
+        }
+      python: |
+        @dataclass
+        class DistributedPepRequest:
+            pdp_decision: str
+            request_context: dict
+            enforcement_point: str
+        
+        @dataclass
+        class DistributedPepResponse:
+            enforced: bool
+            allowed: bool
+            audit_id: str
+        
+        class DistributedPep(Protocol):
+            async def distributed_pep(self, req: DistributedPepRequest) -> DistributedPepResponse: ...
   - name: Org Graph Attribute Feed
     description: "Supplies department, role, and project attributes to the PDP for contextual evaluation; attribute staleness is monitored."
     input:
@@ -143,6 +207,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface OrgGraphAttributeFeedRequest {
+          principalId: string;
+          attributeTypes: string[];
+        }
+        interface OrgGraphAttributeFeedResponse {
+          attributes: object;
+          department: string;
+          roles: string[];
+          projects: string[];
+        }
+        interface OrgGraphAttributeFeed {
+          orgGraphAttributeFeed(req: OrgGraphAttributeFeedRequest): Promise<OrgGraphAttributeFeedResponse>;
+        }
+      python: |
+        @dataclass
+        class OrgGraphAttributeFeedRequest:
+            principal_id: str
+            attribute_types: list[str]
+        
+        @dataclass
+        class OrgGraphAttributeFeedResponse:
+            attributes: dict
+            department: str
+            roles: list[str]
+            projects: list[str]
+        
+        class OrgGraphAttributeFeed(Protocol):
+            async def org_graph_attribute_feed(self, req: OrgGraphAttributeFeedRequest) -> OrgGraphAttributeFeedResponse: ...
 ```
 
 ## 関連パターン

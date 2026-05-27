@@ -6,8 +6,8 @@ pattern_id: RT-2
 facet: runtime
 requires: ["OB-2"]
 required_by: []
-applies_when: [cross_department_decision_flows_with_multiple_accountable_parties, high_risk_tasks_requiring_approval_and_escalation, compliance_domains_requiring_raci_audit_trail]
-not_applicable_when: [simple_tasks_contained_in_single_department, real_time_interactive_low_latency_required, raci_matrix_does_not_exist_for_the_process]
+applies_when: [multi_department, high_risk_ops, hitl_approval, audit_required]
+not_applicable_when: [single_team, real_time_latency]
 risk_tiers: [3, 4]
 key_technologies: [LangGraph, AutoGen, Semantic Kernel, YAML/JSON RACI definition, OpenTelemetry]
 ---
@@ -115,6 +115,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface OrchestratorRequest {
+          workflowId: string;
+          raciMatrix: object;
+          initialContext: object;
+        }
+        interface OrchestratorResponse {
+          executionId: string;
+          phase: string;
+          state: string;
+        }
+        interface Orchestrator {
+          orchestrator(req: OrchestratorRequest): Promise<OrchestratorResponse>;
+        }
+      python: |
+        @dataclass
+        class OrchestratorRequest:
+            workflow_id: str
+            raci_matrix: dict
+            initial_context: dict
+        
+        @dataclass
+        class OrchestratorResponse:
+            execution_id: str
+            phase: str
+            state: str
+        
+        class Orchestrator(Protocol):
+            async def orchestrator(self, req: OrchestratorRequest) -> OrchestratorResponse: ...
   - name: Decision Log
     description: "Structured log (OpenTelemetry) that records which role (R/A/C/I) performed which action and when."
     input:
@@ -127,6 +157,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DecisionLogRequest {
+          projectId: string;
+          decisionText: string;
+          alternatives: string[];
+          rationale: string;
+          authorId: string;
+        }
+        interface DecisionLogResponse {
+          decisionId: string;
+          recordedAt: Date;
+        }
+        interface DecisionLog {
+          decisionLog(req: DecisionLogRequest): Promise<DecisionLogResponse>;
+        }
+      python: |
+        @dataclass
+        class DecisionLogRequest:
+            project_id: str
+            decision_text: str
+            alternatives: list[str]
+            rationale: str
+            author_id: str
+        
+        @dataclass
+        class DecisionLogResponse:
+            decision_id: str
+            recorded_at: datetime
+        
+        class DecisionLog(Protocol):
+            async def decision_log(self, req: DecisionLogRequest) -> DecisionLogResponse: ...
   - name: Approval Gate
     description: "Prevents progression to the next phase until the Accountable human provides approval."
     input:
@@ -139,6 +201,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ApprovalGateRequest {
+          phaseId: string;
+          accountableId: string;
+          workflowExecutionId: string;
+        }
+        interface ApprovalGateResponse {
+          approved: boolean;
+          approvedBy: string;
+          approvedAt: Date;
+        }
+        interface ApprovalGate {
+          approvalGate(req: ApprovalGateRequest): Promise<ApprovalGateResponse>;
+        }
+      python: |
+        @dataclass
+        class ApprovalGateRequest:
+            phase_id: str
+            accountable_id: str
+            workflow_execution_id: str
+        
+        @dataclass
+        class ApprovalGateResponse:
+            approved: bool
+            approved_by: str
+            approved_at: datetime
+        
+        class ApprovalGate(Protocol):
+            async def approval_gate(self, req: ApprovalGateRequest) -> ApprovalGateResponse: ...
 ```
 
 ## Related Patterns

@@ -14,19 +14,19 @@ Sending prompts containing patients' medical information to an external API can 
 ```yaml
 id: TO-10
 decision_rules:
-  - condition: "data_classification IN ['top_secret', 'personally_identifiable', 'competitive_intelligence']"
+  - condition: "data_classification IN ['top_secret', 'department_confidential'] AND cross_border_transfer_prohibited == true"
     recommendation: internal_onprem
     reason: "Top-secret and PII data must not leave internal infrastructure; regulatory/legal requirements may also mandate on-premise"
   - condition: "regulatory_requirement IN ['gdpr', 'financial', 'medical'] AND cross_border_transfer_prohibited == true"
     recommendation: internal_onprem
     reason: "Data regulated against cross-border transfer must remain in compliant infrastructure; DPA alone is insufficient"
-  - condition: "data_classification == 'public' OR data_classification == 'general_internal' AND latest_model_required == true"
+  - condition: "data_classification IN ['public', 'internal_general'] AND latest_model_required == true"
     recommendation: external_api
     reason: "General or public data with no regulatory restrictions can use external API, especially when latest model capability is required"
-  - condition: "data_classification_mixed == true"
+  - condition: "data_classification == 'department_confidential' AND data_classification == 'public'"
     recommendation: hybrid_data_classification_routing
     reason: "Central Model Gateway (GV-5) auto-routes by data classification label; eliminates per-developer routing decisions"
-  - condition: "external_api_used == true AND dpa_not_confirmed == true"
+  - condition: "dpa_confirmed == false AND data_classification IN ['public', 'internal_general']"
     recommendation: internal_onprem
     reason: "Always confirm DPA, region, and data retention policy before using external APIs; default settings may cause unintended data usage"
 ```

@@ -6,8 +6,8 @@ pattern_id: KM-5
 facet: knowledge
 requires: []
 required_by: []
-applies_when: [multiple_business_purposes_reusing_same_agent, high_classification_data_pii_hr_contracts_involved, gdpr_or_similar_data_purpose_restriction_compliance]
-not_applicable_when: [agent_specialized_for_single_purpose_with_fixed_data_scope, prototype_stage_with_undetermined_purpose, low_risk_internal_tools_handling_only_technical_docs]
+applies_when: [multi_purpose_agent, confidential_data, privacy_regulation, personal_data]
+not_applicable_when: [single_team, poc_phase, public_data_only]
 risk_tiers: [2, 3, 4]
 key_technologies: ["OPA (Open Policy Agent)", Microsoft Purview, Google Cloud DLP, AWS Macie, Context Builder, Token Budget Manager]
 ---
@@ -112,6 +112,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PurposePolicyStoreRequest {
+          purpose: string;
+          version: string;
+        }
+        interface PurposePolicyStoreResponse {
+          allowedDataTypes: string[];
+          connectedSystems: string[];
+          tokenLimit: number;
+          ttlSeconds: number;
+        }
+        interface PurposePolicyStore {
+          purposePolicyStore(req: PurposePolicyStoreRequest): Promise<PurposePolicyStoreResponse>;
+        }
+      python: |
+        @dataclass
+        class PurposePolicyStoreRequest:
+            purpose: str
+            version: str
+        
+        @dataclass
+        class PurposePolicyStoreResponse:
+            allowed_data_types: list[str]
+            connected_systems: list[str]
+            token_limit: int
+            ttl_seconds: int
+        
+        class PurposePolicyStore(Protocol):
+            async def purpose_policy_store(self, req: PurposePolicyStoreRequest) -> PurposePolicyStoreResponse: ...
   - name: Context Builder
     description: "Fetches data according to the purpose policy, passes it through DLP/classification checks, applies token budget, and attaches version and purpose tags."
     input:
@@ -124,6 +154,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ContextBuilderRequest {
+          purpose: string;
+          userId: string;
+          rawDataSources: string[];
+        }
+        interface ContextBuilderResponse {
+          contextPackage: object;
+          tokenCount: number;
+          versionTag: string;
+          purposeTag: string;
+        }
+        interface ContextBuilder {
+          contextBuilder(req: ContextBuilderRequest): Promise<ContextBuilderResponse>;
+        }
+      python: |
+        @dataclass
+        class ContextBuilderRequest:
+            purpose: str
+            user_id: str
+            raw_data_sources: list[str]
+        
+        @dataclass
+        class ContextBuilderResponse:
+            context_package: dict
+            token_count: int
+            version_tag: str
+            purpose_tag: str
+        
+        class ContextBuilder(Protocol):
+            async def context_builder(self, req: ContextBuilderRequest) -> ContextBuilderResponse: ...
   - name: DLP / Classification Filter (KM-6)
     description: "Detects and masks or removes any data whose classification is not permitted by the current purpose before the package is handed to the LLM."
     input:
@@ -136,6 +198,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DlpClassificationFilterRequest {
+          contextPackage: object;
+          purpose: string;
+          maxClassification: string;
+        }
+        interface DlpClassificationFilterResponse {
+          filteredPackage: object;
+          redactedCount: number;
+          classificationBreaches: string[];
+        }
+        interface DlpClassificationFilter {
+          dlpClassificationFilter(req: DlpClassificationFilterRequest): Promise<DlpClassificationFilterResponse>;
+        }
+      python: |
+        @dataclass
+        class DlpClassificationFilterRequest:
+            context_package: dict
+            purpose: str
+            max_classification: str
+        
+        @dataclass
+        class DlpClassificationFilterResponse:
+            filtered_package: dict
+            redacted_count: int
+            classification_breaches: list[str]
+        
+        class DlpClassificationFilter(Protocol):
+            async def dlp_classification_filter(self, req: DlpClassificationFilterRequest) -> DlpClassificationFilterResponse: ...
 ```
 
 ## Related Patterns

@@ -6,8 +6,8 @@ pattern_id: RT-3
 facet: runtime
 requires: ["ID-7"]
 required_by: []
-applies_when: [diverse_operation_types_from_read_only_to_financial_transactions, enterprise_systems_involving_money_hr_customer_data, org_with_varying_risk_tolerance_per_department]
-not_applicable_when: [all_operations_are_simple_read_only, no_resources_to_design_tier_boundary_policies, deterministic_rpa_sufficient]
+applies_when: [write_operations, high_risk_ops, enterprise_scale, multi_department]
+not_applicable_when: [poc_phase, public_data_only]
 risk_tiers: [0, 1, 2, 3, 4, 5]
 key_technologies: ["OPA (Open Policy Agent)", Cedar, Risk Scoring Engine, Microsoft Purview, Varonis]
 ---
@@ -114,6 +114,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface RiskScoringEngineRequest {
+          operationType: string;
+          dataClassification: string;
+          irreversible: boolean;
+          affectedScope: string;
+        }
+        interface RiskScoringEngineResponse {
+          riskTier: number;
+          score: number;
+          scoringFactors: object;
+        }
+        interface RiskScoringEngine {
+          riskScoringEngine(req: RiskScoringEngineRequest): Promise<RiskScoringEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class RiskScoringEngineRequest:
+            operation_type: str
+            data_classification: str
+            irreversible: bool
+            affected_scope: str
+        
+        @dataclass
+        class RiskScoringEngineResponse:
+            risk_tier: int
+            score: float
+            scoring_factors: dict
+        
+        class RiskScoringEngine(Protocol):
+            async def risk_scoring_engine(self, req: RiskScoringEngineRequest) -> RiskScoringEngineResponse: ...
   - name: Policy Engine (ID-7)
     description: "Enforces the tier decision at the execution infrastructure level, preventing agents from self-reporting their own tier."
     input:
@@ -126,6 +158,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PolicyEngineRequest {
+          inputId: string;
+          policyVersion: string;
+          attributes: object;
+        }
+        interface PolicyEngineResponse {
+          verdict: string;
+          reason: string;
+          requiresApproval: boolean;
+          redact: boolean;
+        }
+        interface PolicyEngine {
+          policyEngine(req: PolicyEngineRequest): Promise<PolicyEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyEngineRequest:
+            input_id: str
+            policy_version: str
+            attributes: dict
+        
+        @dataclass
+        class PolicyEngineResponse:
+            verdict: str
+            reason: str
+            requires_approval: bool
+            redact: bool
+        
+        class PolicyEngine(Protocol):
+            async def policy_engine(self, req: PolicyEngineRequest) -> PolicyEngineResponse: ...
   - name: Approval Workflow (RT-4)
     description: "Triggered for Tier 3–4 operations to route to human approval before execution proceeds."
     input:
@@ -138,6 +202,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ApprovalWorkflowRequest {
+          operationId: string;
+          riskTier: number;
+          requesterId: string;
+          operationDetails: object;
+        }
+        interface ApprovalWorkflowResponse {
+          approvalRequestId: string;
+          approved: boolean;
+          approvedBy: string;
+        }
+        interface ApprovalWorkflow {
+          approvalWorkflow(req: ApprovalWorkflowRequest): Promise<ApprovalWorkflowResponse>;
+        }
+      python: |
+        @dataclass
+        class ApprovalWorkflowRequest:
+            operation_id: str
+            risk_tier: int
+            requester_id: str
+            operation_details: dict
+        
+        @dataclass
+        class ApprovalWorkflowResponse:
+            approval_request_id: str
+            approved: bool
+            approved_by: str
+        
+        class ApprovalWorkflow(Protocol):
+            async def approval_workflow(self, req: ApprovalWorkflowRequest) -> ApprovalWorkflowResponse: ...
 ```
 
 ## Related Patterns

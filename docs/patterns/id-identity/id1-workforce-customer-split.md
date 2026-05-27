@@ -6,8 +6,8 @@ pattern_id: ID-1
 facet: identity
 requires: []
 required_by: []
-applies_when: [all_enterprises_with_customer_touchpoints, b2b_b2c_requiring_strict_separation_of_customer_and_internal_data, multi_tenant_b2b_saas_where_cross_customer_data_mixing_is_fatal]
-not_applicable_when: [internal_only_no_customer_facing_surface, completely_closed_internal_tool_operations, poc_phase_where_dual_separation_design_is_cost_prohibitive]
+applies_when: [customer_facing, confidential_data, enterprise_scale]
+not_applicable_when: [poc_phase, public_data_only]
 risk_tiers: [2, 3, 4, 5]
 key_technologies: [Okta, Microsoft Entra ID, Google Workspace, Auth0, "Okta Customer Identity (CIAM)", Tenant Isolation, Namespace Isolation, Output Guardrail, PII Filter, Human Handoff]
 ---
@@ -22,7 +22,7 @@ key_technologies: [Okta, Microsoft Entra ID, Google Workspace, Auth0, "Okta Cust
 
 企業が AI エージェントを導入するとき、社内 AI を顧客接点にそのまま流用する誘惑が生まれる。コスト効率や開発速度の観点からは合理的に見えるが、この判断が最も危険な漏洩経路を開く。
 
-従業員面のエージェントは社内ナレッジ・人事情報・未公開案件情報・内部メトリクスにアクセスできる状態で設計される。このエージェントを顧客接点に転用すると、プロンプトインジェクションや意図せぬコンテキスト流出によって社内データが顧客に届いてしまう。逆方向——顧客のデータが従業員エージェントの推論に混入するケース——も同様に深刻だ。
+従業員面のエージェントは社内ナレッジ・人事情報・未公開案件情報・内部メトリクスにアクセスできる状態で設計される。このエージェントを顧客接点に転用すると、プロンプトインジェクションや意図せぬコンテキスト流出によって社内データが顧客に届いてしまう。逆方向——顧客のデータが従業員エージェントの推論に混入するケース——も深刻さは変わらない。
 
 マルチテナント顧客環境では、別顧客の情報が混入する「テナント汚染」リスクもある。ある顧客の問い合わせ文脈が別顧客のセッションに漏れることは、B2B SaaS 企業にとって契約上・法的に致命的な問題になる。
 
@@ -41,9 +41,9 @@ key_technologies: [Okta, Microsoft Entra ID, Google Workspace, Auth0, "Okta Cust
 
 ## 解決策と設計
 
-解決策はシンプルである。「分離」を設計の出発点とし、面をまたぐフローを「原則ゼロ・例外は明示ゲート経由」と定める。
+解決策はシンプルだ。「分離」を設計の出発点とし、面をまたぐフローを「原則ゼロ・例外は明示ゲート経由」と定める。
 
-従業員面と顧客面は信頼境界で分断し、それぞれ独立した IdP・データストア・エージェント群・監査経路を持つ。面をまたぐデータ移動は明示ゲート（分類・承認・マスキング）を通じてのみ許可する。
+従業員面と顧客面は信頼境界で分断し、それぞれ独立した IdP・データストア・エージェント群・監査経路を持つ。面をまたぐデータ移動は明示ゲート（分類・承認・マスキング）を通じてのみ許可される。
 
 ```mermaid
 flowchart TB
@@ -107,8 +107,8 @@ flowchart TB
     社内AIの一部機能をそのまま外に出して顧客向けにするのは最も危険なアンチパターンである。顧客面は別境界として独立設計する。
 
 - 面をまたぐデータフローは「存在しない」が既定だ。必要な場合は明示ゲートを通し、データ分類・承認・マスキングを経てから移動させる。
-- 顧客面のエージェントが社内用のツール・MCP・RAG インデックスにアクセスできないよう、ネットワーク・実行環境レベルで隔離する。アプリ層のフラグによる制御では不十分である。
-- 顧客別テナント分離により、ある顧客の問い合わせ文脈が別顧客に漏れることを防ぐ。セッション管理・コンテキスト境界の実装は、アーキテクチャレビューで必ず確認してほしい。
+- 顧客面のエージェントが社内用のツール・MCP・RAG インデックスにアクセスできないよう、ネットワーク・実行環境レベルで隔離する。アプリ層のフラグによる制御だけでは不十分だ。
+- 顧客別テナント分離により、ある顧客の問い合わせ文脈が別顧客に漏れることを防ぐ。セッション管理・コンテキスト境界の実装はアーキテクチャレビューで必ず確認する。
 - 監査ログも面ごとに分離する。従業員面と顧客面の監査ログが混在すると、インシデント調査時に証跡が汚染されてしまう。
 
 ## Interfaces
@@ -129,6 +129,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DualIdpBoundaryRequest {
+          identityToken: string;
+          boundaryType: string;
+        }
+        interface DualIdpBoundaryResponse {
+          validated: boolean;
+          idpDomain: string;
+          principalId: string;
+        }
+        interface DualIdpBoundary {
+          dualIdpBoundary(req: DualIdpBoundaryRequest): Promise<DualIdpBoundaryResponse>;
+        }
+      python: |
+        @dataclass
+        class DualIdpBoundaryRequest:
+            identity_token: str
+            boundary_type: str
+        
+        @dataclass
+        class DualIdpBoundaryResponse:
+            validated: bool
+            idp_domain: str
+            principal_id: str
+        
+        class DualIdpBoundary(Protocol):
+            async def dual_idp_boundary(self, req: DualIdpBoundaryRequest) -> DualIdpBoundaryResponse: ...
   - name: Explicit Cross-Boundary Gate
     description: "The only permitted path for data to move from workforce to customer side; enforces classification, approval, and KM-6 DLP masking."
     input:
@@ -141,6 +169,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ExplicitCrossBoundaryGateRequest {
+          dataPayload: object;
+          classification: string;
+          approverId: string;
+          purpose: string;
+        }
+        interface ExplicitCrossBoundaryGateResponse {
+          allowed: boolean;
+          maskedPayload: object;
+          gateId: string;
+        }
+        interface ExplicitCrossBoundaryGate {
+          explicitCrossBoundaryGate(req: ExplicitCrossBoundaryGateRequest): Promise<ExplicitCrossBoundaryGateResponse>;
+        }
+      python: |
+        @dataclass
+        class ExplicitCrossBoundaryGateRequest:
+            data_payload: dict
+            classification: str
+            approver_id: str
+            purpose: str
+        
+        @dataclass
+        class ExplicitCrossBoundaryGateResponse:
+            allowed: bool
+            masked_payload: dict
+            gate_id: str
+        
+        class ExplicitCrossBoundaryGate(Protocol):
+            async def explicit_cross_boundary_gate(self, req: ExplicitCrossBoundaryGateRequest) -> ExplicitCrossBoundaryGateResponse: ...
   - name: Tenant Isolation
     description: "In multi-tenant B2B SaaS, prevents one customer's session context from mixing into another customer's agent execution."
     input:
@@ -153,6 +213,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface TenantIsolationRequest {
+          tenantId: string;
+          sessionId: string;
+          requestPayload: object;
+        }
+        interface TenantIsolationResponse {
+          isolated: boolean;
+          tenantContext: object;
+        }
+        interface TenantIsolation {
+          tenantIsolation(req: TenantIsolationRequest): Promise<TenantIsolationResponse>;
+        }
+      python: |
+        @dataclass
+        class TenantIsolationRequest:
+            tenant_id: str
+            session_id: str
+            request_payload: dict
+        
+        @dataclass
+        class TenantIsolationResponse:
+            isolated: bool
+            tenant_context: dict
+        
+        class TenantIsolation(Protocol):
+            async def tenant_isolation(self, req: TenantIsolationRequest) -> TenantIsolationResponse: ...
 ```
 
 ## 関連パターン

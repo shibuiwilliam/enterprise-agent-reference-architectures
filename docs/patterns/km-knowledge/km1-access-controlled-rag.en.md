@@ -6,8 +6,8 @@ pattern_id: KM-1
 facet: knowledge
 requires: ["ID-2", "ID-4"]
 required_by: []
-applies_when: [cross_saas_document_ticket_crm_chat_search, frequent_access_changes_from_departures_or_transfers, multiple_saas_integrated_search_required]
-not_applicable_when: [data_sources_where_acl_cannot_be_controlled, real_time_db_master_requiring_direct_query, public_information_only_no_acl_needed]
+applies_when: [cross_saas_search, frequent_perm_chg, confidential_data, enterprise_scale]
+not_applicable_when: [public_data_only, real_time_latency]
 risk_tiers: [1, 2, 3]
 key_technologies: ["Hybrid Search (BM25 + Vector)", Reranker, Pinecone, Weaviate, Qdrant, Elasticsearch, Freshness Ranking, Citation]
 ---
@@ -104,6 +104,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface IngestPipelineWithAclEmbeddingRequest {
+          documentId: string;
+          content: string;
+          sourceAcl: object;
+          classificationLabel: string;
+        }
+        interface IngestPipelineWithAclEmbeddingResponse {
+          chunkIds: string[];
+          embeddedAt: Date;
+          freshnessTimestamp: Date;
+        }
+        interface IngestPipelineWithAclEmbedding {
+          ingestPipelineWithAclEmbedding(req: IngestPipelineWithAclEmbeddingRequest): Promise<IngestPipelineWithAclEmbeddingResponse>;
+        }
+      python: |
+        @dataclass
+        class IngestPipelineWithAclEmbeddingRequest:
+            document_id: str
+            content: str
+            source_acl: dict
+            classification_label: str
+        
+        @dataclass
+        class IngestPipelineWithAclEmbeddingResponse:
+            chunk_ids: list[str]
+            embedded_at: datetime
+            freshness_timestamp: datetime
+        
+        class IngestPipelineWithAclEmbedding(Protocol):
+            async def ingest_pipeline_with_acl_embedding(self, req: IngestPipelineWithAclEmbeddingRequest) -> IngestPipelineWithAclEmbeddingResponse: ...
   - name: Permission Filter (ID-4)
     description: "Evaluates the requester's current entitlements against chunk ACLs at query time, filtering inaccessible documents before ranking."
     input:
@@ -116,6 +148,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PermissionFilterRequest {
+          userId: string;
+          candidateChunkIds: string[];
+          queryContext: string;
+        }
+        interface PermissionFilterResponse {
+          permittedChunkIds: string[];
+          filteredCount: number;
+        }
+        interface PermissionFilter {
+          permissionFilter(req: PermissionFilterRequest): Promise<PermissionFilterResponse>;
+        }
+      python: |
+        @dataclass
+        class PermissionFilterRequest:
+            user_id: str
+            candidate_chunk_ids: list[str]
+            query_context: str
+        
+        @dataclass
+        class PermissionFilterResponse:
+            permitted_chunk_ids: list[str]
+            filtered_count: int
+        
+        class PermissionFilter(Protocol):
+            async def permission_filter(self, req: PermissionFilterRequest) -> PermissionFilterResponse: ...
   - name: Hybrid Search + Reranker
     description: "Combines BM25 keyword matching with vector similarity; reranker produces final scored results including freshness penalty for stale documents."
     input:
@@ -128,6 +188,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface HybridSearchRerankerRequest {
+          query: string;
+          vectorQuery: object;
+          topK: number;
+          userId: string;
+        }
+        interface HybridSearchRerankerResponse {
+          results: object[];
+          scores: number[];
+          staleFiltered: number;
+        }
+        interface HybridSearchReranker {
+          hybridSearchReranker(req: HybridSearchRerankerRequest): Promise<HybridSearchRerankerResponse>;
+        }
+      python: |
+        @dataclass
+        class HybridSearchRerankerRequest:
+            query: str
+            vector_query: dict
+            top_k: int
+            user_id: str
+        
+        @dataclass
+        class HybridSearchRerankerResponse:
+            results: list[dict]
+            scores: list[float]
+            stale_filtered: int
+        
+        class HybridSearchReranker(Protocol):
+            async def hybrid_search_reranker(self, req: HybridSearchRerankerRequest) -> HybridSearchRerankerResponse: ...
 ```
 
 ## Related Patterns

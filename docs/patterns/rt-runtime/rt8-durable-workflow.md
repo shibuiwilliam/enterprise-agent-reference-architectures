@@ -6,8 +6,8 @@ pattern_id: RT-8
 facet: runtime
 requires: ["OB-1"]
 required_by: ["RT-4", "RT-7", "OB-2"]
-applies_when: [processes_taking_minutes_to_hours_including_human_approval_wait, high_availability_requirements_where_worker_failures_must_not_lose_work, strict_idempotency_and_audit_trail_requirements_in_regulated_industries]
-not_applicable_when: [real_time_responses_required_within_one_to_three_seconds, small_projects_where_workflow_engine_infrastructure_cost_not_justified]
+applies_when: [long_running, hitl_approval, audit_required, regulated_industry]
+not_applicable_when: [real_time_latency, poc_phase]
 risk_tiers: [2, 3, 4]
 key_technologies: [Temporal, AWS Step Functions, Azure Durable Functions, LangGraph Persistence, SQS, Azure Service Bus, RabbitMQ]
 ---
@@ -16,13 +16,13 @@ key_technologies: [Temporal, AWS Step Functions, Azure Durable Functions, LangGr
 
 ## 概要
 
-「承認待ちで3時間止まっていたら、サーバーが再起動して処理が消えた」——同期 HTTP でエージェント処理を動かすと、こうした事態が起きる。このパターンは、エージェントの処理状態をステップ境界ごとに永続化し、障害・再起動・スケールアウトをまたいで処理を継続させる。LLM の出力はアクティビティ境界で固定されるため、リプレイ時に別の結果が生まれるリスクもない。Temporal・Step Functions・Durable Functions で実装する。
+「承認待ちで3時間止まっていたら、サーバーが再起動して処理が消えた」——同期 HTTP でエージェント処理を動かすと、こうした事態が起きる。このパターンはエージェントの処理状態をステップ境界ごとに永続化し、障害・再起動・スケールアウトをまたいで処理を継続させる。LLM の出力はアクティビティ境界で固定されるため、リプレイ時に別の結果が生まれるリスクもない。Temporal・Step Functions・Durable Functions で実装する。
 
 ## 解決する企業課題
 
 エンタープライズの業務フローには、複数部門にまたがる承認待機（数時間〜数日）や大量データの一括処理（数十分）が含まれる。同期 HTTP で実行すると、ロードバランサのタイムアウト（通常 60〜300 秒）に引っかかり処理が消えてしまう。再実行しようとしても冪等性が保証されていなければ二重処理が発生する。
 
-ワーカーの障害は常に起こりうる。Kubernetes Pod の退避、デプロイ、インフラ障害など、実行途中でプロセスが停止するシナリオは珍しくない。長時間処理を同期的に保持しようとすると、コネクション占有・メモリ増加・タイムアウトが連鎖してシステム全体に波及する。
+ワーカーの障害は常に起こりうる。Kubernetes Pod の退避・デプロイ・インフラ障害など、実行途中でプロセスが停止するシナリオは珍しくない。長時間処理を同期的に保持しようとすると、コネクション占有・メモリ増加・タイムアウトが連鎖してシステム全体に波及する。
 
 冪等性と監査証跡の観点でも問題が生じる。処理が途中で失敗したとき「どこまで実行できたか」が記録されていなければ安全に再開できない。エンタープライズの業務処理では各ステップの実行経緯が監査対象となるため、処理履歴の構造化記録が欠かせない。
 
@@ -35,7 +35,7 @@ key_technologies: [Temporal, AWS Step Functions, Azure Durable Functions, LangGr
 
 ## 解決策と設計
 
-解決策の核心は「ワークフローの状態をワーカーから分離すること」だ。状態をストアに外出しすることで、ワーカーが入れ替わっても処理を継続できる。LLM の推論結果はアクティビティ境界で固定し、リプレイ時に再呼び出ししない設計により、コスト増加と非決定性の問題を同時に解決する。
+解決策の核心は「ワークフローの状態をワーカーから分離すること」だ。状態をストアに外出しすることで、ワーカーが入れ替わっても処理を継続できる。LLM の推論結果はアクティビティ境界で固定し、リプレイ時に再呼び出ししない設計にすることで、コスト増加と非決定性の問題を同時に解決する。
 
 ワークフローは明確な状態遷移として定義する。各状態はイベントによって遷移し、アクティビティ（外部 API 呼び出し・LLM 推論・ファイル操作など）は冪等に実装する。ステップ境界で状態をストアに書き込むため、ワーカーがクラッシュしても再起動後に同じステップから再開できる。
 
@@ -58,7 +58,7 @@ stateDiagram-v2
 
 LLM の推論結果はアクティビティが完了した時点でストアに書き込む。ワークフローエンジンがリプレイ（履歴からの再構築）を行う際は、保存済みの結果をそのまま使い LLM を再呼び出ししない。これにより、再生成時に異なる結果が返るリプレイの非決定性問題を回避できる。
 
-予算・時間・ステップ数の上限はワークフロー定義に組み込む。上限を超えた場合は `failed` または `cancelled` に遷移し、OB-1 の監視基盤にアラートを送出する設計にする。
+予算・時間・ステップ数の上限はワークフロー定義に組み込んでおく。上限を超えた場合は `failed` または `cancelled` に遷移し、OB-1 の監視基盤にアラートを送出する設計にする。
 
 ## 向き／不向き
 
@@ -110,6 +110,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface WorkflowDefinitionRequest {
+          workflowId: string;
+          initialState: string;
+          inputPayload: object;
+        }
+        interface WorkflowDefinitionResponse {
+          executionId: string;
+          currentState: string;
+          startedAt: Date;
+        }
+        interface WorkflowDefinition {
+          workflowDefinition(req: WorkflowDefinitionRequest): Promise<WorkflowDefinitionResponse>;
+        }
+      python: |
+        @dataclass
+        class WorkflowDefinitionRequest:
+            workflow_id: str
+            initial_state: str
+            input_payload: dict
+        
+        @dataclass
+        class WorkflowDefinitionResponse:
+            execution_id: str
+            current_state: str
+            started_at: datetime
+        
+        class WorkflowDefinition(Protocol):
+            async def workflow_definition(self, req: WorkflowDefinitionRequest) -> WorkflowDefinitionResponse: ...
   - name: Activity Function
     description: "Wraps LLM calls and external API calls; implements idempotent execution and stores results in workflow history to avoid re-invocation on replay."
     input:
@@ -122,6 +152,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ActivityFunctionRequest {
+          activityId: string;
+          inputPayload: object;
+          executionId: string;
+          idempotencyKey: string;
+        }
+        interface ActivityFunctionResponse {
+          result: object;
+          completed: boolean;
+          cachedFromHistory: boolean;
+        }
+        interface ActivityFunction {
+          activityFunction(req: ActivityFunctionRequest): Promise<ActivityFunctionResponse>;
+        }
+      python: |
+        @dataclass
+        class ActivityFunctionRequest:
+            activity_id: str
+            input_payload: dict
+            execution_id: str
+            idempotency_key: str
+        
+        @dataclass
+        class ActivityFunctionResponse:
+            result: dict
+            completed: bool
+            cached_from_history: bool
+        
+        class ActivityFunction(Protocol):
+            async def activity_function(self, req: ActivityFunctionRequest) -> ActivityFunctionResponse: ...
   - name: Budget / Step Limit Guard
     description: "Enforces maximum step count, execution time, and cost limits in the workflow definition; triggers safe termination on breach."
     input:
@@ -134,6 +196,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface BudgetStepLimitGuardRequest {
+          executionId: string;
+          stepCount: number;
+          elapsedMs: number;
+          totalCost: number;
+        }
+        interface BudgetStepLimitGuardResponse {
+          withinBudget: boolean;
+          terminationReason: string;
+          terminatedAt: Date;
+        }
+        interface BudgetStepLimitGuard {
+          budgetStepLimitGuard(req: BudgetStepLimitGuardRequest): Promise<BudgetStepLimitGuardResponse>;
+        }
+      python: |
+        @dataclass
+        class BudgetStepLimitGuardRequest:
+            execution_id: str
+            step_count: int
+            elapsed_ms: int
+            total_cost: float
+        
+        @dataclass
+        class BudgetStepLimitGuardResponse:
+            within_budget: bool
+            termination_reason: str
+            terminated_at: datetime
+        
+        class BudgetStepLimitGuard(Protocol):
+            async def budget_step_limit_guard(self, req: BudgetStepLimitGuardRequest) -> BudgetStepLimitGuardResponse: ...
 ```
 
 ## 関連パターン

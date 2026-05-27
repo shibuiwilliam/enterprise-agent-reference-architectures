@@ -6,8 +6,8 @@ pattern_id: EX-1
 facet: experience
 requires: ["ID-1", "ID-2", "ID-6"]
 required_by: []
-applies_when: [multiple_channels_and_large_scale_enterprise_deployment, governance_and_audit_requirements_exist, workforce_and_customer_channel_separation_required]
-not_applicable_when: [single_poc_with_one_channel_only, completely_isolated_experimental_environment, single_channel_small_scale_usage]
+applies_when: [enterprise_scale, multi_channel, audit_required, customer_facing]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [Kong, Apigee, AWS API Gateway, OIDC, SAML 2.0, Risk Scoring, OpenTelemetry Trace ID, Token Bucket]
 ---
@@ -105,6 +105,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AuthenticationRiskClassificationRequest {
+          idToken: string;
+          channel: string;
+          requestPayload: object;
+        }
+        interface AuthenticationRiskClassificationResponse {
+          principalId: string;
+          correlationId: string;
+          riskTier: number;
+          intent: string;
+        }
+        interface AuthenticationRiskClassification {
+          authenticationRiskClassification(req: AuthenticationRiskClassificationRequest): Promise<AuthenticationRiskClassificationResponse>;
+        }
+      python: |
+        @dataclass
+        class AuthenticationRiskClassificationRequest:
+            id_token: str
+            channel: str
+            request_payload: dict
+        
+        @dataclass
+        class AuthenticationRiskClassificationResponse:
+            principal_id: str
+            correlation_id: str
+            risk_tier: int
+            intent: str
+        
+        class AuthenticationRiskClassification(Protocol):
+            async def authentication_risk_classification(self, req: AuthenticationRiskClassificationRequest) -> AuthenticationRiskClassificationResponse: ...
   - name: Rate Control & Burst Absorption
     description: "Token-bucket rate limiter that absorbs enterprise-wide peak bursts and coordinates with IN-3 Rate/Quota Broker for SaaS-side quota limits."
     input:
@@ -117,6 +149,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface RateControlBurstAbsorptionRequest {
+          agentId: string;
+          saasTarget: string;
+          requestCount: number;
+        }
+        interface RateControlBurstAbsorptionResponse {
+          allowed: boolean;
+          remainingQuota: number;
+          retryAfterMs: number;
+        }
+        interface RateControlBurstAbsorption {
+          rateControlBurstAbsorption(req: RateControlBurstAbsorptionRequest): Promise<RateControlBurstAbsorptionResponse>;
+        }
+      python: |
+        @dataclass
+        class RateControlBurstAbsorptionRequest:
+            agent_id: str
+            saas_target: str
+            request_count: int
+        
+        @dataclass
+        class RateControlBurstAbsorptionResponse:
+            allowed: bool
+            remaining_quota: int
+            retry_after_ms: int
+        
+        class RateControlBurstAbsorption(Protocol):
+            async def rate_control_burst_absorption(self, req: RateControlBurstAbsorptionRequest) -> RateControlBurstAbsorptionResponse: ...
   - name: Audit Entry Point
     description: "Emits a structured audit record per request (actor ID, channel, intent, risk tier, correlation ID) to OB-1 Observability Lake."
     input:
@@ -129,6 +191,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AuditEntryPointRequest {
+          actorId: string;
+          agentId: string;
+          correlationId: string;
+          action: string;
+          resource: string;
+        }
+        interface AuditEntryPointResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface AuditEntryPoint {
+          auditEntryPoint(req: AuditEntryPointRequest): Promise<AuditEntryPointResponse>;
+        }
+      python: |
+        @dataclass
+        class AuditEntryPointRequest:
+            actor_id: str
+            agent_id: str
+            correlation_id: str
+            action: str
+            resource: str
+        
+        @dataclass
+        class AuditEntryPointResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class AuditEntryPoint(Protocol):
+            async def audit_entry_point(self, req: AuditEntryPointRequest) -> AuditEntryPointResponse: ...
 ```
 
 ## Related Patterns

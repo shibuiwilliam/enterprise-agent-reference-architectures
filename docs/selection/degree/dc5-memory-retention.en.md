@@ -28,7 +28,7 @@ rules:
   - condition: "lifecycle_event IN ['employee_departure', 'role_change', 'project_end']"
     action: immediate_expiry_and_permission_revocation
     reason: "HR lifecycle events (departure, transfer, project end) must trigger immediate memory expiry and access revocation"
-  - condition: "user_requests_deletion == true"
+  - condition: "permission_change_event == true"
     action: immediate_delete_all_personal_scope
     reason: "Right-to-erasure: individual must be able to delete or modify their personal memory scope at any time (ID-8)"
 ```

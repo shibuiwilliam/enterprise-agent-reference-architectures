@@ -6,8 +6,8 @@ pattern_id: ID-6
 facet: identity
 requires: []
 required_by: ["GV-4", "RT-3", "ID-5", "IN-1"]
-applies_when: [multi_saas_environments_handling_confidential_data, multi_cloud_multi_tenant_configurations, regulated_industries_requiring_financial_or_healthcare_compliance]
-not_applicable_when: [completely_isolated_experimental_environment, single_user_personal_poc, public_information_only_processing_without_authorization_needs]
+applies_when: [confidential_data, cross_saas, regulated_industry, multi_agent]
+not_applicable_when: [poc_phase, public_data_only]
 risk_tiers: [2, 3, 4, 5]
 key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, mTLS, "Workload Identity (ID-3)", "Short-lived Token (ID-5)", Network Policy, Runtime Sandbox]
 ---
@@ -119,6 +119,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CentralPdpRequest {
+          principalId: string;
+          agentId: string;
+          action: string;
+          resource: string;
+          attributes: object;
+        }
+        interface CentralPdpResponse {
+          decision: string;
+          reason: string;
+          decisionId: string;
+        }
+        interface CentralPdp {
+          centralPdp(req: CentralPdpRequest): Promise<CentralPdpResponse>;
+        }
+      python: |
+        @dataclass
+        class CentralPdpRequest:
+            principal_id: str
+            agent_id: str
+            action: str
+            resource: str
+            attributes: dict
+        
+        @dataclass
+        class CentralPdpResponse:
+            decision: str
+            reason: str
+            decision_id: str
+        
+        class CentralPdp(Protocol):
+            async def central_pdp(self, req: CentralPdpRequest) -> CentralPdpResponse: ...
   - name: Distributed PEP
     description: "PEPs at Gateway (EX-1), runtime, and connector enforce PDP decisions; no enforcement point bypasses the PDP."
     input:
@@ -131,6 +165,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DistributedPepRequest {
+          pdpDecision: string;
+          requestContext: object;
+          enforcementPoint: string;
+        }
+        interface DistributedPepResponse {
+          enforced: boolean;
+          allowed: boolean;
+          auditId: string;
+        }
+        interface DistributedPep {
+          distributedPep(req: DistributedPepRequest): Promise<DistributedPepResponse>;
+        }
+      python: |
+        @dataclass
+        class DistributedPepRequest:
+            pdp_decision: str
+            request_context: dict
+            enforcement_point: str
+        
+        @dataclass
+        class DistributedPepResponse:
+            enforced: bool
+            allowed: bool
+            audit_id: str
+        
+        class DistributedPep(Protocol):
+            async def distributed_pep(self, req: DistributedPepRequest) -> DistributedPepResponse: ...
   - name: Org Graph Attribute Feed
     description: "Supplies department, role, and project attributes to the PDP for contextual evaluation; attribute staleness is monitored."
     input:
@@ -143,6 +207,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface OrgGraphAttributeFeedRequest {
+          principalId: string;
+          attributeTypes: string[];
+        }
+        interface OrgGraphAttributeFeedResponse {
+          attributes: object;
+          department: string;
+          roles: string[];
+          projects: string[];
+        }
+        interface OrgGraphAttributeFeed {
+          orgGraphAttributeFeed(req: OrgGraphAttributeFeedRequest): Promise<OrgGraphAttributeFeedResponse>;
+        }
+      python: |
+        @dataclass
+        class OrgGraphAttributeFeedRequest:
+            principal_id: str
+            attribute_types: list[str]
+        
+        @dataclass
+        class OrgGraphAttributeFeedResponse:
+            attributes: dict
+            department: str
+            roles: list[str]
+            projects: list[str]
+        
+        class OrgGraphAttributeFeed(Protocol):
+            async def org_graph_attribute_feed(self, req: OrgGraphAttributeFeedRequest) -> OrgGraphAttributeFeedResponse: ...
 ```
 
 ## Related Patterns

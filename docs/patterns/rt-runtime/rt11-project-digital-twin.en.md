@@ -6,8 +6,8 @@ pattern_id: RT-11
 facet: runtime
 requires: ["KM-1", "KM-4", "ID-4"]
 required_by: []
-applies_when: [multi_tool_project_teams_five_to_fifty_members, project_duration_weeks_or_more_with_decision_history_reference_needed, member_turnover_with_onboarding_cost_reduction_needed]
-not_applicable_when: [one_off_short_tasks_where_workspace_overhead_not_worth_it, one_to_two_person_personal_projects, fully_integrated_erp_with_no_information_silos]
+applies_when: [project_team, cross_saas_search, persistent_memory, frequent_perm_chg]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [2, 3]
 key_technologies: ["Neo4j (GraphRAG)", Slack Bot, "Dynamic RBAC (Okta Groups / Azure AD Groups)", PostgreSQL Decision Log, Asana API, Jira REST API, Box API, SharePoint]
 ---
@@ -124,6 +124,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ProjectWorkspaceProvisionerRequest {
+          projectId: string;
+          projectName: string;
+          memberIds: string[];
+          action: string;
+        }
+        interface ProjectWorkspaceProvisionerResponse {
+          slackChannelId: string;
+          jiraBoardId: string;
+          boxFolderId: string;
+          rbacGroupId: string;
+        }
+        interface ProjectWorkspaceProvisioner {
+          projectWorkspaceProvisioner(req: ProjectWorkspaceProvisionerRequest): Promise<ProjectWorkspaceProvisionerResponse>;
+        }
+      python: |
+        @dataclass
+        class ProjectWorkspaceProvisionerRequest:
+            project_id: str
+            project_name: str
+            member_ids: list[str]
+            action: str
+        
+        @dataclass
+        class ProjectWorkspaceProvisionerResponse:
+            slack_channel_id: str
+            jira_board_id: str
+            box_folder_id: str
+            rbac_group_id: str
+        
+        class ProjectWorkspaceProvisioner(Protocol):
+            async def project_workspace_provisioner(self, req: ProjectWorkspaceProvisionerRequest) -> ProjectWorkspaceProvisionerResponse: ...
   - name: GraphRAG Memory
     description: "Maintains a knowledge graph of people, decisions, artifacts, and tasks within the project, filtered by each member's RBAC permissions at read time."
     input:
@@ -136,6 +170,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface GraphragMemoryRequest {
+          projectId: string;
+          query: string;
+          userId: string;
+        }
+        interface GraphragMemoryResponse {
+          nodes: object[];
+          relationships: object[];
+          filteredByRbac: boolean;
+        }
+        interface GraphragMemory {
+          graphragMemory(req: GraphragMemoryRequest): Promise<GraphragMemoryResponse>;
+        }
+      python: |
+        @dataclass
+        class GraphragMemoryRequest:
+            project_id: str
+            query: str
+            user_id: str
+        
+        @dataclass
+        class GraphragMemoryResponse:
+            nodes: list[dict]
+            relationships: list[dict]
+            filtered_by_rbac: bool
+        
+        class GraphragMemory(Protocol):
+            async def graphrag_memory(self, req: GraphragMemoryRequest) -> GraphragMemoryResponse: ...
   - name: Decision Log Store
     description: "Structured record of decisions made, rejected alternatives, and rationale for retrospective and audit use."
     input:
@@ -148,6 +212,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DecisionLogStoreRequest {
+          projectId: string;
+          decisionText: string;
+          alternatives: string[];
+          rationale: string;
+          authorId: string;
+        }
+        interface DecisionLogStoreResponse {
+          decisionId: string;
+          recordedAt: Date;
+        }
+        interface DecisionLogStore {
+          decisionLogStore(req: DecisionLogStoreRequest): Promise<DecisionLogStoreResponse>;
+        }
+      python: |
+        @dataclass
+        class DecisionLogStoreRequest:
+            project_id: str
+            decision_text: str
+            alternatives: list[str]
+            rationale: str
+            author_id: str
+        
+        @dataclass
+        class DecisionLogStoreResponse:
+            decision_id: str
+            recorded_at: datetime
+        
+        class DecisionLogStore(Protocol):
+            async def decision_log_store(self, req: DecisionLogStoreRequest) -> DecisionLogStoreResponse: ...
 ```
 
 ## Related Patterns

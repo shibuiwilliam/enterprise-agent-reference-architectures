@@ -8,22 +8,22 @@ status: done
 
 ## 概要
 
-障害が起きたとき「あのとき何を入力して何が返ってきたか」が再現できなければ原因調査は行き詰まる。しかし全プロンプトを平文でログ基盤に流し込めば、顧客の個人情報や機密情報がログストレージに拡散し、それ自体がセキュリティインシデントの火種になる。「全部記録したい」と「機密を拡散したくない」のあいだの実務的な落としどころとして、三層分離をどう設計するかを扱う。
+障害が起きたとき「あのとき何を入力して何が返ってきたか」が再現できなければ、原因調査は行き詰まる。しかし全プロンプトを平文でログ基盤に流し込めば、顧客の個人情報や機密情報がログストレージに拡散し、それ自体がセキュリティインシデントの火種になる。「全部記録したい」と「機密を拡散したくない」のあいだの実務的な落としどころとして、三層分離をどう設計するかを扱う。
 
 <!-- machine-readable decision rules for coding agents -->
 ```yaml
 id: TO-7
 decision_rules:
-  - condition: "data_classification == 'top_secret' OR pattern == 'ephemeral_secure_context_bus'"
+  - condition: "data_classification == 'top_secret' OR defense_in_depth == false"
     recommendation: metadata_only
     reason: "極秘処理は本文を一切ログに残さず、メタデータ（リクエストID・タイムスタンプ・処理完了フラグ）のみ保存する"
-  - condition: "standard_operations == true AND audit_required == true"
+  - condition: "data_classification IN ['internal_general', 'department_confidential'] AND audit_required == true"
     recommendation: three_layer_separated
     reason: "標準構成は三層分離：メタはTrace DB、本文は暗号化ストレージ、集計はDWH"
-  - condition: "body_storage_policy == 'full_plaintext'"
+  - condition: "confidential_data_in_result == true AND defense_in_depth == false"
     recommendation: three_layer_separated
     reason: "機密情報を含むプロンプトを平文で一般的なログ基盤に保存することは禁忌。本文保存は暗号化ストレージに限定する"
-  - condition: "cost_constraint == true OR not_all_records_needed == true"
+  - condition: "cost_constraint == true"
     recommendation: selective_with_encrypted_body
     reason: "全件保存が不要な場合はエラー時・高リスク操作時・ランダムN%のみフル保存するサンプリング方式を併用する"
   - condition: "regulatory_requirement IN ['gdpr', 'personal_information_protection']"
@@ -45,13 +45,13 @@ decision_rules:
 
 ログ設計の判断軸：
 
-- **再現性**：バグ調査や監査に必要な最小限の情報を本文ストレージに保存する。全件ではなく、エラー発生時・高リスク操作時・ランダムサンプリング分を対象にする
-- **機密性**：本文ストレージは暗号化し、アクセスを監査対応者・セキュリティチームに限定する。平文でのメタデータDBへの保存は禁止する
-- **コスト**：トークン数が多いプロンプト本文を全件保存するとストレージコストが急増する。保存対象の絞り込みルールを設計段階で決める
+- **再現性**：バグ調査や監査に必要な最小限の情報を本文ストレージに保存する。全件ではなく、エラー発生時・高リスク操作時・ランダムサンプリング分に絞る
+- **機密性**：本文ストレージは暗号化し、アクセスを監査対応者・セキュリティチームに限定する。平文でのメタデータ DB への保存は禁止する
+- **コスト**：トークン数の多いプロンプト本文を全件保存するとストレージコストが急増する。保存対象の絞り込みルールは設計段階で決めておく
 
 特殊ケースの扱い：
 
-- **極秘処理（[KM-7](../../patterns/km-knowledge/km7-ephemeral-secure-context-bus.md)）**：本文は保存せず、メタ（リクエストID・タイムスタンプ・処理完了フラグ）のみ保存する。内容の再現よりも「実行した事実」の証明を優先する
+- **極秘処理（[KM-7](../../patterns/km-knowledge/km7-ephemeral-secure-context-bus.md)）**：本文は保存せず、メタ（リクエスト ID・タイムスタンプ・処理完了フラグ）のみ保存する。内容の再現よりも「実行した事実」の証明を優先する
 - **規制対象データ**：GDPR・個人情報保護法等の要件に応じて保存期間と削除ルールを設定する。再現性より法令遵守を優先する
 
 !!! warning "平文での全プロンプト保存は禁忌"
@@ -62,9 +62,9 @@ decision_rules:
 まずメタのみ保存する最小構成で運用を開始し、必要性が確認された範囲で本文保存を追加する。
 
 1. トレースメタ（[OB-1](../../patterns/ob-observability/ob1-observability-lake.md)）のみで監視・アラートを構築する。
-2. デバッグ・監査の需要が発生した時点で、暗号化ストレージへの本文保存を追加する。
-3. 保存対象の選定ルール（エラー時・高リスク操作時・N%サンプリング）を整備する。
-4. DWH集計レイヤーを追加し、匿名化データで品質改善のループを回す。
+2. デバッグ・監査の需要が生じた時点で、暗号化ストレージへの本文保存を追加する。
+3. 保存対象の選定ルール（エラー時・高リスク操作時・N% サンプリング）を整備する。
+4. DWH 集計レイヤーを追加し、匿名化データで品質改善のループを回す。
 
 ## 関連パターン
 

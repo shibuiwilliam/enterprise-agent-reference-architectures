@@ -6,8 +6,8 @@ pattern_id: EX-4
 facet: experience
 requires: ["EX-1", "KM-1", "RT-3"]
 required_by: []
-applies_when: [enterprise_wide_rollout_phase_where_adoption_rate_is_a_challenge, agent_output_used_as_basis_for_business_decisions, initial_deployment_requiring_employee_trust_building]
-not_applicable_when: [poc_stage_with_only_a_few_power_users, fully_automated_backend_processing_with_no_human_review_of_results]
+applies_when: [enterprise_scale, adoption_challenge, prod_deployment]
+not_applicable_when: [poc_phase, autonomous_exec]
 risk_tiers: [1, 2, 3]
 key_technologies: ["RAG Source Tracking (KM-1)", LLM Log Probabilities, Source Consistency Check, WebSocket Streaming, "Usage Metrics Collection (OB-1)", A/B Testing Infrastructure]
 ---
@@ -115,6 +115,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CitationConfidenceLayerRequest {
+          responseText: string;
+          retrievalMetadata: object[];
+        }
+        interface CitationConfidenceLayerResponse {
+          annotatedResponse: string;
+          citations: object[];
+          confidenceLabel: string;
+          freshnessTimestamp: Date;
+        }
+        interface CitationConfidenceLayer {
+          citationConfidenceLayer(req: CitationConfidenceLayerRequest): Promise<CitationConfidenceLayerResponse>;
+        }
+      python: |
+        @dataclass
+        class CitationConfidenceLayerRequest:
+            response_text: str
+            retrieval_metadata: list[dict]
+        
+        @dataclass
+        class CitationConfidenceLayerResponse:
+            annotated_response: str
+            citations: list[dict]
+            confidence_label: str
+            freshness_timestamp: datetime
+        
+        class CitationConfidenceLayer(Protocol):
+            async def citation_confidence_layer(self, req: CitationConfidenceLayerRequest) -> CitationConfidenceLayerResponse: ...
   - name: Progressive Confirmation UI
     description: "For RT-3 Tier-2+ operations, presents operation details before execution and requests user modification or approval."
     input:
@@ -127,6 +157,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ProgressiveConfirmationUiRequest {
+          operationDetails: object;
+          riskTier: number;
+          userId: string;
+        }
+        interface ProgressiveConfirmationUiResponse {
+          confirmed: boolean;
+          modifications: object;
+        }
+        interface ProgressiveConfirmationUi {
+          progressiveConfirmationUi(req: ProgressiveConfirmationUiRequest): Promise<ProgressiveConfirmationUiResponse>;
+        }
+      python: |
+        @dataclass
+        class ProgressiveConfirmationUiRequest:
+            operation_details: dict
+            risk_tier: int
+            user_id: str
+        
+        @dataclass
+        class ProgressiveConfirmationUiResponse:
+            confirmed: bool
+            modifications: dict
+        
+        class ProgressiveConfirmationUi(Protocol):
+            async def progressive_confirmation_ui(self, req: ProgressiveConfirmationUiRequest) -> ProgressiveConfirmationUiResponse: ...
   - name: Value Feedback Dashboard
     description: "Displays estimated time saved per completed task and cumulative weekly/monthly savings, tied to GV-10 measurement data."
     input:
@@ -139,6 +197,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ValueFeedbackDashboardRequest {
+          userId: string;
+          period: string;
+        }
+        interface ValueFeedbackDashboardResponse {
+          timeSavedMinutes: number;
+          taskCount: number;
+          weeklyTrend: object;
+        }
+        interface ValueFeedbackDashboard {
+          valueFeedbackDashboard(req: ValueFeedbackDashboardRequest): Promise<ValueFeedbackDashboardResponse>;
+        }
+      python: |
+        @dataclass
+        class ValueFeedbackDashboardRequest:
+            user_id: str
+            period: str
+        
+        @dataclass
+        class ValueFeedbackDashboardResponse:
+            time_saved_minutes: float
+            task_count: int
+            weekly_trend: dict
+        
+        class ValueFeedbackDashboard(Protocol):
+            async def value_feedback_dashboard(self, req: ValueFeedbackDashboardRequest) -> ValueFeedbackDashboardResponse: ...
 ```
 
 ## Related Patterns

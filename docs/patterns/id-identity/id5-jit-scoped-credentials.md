@@ -6,8 +6,8 @@ pattern_id: ID-5
 facet: identity
 requires: ["ID-6"]
 required_by: []
-applies_when: [agents_spanning_multiple_saas_systems, high_risk_operations_including_writes_deletes_or_pii_access, existing_vault_or_sts_secret_management_infrastructure]
-not_applicable_when: [single_system_internal_api_only_poc, broker_introduction_cost_not_justified_at_small_scale, legacy_saas_with_external_idp_jit_unsupported_combine_with_id4]
+applies_when: [cross_saas, high_risk_ops, vault_sts_infra, audit_required]
+not_applicable_when: [poc_phase, single_team, legacy_saas_mix]
 risk_tiers: [2, 3, 4]
 key_technologies: ["HashiCorp Vault (Dynamic Secrets)", "AWS STS (AssumeRole / GetSessionToken)", Azure Managed Identity / Entra Workload Identity, Google Workload Identity Federation, "OAuth 2.0 Token Exchange (RFC 8693)"]
 ---
@@ -20,17 +20,17 @@ key_technologies: ["HashiCorp Vault (Dynamic Secrets)", "AWS STS (AssumeRole / G
 
 ## 解決する企業課題
 
-SaaS 統合でありがちな問題は、開発時に作った広スコープの API キーが何年も有効なまま複数のコネクターで共有され続ける状態である。このような「散在する長命キー」は、企業のクレデンシャルリスクにおける最頻出の問題である。
+SaaS 統合でありがちな問題は、開発時に作った広スコープの API キーが何年も有効なまま複数のコネクターで共有され続ける状態だ。このような「散在する長命キー」は、企業のクレデンシャルリスクにおける最頻出の問題である。
 
 具体的には次の3つのリスクが積み重なる。
 
-第一は「露出時間窓の長さ」だ。API キーが侵害されてから発見・失効まで平均数ヶ月かかることが多い。長命キーはその間ずっと攻撃者に使い続けられる。短命クレデンシャルなら自動失効までの窓が数分で済み、実害を極小化できる。
+第一は「露出時間窓の長さ」だ。API キーが侵害されてから発見・失効まで平均数か月かかることが多い。長命キーはその間ずっと攻撃者に使い続けられる。短命クレデンシャルなら自動失効までの窓が数分で済み、実害を極小化できる。
 
 第二は「スコープの広さ」だ。便宜上「全部読み書きできるキー」を作ってしまうと、漏洩時の影響範囲が全データに及ぶ。用途を「この顧客レコードの読み取り専用・今この呼び出し限定」に絞れば、漏洩しても使える操作は1つに限定される。
 
 第三は「使用状況の不透明さ」だ。同一の長命キーを複数のエージェント・コネクターが共有すると、どのエージェントがいつ何を操作したかが特定できない。インシデント調査・コンプライアンス監査で証跡が得られず、最悪の場合はキーを失効させると無関係なサービスまで停止する。
 
-クレデンシャルを「持たない・使い捨てる・最小に絞る」という設計原則でこれらを解消するのが本パターンの本質だ。
+クレデンシャルを「持たない・使い捨てる・最小に絞る」という設計原則でこれらを解消するのが、本パターンの本質だ。
 
 !!! tip "最小成立条件（MVP）"
     Vault または AWS STS でツール呼び出し直前に短命トークン（TTL 数分）を1つの SaaS 向けに動的発行し、コネクタにクレデンシャルをハードコードしない構成を作る。
@@ -41,9 +41,9 @@ SaaS 統合でありがちな問題は、開発時に作った広スコープの
 
 ## 解決策と設計
 
-解決策はクレデンシャルの発行モデルを根本から変えることである。コネクターやランタイムはクレデンシャルを事前に保持せず、ツール呼び出しの直前にクレデンシャルブローカーへ動的リクエストを送り、その呼び出し専用のスコープ・TTL を持つクレデンシャルを取得する。
+解決策はクレデンシャルの発行モデルを根本から変えることだ。コネクターやランタイムはクレデンシャルを事前に保持しない。ツール呼び出しの直前にクレデンシャルブローカーへ動的リクエストを送り、その呼び出し専用のスコープ・TTL を持つクレデンシャルを取得する。
 
-エージェントランタイムはクレデンシャルを保持しない。ツール呼び出し時にクレデンシャルブローカー（Vault/STS 等）へ動的リクエストを送り、スコープと TTL が明示された短命クレデンシャルを取得する。取得したクレデンシャルは使い捨てとし、再利用・キャッシュを禁止する。
+エージェントランタイムはクレデンシャルを保持しない。ツール呼び出し時にクレデンシャルブローカー（Vault/STS 等）へ動的リクエストを送り、スコープと TTL が明示された短命クレデンシャルを取得する。取得したクレデンシャルは使い捨てとし、再利用・キャッシュは禁止する。
 
 ```mermaid
 sequenceDiagram
@@ -61,7 +61,7 @@ sequenceDiagram
     note over AGENT,SaaS: TTL 経過後は自動失効
 ```
 
-クレデンシャルには用途タグ・要求元エージェント ID・発行時刻・TTL・許可スコープを含める。これにより、監査ログでどのエージェントがいつどのスコープで何を操作したかを追跡できる。
+クレデンシャルには用途タグ・要求元エージェント ID・発行時刻・TTL・許可スコープを含める。これにより、監査ログでどのエージェントがいつどのスコープで何を操作したかを追跡できるようになる。
 
 ## 向き／不向き
 
@@ -88,7 +88,7 @@ sequenceDiagram
 !!! warning "TTL とリスクのミスマッチ"
     読み取り専用で低リスクの操作と、書き込み・削除・PII アクセスを同一の TTL で扱うのは不適切である。高リスク操作ほど TTL を短く、スコープを狭くする。
 
-- コネクターやツールの実装内に API キーをハードコードするのは厳禁だ。クレデンシャルブローカー経由での取得を必須とするアーキテクチャ制約を設ける。
+- コネクターやツールの実装内に API キーをハードコードするのは厳禁だ。クレデンシャルブローカー経由での取得を必須とするアーキテクチャ制約を設けること。
 - クレデンシャルブローカー自体が単一障害点になるリスクもある。ブローカーの可用性設計（Active-Active、ヘルスチェック）と、取得失敗時のフェイルクローズ（操作中断）を実装しておく。
 
 ## Interfaces
@@ -109,6 +109,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface CredentialBrokerRequest {
+          agentId: string;
+          scope: string[];
+          targetResource: string;
+          ttlSeconds: number;
+        }
+        interface CredentialBrokerResponse {
+          credential: string;
+          expiresAt: Date;
+          credentialId: string;
+        }
+        interface CredentialBroker {
+          credentialBroker(req: CredentialBrokerRequest): Promise<CredentialBrokerResponse>;
+        }
+      python: |
+        @dataclass
+        class CredentialBrokerRequest:
+            agent_id: str
+            scope: list[str]
+            target_resource: str
+            ttl_seconds: int
+        
+        @dataclass
+        class CredentialBrokerResponse:
+            credential: str
+            expires_at: datetime
+            credential_id: str
+        
+        class CredentialBroker(Protocol):
+            async def credential_broker(self, req: CredentialBrokerRequest) -> CredentialBrokerResponse: ...
   - name: PDP Pre-Issuance Check
     description: "Broker consults ID-6 PDP to confirm the requesting agent is authorized before issuing the credential; sets minimum permitted scope."
     input:
@@ -121,6 +153,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface PdpPreIssuanceCheckRequest {
+          agentId: string;
+          requestedScope: string[];
+          targetResource: string;
+        }
+        interface PdpPreIssuanceCheckResponse {
+          authorized: boolean;
+          permittedScope: string[];
+          reason: string;
+        }
+        interface PdpPreIssuanceCheck {
+          pdpPreIssuanceCheck(req: PdpPreIssuanceCheckRequest): Promise<PdpPreIssuanceCheckResponse>;
+        }
+      python: |
+        @dataclass
+        class PdpPreIssuanceCheckRequest:
+            agent_id: str
+            requested_scope: list[str]
+            target_resource: str
+        
+        @dataclass
+        class PdpPreIssuanceCheckResponse:
+            authorized: bool
+            permitted_scope: list[str]
+            reason: str
+        
+        class PdpPreIssuanceCheck(Protocol):
+            async def pdp_pre_issuance_check(self, req: PdpPreIssuanceCheckRequest) -> PdpPreIssuanceCheckResponse: ...
   - name: Credential Audit Trail
     description: "Each issued credential record includes agent_id, purpose, scope, TTL, and target_resource for full forensic traceability."
     input:
@@ -133,6 +195,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface CredentialAuditTrailRequest {
+          actorId: string;
+          agentId: string;
+          correlationId: string;
+          action: string;
+          resource: string;
+        }
+        interface CredentialAuditTrailResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface CredentialAuditTrail {
+          credentialAuditTrail(req: CredentialAuditTrailRequest): Promise<CredentialAuditTrailResponse>;
+        }
+      python: |
+        @dataclass
+        class CredentialAuditTrailRequest:
+            actor_id: str
+            agent_id: str
+            correlation_id: str
+            action: str
+            resource: str
+        
+        @dataclass
+        class CredentialAuditTrailResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class CredentialAuditTrail(Protocol):
+            async def credential_audit_trail(self, req: CredentialAuditTrailRequest) -> CredentialAuditTrailResponse: ...
 ```
 
 ## 関連パターン

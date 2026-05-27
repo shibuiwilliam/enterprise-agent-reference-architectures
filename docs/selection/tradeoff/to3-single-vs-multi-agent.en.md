@@ -17,13 +17,13 @@ decision_rules:
   - condition: "responsibility_spans_multiple_departments == false AND latency_sensitive == true"
     recommendation: single_agent
     reason: "Default to single agent; multi-agent adds cost, latency, and failure points without organizational benefit when responsibility is unified"
-  - condition: "multiple_departments_with_independent_approval == true"
+  - condition: "responsibility_spans_multiple_departments == true AND multiple_approvers == true"
     recommendation: multi_agent
     reason: "Independent approval and accountability across departments (e.g. sales, legal, finance) justifies multi-agent RACI separation"
-  - condition: "subtasks_require_different_models_or_toolsets == true"
+  - condition: "subtasks_require_different_toolsets == true"
     recommendation: multi_agent
     reason: "Specialist subagents with domain-specific models/tools are appropriate when subtasks have distinct expertise requirements"
-  - condition: "team_multi_agent_experience == 'low' OR availability_requirements == 'strict'"
+  - condition: "team_multi_agent_experience == 'low' OR latency_sensitive == true"
     recommendation: single_agent
     reason: "Low team experience or strict availability requirements make multi-agent operational overhead unacceptable"
   - condition: "single_agent_bottleneck_identified == true AND responsibility_split_boundary_clear == true"

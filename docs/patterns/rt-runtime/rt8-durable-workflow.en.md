@@ -6,8 +6,8 @@ pattern_id: RT-8
 facet: runtime
 requires: ["OB-1"]
 required_by: ["RT-4", "RT-7", "OB-2"]
-applies_when: [processes_taking_minutes_to_hours_including_human_approval_wait, high_availability_requirements_where_worker_failures_must_not_lose_work, strict_idempotency_and_audit_trail_requirements_in_regulated_industries]
-not_applicable_when: [real_time_responses_required_within_one_to_three_seconds, small_projects_where_workflow_engine_infrastructure_cost_not_justified]
+applies_when: [long_running, hitl_approval, audit_required, regulated_industry]
+not_applicable_when: [real_time_latency, poc_phase]
 risk_tiers: [2, 3, 4]
 key_technologies: [Temporal, AWS Step Functions, Azure Durable Functions, LangGraph Persistence, SQS, Azure Service Bus, RabbitMQ]
 ---
@@ -110,6 +110,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface WorkflowDefinitionRequest {
+          workflowId: string;
+          initialState: string;
+          inputPayload: object;
+        }
+        interface WorkflowDefinitionResponse {
+          executionId: string;
+          currentState: string;
+          startedAt: Date;
+        }
+        interface WorkflowDefinition {
+          workflowDefinition(req: WorkflowDefinitionRequest): Promise<WorkflowDefinitionResponse>;
+        }
+      python: |
+        @dataclass
+        class WorkflowDefinitionRequest:
+            workflow_id: str
+            initial_state: str
+            input_payload: dict
+        
+        @dataclass
+        class WorkflowDefinitionResponse:
+            execution_id: str
+            current_state: str
+            started_at: datetime
+        
+        class WorkflowDefinition(Protocol):
+            async def workflow_definition(self, req: WorkflowDefinitionRequest) -> WorkflowDefinitionResponse: ...
   - name: Activity Function
     description: "Wraps LLM calls and external API calls; implements idempotent execution and stores results in workflow history to avoid re-invocation on replay."
     input:
@@ -122,6 +152,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ActivityFunctionRequest {
+          activityId: string;
+          inputPayload: object;
+          executionId: string;
+          idempotencyKey: string;
+        }
+        interface ActivityFunctionResponse {
+          result: object;
+          completed: boolean;
+          cachedFromHistory: boolean;
+        }
+        interface ActivityFunction {
+          activityFunction(req: ActivityFunctionRequest): Promise<ActivityFunctionResponse>;
+        }
+      python: |
+        @dataclass
+        class ActivityFunctionRequest:
+            activity_id: str
+            input_payload: dict
+            execution_id: str
+            idempotency_key: str
+        
+        @dataclass
+        class ActivityFunctionResponse:
+            result: dict
+            completed: bool
+            cached_from_history: bool
+        
+        class ActivityFunction(Protocol):
+            async def activity_function(self, req: ActivityFunctionRequest) -> ActivityFunctionResponse: ...
   - name: Budget / Step Limit Guard
     description: "Enforces maximum step count, execution time, and cost limits in the workflow definition; triggers safe termination on breach."
     input:
@@ -134,6 +196,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface BudgetStepLimitGuardRequest {
+          executionId: string;
+          stepCount: number;
+          elapsedMs: number;
+          totalCost: number;
+        }
+        interface BudgetStepLimitGuardResponse {
+          withinBudget: boolean;
+          terminationReason: string;
+          terminatedAt: Date;
+        }
+        interface BudgetStepLimitGuard {
+          budgetStepLimitGuard(req: BudgetStepLimitGuardRequest): Promise<BudgetStepLimitGuardResponse>;
+        }
+      python: |
+        @dataclass
+        class BudgetStepLimitGuardRequest:
+            execution_id: str
+            step_count: int
+            elapsed_ms: int
+            total_cost: float
+        
+        @dataclass
+        class BudgetStepLimitGuardResponse:
+            within_budget: bool
+            termination_reason: str
+            terminated_at: datetime
+        
+        class BudgetStepLimitGuard(Protocol):
+            async def budget_step_limit_guard(self, req: BudgetStepLimitGuardRequest) -> BudgetStepLimitGuardResponse: ...
 ```
 
 ## Related Patterns

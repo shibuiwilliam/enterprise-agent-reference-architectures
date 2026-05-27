@@ -6,8 +6,8 @@ pattern_id: RT-6
 facet: runtime
 requires: ["RT-5"]
 required_by: []
-applies_when: [systems_holding_master_data_like_hr_accounting_customers, multiple_agents_accessing_same_sor_with_consistency_requirements, sox_or_internal_control_requiring_approval_and_audit_trail]
-not_applicable_when: [low_risk_stores_like_logs_or_temporary_data, immediate_update_required_real_time_use_cases]
+applies_when: [sor_writes, sox_internal_ctrl, multi_agent, audit_required]
+not_applicable_when: [real_time_latency, public_data_only]
 risk_tiers: [3, 4]
 key_technologies: [DDD Domain Service, Command Handler, JSON Schema Validation, Immutable Audit Log]
 ---
@@ -112,6 +112,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DomainServiceRequest {
+          commandEnvelope: object;
+          actorId: string;
+          validationRules: string[];
+        }
+        interface DomainServiceResponse {
+          transactionId: string;
+          executed: boolean;
+          beforeState: object;
+          afterState: object;
+        }
+        interface DomainService {
+          domainService(req: DomainServiceRequest): Promise<DomainServiceResponse>;
+        }
+      python: |
+        @dataclass
+        class DomainServiceRequest:
+            command_envelope: dict
+            actor_id: str
+            validation_rules: list[str]
+        
+        @dataclass
+        class DomainServiceResponse:
+            transaction_id: str
+            executed: bool
+            before_state: dict
+            after_state: dict
+        
+        class DomainService(Protocol):
+            async def domain_service(self, req: DomainServiceRequest) -> DomainServiceResponse: ...
   - name: SoE Draft Store
     description: "Holds agent-generated proposals (Slack/Notion/email) for human review before escalation to the domain service."
     input:
@@ -124,6 +156,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SoeDraftStoreRequest {
+          draftContent: object;
+          agentId: string;
+          reviewerId: string;
+          sourceSystem: string;
+        }
+        interface SoeDraftStoreResponse {
+          draftId: string;
+          createdAt: Date;
+          reviewUrl: string;
+        }
+        interface SoeDraftStore {
+          soeDraftStore(req: SoeDraftStoreRequest): Promise<SoeDraftStoreResponse>;
+        }
+      python: |
+        @dataclass
+        class SoeDraftStoreRequest:
+            draft_content: dict
+            agent_id: str
+            reviewer_id: str
+            source_system: str
+        
+        @dataclass
+        class SoeDraftStoreResponse:
+            draft_id: str
+            created_at: datetime
+            review_url: str
+        
+        class SoeDraftStore(Protocol):
+            async def soe_draft_store(self, req: SoeDraftStoreRequest) -> SoeDraftStoreResponse: ...
   - name: Audit Trail
     description: "Records before/after values, operator identity, and timestamp as an immutable log for internal control evidence."
     input:
@@ -136,6 +200,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AuditTrailRequest {
+          actorId: string;
+          agentId: string;
+          correlationId: string;
+          action: string;
+          resource: string;
+        }
+        interface AuditTrailResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface AuditTrail {
+          auditTrail(req: AuditTrailRequest): Promise<AuditTrailResponse>;
+        }
+      python: |
+        @dataclass
+        class AuditTrailRequest:
+            actor_id: str
+            agent_id: str
+            correlation_id: str
+            action: str
+            resource: str
+        
+        @dataclass
+        class AuditTrailResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class AuditTrail(Protocol):
+            async def audit_trail(self, req: AuditTrailRequest) -> AuditTrailResponse: ...
 ```
 
 ## Related Patterns

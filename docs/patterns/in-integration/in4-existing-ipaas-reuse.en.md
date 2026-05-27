@@ -6,8 +6,8 @@ pattern_id: IN-4
 facet: integration
 requires: ["IN-1"]
 required_by: []
-applies_when: [mulesoftworkato_boomi_or_esb_already_running_with_many_integration_flows, integration_team_and_ai_team_separate_with_difficult_knowledge_transfer, gradual_migration_needed_keeping_existing_flows_while_adding_agent_capability]
-not_applicable_when: [first_integration_project_with_no_existing_ipaas, existing_flow_quality_too_low_and_rebuild_more_rational, only_a_few_saas_connections_with_low_mcp_direct_implementation_effort]
+applies_when: [existing_ipaas, cross_saas, enterprise_scale]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3]
 key_technologies: [MuleSoft Anypoint Platform, Workato, Boomi AtomSphere, Apache Camel / IBM MQ, Apigee / Kong, "MCP Adapter (thin wrapper)"]
 ---
@@ -121,6 +121,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface McpAdapterRequest {
+          mcpToolCall: object;
+          iPaasEndpoint: string;
+          authToken: string;
+        }
+        interface McpAdapterResponse {
+          iPaasResult: object;
+          translatedResponse: object;
+        }
+        interface McpAdapter {
+          mcpAdapter(req: McpAdapterRequest): Promise<McpAdapterResponse>;
+        }
+      python: |
+        @dataclass
+        class McpAdapterRequest:
+            mcp_tool_call: dict
+            i_paas_endpoint: str
+            auth_token: str
+        
+        @dataclass
+        class McpAdapterResponse:
+            i_paas_result: dict
+            translated_response: dict
+        
+        class McpAdapter(Protocol):
+            async def mcp_adapter(self, req: McpAdapterRequest) -> McpAdapterResponse: ...
   - name: iPaaS Flow (existing)
     description: "Existing integration flow with its connection config, transformation logic, error handling, and monitoring retained as-is."
     input:
@@ -133,6 +161,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface IpaasFlowRequest {
+          flowId: string;
+          inputPayload: object;
+          triggerSource: string;
+        }
+        interface IpaasFlowResponse {
+          outputPayload: object;
+          executionId: string;
+          status: string;
+        }
+        interface IpaasFlow {
+          ipaasFlow(req: IpaasFlowRequest): Promise<IpaasFlowResponse>;
+        }
+      python: |
+        @dataclass
+        class IpaasFlowRequest:
+            flow_id: str
+            input_payload: dict
+            trigger_source: str
+        
+        @dataclass
+        class IpaasFlowResponse:
+            output_payload: dict
+            execution_id: str
+            status: str
+        
+        class IpaasFlow(Protocol):
+            async def ipaas_flow(self, req: IpaasFlowRequest) -> IpaasFlowResponse: ...
   - name: Contract Test Suite
     description: "Consumer-driven contract tests on the MCP adapter to auto-detect when iPaaS flow changes break the agent-facing interface."
     input:
@@ -145,6 +203,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ContractTestSuiteRequest {
+          adapterId: string;
+          contractVersion: string;
+          testScenarios: string[];
+        }
+        interface ContractTestSuiteResponse {
+          passed: boolean;
+          failures: string[];
+          testedAt: Date;
+        }
+        interface ContractTestSuite {
+          contractTestSuite(req: ContractTestSuiteRequest): Promise<ContractTestSuiteResponse>;
+        }
+      python: |
+        @dataclass
+        class ContractTestSuiteRequest:
+            adapter_id: str
+            contract_version: str
+            test_scenarios: list[str]
+        
+        @dataclass
+        class ContractTestSuiteResponse:
+            passed: bool
+            failures: list[str]
+            tested_at: datetime
+        
+        class ContractTestSuite(Protocol):
+            async def contract_test_suite(self, req: ContractTestSuiteRequest) -> ContractTestSuiteResponse: ...
 ```
 
 ## Related Patterns

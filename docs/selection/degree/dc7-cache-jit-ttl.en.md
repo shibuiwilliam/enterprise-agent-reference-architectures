@@ -20,7 +20,7 @@ rules:
     cache_ttl: long
     jit_credential_ttl: hours
     reason: "Stable, non-personalized, low-risk data can be cached aggressively to reduce latency and cost"
-  - condition: "data_freshness_requirement == 'real_time' OR personalized == true OR data_classification IN ['confidential', 'top_secret']"
+  - condition: "data_freshness_requirement == 'real_time' OR personalized == true OR data_classification IN ['department_confidential', 'top_secret']"
     cache_strategy: disabled
     jit_credential_ttl: minutes
     reason: "Real-time data, personalized responses, and confidential data must bypass cache; always fetch fresh with user credentials"
@@ -28,10 +28,10 @@ rules:
     cache_strategy: disabled
     similarity_threshold: high
     reason: "Side-effect operations and confidential results must not be cached; set high similarity threshold for semantic cache if used"
-  - condition: "permission_change_event_received == true OR employee_departure == true OR session_ended == true"
+  - condition: "permission_change_event == true"
     action: force_expire_jit_credentials
     reason: "Permission changes, departures, and session end must immediately revoke JIT credentials regardless of remaining TTL"
-  - condition: "cache_holding_stale_permissions == true"
+  - condition: "data_freshness_requirement != 'real_time' AND operation_has_side_effects == false"
     action: invalidate_cache_on_permission_event
     reason: "Stale cache invalidates permission fidelity achieved by ID-4 Permission Mirror; link cache invalidation to permission change events"
 ```

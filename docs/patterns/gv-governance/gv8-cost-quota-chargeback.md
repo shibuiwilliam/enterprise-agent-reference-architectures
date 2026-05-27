@@ -6,8 +6,8 @@ pattern_id: GV-8
 facet: governance
 requires: ["GV-1", "GV-5"]
 required_by: []
-applies_when: [thousands_of_users_operating_agents_where_cost_allocation_is_a_management_issue, enterprises_providing_ai_features_commercially_requiring_per_customer_profitability, multi_agent_configurations_with_high_inference_cost_explosion_risk]
-not_applicable_when: [small_poc_or_single_team_where_cost_measurement_overhead_exceeds_value, monthly_costs_are_negligible_and_department_allocation_unnecessary]
+applies_when: [enterprise_scale, cost_mgmt_needed, multi_agent]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [Token Meter, Cost Attribution Pipeline, Budget/Quota Manager, "FinOps Tools (CloudCost, Apptio)", Looker, Tableau, Power BI]
 ---
@@ -20,7 +20,7 @@ key_technologies: [Token Meter, Cost Attribution Pipeline, Budget/Quota Manager,
 
 ## 解決する企業課題
 
-LLM コストは従来のインフラコストと異なり、リクエスト数・トークン数・エージェント呼び出し深度に依存して非線形に増加する。部門が自由に使うと月末に予想外の請求が発生し、どの部門・プロジェクト・エージェントが費用を生んでいるか不明瞭になる。マルチエージェント構成では、1 つのユーザーリクエストが連鎖的に数百回の LLM 呼び出しを生む「推論爆発」が起きうる。顧客向け AI 機能を提供している企業では、顧客別採算を把握できなければプライシング設計もできない。コストを「インフラ費」として一括管理するだけでは「高いコストをかけているが成果が出ていない」エージェントを見逃し、AI 投資全体の説明責任が果たせなくなる。
+LLM コストは従来のインフラコストと異なり、リクエスト数・トークン数・エージェント呼び出し深度に依存して非線形に増加する。部門が自由に使うと月末に予想外の請求が発生し、どの部門・プロジェクト・エージェントが費用を生んでいるか不明瞭になる。マルチエージェント構成では、1 つのユーザーリクエストが連鎖的に数百回の LLM 呼び出しを生む「推論爆発」が起きうる。顧客向け AI 機能を提供している企業では、顧客別採算を把握できなければプライシング設計もできない。コストを「インフラ費」として一括管理するだけでは「高いコストをかけているが成果が出ていない」エージェントを見逃し、AI 投資全体の説明責任が果たせない。
 
 !!! tip "最小成立条件（MVP）"
     全 LLM 呼び出しに cost_center タグを付与し、部門別の月次トークン消費量と概算コストをダッシュボードに表示する。予算上限や縮退戦略は後から追加すればよい。
@@ -68,7 +68,7 @@ flowchart TD
     Attribution --> FinOps
 ```
 
-上限到達時の縮退戦略は段階的に設計する。予算の 80% でアラートを送信し、100% に達すると簡易モデル（コスト小）へ切り替えるか、キャッシュ結果で代替するか、人間への移譲を促す。マルチエージェント構成では再帰呼び出しによる推論コストの爆発が起きやすいため、エージェント単位の実行コスト上限を設けることが重要だ。
+上限到達時の縮退戦略は段階的に設計する。予算の 80% でアラートを送信し、100% に達したら簡易モデル（コスト小）へ切り替えるか、キャッシュ結果で代替するか、人間への移譲を促す。マルチエージェント構成では再帰呼び出しによる推論コストの爆発が起きやすいため、エージェント単位の実行コスト上限を設けることが重要だ。
 
 ## 向き／不向き
 
@@ -116,6 +116,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface CostCenterTagAttributionRequest {
+          requestId: string;
+          agentId: string;
+          costCenter: string;
+          projectId: string;
+        }
+        interface CostCenterTagAttributionResponse {
+          tagged: boolean;
+          aggregationKey: string;
+        }
+        interface CostCenterTagAttribution {
+          costCenterTagAttribution(req: CostCenterTagAttributionRequest): Promise<CostCenterTagAttributionResponse>;
+        }
+      python: |
+        @dataclass
+        class CostCenterTagAttributionRequest:
+            request_id: str
+            agent_id: str
+            cost_center: str
+            project_id: str
+        
+        @dataclass
+        class CostCenterTagAttributionResponse:
+            tagged: bool
+            aggregation_key: str
+        
+        class CostCenterTagAttribution(Protocol):
+            async def cost_center_tag_attribution(self, req: CostCenterTagAttributionRequest) -> CostCenterTagAttributionResponse: ...
   - name: Budget Alert & Degradation
     description: "Alerts at 80% budget; at 100% switches to cheaper model, cache-first mode, or queues requests; prevents runaway inference chains."
     input:
@@ -128,6 +158,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface BudgetAlertDegradationRequest {
+          costCenter: string;
+          currentSpend: number;
+          budgetLimit: number;
+        }
+        interface BudgetAlertDegradationResponse {
+          alertLevel: string;
+          degradationMode: string;
+          queueEnabled: boolean;
+        }
+        interface BudgetAlertDegradation {
+          budgetAlertDegradation(req: BudgetAlertDegradationRequest): Promise<BudgetAlertDegradationResponse>;
+        }
+      python: |
+        @dataclass
+        class BudgetAlertDegradationRequest:
+            cost_center: str
+            current_spend: float
+            budget_limit: float
+        
+        @dataclass
+        class BudgetAlertDegradationResponse:
+            alert_level: str
+            degradation_mode: str
+            queue_enabled: bool
+        
+        class BudgetAlertDegradation(Protocol):
+            async def budget_alert_degradation(self, req: BudgetAlertDegradationRequest) -> BudgetAlertDegradationResponse: ...
   - name: ROI Dashboard
     description: "Pairs cost data (denominator) with GV-10 business outcome data (numerator) to compute unit-cost-per-business-outcome per agent and department."
     input:
@@ -140,6 +200,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface RoiDashboardRequest {
+          userId: string;
+          period: string;
+        }
+        interface RoiDashboardResponse {
+          timeSavedMinutes: number;
+          taskCount: number;
+          weeklyTrend: object;
+        }
+        interface RoiDashboard {
+          roiDashboard(req: RoiDashboardRequest): Promise<RoiDashboardResponse>;
+        }
+      python: |
+        @dataclass
+        class RoiDashboardRequest:
+            user_id: str
+            period: str
+        
+        @dataclass
+        class RoiDashboardResponse:
+            time_saved_minutes: float
+            task_count: int
+            weekly_trend: dict
+        
+        class RoiDashboard(Protocol):
+            async def roi_dashboard(self, req: RoiDashboardRequest) -> RoiDashboardResponse: ...
 ```
 
 ## 関連パターン

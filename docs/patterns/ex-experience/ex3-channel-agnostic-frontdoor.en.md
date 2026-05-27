@@ -6,8 +6,8 @@ pattern_id: EX-3
 facet: experience
 requires: ["EX-1", "ID-2"]
 required_by: []
-applies_when: [incrementally_adding_channels_to_an_existing_agent, cross_channel_session_continuity_required, unified_permission_history_and_audit_management_needed]
-not_applicable_when: [permanently_using_single_channel_only, channels_are_completely_independent_services_with_no_session_sharing, cross_channel_session_sharing_not_needed_for_independent_tasks]
+applies_when: [multi_channel, audit_required, enterprise_scale]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [1, 2, 3]
 key_technologies: [Slack Bolt SDK, "Bot Framework (Teams)", REST/gRPC Adapter, Redis Session Store, JWT Session Claims, OIDC Federation]
 ---
@@ -115,6 +115,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ChannelAdapterRequest {
+          channelToken: string;
+          channelType: string;
+          rawPayload: object;
+        }
+        interface ChannelAdapterResponse {
+          unifiedSessionId: string;
+          normalizedInput: object;
+          principalId: string;
+        }
+        interface ChannelAdapter {
+          channelAdapter(req: ChannelAdapterRequest): Promise<ChannelAdapterResponse>;
+        }
+      python: |
+        @dataclass
+        class ChannelAdapterRequest:
+            channel_token: str
+            channel_type: str
+            raw_payload: dict
+        
+        @dataclass
+        class ChannelAdapterResponse:
+            unified_session_id: str
+            normalized_input: dict
+            principal_id: str
+        
+        class ChannelAdapter(Protocol):
+            async def channel_adapter(self, req: ChannelAdapterRequest) -> ChannelAdapterResponse: ...
   - name: Unified Session Store
     description: "Redis-backed session store that enables cross-channel session continuity; session handoff requires re-authentication or signature verification."
     input:
@@ -127,6 +157,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface UnifiedSessionStoreRequest {
+          sessionId: string;
+          principalId: string;
+          channelType: string;
+        }
+        interface UnifiedSessionStoreResponse {
+          session: object;
+          expiresAt: Date;
+        }
+        interface UnifiedSessionStore {
+          unifiedSessionStore(req: UnifiedSessionStoreRequest): Promise<UnifiedSessionStoreResponse>;
+        }
+      python: |
+        @dataclass
+        class UnifiedSessionStoreRequest:
+            session_id: str
+            principal_id: str
+            channel_type: str
+        
+        @dataclass
+        class UnifiedSessionStoreResponse:
+            session: dict
+            expires_at: datetime
+        
+        class UnifiedSessionStore(Protocol):
+            async def unified_session_store(self, req: UnifiedSessionStoreRequest) -> UnifiedSessionStoreResponse: ...
   - name: Unified Audit Logger
     description: "Ensures cross-channel operations appear in a single audit trail (OB-2), preventing session fragmentation from hiding activity."
     input:
@@ -139,6 +197,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface UnifiedAuditLoggerRequest {
+          sessionId: string;
+          principalId: string;
+          channelType: string;
+          action: string;
+        }
+        interface UnifiedAuditLoggerResponse {
+          auditId: string;
+          traceId: string;
+        }
+        interface UnifiedAuditLogger {
+          unifiedAuditLogger(req: UnifiedAuditLoggerRequest): Promise<UnifiedAuditLoggerResponse>;
+        }
+      python: |
+        @dataclass
+        class UnifiedAuditLoggerRequest:
+            session_id: str
+            principal_id: str
+            channel_type: str
+            action: str
+        
+        @dataclass
+        class UnifiedAuditLoggerResponse:
+            audit_id: str
+            trace_id: str
+        
+        class UnifiedAuditLogger(Protocol):
+            async def unified_audit_logger(self, req: UnifiedAuditLoggerRequest) -> UnifiedAuditLoggerResponse: ...
 ```
 
 ## Related Patterns

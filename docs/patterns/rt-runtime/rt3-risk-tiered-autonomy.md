@@ -6,8 +6,8 @@ pattern_id: RT-3
 facet: runtime
 requires: ["ID-7"]
 required_by: []
-applies_when: [diverse_operation_types_from_read_only_to_financial_transactions, enterprise_systems_involving_money_hr_customer_data, org_with_varying_risk_tolerance_per_department]
-not_applicable_when: [all_operations_are_simple_read_only, no_resources_to_design_tier_boundary_policies, deterministic_rpa_sufficient]
+applies_when: [write_operations, high_risk_ops, enterprise_scale, multi_department]
+not_applicable_when: [poc_phase, public_data_only]
 risk_tiers: [0, 1, 2, 3, 4, 5]
 key_technologies: ["OPA (Open Policy Agent)", Cedar, Risk Scoring Engine, Microsoft Purview, Varonis]
 ---
@@ -16,15 +16,15 @@ key_technologies: ["OPA (Open Policy Agent)", Cedar, Risk Scoring Engine, Micros
 
 ## 概要
 
-「社内文書の要約」と「顧客への返金処理」を同じ自律度で実行させるべきではない。このパターンは、操作のリスクを Tier 0（回答・要約のみ）から Tier 5（禁止/二者承認必須）まで段階化し、Tier ごとに自動実行・単独承認・複数承認・禁止をポリシーで強制する。「全自動は危険、全承認は遅い」という二項対立を解消し、低リスクは自動化しつつ高リスクは人間の判断を残す。
+「社内文書の要約」と「顧客への返金処理」を同じ自律度で実行させるべきではない。このパターンは操作のリスクを Tier 0（回答・要約のみ）から Tier 5（禁止/二者承認必須）まで段階化し、Tier ごとに自動実行・単独承認・複数承認・禁止をポリシーで強制する。「全自動は危険、全承認は遅い」という二項対立を解消し、低リスクは自動化しつつ高リスクには人間の判断を残す。
 
 ## 解決する企業課題
 
-エンタープライズにおけるエージェント展開では、「どこまで自律させてよいか」という判断を組織が下せないことが最大の障壁になる。「全操作を承認必須にする」運用は承認待ちのボトルネックを生みエージェントの価値を損なう。一方「全操作を自動化する」設計は、資金移動・権限付与・顧客への送信を誤実行するリスクを抱える。
+エンタープライズにおけるエージェント展開では、「どこまで自律させてよいか」という判断を組織が下せないことが最大の障壁になる。「全操作を承認必須にする」運用は承認待ちのボトルネックを生み、エージェントの価値を損なう。一方「全操作を自動化する」設計は、資金移動・権限付与・顧客への送信を誤実行するリスクを抱える。
 
-部門ごとにリスク感覚が異なる企業では、「このエージェントがここまで自動でやっていいのか」という基準が属人化しやすい。承認なしで実行した操作が後から問題になる場面も多く、コスト・監査・コンプライアンスの観点で表面化する。特に金銭・人事・顧客データに関わる操作は、一度実行すると取り消しが困難な不可逆性を持つ。
+部門ごとにリスク感覚が異なる企業では、「このエージェントがここまで自動でやっていいのか」という基準が属人化しやすい。承認なしで実行した操作が後から問題になるケースも多く、コスト・監査・コンプライアンスの観点で表面化する。特に金銭・人事・顧客データに関わる操作は、一度実行すると取り消しが困難な不可逆性を持つ。
 
-Tier 設計はこのトレードオフを明文化・強制することで、部門横断的な一貫性を確保し、スケールと統制を両立する。読み取り操作（Tier 0）をほぼすべての業務で自動化するだけでも大きな効率化が得られ、承認リソースを高リスク操作に集中できる。
+Tier 設計はこのトレードオフを明文化・強制することで部門横断的な一貫性を確保し、スケールと統制を両立させる。読み取り操作（Tier 0）をほぼすべての業務で自動化するだけでも大きな効率化が得られ、承認リソースを高リスク操作に集中できる。
 
 !!! tip "最小成立条件（MVP）"
     Tier 0（読み取り自動）と Tier 3（書き込みは承認必須）の2段階だけを定義し、ポリシーエンジンで強制する構成。中間 Tier は運用データを見ながら段階的に追加する。
@@ -35,7 +35,7 @@ Tier 設計はこのトレードオフを明文化・強制することで、部
 
 ## 解決策と設計
 
-解決策の核心は「操作の自律度をポリシーとして明文化し、エージェントの実行基盤側で強制すること」だ。リスク評価をエージェント自身の判断に委ねず、ポリシーエンジン（ID-7）が操作属性を評価して Tier を決定する構造にする。プロンプトでセキュリティを守る設計（脆弱）ではなく、実行基盤側での防御（堅牢）を実現するための要点はここにある。
+解決策の核心は「操作の自律度をポリシーとして明文化し、エージェントの実行基盤側で強制すること」だ。リスク評価をエージェント自身の判断に委ねず、ポリシーエンジン（ID-7）が操作属性を評価して Tier を決定する構造にする。プロンプトでセキュリティを守る設計（脆弱）ではなく実行基盤側での防御（堅牢）——その核心がここにある。
 
 6段階の Tier を定義する。
 
@@ -67,7 +67,7 @@ flowchart TD
     BLOCK --> AUDIT
 ```
 
-リスクスコアリングはポリシーエンジン（ID-7）が担う。対象リソースのデータ分類、操作の不可逆性（削除・送信・支払いなど）、影響を受けるユーザ・組織の範囲を入力として Tier を決定する。Tier は固定値ではなく、文脈によって動的に変わる。同じ「社内記録への書き込み」でも、対象が個人情報を含む場合は Tier 4 相当に引き上げられる。
+リスクスコアリングはポリシーエンジン（ID-7）が担う。対象リソースのデータ分類、操作の不可逆性（削除・送信・支払いなど）、影響を受けるユーザ・組織の範囲を入力として Tier を決定する。Tier は固定値ではなく文脈によって動的に変わる。同じ「社内記録への書き込み」でも、対象が個人情報を含む場合は Tier 4 相当に引き上げられる。
 
 ## 向き／不向き
 
@@ -90,9 +90,9 @@ flowchart TD
 
 **Tier 境界の固定化**。「この操作は常に Tier 2」という静的な分類は危険だ。同じ社内記録への書き込みでも、対象が個人情報を含む場合は Tier 4 相当になりうる。Tier はデータ分類・操作の不可逆性・実行者の職責を組み合わせて動的に決定する設計にすること。
 
-**Tier 5 の定義放棄**。「禁止操作など実際には必要ない」として Tier 5 を省略すると、予想外の操作経路が生じたときに防御手段がなくなる。生産 DB の直接削除、権限の無審査昇格、個人情報の一括エクスポートなどを明示的に Tier 5 として列挙しておく。
+**Tier 5 の定義放棄**。「禁止操作など実際には必要ない」として Tier 5 を省略すると、予想外の操作経路が生じたときに防御手段がなくなる。生産 DB の直接削除・権限の無審査昇格・個人情報の一括エクスポートなどを明示的に Tier 5 として列挙しておきたい。
 
-**自律度とデータ分類の切り離し**。Tier 設計でリスクレベルのみを見て操作対象のデータ分類を考慮しない実装は多い。機密レベルの高いデータへの読み取りでさえ、Tier 0 ではなく Tier 1〜2 に引き上げる必要がある。
+**自律度とデータ分類の切り離し**。Tier 設計でリスクレベルのみを見て操作対象のデータ分類を考慮しない実装は多い。機密度の高いデータへの読み取りでさえ、Tier 0 ではなく Tier 1〜2 に引き上げる必要がある。
 
 **承認疲れ**。Tier 3〜4 の操作が多すぎると、承認者が形骸的な承認をするようになる。Tier 1〜2 の範囲を適切に設計し、Tier 3 以上の件数を定期的に監視・最適化すること。
 
@@ -114,6 +114,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface RiskScoringEngineRequest {
+          operationType: string;
+          dataClassification: string;
+          irreversible: boolean;
+          affectedScope: string;
+        }
+        interface RiskScoringEngineResponse {
+          riskTier: number;
+          score: number;
+          scoringFactors: object;
+        }
+        interface RiskScoringEngine {
+          riskScoringEngine(req: RiskScoringEngineRequest): Promise<RiskScoringEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class RiskScoringEngineRequest:
+            operation_type: str
+            data_classification: str
+            irreversible: bool
+            affected_scope: str
+        
+        @dataclass
+        class RiskScoringEngineResponse:
+            risk_tier: int
+            score: float
+            scoring_factors: dict
+        
+        class RiskScoringEngine(Protocol):
+            async def risk_scoring_engine(self, req: RiskScoringEngineRequest) -> RiskScoringEngineResponse: ...
   - name: Policy Engine (ID-7)
     description: "Enforces the tier decision at the execution infrastructure level, preventing agents from self-reporting their own tier."
     input:
@@ -126,6 +158,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface PolicyEngineRequest {
+          inputId: string;
+          policyVersion: string;
+          attributes: object;
+        }
+        interface PolicyEngineResponse {
+          verdict: string;
+          reason: string;
+          requiresApproval: boolean;
+          redact: boolean;
+        }
+        interface PolicyEngine {
+          policyEngine(req: PolicyEngineRequest): Promise<PolicyEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyEngineRequest:
+            input_id: str
+            policy_version: str
+            attributes: dict
+        
+        @dataclass
+        class PolicyEngineResponse:
+            verdict: str
+            reason: str
+            requires_approval: bool
+            redact: bool
+        
+        class PolicyEngine(Protocol):
+            async def policy_engine(self, req: PolicyEngineRequest) -> PolicyEngineResponse: ...
   - name: Approval Workflow (RT-4)
     description: "Triggered for Tier 3–4 operations to route to human approval before execution proceeds."
     input:
@@ -138,6 +202,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ApprovalWorkflowRequest {
+          operationId: string;
+          riskTier: number;
+          requesterId: string;
+          operationDetails: object;
+        }
+        interface ApprovalWorkflowResponse {
+          approvalRequestId: string;
+          approved: boolean;
+          approvedBy: string;
+        }
+        interface ApprovalWorkflow {
+          approvalWorkflow(req: ApprovalWorkflowRequest): Promise<ApprovalWorkflowResponse>;
+        }
+      python: |
+        @dataclass
+        class ApprovalWorkflowRequest:
+            operation_id: str
+            risk_tier: int
+            requester_id: str
+            operation_details: dict
+        
+        @dataclass
+        class ApprovalWorkflowResponse:
+            approval_request_id: str
+            approved: bool
+            approved_by: str
+        
+        class ApprovalWorkflow(Protocol):
+            async def approval_workflow(self, req: ApprovalWorkflowRequest) -> ApprovalWorkflowResponse: ...
 ```
 
 ## 関連パターン

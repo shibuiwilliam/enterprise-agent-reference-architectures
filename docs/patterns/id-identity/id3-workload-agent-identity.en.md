@@ -6,8 +6,8 @@ pattern_id: ID-3
 facet: identity
 requires: ["ID-5", "ID-6"]
 required_by: []
-applies_when: [scheduled_batch_or_system_triggered_autonomous_execution_exists, audit_separation_of_autonomous_and_human_delegated_agent_operations_required, workloads_dynamically_scale_on_kubernetes_or_cloud]
-not_applicable_when: [all_agent_operations_originate_from_explicit_human_requests_id2_sufficient, poc_with_immature_id_infrastructure, small_single_fixed_server_batch_certificate_rotation_overhead_not_justified]
+applies_when: [autonomous_exec, audit_required, kubernetes_cloud]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [2, 3, 4]
 key_technologies: [SPIFFE/SPIRE, "SVID (Short-lived Certificate)", AWS IAM Roles Anywhere / IRSA, Microsoft Entra Workload Identity, Google Workload Identity Federation, mTLS]
 ---
@@ -109,6 +109,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface WorkloadCertificateIssuerRequest {
+          workloadId: string;
+          agentType: string;
+          requestedTtlSeconds: number;
+        }
+        interface WorkloadCertificateIssuerResponse {
+          certificate: string;
+          expiresAt: Date;
+          workloadIdentity: string;
+        }
+        interface WorkloadCertificateIssuer {
+          workloadCertificateIssuer(req: WorkloadCertificateIssuerRequest): Promise<WorkloadCertificateIssuerResponse>;
+        }
+      python: |
+        @dataclass
+        class WorkloadCertificateIssuerRequest:
+            workload_id: str
+            agent_type: str
+            requested_ttl_seconds: int
+        
+        @dataclass
+        class WorkloadCertificateIssuerResponse:
+            certificate: str
+            expires_at: datetime
+            workload_identity: str
+        
+        class WorkloadCertificateIssuer(Protocol):
+            async def workload_certificate_issuer(self, req: WorkloadCertificateIssuerRequest) -> WorkloadCertificateIssuerResponse: ...
   - name: Dual Representation Audit Record
     description: "Records workload_id as actor and human_id as subject (if present) per call; purely autonomous batches record only workload_id with policy/schedule reference."
     input:
@@ -121,6 +151,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DualRepresentationAuditRecordRequest {
+          workloadId: string;
+          humanId: string | null;
+          action: string;
+          resource: string;
+        }
+        interface DualRepresentationAuditRecordResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface DualRepresentationAuditRecord {
+          dualRepresentationAuditRecord(req: DualRepresentationAuditRecordRequest): Promise<DualRepresentationAuditRecordResponse>;
+        }
+      python: |
+        @dataclass
+        class DualRepresentationAuditRecordRequest:
+            workload_id: str
+            human_id: str | None
+            action: str
+            resource: str
+        
+        @dataclass
+        class DualRepresentationAuditRecordResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class DualRepresentationAuditRecord(Protocol):
+            async def dual_representation_audit_record(self, req: DualRepresentationAuditRecordRequest) -> DualRepresentationAuditRecordResponse: ...
   - name: Least-Privilege Workload Scope
     description: "Each autonomous agent's workload identity carries only the minimum permissions needed for its specific job; broader permissions are never inherited."
     input:
@@ -133,6 +193,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface LeastPrivilegeWorkloadScopeRequest {
+          workloadId: string;
+          jobType: string;
+          requiredScopes: string[];
+        }
+        interface LeastPrivilegeWorkloadScopeResponse {
+          grantedScopes: string[];
+          permissionToken: string;
+          expiresAt: Date;
+        }
+        interface LeastPrivilegeWorkloadScope {
+          leastPrivilegeWorkloadScope(req: LeastPrivilegeWorkloadScopeRequest): Promise<LeastPrivilegeWorkloadScopeResponse>;
+        }
+      python: |
+        @dataclass
+        class LeastPrivilegeWorkloadScopeRequest:
+            workload_id: str
+            job_type: str
+            required_scopes: list[str]
+        
+        @dataclass
+        class LeastPrivilegeWorkloadScopeResponse:
+            granted_scopes: list[str]
+            permission_token: str
+            expires_at: datetime
+        
+        class LeastPrivilegeWorkloadScope(Protocol):
+            async def least_privilege_workload_scope(self, req: LeastPrivilegeWorkloadScopeRequest) -> LeastPrivilegeWorkloadScopeResponse: ...
 ```
 
 ## Related Patterns

@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-社内の全文書を中央のベクトル DB に索引化すれば検索は速い。しかし Salesforce の商談レコードのように閲覧権限が人によって異なるデータまで索引化すると、権限変更の反映が追いつかず「見えてはいけないデータが見える」事故が起きる。中央集権レイクとフェデレーテッド Context Mesh（[KM-2](../../patterns/km-knowledge/km2-context-mesh.md)）のどちらを選ぶか——実際には「公開情報はレイク、機密は Mesh」というハイブリッドが必須であり、その線引きをどこで引くかが設計の核心だ。
+社内の全文書を中央のベクトル DB に索引化すれば検索は速い。しかし Salesforce の商談レコードのように閲覧権限が人によって異なるデータまで索引化すると、権限変更の反映が追いつかず「見えてはいけないデータが見える」事故が起きる。中央集権レイクとフェデレーテッド Context Mesh（[KM-2](../../patterns/km-knowledge/km2-context-mesh.md)）のどちらを選ぶか——実際には「公開情報はレイク、機密は Mesh」というハイブリッドが必須だ。その線引きをどこで引くかが設計の核心になる。
 
 <!-- machine-readable decision rules for coding agents -->
 ```yaml
@@ -23,7 +23,7 @@ decision_rules:
   - condition: "pre_indexed == true AND acl_required == true"
     recommendation: central_lake
     reason: "事前索引する場合もACL同梱（KM-1）を必須にすれば中央レイクを使ってよい"
-  - condition: "mix_of_public_and_confidential == true"
+  - condition: "data_sensitivity == 'public' AND confidential_data_in_result == true"
     recommendation: hybrid
     reason: "公開情報はレイクで高速に、機密情報はMeshで権限を維持して取得し、KM-3で統合ルーティングする"
 ```
@@ -47,7 +47,7 @@ decision_rules:
 
 ## ハイブリッド・段階的アプローチ
 
-ハイブリッドが必須だ。公開情報はレイクで高速に、機密情報は Mesh で権限を維持して取得する。両者を [KM-3 Knowledge Graph](../../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md) で統合的にルーティングする構成が実務的な落としどころである。
+ハイブリッドが必須だ。公開情報はレイクで高速に取得し、機密情報は Mesh で権限を維持して取得する。両者を [KM-3 Knowledge Graph](../../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md) で統合的にルーティングする構成が、実務的な落としどころになる。
 
 ## 関連パターン
 

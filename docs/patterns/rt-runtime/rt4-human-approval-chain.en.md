@@ -6,8 +6,8 @@ pattern_id: RT-4
 facet: runtime
 requires: ["RT-8", "ID-7"]
 required_by: []
-applies_when: [irreversible_high_risk_operations_like_fund_transfer_or_permission_grant, org_chart_is_maintained_and_approvers_can_be_resolved_by_role, existing_approval_workflow_tools_already_deployed]
-not_applicable_when: [strict_real_time_latency_requirements, low_risk_tier_0_1_operations, org_chart_not_maintained]
+applies_when: [high_risk_ops, hitl_approval, org_chart_maintained, write_operations]
+not_applicable_when: [real_time_latency, poc_phase]
 risk_tiers: [3, 4]
 key_technologies: [Temporal, AWS Step Functions, Workday HCM, Microsoft Entra, Slack Block Kit, ServiceNow, OpenTelemetry]
 ---
@@ -121,6 +121,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ApproverResolutionEngineRequest {
+          requestType: string;
+          riskTier: number;
+          requesterId: string;
+          resourceId: string;
+        }
+        interface ApproverResolutionEngineResponse {
+          approverId: string;
+          approverRole: string;
+          escalationChain: string[];
+        }
+        interface ApproverResolutionEngine {
+          approverResolutionEngine(req: ApproverResolutionEngineRequest): Promise<ApproverResolutionEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class ApproverResolutionEngineRequest:
+            request_type: str
+            risk_tier: int
+            requester_id: str
+            resource_id: str
+        
+        @dataclass
+        class ApproverResolutionEngineResponse:
+            approver_id: str
+            approver_role: str
+            escalation_chain: list[str]
+        
+        class ApproverResolutionEngine(Protocol):
+            async def approver_resolution_engine(self, req: ApproverResolutionEngineRequest) -> ApproverResolutionEngineResponse: ...
   - name: Workflow Tool Notification
     description: "Sends approval requests with action buttons to Slack or ServiceNow tasks so approvers can act within familiar tools."
     input:
@@ -133,6 +165,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface WorkflowToolNotificationRequest {
+          approverId: string;
+          approvalRequestId: string;
+          operationSummary: string;
+          actionButtons: string[];
+        }
+        interface WorkflowToolNotificationResponse {
+          notificationId: string;
+          deliveredAt: Date;
+          channel: string;
+        }
+        interface WorkflowToolNotification {
+          workflowToolNotification(req: WorkflowToolNotificationRequest): Promise<WorkflowToolNotificationResponse>;
+        }
+      python: |
+        @dataclass
+        class WorkflowToolNotificationRequest:
+            approver_id: str
+            approval_request_id: str
+            operation_summary: str
+            action_buttons: list[str]
+        
+        @dataclass
+        class WorkflowToolNotificationResponse:
+            notification_id: str
+            delivered_at: datetime
+            channel: str
+        
+        class WorkflowToolNotification(Protocol):
+            async def workflow_tool_notification(self, req: WorkflowToolNotificationRequest) -> WorkflowToolNotificationResponse: ...
   - name: Decision Log
     description: "Records the approver identity, decision (approve/deny/delegate), reason, and timestamp for internal control evidence."
     input:
@@ -145,6 +209,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface DecisionLogRequest {
+          projectId: string;
+          decisionText: string;
+          alternatives: string[];
+          rationale: string;
+          authorId: string;
+        }
+        interface DecisionLogResponse {
+          decisionId: string;
+          recordedAt: Date;
+        }
+        interface DecisionLog {
+          decisionLog(req: DecisionLogRequest): Promise<DecisionLogResponse>;
+        }
+      python: |
+        @dataclass
+        class DecisionLogRequest:
+            project_id: str
+            decision_text: str
+            alternatives: list[str]
+            rationale: str
+            author_id: str
+        
+        @dataclass
+        class DecisionLogResponse:
+            decision_id: str
+            recorded_at: datetime
+        
+        class DecisionLog(Protocol):
+            async def decision_log(self, req: DecisionLogRequest) -> DecisionLogResponse: ...
 ```
 
 ## Related Patterns

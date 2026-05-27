@@ -6,8 +6,8 @@ pattern_id: IN-3
 facet: integration
 requires: []
 required_by: []
-applies_when: [more_than_1000_users_sharing_same_saas_via_agents, batch_jobs_and_interactive_use_coexisting, monthly_saas_api_request_quota_exists]
-not_applicable_when: [poc_small_scale_with_ample_api_quota, agents_only_call_internal_apis_with_no_rate_limits, no_rate_limited_saas_in_use]
+applies_when: [high_api_volume, enterprise_scale, async_processing]
+not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3]
 key_technologies: ["Redis (Lua atomic bucket operations)", Envoy Rate Limit Service, Kong Rate Limiting Plugin, Apigee Quota Policy, RabbitMQ Priority Queue, Redis Sorted Set]
 ---
@@ -113,6 +113,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface TokenBucketPerSaasRequest {
+          agentId: string;
+          saasTarget: string;
+          requestCount: number;
+        }
+        interface TokenBucketPerSaasResponse {
+          allowed: boolean;
+          remainingQuota: number;
+          retryAfterMs: number;
+        }
+        interface TokenBucketPerSaas {
+          tokenBucketPerSaas(req: TokenBucketPerSaasRequest): Promise<TokenBucketPerSaasResponse>;
+        }
+      python: |
+        @dataclass
+        class TokenBucketPerSaasRequest:
+            agent_id: str
+            saas_target: str
+            request_count: int
+        
+        @dataclass
+        class TokenBucketPerSaasResponse:
+            allowed: bool
+            remaining_quota: int
+            retry_after_ms: int
+        
+        class TokenBucketPerSaas(Protocol):
+            async def token_bucket_per_saas(self, req: TokenBucketPerSaasRequest) -> TokenBucketPerSaasResponse: ...
   - name: Priority Queue
     description: "Separates interactive (high priority) and batch (low priority) requests; batch is scheduled to off-peak hours when quota is constrained."
     input:
@@ -125,6 +155,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface PriorityQueueRequest {
+          requestId: string;
+          priority: string;
+          saasTarget: string;
+          payload: object;
+        }
+        interface PriorityQueueResponse {
+          queued: boolean;
+          position: number;
+          estimatedDelayMs: number;
+        }
+        interface PriorityQueue {
+          priorityQueue(req: PriorityQueueRequest): Promise<PriorityQueueResponse>;
+        }
+      python: |
+        @dataclass
+        class PriorityQueueRequest:
+            request_id: str
+            priority: str
+            saas_target: str
+            payload: dict
+        
+        @dataclass
+        class PriorityQueueResponse:
+            queued: bool
+            position: int
+            estimated_delay_ms: int
+        
+        class PriorityQueue(Protocol):
+            async def priority_queue(self, req: PriorityQueueRequest) -> PriorityQueueResponse: ...
   - name: Centralized Retry Handler
     description: "Absorbs 429 responses from SaaS APIs and retries with exponential back-off plus jitter; individual agents receive only back-pressure signals, never raw 429s."
     input:
@@ -137,6 +199,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CentralizedRetryHandlerRequest {
+          requestId: string;
+          saasTarget: string;
+          payload: object;
+          attemptNumber: number;
+        }
+        interface CentralizedRetryHandlerResponse {
+          executed: boolean;
+          backPressureSignal: boolean;
+          finalStatus: number;
+        }
+        interface CentralizedRetryHandler {
+          centralizedRetryHandler(req: CentralizedRetryHandlerRequest): Promise<CentralizedRetryHandlerResponse>;
+        }
+      python: |
+        @dataclass
+        class CentralizedRetryHandlerRequest:
+            request_id: str
+            saas_target: str
+            payload: dict
+            attempt_number: int
+        
+        @dataclass
+        class CentralizedRetryHandlerResponse:
+            executed: bool
+            back_pressure_signal: bool
+            final_status: int
+        
+        class CentralizedRetryHandler(Protocol):
+            async def centralized_retry_handler(self, req: CentralizedRetryHandlerRequest) -> CentralizedRetryHandlerResponse: ...
 ```
 
 ## Related Patterns

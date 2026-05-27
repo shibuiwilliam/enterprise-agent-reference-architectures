@@ -6,8 +6,8 @@ pattern_id: RT-9
 facet: runtime
 requires: []
 required_by: []
-applies_when: [existing_itsm_or_customer_support_system_with_volume_growth_or_after_hours_need, unified_sla_and_ticket_history_management_required, agent_scope_is_clearly_definable_with_escalation_logic_implementable]
-not_applicable_when: [no_defined_tasks_and_general_purpose_assistant_preferred, sla_does_not_exist_and_priority_management_not_needed, no_human_escalation_target_exists]
+applies_when: [itsm_queue, enterprise_scale, async_processing]
+not_applicable_when: [single_team, real_time_latency]
 risk_tiers: [1, 2, 3]
 key_technologies: [ServiceNow, Zendesk, Jira Service Management, LangGraph, LangChain Agents]
 ---
@@ -105,6 +105,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface QueueConsumerRequest {
+          queueId: string;
+          agentId: string;
+          maxConcurrent: number;
+        }
+        interface QueueConsumerResponse {
+          taskId: string;
+          task: object;
+          assignedAt: Date;
+        }
+        interface QueueConsumer {
+          queueConsumer(req: QueueConsumerRequest): Promise<QueueConsumerResponse>;
+        }
+      python: |
+        @dataclass
+        class QueueConsumerRequest:
+            queue_id: str
+            agent_id: str
+            max_concurrent: int
+        
+        @dataclass
+        class QueueConsumerResponse:
+            task_id: str
+            task: dict
+            assigned_at: datetime
+        
+        class QueueConsumer(Protocol):
+            async def queue_consumer(self, req: QueueConsumerRequest) -> QueueConsumerResponse: ...
   - name: Escalation Handler
     description: "Evaluates whether a task is within scope; if not, documents findings and attempts to date in ticket comments before reassigning to a human."
     input:
@@ -117,6 +147,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface EscalationHandlerRequest {
+          taskId: string;
+          agentId: string;
+          inScopeCheck: boolean;
+          findings: string;
+        }
+        interface EscalationHandlerResponse {
+          escalated: boolean;
+          assignedTo: string;
+          escalationReason: string;
+        }
+        interface EscalationHandler {
+          escalationHandler(req: EscalationHandlerRequest): Promise<EscalationHandlerResponse>;
+        }
+      python: |
+        @dataclass
+        class EscalationHandlerRequest:
+            task_id: str
+            agent_id: str
+            in_scope_check: bool
+            findings: str
+        
+        @dataclass
+        class EscalationHandlerResponse:
+            escalated: bool
+            assigned_to: str
+            escalation_reason: str
+        
+        class EscalationHandler(Protocol):
+            async def escalation_handler(self, req: EscalationHandlerRequest) -> EscalationHandlerResponse: ...
   - name: SLA Monitor
     description: "Triggers automatic escalation to a human when SLA remaining time falls below threshold or processing cannot proceed."
     input:
@@ -129,6 +191,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SlaMonitorRequest {
+          taskId: string;
+          slaThresholdMs: number;
+          currentElapsedMs: number;
+        }
+        interface SlaMonitorResponse {
+          slaBreached: boolean;
+          alertSent: boolean;
+          escalatedTo: string;
+        }
+        interface SlaMonitor {
+          slaMonitor(req: SlaMonitorRequest): Promise<SlaMonitorResponse>;
+        }
+      python: |
+        @dataclass
+        class SlaMonitorRequest:
+            task_id: str
+            sla_threshold_ms: int
+            current_elapsed_ms: int
+        
+        @dataclass
+        class SlaMonitorResponse:
+            sla_breached: bool
+            alert_sent: bool
+            escalated_to: str
+        
+        class SlaMonitor(Protocol):
+            async def sla_monitor(self, req: SlaMonitorRequest) -> SlaMonitorResponse: ...
 ```
 
 ## Related Patterns

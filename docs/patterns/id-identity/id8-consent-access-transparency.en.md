@@ -6,8 +6,8 @@ pattern_id: ID-8
 facet: identity
 requires: ["ID-2", "ID-4", "ID-5"]
 required_by: []
-applies_when: [agents_accessing_personal_data_email_calendar_documents, privacy_regulations_gdpr_appi_requiring_user_consent_and_revocation, trust_building_needed_through_scope_visibility]
-not_applicable_when: [agent_handles_only_system_data_with_no_personal_data, fully_autonomous_batch_processing_with_no_human_operation_origin_id3_is_appropriate, poc_where_consent_flow_implementation_cost_cannot_be_justified]
+applies_when: [personal_data, privacy_regulation, adoption_challenge]
+not_applicable_when: [autonomous_exec, poc_phase, public_data_only]
 risk_tiers: [2, 3, 4]
 key_technologies: [Okta Consent, Microsoft Entra ID Admin/User Consent, OAuth 2.0 Scope Management, RFC 7009 Token Revocation, "Consent Registry (DB / Policy Store)", Internal Consent Portal]
 ---
@@ -127,6 +127,40 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ConsentScreenRequest {
+          userId: string;
+          agentId: string;
+          scope: string[];
+          purpose: string;
+          expiryDate: Date;
+        }
+        interface ConsentScreenResponse {
+          consentId: string;
+          granted: boolean;
+          recordedAt: Date;
+        }
+        interface ConsentScreen {
+          consentScreen(req: ConsentScreenRequest): Promise<ConsentScreenResponse>;
+        }
+      python: |
+        @dataclass
+        class ConsentScreenRequest:
+            user_id: str
+            agent_id: str
+            scope: list[str]
+            purpose: str
+            expiry_date: datetime
+        
+        @dataclass
+        class ConsentScreenResponse:
+            consent_id: str
+            granted: bool
+            recorded_at: datetime
+        
+        class ConsentScreen(Protocol):
+            async def consent_screen(self, req: ConsentScreenRequest) -> ConsentScreenResponse: ...
   - name: Consent Registry
     description: "Stores per-purpose consent entries (subject, scope, purpose, expiry); PDP checks registry before any delegated action proceeds."
     input:
@@ -139,6 +173,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ConsentRegistryRequest {
+          subject: string;
+          scope: string[];
+          purpose: string;
+          expiry: Date;
+        }
+        interface ConsentRegistryResponse {
+          consentId: string;
+          valid: boolean;
+          expiresAt: Date;
+        }
+        interface ConsentRegistry {
+          consentRegistry(req: ConsentRegistryRequest): Promise<ConsentRegistryResponse>;
+        }
+      python: |
+        @dataclass
+        class ConsentRegistryRequest:
+            subject: str
+            scope: list[str]
+            purpose: str
+            expiry: datetime
+        
+        @dataclass
+        class ConsentRegistryResponse:
+            consent_id: str
+            valid: bool
+            expires_at: datetime
+        
+        class ConsentRegistry(Protocol):
+            async def consent_registry(self, req: ConsentRegistryRequest) -> ConsentRegistryResponse: ...
   - name: Revocation & Instant Token Invalidation
     description: "User revocation in the dashboard immediately invalidates cached tokens via RFC 7009; Gateway re-checks consent state on each subsequent call."
     input:
@@ -151,6 +217,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface RevocationInstantTokenInvalidationRequest {
+          userId: string;
+          consentId: string;
+          reason: string;
+        }
+        interface RevocationInstantTokenInvalidationResponse {
+          revoked: boolean;
+          revokedAt: Date;
+          tokensInvalidated: number;
+        }
+        interface RevocationInstantTokenInvalidation {
+          revocationInstantTokenInvalidation(req: RevocationInstantTokenInvalidationRequest): Promise<RevocationInstantTokenInvalidationResponse>;
+        }
+      python: |
+        @dataclass
+        class RevocationInstantTokenInvalidationRequest:
+            user_id: str
+            consent_id: str
+            reason: str
+        
+        @dataclass
+        class RevocationInstantTokenInvalidationResponse:
+            revoked: bool
+            revoked_at: datetime
+            tokens_invalidated: int
+        
+        class RevocationInstantTokenInvalidation(Protocol):
+            async def revocation_instant_token_invalidation(self, req: RevocationInstantTokenInvalidationRequest) -> RevocationInstantTokenInvalidationResponse: ...
 ```
 
 ## Related Patterns

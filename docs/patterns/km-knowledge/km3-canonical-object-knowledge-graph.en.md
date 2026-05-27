@@ -6,8 +6,8 @@ pattern_id: KM-3
 facet: knowledge
 requires: []
 required_by: []
-applies_when: [many_systems_with_scattered_data_for_cross_department_ai, customer_person_entity_deduplication_needed, org_graph_used_as_cross_cutting_axis]
-not_applicable_when: [single_saas_workflow_with_no_cross_system_need, roi_insufficient_for_small_scale_data_integration, saas_proprietary_vocabulary_sufficient]
+applies_when: [multi_department, cross_saas, enterprise_scale]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [2, 3]
 key_technologies: [Canonical Data Model, GraphRAG, Neo4j, "Master Data Management (MDM)", Entity Resolution, Sansan]
 ---
@@ -112,6 +112,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface EntityResolutionEngineRequest {
+          entityIds: object[];
+          sourceSystems: string[];
+          matchThreshold: number;
+        }
+        interface EntityResolutionEngineResponse {
+          resolvedEntities: object[];
+          confidenceScores: number[];
+          lowConfidenceFlags: string[];
+        }
+        interface EntityResolutionEngine {
+          entityResolutionEngine(req: EntityResolutionEngineRequest): Promise<EntityResolutionEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class EntityResolutionEngineRequest:
+            entity_ids: list[dict]
+            source_systems: list[str]
+            match_threshold: float
+        
+        @dataclass
+        class EntityResolutionEngineResponse:
+            resolved_entities: list[dict]
+            confidence_scores: list[float]
+            low_confidence_flags: list[str]
+        
+        class EntityResolutionEngine(Protocol):
+            async def entity_resolution_engine(self, req: EntityResolutionEngineRequest) -> EntityResolutionEngineResponse: ...
   - name: Knowledge Graph (Neo4j)
     description: "Stores reference links and relationship metadata (member-of, owned-by, referenced-by) plus entitlement edges; actual data stays in source SaaS."
     input:
@@ -124,6 +154,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface KnowledgeGraphRequest {
+          entityId: string;
+          relationshipTypes: string[];
+          depth: number;
+        }
+        interface KnowledgeGraphResponse {
+          nodes: object[];
+          edges: object[];
+          entitlementEdges: object[];
+        }
+        interface KnowledgeGraph {
+          knowledgeGraph(req: KnowledgeGraphRequest): Promise<KnowledgeGraphResponse>;
+        }
+      python: |
+        @dataclass
+        class KnowledgeGraphRequest:
+            entity_id: str
+            relationship_types: list[str]
+            depth: int
+        
+        @dataclass
+        class KnowledgeGraphResponse:
+            nodes: list[dict]
+            edges: list[dict]
+            entitlement_edges: list[dict]
+        
+        class KnowledgeGraph(Protocol):
+            async def knowledge_graph(self, req: KnowledgeGraphRequest) -> KnowledgeGraphResponse: ...
   - name: Graph Traversal API
     description: "Enables agents to navigate related entities and then use KM-2 Context Providers to JIT-fetch actual data from source systems."
     input:
@@ -136,6 +196,34 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface GraphTraversalApiRequest {
+          startEntityId: string;
+          traversalPattern: string;
+          userId: string;
+        }
+        interface GraphTraversalApiResponse {
+          relatedEntities: object[];
+          paths: object[];
+        }
+        interface GraphTraversalApi {
+          graphTraversalApi(req: GraphTraversalApiRequest): Promise<GraphTraversalApiResponse>;
+        }
+      python: |
+        @dataclass
+        class GraphTraversalApiRequest:
+            start_entity_id: str
+            traversal_pattern: str
+            user_id: str
+        
+        @dataclass
+        class GraphTraversalApiResponse:
+            related_entities: list[dict]
+            paths: list[dict]
+        
+        class GraphTraversalApi(Protocol):
+            async def graph_traversal_api(self, req: GraphTraversalApiRequest) -> GraphTraversalApiResponse: ...
 ```
 
 ## Related Patterns

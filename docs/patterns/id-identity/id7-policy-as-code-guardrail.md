@@ -6,8 +6,8 @@ pattern_id: ID-7
 facet: identity
 requires: ["ID-6"]
 required_by: ["RT-3", "RT-4", "GV-4"]
-applies_when: [complex_regulatory_and_internal_rules_in_large_enterprises, regulated_industries_finance_healthcare_legal_public, multiple_agents_required_to_follow_common_rules]
-not_applicable_when: [simple_text_generation_only_use_cases, internal_faq_without_permission_control, personal_experimental_use]
+applies_when: [regulated_industry, enterprise_scale, multi_agent, high_risk_ops]
+not_applicable_when: [poc_phase, public_data_only, single_team]
 risk_tiers: [2, 3, 4, 5]
 key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, "PDP/PEP (ID-6)", "Policy Versioning (GV-6)", Git, "Approval Workflow (RT-4)", "Industry Policy Pack (GV-4)"]
 ---
@@ -22,9 +22,9 @@ key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, "PDP/PEP (ID-6)", "P
 
 エージェントの安全性をプロンプトで確保しようとする設計は、エンタープライズ環境で繰り返し失敗する。「機密情報を出力しないこと」「財務データへのアクセスは禁止」といった指示をシステムプロンプトに書いても、それはセキュリティ境界にならない。
 
-理由は明確である。プロンプトはプロンプトインジェクションで書き換えられうる。ユーザーの入力、外部ツールが返した内容、他エージェントが生成したメッセージのいずれも、悪意ある指示を含み得る。LLM はそれを文脈として処理し、元の安全指示を「上書き」した判断を出力することがある。
+理由は明確だ。プロンプトはプロンプトインジェクションで書き換えられうる。ユーザーの入力、外部ツールが返した内容、他エージェントが生成したメッセージのいずれも、悪意ある指示を含み得る。LLM はそれを文脈として処理し、元の安全指示を「上書き」した判断を出力することがある。
 
-さらに、大企業では規制・社内ルール・コンプライアンス要件が複雑に絡み合う。金融機関なら顧客情報の取り扱い規則、医療機関なら PHI のアクセス制限、上場企業ならインサイダー情報の管理規定——これらが各エージェントのプロンプトに散在すると、承認基準が属人化し変更管理も困難になる。「なぜそのアクションを許可したか」を監査者に説明できなくなってしまう。
+さらに、大企業では規制・社内ルール・コンプライアンス要件が複雑に絡み合う。金融機関なら顧客情報の取り扱い規則、医療機関なら PHI のアクセス制限、上場企業ならインサイダー情報の管理規定——これらが各エージェントのプロンプトに散在すると、承認基準が属人化して変更管理も困難になる。「なぜそのアクションを許可したか」を監査者に説明できなくなってしまう。
 
 解決すべき企業課題は次の4点にまとめられる。
 
@@ -42,7 +42,7 @@ key_technologies: ["OPA (Open Policy Agent) / Rego", Cedar, "PDP/PEP (ID-6)", "P
 
 ## 解決策と設計
 
-解決策はシンプルである。LLM の判断ループの外側に決定論的な Policy Engine を置き、エージェントのアクション提案をポリシー入力として渡して Engine が判定結果を返す。LLM は「何をしようとしているか」を構造化し、「やっていいか」の判断はポリシーに委ねる。
+解決策はシンプルだ。LLM の判断ループの外側に決定論的な Policy Engine を置き、エージェントのアクション提案をポリシー入力として渡して Engine が判定結果を返す。LLM は「何をしようとしているか」を構造化し、「やっていいか」の判断はポリシーに委ねる。
 
 エージェントの提案（アクション）を構造化した入力として Policy Engine に渡し、決定論的に判定する。Industry Policy Pack（[GV-4](../gv-governance/gv4-industry-policy-pack.md)）やエージェント憲法をポリシーとして展開する。
 
@@ -119,7 +119,7 @@ flowchart LR
 
 - 「プロンプトに『機密情報を出力するな』と書けば安全」という設計は禁忌だ。プロンプトインジェクションで容易に突破される。
 - ポリシーは Git で版管理し、変更はレビュー・テスト・カナリアを経てデプロイする（[GV-7](../gv-governance/gv7-evaluation-governance-pipeline.md)）。
-- ポリシーが増えすぎると競合が生じる。優先順位を明確にし、競合を検出する仕組みをあらかじめ持つ。
+- ポリシーが増えすぎると競合が生じる。優先順位を明確にし、競合を検出する仕組みをあらかじめ用意しておく。
 - deny の理由をユーザーに返すことで、正当な業務がブロックされた場合の改善サイクルを回せる。
 
 ## Interfaces
@@ -140,6 +140,42 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface StructuredPolicyInputRequest {
+          actor: string;
+          agent: string;
+          action: string;
+          resource: string;
+          dataClassification: string;
+          riskTier: number;
+          purpose: string;
+        }
+        interface StructuredPolicyInputResponse {
+          structured: boolean;
+          inputId: string;
+        }
+        interface StructuredPolicyInput {
+          structuredPolicyInput(req: StructuredPolicyInputRequest): Promise<StructuredPolicyInputResponse>;
+        }
+      python: |
+        @dataclass
+        class StructuredPolicyInputRequest:
+            actor: str
+            agent: str
+            action: str
+            resource: str
+            data_classification: str
+            risk_tier: int
+            purpose: str
+        
+        @dataclass
+        class StructuredPolicyInputResponse:
+            structured: bool
+            input_id: str
+        
+        class StructuredPolicyInput(Protocol):
+            async def structured_policy_input(self, req: StructuredPolicyInputRequest) -> StructuredPolicyInputResponse: ...
   - name: Policy Engine (OPA/Cedar)
     description: "Deterministically evaluates inputs against versioned policy rules; returns allow, deny, require_approval, or redact with reason."
     input:
@@ -152,6 +188,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface PolicyEngineRequest {
+          inputId: string;
+          policyVersion: string;
+          attributes: object;
+        }
+        interface PolicyEngineResponse {
+          verdict: string;
+          reason: string;
+          requiresApproval: boolean;
+          redact: boolean;
+        }
+        interface PolicyEngine {
+          policyEngine(req: PolicyEngineRequest): Promise<PolicyEngineResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyEngineRequest:
+            input_id: str
+            policy_version: str
+            attributes: dict
+        
+        @dataclass
+        class PolicyEngineResponse:
+            verdict: str
+            reason: str
+            requires_approval: bool
+            redact: bool
+        
+        class PolicyEngine(Protocol):
+            async def policy_engine(self, req: PolicyEngineRequest) -> PolicyEngineResponse: ...
   - name: Policy Version & Test Gate
     description: "Policy changes are managed in Git with PR review, automated test, and canary before production deployment; conflicts between policies are surfaced automatically."
     input:
@@ -164,6 +232,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface PolicyVersionTestGateRequest {
+          policyDiff: string;
+          prId: string;
+          testSuiteId: string;
+        }
+        interface PolicyVersionTestGateResponse {
+          passed: boolean;
+          conflicts: string[];
+          canarySlot: string;
+        }
+        interface PolicyVersionTestGate {
+          policyVersionTestGate(req: PolicyVersionTestGateRequest): Promise<PolicyVersionTestGateResponse>;
+        }
+      python: |
+        @dataclass
+        class PolicyVersionTestGateRequest:
+            policy_diff: str
+            pr_id: str
+            test_suite_id: str
+        
+        @dataclass
+        class PolicyVersionTestGateResponse:
+            passed: bool
+            conflicts: list[str]
+            canary_slot: str
+        
+        class PolicyVersionTestGate(Protocol):
+            async def policy_version_test_gate(self, req: PolicyVersionTestGateRequest) -> PolicyVersionTestGateResponse: ...
 ```
 
 ## 関連パターン

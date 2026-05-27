@@ -6,8 +6,8 @@ pattern_id: KM-5
 facet: knowledge
 requires: []
 required_by: []
-applies_when: [multiple_business_purposes_reusing_same_agent, high_classification_data_pii_hr_contracts_involved, gdpr_or_similar_data_purpose_restriction_compliance]
-not_applicable_when: [agent_specialized_for_single_purpose_with_fixed_data_scope, prototype_stage_with_undetermined_purpose, low_risk_internal_tools_handling_only_technical_docs]
+applies_when: [multi_purpose_agent, confidential_data, privacy_regulation, personal_data]
+not_applicable_when: [single_team, poc_phase, public_data_only]
 risk_tiers: [2, 3, 4]
 key_technologies: ["OPA (Open Policy Agent)", Microsoft Purview, Google Cloud DLP, AWS Macie, Context Builder, Token Budget Manager]
 ---
@@ -20,9 +20,9 @@ key_technologies: ["OPA (Open Policy Agent)", Microsoft Purview, Google Cloud DL
 
 ## 解決する企業課題
 
-「とりあえず全部渡す」設計は複数の問題を引き起こす。顧客データや人事データが業務上の必要性なしに LLM コンテキストに入る過剰共有、目的外利用（営業情報が経理業務のコンテキストに混入するなど）、そしてコンテキスト肥大化による lost-in-the-middle（長いコンテキストで LLM が重要情報を見失う現象）とコスト爆発——これらが典型的な問題だ。
+「とりあえず全部渡す」設計は複数の問題を引き起こす。顧客データや人事データが業務上の必要性なしに LLM コンテキストに入る過剰共有、目的外利用（営業情報が経理業務のコンテキストに混入するなど）、そしてコンテキスト肥大化による lost-in-the-middle（長いコンテキストで LLM が重要情報を見失う現象）とコスト爆発——これらが典型的な問題として挙げられる。
 
-GDPR などのデータ保護規制は「目的外利用の禁止」を要求する。エージェントが「アクセスできるすべてのデータ」をコンテキストに含めると、技術的に権限があってもデータ保護の観点では目的外利用となりうる。目的限定コンテキストはこれらを構造的に防ぐ。何の目的でどのデータを使ったかというコンプライアンスの証跡も、パッケージのバージョンタグとして記録する。
+GDPR などのデータ保護規制は「目的外利用の禁止」を要求する。エージェントが「アクセスできるすべてのデータ」をコンテキストに含めると、技術的に権限があってもデータ保護の観点では目的外利用となりうる。目的限定コンテキストはこれらを構造的に防ぐ手段だ。何の目的でどのデータを使ったかというコンプライアンスの証跡も、パッケージのバージョンタグとして記録できる。
 
 !!! tip "最小成立条件（MVP）"
     主要業務目的（例：sales_followup）を1つ定義し、許可データ種別とトークン上限を設定したコンテキストビルダーを実装する。目的ポリシーは JSON/YAML ファイルで十分であり、OPA 等の導入は後続でよい。
@@ -33,7 +33,7 @@ GDPR などのデータ保護規制は「目的外利用の禁止」を要求す
 
 ## 解決策と設計
 
-コンテキストビルダーは業務要求を受けると、目的ポリシーを参照してアクセス可能なデータと最大トークン数を決定する。データ取得後は DLP/分類エンジンでデータクラスを確認し、目的に許可されていないクラスのデータをフィルタリングまたはマスキングする。生成したパッケージにはバージョンと目的タグを付与してエージェントに渡す。
+コンテキストビルダーは業務要求を受け取ると、目的ポリシーを参照してアクセス可能なデータと最大トークン数を決定する。データ取得後は DLP/分類エンジンでデータクラスを確認し、目的に許可されていないクラスのデータをフィルタリングまたはマスキングする。生成したパッケージにはバージョンと目的タグを付与してエージェントに渡す。
 
 ```mermaid
 flowchart TB
@@ -91,8 +91,8 @@ flowchart TB
 !!! warning "目的定義の形骸化"
     目的ポリシーを最初だけ設定してメンテナンスしないと、ビジネス変化に伴い実際の業務と乖離する。目的定義はデータオーナーと定期的にレビューし、バージョン管理する。
 
-- 複数目的を一つのパッケージに混在させると目的境界が消える。パッケージは目的単位で分離する。
-- 目的ポリシーの変更が即座にコンテキストパッケージに反映されないと、古いポリシーで過剰データが渡り続ける。パッケージにバージョンタグを付与し、ポリシー更新時は再生成を強制する。
+- 複数目的を一つのパッケージに混在させると目的境界が消える。パッケージは目的単位で分離すること。
+- 目的ポリシーの変更がコンテキストパッケージに即座に反映されないと、古いポリシーで過剰データが渡り続ける。パッケージにバージョンタグを付与し、ポリシー更新時は再生成を強制する設計にする。
 
 ## Interfaces
 
@@ -112,6 +112,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface PurposePolicyStoreRequest {
+          purpose: string;
+          version: string;
+        }
+        interface PurposePolicyStoreResponse {
+          allowedDataTypes: string[];
+          connectedSystems: string[];
+          tokenLimit: number;
+          ttlSeconds: number;
+        }
+        interface PurposePolicyStore {
+          purposePolicyStore(req: PurposePolicyStoreRequest): Promise<PurposePolicyStoreResponse>;
+        }
+      python: |
+        @dataclass
+        class PurposePolicyStoreRequest:
+            purpose: str
+            version: str
+        
+        @dataclass
+        class PurposePolicyStoreResponse:
+            allowed_data_types: list[str]
+            connected_systems: list[str]
+            token_limit: int
+            ttl_seconds: int
+        
+        class PurposePolicyStore(Protocol):
+            async def purpose_policy_store(self, req: PurposePolicyStoreRequest) -> PurposePolicyStoreResponse: ...
   - name: Context Builder
     description: "Fetches data according to the purpose policy, passes it through DLP/classification checks, applies token budget, and attaches version and purpose tags."
     input:
@@ -124,6 +154,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface ContextBuilderRequest {
+          purpose: string;
+          userId: string;
+          rawDataSources: string[];
+        }
+        interface ContextBuilderResponse {
+          contextPackage: object;
+          tokenCount: number;
+          versionTag: string;
+          purposeTag: string;
+        }
+        interface ContextBuilder {
+          contextBuilder(req: ContextBuilderRequest): Promise<ContextBuilderResponse>;
+        }
+      python: |
+        @dataclass
+        class ContextBuilderRequest:
+            purpose: str
+            user_id: str
+            raw_data_sources: list[str]
+        
+        @dataclass
+        class ContextBuilderResponse:
+            context_package: dict
+            token_count: int
+            version_tag: str
+            purpose_tag: str
+        
+        class ContextBuilder(Protocol):
+            async def context_builder(self, req: ContextBuilderRequest) -> ContextBuilderResponse: ...
   - name: DLP / Classification Filter (KM-6)
     description: "Detects and masks or removes any data whose classification is not permitted by the current purpose before the package is handed to the LLM."
     input:
@@ -136,6 +198,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "詳細は本文の「解決策と設計」節を参照"
+    code_examples:
+      typescript: |
+        interface DlpClassificationFilterRequest {
+          contextPackage: object;
+          purpose: string;
+          maxClassification: string;
+        }
+        interface DlpClassificationFilterResponse {
+          filteredPackage: object;
+          redactedCount: number;
+          classificationBreaches: string[];
+        }
+        interface DlpClassificationFilter {
+          dlpClassificationFilter(req: DlpClassificationFilterRequest): Promise<DlpClassificationFilterResponse>;
+        }
+      python: |
+        @dataclass
+        class DlpClassificationFilterRequest:
+            context_package: dict
+            purpose: str
+            max_classification: str
+        
+        @dataclass
+        class DlpClassificationFilterResponse:
+            filtered_package: dict
+            redacted_count: int
+            classification_breaches: list[str]
+        
+        class DlpClassificationFilter(Protocol):
+            async def dlp_classification_filter(self, req: DlpClassificationFilterRequest) -> DlpClassificationFilterResponse: ...
 ```
 
 ## 関連パターン

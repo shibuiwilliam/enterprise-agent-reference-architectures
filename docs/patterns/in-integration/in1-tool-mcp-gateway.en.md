@@ -6,8 +6,8 @@ pattern_id: IN-1
 facet: integration
 requires: ["ID-6"]
 required_by: []
-applies_when: [multiple_tool_integrations_or_multiple_agents_sharing_common_tools, multiple_mcp_servers_in_the_environment, audit_and_authorization_required_for_tool_calls]
-not_applicable_when: [single_llm_chat_without_tool_use, single_tool_proof_of_concept, fully_isolated_experimental_environment]
+applies_when: [multi_agent, cross_saas, audit_required, enterprise_scale]
+not_applicable_when: [poc_phase, single_team, public_data_only]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [MCP Gateway, "API Gateway (Kong / Envoy)", "Tool Registry (JSON Schema)", Secret Manager, "OPA / Cedar (ID-6)", Idempotency Key]
 ---
@@ -114,6 +114,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ToolCatalogRequest {
+          toolId: string;
+          version: string;
+        }
+        interface ToolCatalogResponse {
+          schema: object;
+          requiredPermissions: string[];
+          estimatedCost: number;
+          enabled: boolean;
+        }
+        interface ToolCatalog {
+          toolCatalog(req: ToolCatalogRequest): Promise<ToolCatalogResponse>;
+        }
+      python: |
+        @dataclass
+        class ToolCatalogRequest:
+            tool_id: str
+            version: str
+        
+        @dataclass
+        class ToolCatalogResponse:
+            schema: dict
+            required_permissions: list[str]
+            estimated_cost: float
+            enabled: bool
+        
+        class ToolCatalog(Protocol):
+            async def tool_catalog(self, req: ToolCatalogRequest) -> ToolCatalogResponse: ...
   - name: Auth / Authz Layer (ID-6 PDP/PEP)
     description: "Validates agent identity and evaluates per-tool authorization policy before forwarding the request; credentials are held in Secret Manager not passed to agents."
     input:
@@ -126,6 +156,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AuthAuthzLayerRequest {
+          agentId: string;
+          toolId: string;
+          oboToken: string;
+        }
+        interface AuthAuthzLayerResponse {
+          authorized: boolean;
+          forwardHeaders: object;
+          reason: string;
+        }
+        interface AuthAuthzLayer {
+          authAuthzLayer(req: AuthAuthzLayerRequest): Promise<AuthAuthzLayerResponse>;
+        }
+      python: |
+        @dataclass
+        class AuthAuthzLayerRequest:
+            agent_id: str
+            tool_id: str
+            obo_token: str
+        
+        @dataclass
+        class AuthAuthzLayerResponse:
+            authorized: bool
+            forward_headers: dict
+            reason: str
+        
+        class AuthAuthzLayer(Protocol):
+            async def auth_authz_layer(self, req: AuthAuthzLayerRequest) -> AuthAuthzLayerResponse: ...
   - name: Audit Recorder
     description: "Records every tool invocation with its input, output, actor, agent ID, and correlation ID for cross-system tracing."
     input:
@@ -138,6 +198,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface AuditRecorderRequest {
+          actorId: string;
+          agentId: string;
+          correlationId: string;
+          action: string;
+          resource: string;
+        }
+        interface AuditRecorderResponse {
+          auditId: string;
+          recordedAt: Date;
+        }
+        interface AuditRecorder {
+          auditRecorder(req: AuditRecorderRequest): Promise<AuditRecorderResponse>;
+        }
+      python: |
+        @dataclass
+        class AuditRecorderRequest:
+            actor_id: str
+            agent_id: str
+            correlation_id: str
+            action: str
+            resource: str
+        
+        @dataclass
+        class AuditRecorderResponse:
+            audit_id: str
+            recorded_at: datetime
+        
+        class AuditRecorder(Protocol):
+            async def audit_recorder(self, req: AuditRecorderRequest) -> AuditRecorderResponse: ...
 ```
 
 ## Related Patterns

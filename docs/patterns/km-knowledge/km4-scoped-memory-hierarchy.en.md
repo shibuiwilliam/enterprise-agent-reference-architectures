@@ -6,8 +6,8 @@ pattern_id: KM-4
 facet: knowledge
 requires: []
 required_by: []
-applies_when: [continuous_use_spanning_multiple_departments_or_projects, agents_handling_customer_information, long_term_projects_where_context_accumulation_is_important]
-not_applicable_when: [completely_stateless_one_off_use, read_only_reference_ai_without_memory_needed, one_time_question_answer_sessions]
+applies_when: [persistent_memory, multi_department, personal_data, project_team]
+not_applicable_when: [single_team, poc_phase]
 risk_tiers: [2, 3]
 key_technologies: [Memory Store, "Vector DB (Namespace isolation)", ACL, TTL, Memory Review UI]
 ---
@@ -105,6 +105,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface MemoryScopePartitionerRequest {
+          scope: string;
+          userId: string;
+          projectId: string;
+          classification: string;
+        }
+        interface MemoryScopePartitionerResponse {
+          namespaceId: string;
+          encryptionKeyId: string;
+          partitionedAt: Date;
+        }
+        interface MemoryScopePartitioner {
+          memoryScopePartitioner(req: MemoryScopePartitionerRequest): Promise<MemoryScopePartitionerResponse>;
+        }
+      python: |
+        @dataclass
+        class MemoryScopePartitionerRequest:
+            scope: str
+            user_id: str
+            project_id: str
+            classification: str
+        
+        @dataclass
+        class MemoryScopePartitionerResponse:
+            namespace_id: str
+            encryption_key_id: str
+            partitioned_at: datetime
+        
+        class MemoryScopePartitioner(Protocol):
+            async def memory_scope_partitioner(self, req: MemoryScopePartitionerRequest) -> MemoryScopePartitionerResponse: ...
   - name: Lifecycle Event Handler
     description: "Listens for org events (project closed, employee departed, transfer) and triggers memory archive/expiry and RBAC group removal automatically."
     input:
@@ -117,6 +149,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface LifecycleEventHandlerRequest {
+          eventType: string;
+          entityId: string;
+          userId: string;
+          timestamp: Date;
+        }
+        interface LifecycleEventHandlerResponse {
+          memoryArchived: boolean;
+          rbacGroupsRemoved: string[];
+          processedAt: Date;
+        }
+        interface LifecycleEventHandler {
+          lifecycleEventHandler(req: LifecycleEventHandlerRequest): Promise<LifecycleEventHandlerResponse>;
+        }
+      python: |
+        @dataclass
+        class LifecycleEventHandlerRequest:
+            event_type: str
+            entity_id: str
+            user_id: str
+            timestamp: datetime
+        
+        @dataclass
+        class LifecycleEventHandlerResponse:
+            memory_archived: bool
+            rbac_groups_removed: list[str]
+            processed_at: datetime
+        
+        class LifecycleEventHandler(Protocol):
+            async def lifecycle_event_handler(self, req: LifecycleEventHandlerRequest) -> LifecycleEventHandlerResponse: ...
   - name: Memory Review UI
     description: "Allows individuals to inspect, correct, and erase their personal memory scope to satisfy Right to Erasure requirements."
     input:
@@ -129,6 +193,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface MemoryReviewUiRequest {
+          userId: string;
+          memoryScope: string;
+          action: string;
+        }
+        interface MemoryReviewUiResponse {
+          entries: object[];
+          erasedCount: number;
+          updatedAt: Date;
+        }
+        interface MemoryReviewUi {
+          memoryReviewUi(req: MemoryReviewUiRequest): Promise<MemoryReviewUiResponse>;
+        }
+      python: |
+        @dataclass
+        class MemoryReviewUiRequest:
+            user_id: str
+            memory_scope: str
+            action: str
+        
+        @dataclass
+        class MemoryReviewUiResponse:
+            entries: list[dict]
+            erased_count: int
+            updated_at: datetime
+        
+        class MemoryReviewUi(Protocol):
+            async def memory_review_ui(self, req: MemoryReviewUiRequest) -> MemoryReviewUiResponse: ...
 ```
 
 ## Related Patterns

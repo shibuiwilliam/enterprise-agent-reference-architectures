@@ -6,7 +6,7 @@ pattern_id: OB-2
 facet: observability
 requires: ["GV-1", "RT-8"]
 required_by: ["GV-9"]
-applies_when: [all_production_ai_deployments, regulated_industries_requiring_full_action_traceability]
+applies_when: [prod_deployment, audit_required, regulated_industry]
 not_applicable_when: []
 risk_tiers: [0, 1, 2, 3, 4, 5]
 key_technologies: [Splunk, Microsoft Sentinel, Salesforce Shield, Google Workspace Audit, Okta System Log, OpenTelemetry Trace ID / Span ID, "Event Store (append-only / WORM)"]
@@ -120,6 +120,42 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface ThreePartyAuditRecordRequest {
+          principalId: string;
+          agentId: string;
+          toolId: string;
+          inputHash: string;
+          outputHash: string;
+          policyDecision: string;
+          delegationChain: string[];
+        }
+        interface ThreePartyAuditRecordResponse {
+          auditId: string;
+          appendedAt: Date;
+        }
+        interface ThreePartyAuditRecord {
+          threePartyAuditRecord(req: ThreePartyAuditRecordRequest): Promise<ThreePartyAuditRecordResponse>;
+        }
+      python: |
+        @dataclass
+        class ThreePartyAuditRecordRequest:
+            principal_id: str
+            agent_id: str
+            tool_id: str
+            input_hash: str
+            output_hash: str
+            policy_decision: str
+            delegation_chain: list[str]
+        
+        @dataclass
+        class ThreePartyAuditRecordResponse:
+            audit_id: str
+            appended_at: datetime
+        
+        class ThreePartyAuditRecord(Protocol):
+            async def three_party_audit_record(self, req: ThreePartyAuditRecordRequest) -> ThreePartyAuditRecordResponse: ...
   - name: Correlation ID Stitcher
     description: "Uses OpenTelemetry Trace ID / Span ID to join agent-side audit records with SaaS-side audit logs (Salesforce Shield, Okta System Log) enabling cross-system investigation."
     input:
@@ -132,6 +168,38 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface CorrelationIdStitcherRequest {
+          traceId: string;
+          spanId: string;
+          saasName: string;
+          timeWindowStart: Date;
+          timeWindowEnd: Date;
+        }
+        interface CorrelationIdStitcherResponse {
+          stitchedEvents: object[];
+          crossSystemView: object;
+        }
+        interface CorrelationIdStitcher {
+          correlationIdStitcher(req: CorrelationIdStitcherRequest): Promise<CorrelationIdStitcherResponse>;
+        }
+      python: |
+        @dataclass
+        class CorrelationIdStitcherRequest:
+            trace_id: str
+            span_id: str
+            saas_name: str
+            time_window_start: datetime
+            time_window_end: datetime
+        
+        @dataclass
+        class CorrelationIdStitcherResponse:
+            stitched_events: list[dict]
+            cross_system_view: dict
+        
+        class CorrelationIdStitcher(Protocol):
+            async def correlation_id_stitcher(self, req: CorrelationIdStitcherRequest) -> CorrelationIdStitcherResponse: ...
   - name: SIEM Integration
     description: "Forwards normalized audit events to Splunk or Microsoft Sentinel so that agent actions appear alongside human actions in the same correlation queries."
     input:
@@ -144,6 +212,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface SiemIntegrationRequest {
+          auditEvent: object;
+          eventType: string;
+          severity: string;
+        }
+        interface SiemIntegrationResponse {
+          forwarded: boolean;
+          siemEventId: string;
+          forwardedAt: Date;
+        }
+        interface SiemIntegration {
+          siemIntegration(req: SiemIntegrationRequest): Promise<SiemIntegrationResponse>;
+        }
+      python: |
+        @dataclass
+        class SiemIntegrationRequest:
+            audit_event: dict
+            event_type: str
+            severity: str
+        
+        @dataclass
+        class SiemIntegrationResponse:
+            forwarded: bool
+            siem_event_id: str
+            forwarded_at: datetime
+        
+        class SiemIntegration(Protocol):
+            async def siem_integration(self, req: SiemIntegrationRequest) -> SiemIntegrationResponse: ...
 ```
 
 ## Related Patterns

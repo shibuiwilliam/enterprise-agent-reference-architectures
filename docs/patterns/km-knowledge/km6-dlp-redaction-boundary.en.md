@@ -6,8 +6,8 @@ pattern_id: KM-6
 facet: knowledge
 requires: []
 required_by: []
-applies_when: [any_enterprise_use_case_with_possible_pii_secrets_or_contract_data, external_llm_api_in_use, gdpr_appi_or_similar_pii_processing_control_audit_required]
-not_applicable_when: [public_information_only_internal_tool_no_pii, completely_air_gapped_on_premise_no_external_transmission_possible, extremely_strict_real_time_latency_requirements_dlp_scan_bottleneck]
+applies_when: [personal_data, external_llm_api, privacy_regulation, confidential_data]
+not_applicable_when: [public_data_only, real_time_latency]
 risk_tiers: [2, 3, 4, 5]
 key_technologies: [Microsoft Purview, Google Cloud DLP / Sensitive Data Protection, "Presidio (Microsoft OSS)", GitGuardian, truffleHog, HashiCorp Vault Transit Secrets Engine, "Format-Preserving Encryption (FPE)", Fluentd / Logstash masking plugins]
 ---
@@ -116,6 +116,36 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface InputDlpGateRequest {
+          userInput: string;
+          ragChunks: string[];
+          classification: string;
+        }
+        interface InputDlpGateResponse {
+          sanitizedInput: string;
+          maskedTokens: object[];
+          routeTo: string;
+        }
+        interface InputDlpGate {
+          inputDlpGate(req: InputDlpGateRequest): Promise<InputDlpGateResponse>;
+        }
+      python: |
+        @dataclass
+        class InputDlpGateRequest:
+            user_input: str
+            rag_chunks: list[str]
+            classification: str
+        
+        @dataclass
+        class InputDlpGateResponse:
+            sanitized_input: str
+            masked_tokens: list[dict]
+            route_to: str
+        
+        class InputDlpGate(Protocol):
+            async def input_dlp_gate(self, req: InputDlpGateRequest) -> InputDlpGateResponse: ...
   - name: Output DLP Gate
     description: "Post-scans LLM output and tool results for residual sensitive data before returning to the user or writing to logs."
     input:
@@ -128,6 +158,32 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface OutputDlpGateRequest {
+          llmOutput: string;
+          toolResults: object[];
+        }
+        interface OutputDlpGateResponse {
+          sanitizedOutput: string;
+          redactedFields: string[];
+        }
+        interface OutputDlpGate {
+          outputDlpGate(req: OutputDlpGateRequest): Promise<OutputDlpGateResponse>;
+        }
+      python: |
+        @dataclass
+        class OutputDlpGateRequest:
+            llm_output: str
+            tool_results: list[dict]
+        
+        @dataclass
+        class OutputDlpGateResponse:
+            sanitized_output: str
+            redacted_fields: list[str]
+        
+        class OutputDlpGate(Protocol):
+            async def output_dlp_gate(self, req: OutputDlpGateRequest) -> OutputDlpGateResponse: ...
   - name: Log Filter
     description: "Strips PII from log collection pipeline (Fluentd/Logstash) so that audit logs do not contain plaintext sensitive data."
     input:
@@ -140,6 +196,32 @@ interfaces:
     protocol: "REST / gRPC"
     implementation_hints:
       - "See the Solution and Design section for details"
+    code_examples:
+      typescript: |
+        interface LogFilterRequest {
+          logEntry: object;
+          pipelineStage: string;
+        }
+        interface LogFilterResponse {
+          filteredEntry: object;
+          strippedFields: string[];
+        }
+        interface LogFilter {
+          logFilter(req: LogFilterRequest): Promise<LogFilterResponse>;
+        }
+      python: |
+        @dataclass
+        class LogFilterRequest:
+            log_entry: dict
+            pipeline_stage: str
+        
+        @dataclass
+        class LogFilterResponse:
+            filtered_entry: dict
+            stripped_fields: list[str]
+        
+        class LogFilter(Protocol):
+            async def log_filter(self, req: LogFilterRequest) -> LogFilterResponse: ...
 ```
 
 ## Related Patterns
