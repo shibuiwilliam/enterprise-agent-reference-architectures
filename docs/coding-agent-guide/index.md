@@ -92,8 +92,8 @@ status: done
 
 ## 関連ページ
 
-- [価値ユースケース選定ガイド](../integration/usecase-selection-guide.md)
+- [価値ユースケース選定ガイド](../decisions/decision-guide.md)
 - [組み合わせレシピ](../integration/recipe.md)
-- [定着・アダプション](../integration/adoption.md)
+- [定着・アダプション](../decisions/decision-guide.md)
 - [GV-10 三層価値計測](../decisions/gv-governance/gv-d7-value-measurement.md)
 - [意思決定の手引き](../decisions/decision-guide.md)

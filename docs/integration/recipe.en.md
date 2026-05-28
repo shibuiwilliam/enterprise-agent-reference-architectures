@@ -53,7 +53,7 @@ Without this pattern, the HR department sets up its own HR agent, the sales depa
 Without this pattern, each agent implements its own authentication, log formats are not unified, and some agents continue to run without policy applied. Cost management and understanding usage patterns may also become difficult.
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Begin measuring [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) Layer 0 (adoption rate, retention rate). Implement Phase 1 of [Adoption & Change Management](adoption.md) at this stage (guided first-time experience, limited use case rollout) to increase utilization.
+    Begin measuring [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) Layer 0 (adoption rate, retention rate). Implement Phase 1 of [Adoption & Change Management](../decisions/decision-guide.md) at this stage (guided first-time experience, limited use case rollout) to increase utilization.
 
 ## Recipe 3: Actual Business Execution
 
@@ -72,7 +72,7 @@ Without this pattern, the agent searches all documents, and the content of confi
 **[KM-2 Context Mesh](../decisions/km-knowledge/km-d1-context-supply.md)** is a pattern for assembling cross-cutting context spanning multiple SaaS and internal systems while preserving permissions. Building a response combining "Salesforce customer information + Confluence proposal + Jira task status" requires cross-cutting context collection while having access rights to each system.
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Confirm Layer 1 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) improvements (processing time reduction, information retrieval time reduction). Promote habit formation in Phase 2 of [Adoption & Change Management](adoption.md) (champion program, embedding in business processes).
+    Confirm Layer 1 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) improvements (processing time reduction, information retrieval time reduction). Promote habit formation in Phase 2 of [Adoption & Change Management](../decisions/decision-guide.md) (champion program, embedding in business processes).
 
 ## Recipe 4: Value Realization (Cost-Reduction + Revenue Automation)
 
@@ -98,7 +98,7 @@ Traditional 2-phase commits cannot be used for distributed transactions across S
 For this recipe to function, the security foundation from Recipe 1 (especially ID-7 Policy-as-Code) and state persistence of [RT-8](../decisions/rt-runtime/rt-d4-long-running-reliability.md) must already be in place.
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Track the causal chain from Layer 1 → Layer 2 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) (processing time reduction → labor cost reduction, win rate improvement → revenue improvement). Avoid value-realization anti-patterns in [Adoption & Change Management](adoption.md) (automating broken processes, uncaptured free time, etc.). Prioritize high-value-potential use cases in [AI Investment Portfolio](portfolio.md).
+    Track the causal chain from Layer 1 → Layer 2 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) (processing time reduction → labor cost reduction, win rate improvement → revenue improvement). Avoid value-realization anti-patterns in [Adoption & Change Management](../decisions/decision-guide.md) (automating broken processes, uncaptured free time, etc.). Prioritize high-value-potential use cases in [AI Investment Portfolio](../decisions/decision-guide.md).
 
 ```mermaid
 sequenceDiagram
@@ -138,7 +138,7 @@ The governance backbone is not something placed before or after a specific recip
     The governance backbone is not a "governance layer added later." GV-1 and GV-5 should begin setup at the same time as Recipe 1, and ideally registration and recording function from the moment the first agent starts running. Adding them later results in large inventory and registration costs for existing agents.
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Report Layer 2 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) improvements (business KPIs: revenue impact, cost reduction, decision speed) to management. Advance company-wide expansion in Phase 3 of [Adoption & Change Management](adoption.md) (use case expansion, results sharing, horizontal rollout). Decide on expansion, improvement, and withdrawal in the [AI Investment Portfolio](portfolio.md) quarterly review and determine reinvestment targets.
+    Report Layer 2 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) improvements (business KPIs: revenue impact, cost reduction, decision speed) to management. Advance company-wide expansion in Phase 3 of [Adoption & Change Management](../decisions/decision-guide.md) (use case expansion, results sharing, horizontal rollout). Decide on expansion, improvement, and withdrawal in the [AI Investment Portfolio](../decisions/decision-guide.md) quarterly review and determine reinvestment targets.
 
 ---
 
@@ -247,4 +247,4 @@ The value track is not independent from the safety track. They synchronize at th
 This design creates a state where "value use cases are also ready when the safety foundation is complete," minimizing the gap between foundation building and value realization.
 
 !!! note "Connection to the Value Loop"
-    Value created in quick wins is measured with [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md), utilization is increased with [Adoption & Change Management](adoption.md), and reinvestment decisions are made with [AI Investment Portfolio](portfolio.md). The condition for agent investment to be sustained is turning this **value loop (Create → Measure → Adopt → Reinvest)** once within 90 days. For details, refer to the [Value Maturity Roadmap](value-maturity-roadmap.md).
+    Value created in quick wins is measured with [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md), utilization is increased with [Adoption & Change Management](../decisions/decision-guide.md), and reinvestment decisions are made with [AI Investment Portfolio](../decisions/decision-guide.md). The condition for agent investment to be sustained is turning this **value loop (Create → Measure → Adopt → Reinvest)** once within 90 days. For details, refer to the [Value Maturity Roadmap](../decisions/decision-guide.md).

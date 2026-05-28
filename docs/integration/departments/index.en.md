@@ -28,7 +28,7 @@ When selecting the right pattern bundle for a department, the following six axes
 
 **Business value type**: Whether the primary focus is revenue contribution (Sales), cost optimization (HR/CS/Engineering), or decision acceleration (Executive) determines use case selection. The "Value Use Cases" table and "Outcome KPI Mapping" diagram on each department page show specific causal paths.
 
-**Value realization timeline**: The staged design of Quick Win (read-only, value felt in 1–4 weeks) → Analysis/Insights (1–3 months) → Automation (3–12 months) is common to all departments. The "Value Staircase" on each department page shows the functions and expected outcomes at each stage. For details, refer to the [Value Maturity Roadmap](../value-maturity-roadmap.md).
+**Value realization timeline**: The staged design of Quick Win (read-only, value felt in 1–4 weeks) → Analysis/Insights (1–3 months) → Automation (3–12 months) is common to all departments. The "Value Staircase" on each department page shows the functions and expected outcomes at each stage. For details, refer to the [Value Maturity Roadmap](../../decisions/decision-guide.md).
 
 ### Safety Axis (For Realizing Value Safely)
 

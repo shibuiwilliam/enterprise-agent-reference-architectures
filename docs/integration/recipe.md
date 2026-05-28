@@ -53,7 +53,7 @@ graph LR
 これがないと、各エージェントが独自の認証を実装し、ログフォーマットが統一されず、一部のエージェントがポリシー未適用のまま動き続けます。コスト管理や利用状況の把握も困難になります。
 
 !!! tip "この段階で計測する価値と定着施策"
-    [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) 第0層（採用率・継続利用率）の計測を開始します。[定着・アダプション](adoption.md)のフェーズ1（ガイド付き初回体験・ユースケース限定展開）をこの段階で実施し、利用率を引き上げます。
+    [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) 第0層（採用率・継続利用率）の計測を開始します。[定着・アダプション](../decisions/decision-guide.md)のフェーズ1（ガイド付き初回体験・ユースケース限定展開）をこの段階で実施し、利用率を引き上げます。
 
 ## レシピ3：実際の業務遂行
 
@@ -72,7 +72,7 @@ graph LR
 **[KM-2 Context Mesh](../decisions/km-knowledge/km-d1-context-supply.md)** は、複数の SaaS や社内システムにまたがる横断的な文脈を、権限を保ちながら組み立てるパターンです。「Salesforce の顧客情報＋Confluence の提案書＋Jira のタスク状況」を組み合わせた回答を作るには、それぞれのシステムへのアクセス権限を保ちながら横断的に文脈を収集する必要があります。
 
 !!! tip "この段階で計測する価値と定着施策"
-    [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) 第1層（処理時間短縮・情報検索時間削減）の改善を確認します。[定着・アダプション](adoption.md)のフェーズ2（チャンピオン制度・業務プロセスへの組み込み）で習慣化を促進します。
+    [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) 第1層（処理時間短縮・情報検索時間削減）の改善を確認します。[定着・アダプション](../decisions/decision-guide.md)のフェーズ2（チャンピオン制度・業務プロセスへの組み込み）で習慣化を促進します。
 
 ## レシピ4：価値実現（コスト削減型＋売上型の自動化）
 
@@ -98,7 +98,7 @@ graph LR
 このレシピを機能させるには、レシピ1のセキュリティ基盤（特に ID-7 Policy-as-Code）と [RT-8](../decisions/rt-runtime/rt-d4-long-running-reliability.md) の状態永続化が先に整っている必要があります。
 
 !!! tip "この段階で計測する価値と定着施策"
-    [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) 第1層→第2層の因果連鎖（処理時間短縮→人件費削減、受注率向上→売上改善）を追跡します。[定着・アダプション](adoption.md)の価値実現アンチパターン（壊れた業務の自動化・空き時間の未回収等）を回避します。[AI投資ポートフォリオ](portfolio.md)で価値ポテンシャルの高いユースケースを優先します。
+    [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) 第1層→第2層の因果連鎖（処理時間短縮→人件費削減、受注率向上→売上改善）を追跡します。[定着・アダプション](../decisions/decision-guide.md)の価値実現アンチパターン（壊れた業務の自動化・空き時間の未回収等）を回避します。[AI投資ポートフォリオ](../decisions/decision-guide.md)で価値ポテンシャルの高いユースケースを優先します。
 
 ```mermaid
 sequenceDiagram
@@ -138,7 +138,7 @@ sequenceDiagram
     統治の背骨は「後から追加するガバナンス層」ではありません。GV-1 と GV-5 はレシピ1と同時期に整備を始め、エージェントが1つでも動き始めた段階から登録・記録が機能していることが理想です。後から追加しようとすると、既存エージェントの棚卸しと登録作業が大きなコストになります。
 
 !!! tip "この段階で計測する価値と定着施策"
-    [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) 第2層（経営KPI：売上影響・コスト削減・意思決定速度）の改善を経営に報告します。[定着・アダプション](adoption.md)のフェーズ3（ユースケース拡大・成果共有・横展開）で全社への拡大を推進します。[AI投資ポートフォリオ](portfolio.md)の四半期レビューで拡大・改善・撤退を判断し、再投資先を決定します。
+    [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) 第2層（経営KPI：売上影響・コスト削減・意思決定速度）の改善を経営に報告します。[定着・アダプション](../decisions/decision-guide.md)のフェーズ3（ユースケース拡大・成果共有・横展開）で全社への拡大を推進します。[AI投資ポートフォリオ](../decisions/decision-guide.md)の四半期レビューで拡大・改善・撤退を判断し、再投資先を決定します。
 
 ---
 
@@ -247,4 +247,4 @@ quadrantChart
 この設計により、「安全性基盤が整ったタイミングで価値のユースケースも準備完了している」状態を作り、基盤整備と価値実現のギャップを最小化します。
 
 !!! note "価値ループとの接続"
-    クイックウィンで創出した価値は、[GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) で計測し、[定着・アダプション](adoption.md)で利用率を引き上げ、[AI投資ポートフォリオ](portfolio.md)で再投資判断します。この**価値ループ（創出→計測→定着→再投資）**を90日以内に1回転させることが、エージェント投資が持続する条件です。詳細は[価値成熟度ロードマップ](value-maturity-roadmap.md)を参照してください。
+    クイックウィンで創出した価値は、[GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) で計測し、[定着・アダプション](../decisions/decision-guide.md)で利用率を引き上げ、[AI投資ポートフォリオ](../decisions/decision-guide.md)で再投資判断します。この**価値ループ（創出→計測→定着→再投資）**を90日以内に1回転させることが、エージェント投資が持続する条件です。詳細は[価値成熟度ロードマップ](../decisions/decision-guide.md)を参照してください。

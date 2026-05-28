@@ -115,6 +115,6 @@ flowchart TD
 
 - [Degree Criteria DC-1 to DC-9](index.md)
 - [Tradeoff Criteria TO-1 to TO-12](index.md)
-- [Use-Case Selection Guide](../integration/usecase-selection-guide.md)
+- [Use-Case Selection Guide](decision-guide.md)
 - [Composition Recipes](../integration/recipe.md)
 - [Dependencies & Chains](../integration/dependency-chain.md)

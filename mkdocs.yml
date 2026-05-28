@@ -145,10 +145,21 @@ plugins:
         'decisions/tradeoff/to10-onprem-vs-external.md': 'decisions/gv-governance/gv-d2-model-vendor-routing.md'
         'decisions/tradeoff/to11-sync-vs-async.md': 'decisions/rt-runtime/rt-d4-long-running-reliability.md'
         'decisions/tradeoff/to12-prompt-vs-platform.md': 'decisions/id-identity/id-d5-authorization-method.md'
-        # Glossary → Foundations
-        'glossary.md': 'overview/foundations.md'
+        # Glossary → Concepts
+        'glossary.md': 'overview/concepts-and-principles.md'
         # Wizard → Decision guide
         'wizard.md': 'decisions/decision-guide.md'
+        # Old overview pages → Concepts and Principles
+        'overview/agenda.md': 'overview/concepts-and-principles.md'
+        'overview/schema.md': 'overview/concepts-and-principles.md'
+        'overview/principles.md': 'overview/concepts-and-principles.md'
+        'overview/foundations.md': 'overview/concepts-and-principles.md'
+        # Old value pages → Decision Guide
+        'integration/usecase-selection-guide.md': 'decisions/decision-guide.md'
+        'integration/adoption.md': 'decisions/decision-guide.md'
+        'integration/value-maturity-roadmap.md': 'decisions/decision-guide.md'
+        'integration/portfolio.md': 'decisions/decision-guide.md'
+        'integration/value-anti-patterns.md': 'decisions/decision-guide.md'
   - i18n:
       docs_structure: suffix
       languages:
@@ -162,11 +173,7 @@ plugins:
           site_name: Enterprise AI Agent Architecture Reference
           nav_translations:
             ホーム: Home
-            はじめに: Foundations
-            中心命題・組織グラフ・意思決定ドメイン: Core Thesis, Org Graph & Decision Domains
-            意思決定ページの共通スキーマ: Decision Page Schema
-            設計原則: Design Principles
-            前提概念: Key Concepts
+            概念と原則: Concepts & Principles
             意思決定カタログ: Decision Catalog
             概要: Overview
             体験・ゲートウェイの意思決定: "D-EX: Experience & Gateway"
@@ -177,8 +184,6 @@ plugins:
             統合・ツールの意思決定: "D-IN: Integration & Tools"
             観測・評価・監査の意思決定: "D-OB: Observability & Audit"
             意思決定の手引き: Decision Guidance
-            価値ユースケース選定ガイド: Use-Case Selection Guide
-            シナリオ別決定表: Scenario Decision Table
             組み合わせと実装: Compositions & Implementation
             依存関係と依存チェーン: Dependencies & Chains
             横断軸: Cross-Cutting Axes
@@ -189,11 +194,6 @@ plugins:
             部署軸: Department Axis
             プロジェクト軸: Project Axis
             メンバー個別軸: Individual Axis
-            価値の回収と拡大: Value Recovery & Expansion
-            定着・アダプション: Adoption & Change Management
-            価値成熟度ロードマップ: Value Maturity Roadmap
-            AI投資ポートフォリオ管理: AI Investment Portfolio
-            価値実現のアンチパターン: Value Realization Anti-Patterns
             コーディングエージェント向けガイド: Coding Agent Guide
             # Decision translations
             "EX-D1 統一フロントドアとチャネル戦略": "EX-D1 Unified Front Door & Channel Strategy"
@@ -239,11 +239,7 @@ extra:
 # nav は手動管理。機械可読インデックスは scripts/build_machine_index.py で再生成する
 nav:
   - ホーム: index.md
-  - はじめに:
-      - 中心命題・組織グラフ・意思決定ドメイン: overview/agenda.md
-      - 意思決定ページの共通スキーマ: overview/schema.md
-      - 設計原則: overview/principles.md
-      - 前提概念: overview/foundations.md
+  - 概念と原則: overview/concepts-and-principles.md
   - 意思決定カタログ:
       - 概要: decisions/index.md
       - 体験・ゲートウェイの意思決定:
@@ -291,9 +287,7 @@ nav:
           - decisions/ob-observability/index.md
           - "OB-D1 観測の範囲とログ粒度": decisions/ob-observability/ob-d1-observability-scope.md
           - "OB-D2 監査と帰責": decisions/ob-observability/ob-d2-audit-attribution.md
-  - 意思決定の手引き:
-      - 価値ユースケース選定ガイド: integration/usecase-selection-guide.md
-      - シナリオ別決定表: decisions/decision-guide.md
+  - 意思決定の手引き: decisions/decision-guide.md
   - 組み合わせと実装:
       - 依存関係と依存チェーン: integration/dependency-chain.md
       - 横断軸: integration/cross-cutting-axes.md
@@ -311,10 +305,5 @@ nav:
           - 部署軸: integration/architecture/department.md
           - プロジェクト軸: integration/architecture/project.md
           - メンバー個別軸: integration/architecture/individual.md
-  - 価値の回収と拡大:
-      - 定着・アダプション: integration/adoption.md
-      - 価値成熟度ロードマップ: integration/value-maturity-roadmap.md
-      - AI投資ポートフォリオ管理: integration/portfolio.md
-      - 価値実現のアンチパターン: integration/value-anti-patterns.md
   - コーディングエージェント向けガイド:
       - coding-agent-guide/index.md

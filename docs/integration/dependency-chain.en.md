@@ -139,8 +139,8 @@ Dependency chains define "the order for operating safely," but implementation is
 | Final Link | Role | Key Pages |
 |---|---|---|
 | [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) | Measures the causality of adoption rate (Layer 0) → productivity (Layer 1) → business KPI (Layer 2) to visualize value | The "Value Hypothesis" section of each pattern corresponds to GV-10's measurement layers |
-| [Adoption & Change Management](adoption.md) | Increases utilization rate and secures the "denominator" of ROI. Also covers avoidance of value-realization anti-patterns | Three phases of change management roadmap |
-| [AI Investment Portfolio](portfolio.md) | Based on measurement results, decides on expansion, improvement, or withdrawal of use cases and determines reinvestment targets | Decision cycle in quarterly reviews |
+| [Adoption & Change Management](../decisions/decision-guide.md) | Increases utilization rate and secures the "denominator" of ROI. Also covers avoidance of value-realization anti-patterns | Three phases of change management roadmap |
+| [AI Investment Portfolio](../decisions/decision-guide.md) | Based on measurement results, decides on expansion, improvement, or withdrawal of use cases and determines reinvestment targets | Decision cycle in quarterly reviews |
 
 Build up patterns along the dependency chains, create value with department-specific use cases, measure with GV-10, secure utilization with adoption initiatives, and make reinvestment decisions through the portfolio — when this **value loop (Create → Measure → Adopt → Reinvest)** runs, pattern adoption translates into actual enterprise value improvement.
 

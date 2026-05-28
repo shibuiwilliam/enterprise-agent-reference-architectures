@@ -92,8 +92,8 @@ Parse JSON files under `docs/_machine/` directly.
 
 ## Related Pages
 
-- [Use-Case Selection Guide](../integration/usecase-selection-guide.md)
+- [Use-Case Selection Guide](../decisions/decision-guide.md)
 - [Composition Recipes](../integration/recipe.md)
-- [Adoption & Change Management](../integration/adoption.md)
+- [Adoption & Change Management](../decisions/decision-guide.md)
 - [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md)
 - [Decision Guide](../decisions/decision-guide.md)
