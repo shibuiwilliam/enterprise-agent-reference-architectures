@@ -22,27 +22,27 @@ As the foundation for safely realizing this value, for operations with the most 
 
 ## Applied Patterns and Reasons
 
-### [IN-1 Tool / MCP Gateway](../../patterns/in-integration/in1-tool-mcp-gateway.md)
+### [IN-1 Tool / MCP Gateway](../../decisions/in-integration/in-d1-tool-gateway.md)
 
 Engineering agents use many tools — code execution, GitHub API, cloud CLI, and more. IN-1 routes all these tool calls through a single gateway, centrally recording and restricting "which agent, which tool, with what arguments." If the agent is given direct AWS CLI access without a gateway, permission boundaries become invisible and post-hoc tracing of what happened becomes difficult. Adding, removing, and changing tool permissions can also be centrally managed at the gateway.
 
-### [ID-6 Zero-Trust PDP/PEP](../../patterns/id-identity/id6-zero-trust-pdp-pep.md)
+### [ID-6 Zero-Trust PDP/PEP](../../decisions/id-identity/id-d5-authorization-method.md)
 
 The "execute code" operation requires allow/deny judgment that varies based on the content. Fine-grained authorization is needed: allow running unit tests, but deny direct connections to production DB. ID-6 separates the policy decision point (PDP) and policy enforcement point (PEP), evaluating all execution requests in real time. When the agent attempts to access resources outside the sandbox, the PEP forcibly blocks it and records it in the PDP log. By separating network, filesystem, and process permissions at the execution platform level, this provides far stronger guarantees than prompt-level restrictions.
 
-### [RT-8 Durable Workflow](../../patterns/rt-runtime/rt8-durable-workflow.md)
+### [RT-8 Durable Workflow](../../decisions/rt-runtime/rt-d4-long-running-reliability.md)
 
 CI/CD pipelines are multi-stage processes: "build → test → review → staging deploy → production deploy." Having to restart the entire process from the beginning when network failures or timeouts occur is inefficient and dangerous (risk of double-deploy). RT-8 persists each workflow step, enabling resumption from the point of failure while skipping already-completed steps. Even if the agent crashes after completing staging, it can resume from the production deploy step and prevent duplicate execution.
 
-### [OB-1 Observability Lake](../../patterns/ob-observability/ob1-observability-lake.md)
+### [OB-1 Observability Lake](../../decisions/ob-observability/ob-d1-observability-scope.md)
 
 What "purpose, which tools, in what sequence" the engineering agent used must be completely recorded from the perspectives of security audit, incident investigation, and cost tracking. OB-1 aggregates all agent actions (tool calls, LLM input/output, decision rationale) into the observability lake and stores them as OpenTelemetry-compatible traces. The ability to identify within 5 minutes "what this agent sent to the production DB" after an incident is particularly important for engineering use cases.
 
-### [GV-9 Incident Response / Kill Switch](../../patterns/gv-governance/gv9-incident-response-kill-switch.md)
+### [GV-9 Incident Response / Kill Switch](../../decisions/gv-governance/gv-d5-incident-kill-switch.md)
 
 When production environment impact occurs, a mechanism to immediately stop the agent is essential. GV-9 monitors agent execution in real time and stops the agent automatically or manually when anomaly indicators are detected (spike in error rate, unexpected resource deletion, abnormal API call patterns). After stopping, the current execution state is saved, enabling resumption or rollback after cause investigation. When "the agent has started deploying to production and I want to stop it," one kill switch handles it without modifying code.
 
-### [ID-7 Policy-as-Code Guardrail](../../patterns/id-identity/id7-policy-as-code-guardrail.md)
+### [ID-7 Policy-as-Code Guardrail](../../decisions/id-identity/id-d5-authorization-method.md)
 
 Rules such as "only approved PRs permitted to deploy to production," "builds with test pass rate below 80% cannot deploy," and "direct pushes to production branch prohibited" should be implemented as policy code in OPA (Open Policy Agent), not instructed through prompts. ID-7 routes agent operation requests through the policy engine and blocks them before execution if they violate policy. Since policies are managed as code, version control, review, and audit trails are automatically created.
 

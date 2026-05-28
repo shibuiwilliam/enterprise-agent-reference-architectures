@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Machine Index Entry Point",
+  "description": "Master index listing all machine-readable resources.",
+  "type": "object",
+  "required": ["schema_version", "generated", "resources"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "generated": {"type": "string", "format": "date"},
+    "resources": {
+      "type": "object",
+      "required": ["decisions", "building_blocks", "value_loop", "departments"],
+      "properties": {
+        "decisions": {
+          "type": "object",
+          "required": ["path", "description"],
+          "properties": {
+            "path": {"type": "string"},
+            "description": {"type": "string"},
+            "count": {"type": "integer"}
+          }
+        },
+        "building_blocks": {
+          "type": "object",
+          "required": ["path", "description"],
+          "properties": {
+            "path": {"type": "string"},
+            "description": {"type": "string"},
+            "count": {"type": "integer"}
+          }
+        },
+        "value_loop": {
+          "type": "object",
+          "required": ["path", "description"],
+          "properties": {
+            "path": {"type": "string"},
+            "description": {"type": "string"}
+          }
+        },
+        "departments": {
+          "type": "object",
+          "required": ["path", "description"],
+          "properties": {
+            "path": {"type": "string"},
+            "description": {"type": "string"},
+            "count": {"type": "integer"}
+          }
+        }
+      }
+    },
+    "value_drivers_vocabulary": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

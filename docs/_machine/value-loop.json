@@ -1,11 +1,16 @@
 {
   "schema_version": "1.0.0",
+  "description": "価値実現ループ — ユースケース選定から投資判断まで6ステップを繰り返す",
   "nodes": [
     {
       "id": "usecase_selection",
       "label": "価値ユースケース選定",
       "page": "integration/usecase-selection-guide.md",
       "description": "高価値・低リスクの初手を選ぶ",
+      "related_decisions": [
+        "EX-D1",
+        "EX-D2"
+      ],
       "next": "recipe_quickwin"
     },
     {
@@ -13,6 +18,12 @@
       "label": "最小安全ベースライン＋クイックウィン",
       "page": "integration/recipe.md",
       "description": "MVP構成で30-60日以内に初期価値を実証",
+      "related_decisions": [
+        "ID-D1",
+        "ID-D2",
+        "GV-D1",
+        "RT-D1"
+      ],
       "next": "adoption"
     },
     {
@@ -20,13 +31,21 @@
       "label": "定着・アダプション",
       "page": "integration/adoption.md",
       "description": "チェンジマネジメントで利用率を引き上げ",
+      "related_decisions": [
+        "EX-D2",
+        "GV-D7"
+      ],
       "next": "measurement"
     },
     {
       "id": "measurement",
-      "label": "GV-10 三層価値計測",
-      "page": "patterns/gv-governance/gv10-two-layer-value-measurement.md",
+      "label": "三層価値計測",
+      "page": "decisions/gv-governance/gv-d7-value-measurement.md",
       "description": "採用定着→生産性→経営KPIの3層でROI追跡",
+      "related_decisions": [
+        "GV-D7",
+        "GV-D4"
+      ],
       "next": "maturity_roadmap"
     },
     {
@@ -34,6 +53,10 @@
       "label": "価値成熟度ロードマップ",
       "page": "integration/value-maturity-roadmap.md",
       "description": "段階的に適用範囲と自律度を拡大",
+      "related_decisions": [
+        "RT-D2",
+        "GV-D3"
+      ],
       "next": "portfolio"
     },
     {
@@ -41,6 +64,10 @@
       "label": "AI投資ポートフォリオ管理",
       "page": "integration/portfolio.md",
       "description": "計測結果に基づき再投資・改善・撤退を判断",
+      "related_decisions": [
+        "GV-D4",
+        "GV-D7"
+      ],
       "next": "usecase_selection"
     }
   ]

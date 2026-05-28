@@ -1,5 +1,5 @@
 site_name: エンタープライズAIエージェント・アーキテクチャ・リファレンス
-site_description: 数万人規模・多様な既存SaaS・厳格な権限管理・階層的組織を前提とした、AIエージェントのエンタープライズ組み込みアーキテクチャパターン集
+site_description: エンタープライズにAIエージェントを安全に組み込むための意思決定駆動アーキテクチャ・リファレンス
 site_author: ""
 site_url: https://shibuiwilliam.github.io/enterprise-agent-reference-architectures/
 repo_url: https://github.com/shibuiwilliam/enterprise-agent-reference-architectures
@@ -64,6 +64,91 @@ plugins:
       lang:
         - ja
         - en
+  - redirects:
+      redirect_maps:
+        # Pattern catalog → Decision pages
+        'patterns/index.md': 'decisions/index.md'
+        'patterns/ex-experience/index.md': 'decisions/ex-experience/index.md'
+        'patterns/ex-experience/ex1-enterprise-agent-gateway.md': 'decisions/ex-experience/ex-d1-front-door-channel.md'
+        'patterns/ex-experience/ex2-embedded-vs-portal.md': 'decisions/ex-experience/ex-d1-front-door-channel.md'
+        'patterns/ex-experience/ex3-channel-agnostic-frontdoor.md': 'decisions/ex-experience/ex-d1-front-door-channel.md'
+        'patterns/ex-experience/ex4-trust-value-ux.md': 'decisions/ex-experience/ex-d2-trust-value-ux.md'
+        'patterns/gv-governance/index.md': 'decisions/gv-governance/index.md'
+        'patterns/gv-governance/gv1-agent-control-plane.md': 'decisions/gv-governance/gv-d1-control-plane-scope.md'
+        'patterns/gv-governance/gv2-agent-catalog-marketplace.md': 'decisions/gv-governance/gv-d1-control-plane-scope.md'
+        'patterns/gv-governance/gv3-department-agent-factory.md': 'decisions/gv-governance/gv-d1-control-plane-scope.md'
+        'patterns/gv-governance/gv4-industry-policy-pack.md': 'decisions/gv-governance/gv-d6-industry-regulation.md'
+        'patterns/gv-governance/gv5-central-model-gateway.md': 'decisions/gv-governance/gv-d2-model-vendor-routing.md'
+        'patterns/gv-governance/gv6-version-registry.md': 'decisions/gv-governance/gv-d3-change-eval-rigor.md'
+        'patterns/gv-governance/gv7-evaluation-governance-pipeline.md': 'decisions/gv-governance/gv-d3-change-eval-rigor.md'
+        'patterns/gv-governance/gv8-cost-quota-chargeback.md': 'decisions/gv-governance/gv-d4-cost-visibility.md'
+        'patterns/gv-governance/gv9-incident-response-kill-switch.md': 'decisions/gv-governance/gv-d5-incident-kill-switch.md'
+        'patterns/gv-governance/gv10-two-layer-value-measurement.md': 'decisions/gv-governance/gv-d7-value-measurement.md'
+        'patterns/id-identity/index.md': 'decisions/id-identity/index.md'
+        'patterns/id-identity/id1-workforce-customer-split.md': 'decisions/id-identity/id-d1-workforce-customer-split.md'
+        'patterns/id-identity/id2-identity-federation-obo.md': 'decisions/id-identity/id-d2-delegation-method.md'
+        'patterns/id-identity/id3-workload-agent-identity.md': 'decisions/id-identity/id-d2-delegation-method.md'
+        'patterns/id-identity/id4-permission-mirror-least-of.md': 'decisions/id-identity/id-d3-permission-reduction.md'
+        'patterns/id-identity/id5-jit-scoped-credentials.md': 'decisions/id-identity/id-d4-credential-minimization.md'
+        'patterns/id-identity/id6-zero-trust-pdp-pep.md': 'decisions/id-identity/id-d5-authorization-method.md'
+        'patterns/id-identity/id7-policy-as-code-guardrail.md': 'decisions/id-identity/id-d5-authorization-method.md'
+        'patterns/id-identity/id8-consent-access-transparency.md': 'decisions/id-identity/id-d6-consent-transparency.md'
+        'patterns/rt-runtime/index.md': 'decisions/rt-runtime/index.md'
+        'patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md': 'decisions/rt-runtime/rt-d1-single-vs-multi-agent.md'
+        'patterns/rt-runtime/rt2-raci-multi-agent.md': 'decisions/rt-runtime/rt-d1-single-vs-multi-agent.md'
+        'patterns/rt-runtime/rt3-risk-tiered-autonomy.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
+        'patterns/rt-runtime/rt4-human-approval-chain.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
+        'patterns/rt-runtime/rt5-command-envelope.md': 'decisions/rt-runtime/rt-d3-side-effect-safety.md'
+        'patterns/rt-runtime/rt6-sor-write-boundary.md': 'decisions/rt-runtime/rt-d3-side-effect-safety.md'
+        'patterns/rt-runtime/rt7-enterprise-saga.md': 'decisions/rt-runtime/rt-d4-long-running-reliability.md'
+        'patterns/rt-runtime/rt8-durable-workflow.md': 'decisions/rt-runtime/rt-d4-long-running-reliability.md'
+        'patterns/rt-runtime/rt9-work-queue-agent.md': 'decisions/rt-runtime/rt-d5-trigger-mechanism.md'
+        'patterns/rt-runtime/rt10-event-driven-orchestrator.md': 'decisions/rt-runtime/rt-d5-trigger-mechanism.md'
+        'patterns/rt-runtime/rt11-project-digital-twin.md': 'decisions/rt-runtime/rt-d6-project-digital-twin.md'
+        'patterns/km-knowledge/index.md': 'decisions/km-knowledge/index.md'
+        'patterns/km-knowledge/km1-access-controlled-rag.md': 'decisions/km-knowledge/km-d1-context-supply.md'
+        'patterns/km-knowledge/km2-context-mesh.md': 'decisions/km-knowledge/km-d1-context-supply.md'
+        'patterns/km-knowledge/km3-canonical-object-knowledge-graph.md': 'decisions/km-knowledge/km-d2-knowledge-normalization.md'
+        'patterns/km-knowledge/km4-scoped-memory-hierarchy.md': 'decisions/km-knowledge/km-d3-memory-scope.md'
+        'patterns/km-knowledge/km5-purpose-bound-context.md': 'decisions/km-knowledge/km-d4-purpose-limitation.md'
+        'patterns/km-knowledge/km6-dlp-redaction-boundary.md': 'decisions/km-knowledge/km-d5-confidentiality-strength.md'
+        'patterns/km-knowledge/km7-ephemeral-secure-context-bus.md': 'decisions/km-knowledge/km-d5-confidentiality-strength.md'
+        'patterns/in-integration/index.md': 'decisions/in-integration/index.md'
+        'patterns/in-integration/in1-tool-mcp-gateway.md': 'decisions/in-integration/in-d1-tool-gateway.md'
+        'patterns/in-integration/in2-saas-connector-adapter.md': 'decisions/in-integration/in-d2-build-vs-reuse.md'
+        'patterns/in-integration/in3-rate-quota-broker.md': 'decisions/in-integration/in-d3-rate-capacity.md'
+        'patterns/in-integration/in4-existing-ipaas-reuse.md': 'decisions/in-integration/in-d2-build-vs-reuse.md'
+        'patterns/ob-observability/index.md': 'decisions/ob-observability/index.md'
+        'patterns/ob-observability/ob1-observability-lake.md': 'decisions/ob-observability/ob-d1-observability-scope.md'
+        'patterns/ob-observability/ob2-unified-audit-lineage.md': 'decisions/ob-observability/ob-d2-audit-attribution.md'
+        # Old selection → Decision pages
+        'decisions/degree/index.md': 'decisions/index.md'
+        'decisions/degree/dc1-risk-tier-boundary.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
+        'decisions/degree/dc2-timeout-retry-budget.md': 'decisions/gv-governance/gv-d4-cost-visibility.md'
+        'decisions/degree/dc3-log-granularity.md': 'decisions/ob-observability/ob-d1-observability-scope.md'
+        'decisions/degree/dc4-context-volume.md': 'decisions/km-knowledge/km-d1-context-supply.md'
+        'decisions/degree/dc5-memory-retention.md': 'decisions/km-knowledge/km-d3-memory-scope.md'
+        'decisions/degree/dc6-guardrail-strength.md': 'decisions/id-identity/id-d5-authorization-method.md'
+        'decisions/degree/dc7-cache-jit-ttl.md': 'decisions/id-identity/id-d4-credential-minimization.md'
+        'decisions/degree/dc8-model-routing.md': 'decisions/gv-governance/gv-d2-model-vendor-routing.md'
+        'decisions/degree/dc9-canary-event-throttle.md': 'decisions/gv-governance/gv-d3-change-eval-rigor.md'
+        'decisions/tradeoff/index.md': 'decisions/index.md'
+        'decisions/tradeoff/to1-obo-vs-service-account.md': 'decisions/id-identity/id-d2-delegation-method.md'
+        'decisions/tradeoff/to2-lake-vs-mesh.md': 'decisions/km-knowledge/km-d1-context-supply.md'
+        'decisions/tradeoff/to3-single-vs-multi-agent.md': 'decisions/rt-runtime/rt-d1-single-vs-multi-agent.md'
+        'decisions/tradeoff/to4-readonly-vs-write.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
+        'decisions/tradeoff/to5-copilot-vs-autopilot.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
+        'decisions/tradeoff/to6-personal-vs-team-memory.md': 'decisions/km-knowledge/km-d3-memory-scope.md'
+        'decisions/tradeoff/to7-full-vs-selective-log.md': 'decisions/ob-observability/ob-d1-observability-scope.md'
+        'decisions/tradeoff/to8-central-vs-federation.md': 'decisions/gv-governance/gv-d1-control-plane-scope.md'
+        'decisions/tradeoff/to9-custom-vs-ipaas.md': 'decisions/in-integration/in-d2-build-vs-reuse.md'
+        'decisions/tradeoff/to10-onprem-vs-external.md': 'decisions/gv-governance/gv-d2-model-vendor-routing.md'
+        'decisions/tradeoff/to11-sync-vs-async.md': 'decisions/rt-runtime/rt-d4-long-running-reliability.md'
+        'decisions/tradeoff/to12-prompt-vs-platform.md': 'decisions/id-identity/id-d5-authorization-method.md'
+        # Glossary → Foundations
+        'glossary.md': 'overview/foundations.md'
+        # Wizard → Decision guide
+        'wizard.md': 'decisions/decision-guide.md'
   - i18n:
       docs_structure: suffix
       languages:
@@ -77,116 +162,71 @@ plugins:
           site_name: Enterprise AI Agent Architecture Reference
           nav_translations:
             ホーム: Home
-            はじめに: Introduction
-            中心命題・分類学・組織グラフ・7面: Core Thesis, Taxonomy, Org Graph & 7 Facets
-            項目設計と面分類: Schema Design & Facet Classification
+            はじめに: Foundations
+            中心命題・組織グラフ・意思決定ドメイン: Core Thesis, Org Graph & Decision Domains
+            意思決定ページの共通スキーマ: Decision Page Schema
             設計原則: Design Principles
-            パターンカタログ: Pattern Catalog
+            前提概念: Key Concepts
+            意思決定カタログ: Decision Catalog
             概要: Overview
-            面1 体験・ゲートウェイ: "Facet 1: Experience & Gateway"
-            面2 制御・ガバナンス: "Facet 2: Control & Governance"
-            面3 アイデンティティ・信頼: "Facet 3: Identity & Trust"
-            面4 実行・オーケストレーション: "Facet 4: Runtime & Orchestration"
-            面5 知識・メモリ: "Facet 5: Knowledge & Memory"
-            面6 統合・ツール: "Facet 6: Integration & Tools"
-            面7 観測・評価・監査: "Facet 7: Observability & Audit"
-            意思決定層: Decision Layer
-            意思決定の手引き: Decision Guide
-            パターン選定ウィザード: Pattern Selection Wizard
-            「程度」の選定基準: Degree Criteria
-            「相反する仕組み」の選定基準: Tradeoff Criteria
-            価値の回収と拡大: Value Recovery & Expansion
-            価値実現のアンチパターン: Value Realization Anti-Patterns
-            コーディングエージェント向けガイド: Coding Agent Guide
-            用語集: Glossary
-            統合と組み合わせ方: Integration & Composition
+            体験・ゲートウェイの意思決定: "D-EX: Experience & Gateway"
+            ガバナンス・統制の意思決定: "D-GV: Governance & Control"
+            アイデンティティ・信頼の意思決定: "D-ID: Identity & Trust"
+            実行・オーケストレーションの意思決定: "D-RT: Runtime & Orchestration"
+            知識・メモリの意思決定: "D-KM: Knowledge & Memory"
+            統合・ツールの意思決定: "D-IN: Integration & Tools"
+            観測・評価・監査の意思決定: "D-OB: Observability & Audit"
+            意思決定の手引き: Decision Guidance
+            価値ユースケース選定ガイド: Use-Case Selection Guide
+            シナリオ別決定表: Scenario Decision Table
+            組み合わせと実装: Compositions & Implementation
             依存関係と依存チェーン: Dependencies & Chains
             横断軸: Cross-Cutting Axes
             組み合わせレシピ: Composition Recipes
-            価値成熟度ロードマップ: Value Maturity Roadmap
-            価値ユースケース選定ガイド: Use-Case Selection Guide
-            定着・アダプション: Adoption & Change Management
-            AI投資ポートフォリオ管理: AI Investment Portfolio
             部門別適用例: Department Examples
             リファレンスアーキテクチャ: Reference Architecture
             全社横断軸: Company-Wide Axis
             部署軸: Department Axis
             プロジェクト軸: Project Axis
             メンバー個別軸: Individual Axis
-            # EX patterns
-            "EX-1 Enterprise Agent Gateway（統一フロントドア）": EX-1 Enterprise Agent Gateway (Unified Front Door)
-            "EX-2 業務埋め込み＋独立ワークベンチ（チャネル配置）": EX-2 Embedded + Standalone Workbench (Channel Placement)
-            "EX-3 チャネル非依存フロントドア": EX-3 Channel-Agnostic Front Door
-            "EX-4 信頼と価値実感のUX（定着を支える体験設計）": EX-4 Trust & Value UX (Experience Design for Adoption)
-            # GV patterns
-            "GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）": GV-1 Enterprise Agent Control Plane (Registry / Lifecycle)
-            "GV-2 Agent Catalog & Marketplace（社内カタログ）": GV-2 Agent Catalog & Marketplace
-            "GV-3 Department Agent Factory（役割テンプレート工場）": GV-3 Department Agent Factory (Role Template Factory)
-            "GV-4 Industry Policy Pack（業界ポリシーパック）": GV-4 Industry Policy Pack
-            "GV-5 Central Model Gateway（モデル・ベンダー統制）": GV-5 Central Model Gateway (Model & Vendor Control)
-            "GV-6 Version Registry（モデル/プロンプト/ツール/ポリシー/索引の版管理）": GV-6 Version Registry (Model / Prompt / Tool / Policy / Index)
-            "GV-7 Evaluation & Governance Pipeline（評価CI/CD）": GV-7 Evaluation & Governance Pipeline (Eval CI/CD)
-            "GV-8 Cost Quota & Chargeback（コスト配賦）": GV-8 Cost Quota & Chargeback
-            "GV-9 Incident Response & Kill Switch（事故対応・停止）": GV-9 Incident Response & Kill Switch
-            "GV-10 Three-Layer Value Measurement（採用定着×生産性×経営KPI）": GV-10 Three-Layer Value Measurement (Adoption × Productivity × Business KPI)
-            # ID patterns
-            "ID-1 Workforce/Customer 二面分離": ID-1 Workforce/Customer Identity Split
-            "ID-2 Identity Federation & On-Behalf-Of（OBO委譲）": ID-2 Identity Federation & On-Behalf-Of (OBO Delegation)
-            "ID-3 Workload / Agent Identity（エージェント自身のID）": ID-3 Workload / Agent Identity
-            "ID-4 Permission Mirror & Least-of Faithful Access（権限忠実アクセス）": ID-4 Permission Mirror & Least-of Faithful Access
-            "ID-5 JIT Scoped Credentials（最小・短命・用途限定）": ID-5 JIT Scoped Credentials (Minimal, Short-Lived, Purpose-Scoped)
-            "ID-6 Zero-Trust Runtime + 中央PDP/分散PEP（ABAC/ReBAC）": ID-6 Zero-Trust Runtime + Central PDP / Distributed PEP (ABAC/ReBAC)
-            "ID-7 Policy-as-Code Guardrail（決定論的行動可否）": ID-7 Policy-as-Code Guardrail (Deterministic Authorization)
-            "ID-8 Consent & Access Transparency（同意・透明化）": ID-8 Consent & Access Transparency
-            # RT patterns
-            "RT-1 Org-Hierarchical Hub & Spoke（意図ルーティング＋ドメインスポーク）": RT-1 Org-Hierarchical Hub & Spoke (Intent Routing + Domain Spokes)
-            "RT-3 Risk-Tiered Autonomy（自律度の階層）": RT-3 Risk-Tiered Autonomy
-            "RT-4 Human Approval Chain（組織解決型承認）": RT-4 Human Approval Chain (Org-Resolved Approval)
-            "RT-5 Intent-to-Enterprise Command Envelope（構造化コマンド封筒）": RT-5 Intent-to-Enterprise Command Envelope
-            "RT-6 System-of-Record Write Boundary（書き込み境界）": RT-6 System-of-Record Write Boundary
-            "RT-7 Enterprise Saga Agent（補償トランザクション）": RT-7 Enterprise Saga Agent (Compensating Transactions)
-            "RT-8 Durable Enterprise Agent Workflow（永続ワークフロー）": RT-8 Durable Enterprise Agent Workflow
-            "RT-9 Enterprise Work Queue Agent（業務キュー参加）": RT-9 Enterprise Work Queue Agent
-            "RT-10 Event-Driven Enterprise Orchestrator（イベント駆動）": RT-10 Event-Driven Enterprise Orchestrator
-            "RT-11 Project Workspace / Digital Twin Agent（プロジェクト・デジタルツイン）": RT-11 Project Workspace / Digital Twin Agent
-            # KM patterns
-            "KM-1 Access-Controlled Enterprise RAG（権限認識RAG）": KM-1 Access-Controlled Enterprise RAG
-            "KM-2 Access-Controlled Context Mesh（フェデレーテッド文脈）": KM-2 Access-Controlled Context Mesh (Federated Context)
-            "KM-3 Canonical Enterprise Object Model & Knowledge Graph（正規オブジェクト／知識グラフ）": KM-3 Canonical Enterprise Object Model & Knowledge Graph
-            "KM-4 Scoped Memory Hierarchy（スコープ記憶階層）": KM-4 Scoped Memory Hierarchy
-            "KM-5 Purpose-Bound Context Package（目的限定コンテキスト）": KM-5 Purpose-Bound Context Package
-            "KM-6 DLP & Redaction Boundary（DLP・マスキング）": KM-6 DLP & Redaction Boundary
-            "KM-7 Ephemeral Secure Context Bus（揮発・機密計算）": KM-7 Ephemeral Secure Context Bus (Volatile Confidential Computing)
-            # IN patterns
-            "IN-2 SaaS Connector Adapter（腐敗防止）": IN-2 SaaS Connector Adapter (Anti-Corruption Layer)
-            "IN-3 Rate / Quota Broker（レート/クォータ調停）": IN-3 Rate / Quota Broker
-            "IN-4 Existing iPaaS Reuse（既存統合資産の再利用）": IN-4 Existing iPaaS Reuse
-            # OB patterns
-            "OB-2 Unified Audit & Lineage（三者帰責）": OB-2 Unified Audit & Lineage (Three-Party Attribution)
-            # DC selection criteria
-            "DC-1 自律度のティア境界（Risk-Tier の引き方）": DC-1 Autonomy Tier Boundaries (Risk-Tier Calibration)
-            "DC-2 タイムアウト・リトライ・予算（コスト上限）": DC-2 Timeout, Retry & Budget (Cost Caps)
-            "DC-3 プロンプト/トレースのログ粒度（三層分離）": DC-3 Prompt/Trace Log Granularity (Three-Layer Split)
-            "DC-4 コンテキスト投入量（top-k・トークン予算）": DC-4 Context Volume (top-k & Token Budget)
-            "DC-5 メモリ保持・忘却（TTL・スコープ）": DC-5 Memory Retention & Forgetting (TTL & Scope)
-            "DC-6 ガードレール強度（誤検知 vs 見逃し）": DC-6 Guardrail Strength (False Positives vs. Misses)
-            "DC-7 キャッシュ積極度・JIT 資格情報 TTL": DC-7 Cache Aggressiveness & JIT Credential TTL
-            "DC-8 モデルの強さ・データ分類別ルーティング": DC-8 Model Strength & Data-Classification Routing
-            "DC-9 カナリア段階・イベント駆動の頻度制限": DC-9 Canary Stages & Event-Driven Rate Limits
-            # TO selection criteria
-            "TO-1 OBO委譲 vs サービスアカウント": TO-1 OBO Delegation vs. Service Account
-            "TO-2 中央集権データレイク vs フェデレーテッド Context Mesh": TO-2 Central Data Lake vs. Federated Context Mesh
-            "TO-3 単一エージェント vs RACI マルチエージェント": TO-3 Single Agent vs. RACI Multi-Agent
-            "TO-4 Read-only vs Write-capable（段階的拡張）": TO-4 Read-only vs. Write-capable (Staged Expansion)
-            "TO-6 個人の記憶 vs プロジェクト/チームの記憶": TO-6 Personal Memory vs. Project/Team Memory
-            "TO-7 全プロンプトログ vs 選択的トレースログ": TO-7 Full Prompt Logs vs. Selective Trace Logs
-            "TO-8 中央集権プラットフォーム vs 部署フェデレーション": TO-8 Central Platform vs. Department Federation
-            "TO-9 コネクタ自前構築 vs 既存 iPaaS 再利用": TO-9 Custom Connectors vs. Existing iPaaS Reuse
-            "TO-10 内部/オンプレモデル vs 外部 API": TO-10 Internal/On-prem Model vs. External API
-            "TO-11 同期 vs 非同期": TO-11 Synchronous vs. Asynchronous
-            "TO-12 プロンプトで守る vs ポリシー/実行基盤で守る": TO-12 Guard with Prompts vs. Policy/Platform
-            # Department examples
-            部門別適用例: Department Examples
+            価値の回収と拡大: Value Recovery & Expansion
+            定着・アダプション: Adoption & Change Management
+            価値成熟度ロードマップ: Value Maturity Roadmap
+            AI投資ポートフォリオ管理: AI Investment Portfolio
+            価値実現のアンチパターン: Value Realization Anti-Patterns
+            コーディングエージェント向けガイド: Coding Agent Guide
+            # Decision translations
+            "EX-D1 統一フロントドアとチャネル戦略": "EX-D1 Unified Front Door & Channel Strategy"
+            "EX-D2 信頼・価値実感UXの強度": "EX-D2 Trust & Value UX Strength"
+            "GV-D1 統制プレーンの導入と範囲": "GV-D1 Control Plane Scope"
+            "GV-D2 モデル・ベンダー・データ経路の統制": "GV-D2 Model & Vendor Routing"
+            "GV-D3 変更管理と評価の厳格度": "GV-D3 Change Management & Eval Rigor"
+            "GV-D4 コストの可視化と配賦": "GV-D4 Cost Visibility & Chargeback"
+            "GV-D5 事故対応と停止粒度": "GV-D5 Incident Response & Kill Switch"
+            "GV-D6 業界規制の組み込み": "GV-D6 Industry Regulation"
+            "GV-D7 価値計測の設計": "GV-D7 Value Measurement Design"
+            "ID-D1 従業員面／顧客面の分離": "ID-D1 Workforce/Customer Split"
+            "ID-D2 実行主体と権限の委譲方式": "ID-D2 Delegation Method"
+            "ID-D3 権限の忠実な縮退": "ID-D3 Permission Reduction"
+            "ID-D4 資格情報の最小・短命化": "ID-D4 Credential Minimization"
+            "ID-D5 認可の決定方式": "ID-D5 Authorization Method"
+            "ID-D6 同意と透明化の範囲": "ID-D6 Consent & Transparency"
+            "RT-D1 単一 vs マルチエージェントと分業": "RT-D1 Single vs. Multi-Agent"
+            "RT-D2 自律度の設計": "RT-D2 Autonomy Design"
+            "RT-D3 副作用の安全な実行": "RT-D3 Side-Effect Safety"
+            "RT-D4 長尺・分散処理の信頼性": "RT-D4 Long-Running Reliability"
+            "RT-D5 起動契機": "RT-D5 Trigger Mechanism"
+            "RT-D6 プロジェクト・デジタルツイン": "RT-D6 Project Digital Twin"
+            "KM-D1 文脈供給の方式と投入量": "KM-D1 Context Supply"
+            "KM-D2 全社知識の正規化": "KM-D2 Knowledge Normalization"
+            "KM-D3 メモリのスコープと保持": "KM-D3 Memory Scope & Retention"
+            "KM-D4 目的限定と最小化": "KM-D4 Purpose Limitation"
+            "KM-D5 機密保護の強度": "KM-D5 Confidentiality Strength"
+            "IN-D1 ツール接続の統制": "IN-D1 Tool Gateway"
+            "IN-D2 自前構築 vs 既存資産": "IN-D2 Build vs. Reuse"
+            "IN-D3 レート・容量の調停": "IN-D3 Rate & Capacity"
+            "OB-D1 観測の範囲とログ粒度": "OB-D1 Observability Scope"
+            "OB-D2 監査と帰責": "OB-D2 Audit & Attribution"
 
 extra_css:
   - stylesheets/nav.css
@@ -200,108 +240,64 @@ extra:
 nav:
   - ホーム: index.md
   - はじめに:
-      - 中心命題・分類学・組織グラフ・7面: overview/agenda.md
-      - 項目設計と面分類: overview/schema.md
+      - 中心命題・組織グラフ・意思決定ドメイン: overview/agenda.md
+      - 意思決定ページの共通スキーマ: overview/schema.md
       - 設計原則: overview/principles.md
-  - パターンカタログ:
-      - 概要: patterns/index.md
-      - 面1 体験・ゲートウェイ:
-          - patterns/ex-experience/index.md
-          - "EX-1 Enterprise Agent Gateway（統一フロントドア）": patterns/ex-experience/ex1-enterprise-agent-gateway.md
-          - "EX-2 業務埋め込み＋独立ワークベンチ（チャネル配置）": patterns/ex-experience/ex2-embedded-vs-portal.md
-          - "EX-3 チャネル非依存フロントドア": patterns/ex-experience/ex3-channel-agnostic-frontdoor.md
-          - "EX-4 信頼と価値実感のUX（定着を支える体験設計）": patterns/ex-experience/ex4-trust-value-ux.md
-      - 面2 制御・ガバナンス:
-          - patterns/gv-governance/index.md
-          - "GV-1 Enterprise Agent Control Plane（レジストリ／ライフサイクル）": patterns/gv-governance/gv1-agent-control-plane.md
-          - "GV-2 Agent Catalog & Marketplace（社内カタログ）": patterns/gv-governance/gv2-agent-catalog-marketplace.md
-          - "GV-3 Department Agent Factory（役割テンプレート工場）": patterns/gv-governance/gv3-department-agent-factory.md
-          - "GV-4 Industry Policy Pack（業界ポリシーパック）": patterns/gv-governance/gv4-industry-policy-pack.md
-          - "GV-5 Central Model Gateway（モデル・ベンダー統制）": patterns/gv-governance/gv5-central-model-gateway.md
-          - "GV-6 Version Registry（モデル/プロンプト/ツール/ポリシー/索引の版管理）": patterns/gv-governance/gv6-version-registry.md
-          - "GV-7 Evaluation & Governance Pipeline（評価CI/CD）": patterns/gv-governance/gv7-evaluation-governance-pipeline.md
-          - "GV-8 Cost Quota & Chargeback（コスト配賦）": patterns/gv-governance/gv8-cost-quota-chargeback.md
-          - "GV-9 Incident Response & Kill Switch（事故対応・停止）": patterns/gv-governance/gv9-incident-response-kill-switch.md
-          - "GV-10 Three-Layer Value Measurement（採用定着×生産性×経営KPI）": patterns/gv-governance/gv10-two-layer-value-measurement.md
-      - 面3 アイデンティティ・信頼:
-          - patterns/id-identity/index.md
-          - "ID-1 Workforce/Customer 二面分離": patterns/id-identity/id1-workforce-customer-split.md
-          - "ID-2 Identity Federation & On-Behalf-Of（OBO委譲）": patterns/id-identity/id2-identity-federation-obo.md
-          - "ID-3 Workload / Agent Identity（エージェント自身のID）": patterns/id-identity/id3-workload-agent-identity.md
-          - "ID-4 Permission Mirror & Least-of Faithful Access（権限忠実アクセス）": patterns/id-identity/id4-permission-mirror-least-of.md
-          - "ID-5 JIT Scoped Credentials（最小・短命・用途限定）": patterns/id-identity/id5-jit-scoped-credentials.md
-          - "ID-6 Zero-Trust Runtime + 中央PDP/分散PEP（ABAC/ReBAC）": patterns/id-identity/id6-zero-trust-pdp-pep.md
-          - "ID-7 Policy-as-Code Guardrail（決定論的行動可否）": patterns/id-identity/id7-policy-as-code-guardrail.md
-          - "ID-8 Consent & Access Transparency（同意・透明化）": patterns/id-identity/id8-consent-access-transparency.md
-      - 面4 実行・オーケストレーション:
-          - patterns/rt-runtime/index.md
-          - "RT-1 Org-Hierarchical Hub & Spoke（意図ルーティング＋ドメインスポーク）": patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md
-          - "RT-2 RACI-based Multi-Agent Orchestration": patterns/rt-runtime/rt2-raci-multi-agent.md
-          - "RT-3 Risk-Tiered Autonomy（自律度の階層）": patterns/rt-runtime/rt3-risk-tiered-autonomy.md
-          - "RT-4 Human Approval Chain（組織解決型承認）": patterns/rt-runtime/rt4-human-approval-chain.md
-          - "RT-5 Intent-to-Enterprise Command Envelope（構造化コマンド封筒）": patterns/rt-runtime/rt5-command-envelope.md
-          - "RT-6 System-of-Record Write Boundary（書き込み境界）": patterns/rt-runtime/rt6-sor-write-boundary.md
-          - "RT-7 Enterprise Saga Agent（補償トランザクション）": patterns/rt-runtime/rt7-enterprise-saga.md
-          - "RT-8 Durable Enterprise Agent Workflow（永続ワークフロー）": patterns/rt-runtime/rt8-durable-workflow.md
-          - "RT-9 Enterprise Work Queue Agent（業務キュー参加）": patterns/rt-runtime/rt9-work-queue-agent.md
-          - "RT-10 Event-Driven Enterprise Orchestrator（イベント駆動）": patterns/rt-runtime/rt10-event-driven-orchestrator.md
-          - "RT-11 Project Workspace / Digital Twin Agent（プロジェクト・デジタルツイン）": patterns/rt-runtime/rt11-project-digital-twin.md
-      - 面5 知識・メモリ:
-          - patterns/km-knowledge/index.md
-          - "KM-1 Access-Controlled Enterprise RAG（権限認識RAG）": patterns/km-knowledge/km1-access-controlled-rag.md
-          - "KM-2 Access-Controlled Context Mesh（フェデレーテッド文脈）": patterns/km-knowledge/km2-context-mesh.md
-          - "KM-3 Canonical Enterprise Object Model & Knowledge Graph（正規オブジェクト／知識グラフ）": patterns/km-knowledge/km3-canonical-object-knowledge-graph.md
-          - "KM-4 Scoped Memory Hierarchy（スコープ記憶階層）": patterns/km-knowledge/km4-scoped-memory-hierarchy.md
-          - "KM-5 Purpose-Bound Context Package（目的限定コンテキスト）": patterns/km-knowledge/km5-purpose-bound-context.md
-          - "KM-6 DLP & Redaction Boundary（DLP・マスキング）": patterns/km-knowledge/km6-dlp-redaction-boundary.md
-          - "KM-7 Ephemeral Secure Context Bus（揮発・機密計算）": patterns/km-knowledge/km7-ephemeral-secure-context-bus.md
-      - 面6 統合・ツール:
-          - patterns/in-integration/index.md
-          - "IN-1 Enterprise Tool / MCP Gateway": patterns/in-integration/in1-tool-mcp-gateway.md
-          - "IN-2 SaaS Connector Adapter（腐敗防止）": patterns/in-integration/in2-saas-connector-adapter.md
-          - "IN-3 Rate / Quota Broker（レート/クォータ調停）": patterns/in-integration/in3-rate-quota-broker.md
-          - "IN-4 Existing iPaaS Reuse（既存統合資産の再利用）": patterns/in-integration/in4-existing-ipaas-reuse.md
-      - 面7 観測・評価・監査:
-          - patterns/ob-observability/index.md
-          - "OB-1 Enterprise Agent Observability Lake": patterns/ob-observability/ob1-observability-lake.md
-          - "OB-2 Unified Audit & Lineage（三者帰責）": patterns/ob-observability/ob2-unified-audit-lineage.md
-  - 意思決定層:
-      - 意思決定の手引き: decisions/decision-guide.md
-      - パターン選定ウィザード: wizard.md
-      - 「程度」の選定基準:
-          - decisions/degree/index.md
-          - "DC-1 自律度のティア境界（Risk-Tier の引き方）": decisions/degree/dc1-risk-tier-boundary.md
-          - "DC-2 タイムアウト・リトライ・予算（コスト上限）": decisions/degree/dc2-timeout-retry-budget.md
-          - "DC-3 プロンプト/トレースのログ粒度（三層分離）": decisions/degree/dc3-log-granularity.md
-          - "DC-4 コンテキスト投入量（top-k・トークン予算）": decisions/degree/dc4-context-volume.md
-          - "DC-5 メモリ保持・忘却（TTL・スコープ）": decisions/degree/dc5-memory-retention.md
-          - "DC-6 ガードレール強度（誤検知 vs 見逃し）": decisions/degree/dc6-guardrail-strength.md
-          - "DC-7 キャッシュ積極度・JIT 資格情報 TTL": decisions/degree/dc7-cache-jit-ttl.md
-          - "DC-8 モデルの強さ・データ分類別ルーティング": decisions/degree/dc8-model-routing.md
-          - "DC-9 カナリア段階・イベント駆動の頻度制限": decisions/degree/dc9-canary-event-throttle.md
-      - 「相反する仕組み」の選定基準:
-          - decisions/tradeoff/index.md
-          - "TO-1 OBO委譲 vs サービスアカウント": decisions/tradeoff/to1-obo-vs-service-account.md
-          - "TO-2 中央集権データレイク vs フェデレーテッド Context Mesh": decisions/tradeoff/to2-lake-vs-mesh.md
-          - "TO-3 単一エージェント vs RACI マルチエージェント": decisions/tradeoff/to3-single-vs-multi-agent.md
-          - "TO-4 Read-only vs Write-capable（段階的拡張）": decisions/tradeoff/to4-readonly-vs-write.md
-          - "TO-5 Copilot vs Autopilot": decisions/tradeoff/to5-copilot-vs-autopilot.md
-          - "TO-6 個人の記憶 vs プロジェクト/チームの記憶": decisions/tradeoff/to6-personal-vs-team-memory.md
-          - "TO-7 全プロンプトログ vs 選択的トレースログ": decisions/tradeoff/to7-full-vs-selective-log.md
-          - "TO-8 中央集権プラットフォーム vs 部署フェデレーション": decisions/tradeoff/to8-central-vs-federation.md
-          - "TO-9 コネクタ自前構築 vs 既存 iPaaS 再利用": decisions/tradeoff/to9-custom-vs-ipaas.md
-          - "TO-10 内部/オンプレモデル vs 外部 API": decisions/tradeoff/to10-onprem-vs-external.md
-          - "TO-11 同期 vs 非同期": decisions/tradeoff/to11-sync-vs-async.md
-          - "TO-12 プロンプトで守る vs ポリシー/実行基盤で守る": decisions/tradeoff/to12-prompt-vs-platform.md
-  - 用語集: glossary.md
-  - 統合と組み合わせ方:
+      - 前提概念: overview/foundations.md
+  - 意思決定カタログ:
+      - 概要: decisions/index.md
+      - 体験・ゲートウェイの意思決定:
+          - decisions/ex-experience/index.md
+          - "EX-D1 統一フロントドアとチャネル戦略": decisions/ex-experience/ex-d1-front-door-channel.md
+          - "EX-D2 信頼・価値実感UXの強度": decisions/ex-experience/ex-d2-trust-value-ux.md
+      - ガバナンス・統制の意思決定:
+          - decisions/gv-governance/index.md
+          - "GV-D1 統制プレーンの導入と範囲": decisions/gv-governance/gv-d1-control-plane-scope.md
+          - "GV-D2 モデル・ベンダー・データ経路の統制": decisions/gv-governance/gv-d2-model-vendor-routing.md
+          - "GV-D3 変更管理と評価の厳格度": decisions/gv-governance/gv-d3-change-eval-rigor.md
+          - "GV-D4 コストの可視化と配賦": decisions/gv-governance/gv-d4-cost-visibility.md
+          - "GV-D5 事故対応と停止粒度": decisions/gv-governance/gv-d5-incident-kill-switch.md
+          - "GV-D6 業界規制の組み込み": decisions/gv-governance/gv-d6-industry-regulation.md
+          - "GV-D7 価値計測の設計": decisions/gv-governance/gv-d7-value-measurement.md
+      - アイデンティティ・信頼の意思決定:
+          - decisions/id-identity/index.md
+          - "ID-D1 従業員面／顧客面の分離": decisions/id-identity/id-d1-workforce-customer-split.md
+          - "ID-D2 実行主体と権限の委譲方式": decisions/id-identity/id-d2-delegation-method.md
+          - "ID-D3 権限の忠実な縮退": decisions/id-identity/id-d3-permission-reduction.md
+          - "ID-D4 資格情報の最小・短命化": decisions/id-identity/id-d4-credential-minimization.md
+          - "ID-D5 認可の決定方式": decisions/id-identity/id-d5-authorization-method.md
+          - "ID-D6 同意と透明化の範囲": decisions/id-identity/id-d6-consent-transparency.md
+      - 実行・オーケストレーションの意思決定:
+          - decisions/rt-runtime/index.md
+          - "RT-D1 単一 vs マルチエージェントと分業": decisions/rt-runtime/rt-d1-single-vs-multi-agent.md
+          - "RT-D2 自律度の設計": decisions/rt-runtime/rt-d2-autonomy-design.md
+          - "RT-D3 副作用の安全な実行": decisions/rt-runtime/rt-d3-side-effect-safety.md
+          - "RT-D4 長尺・分散処理の信頼性": decisions/rt-runtime/rt-d4-long-running-reliability.md
+          - "RT-D5 起動契機": decisions/rt-runtime/rt-d5-trigger-mechanism.md
+          - "RT-D6 プロジェクト・デジタルツイン": decisions/rt-runtime/rt-d6-project-digital-twin.md
+      - 知識・メモリの意思決定:
+          - decisions/km-knowledge/index.md
+          - "KM-D1 文脈供給の方式と投入量": decisions/km-knowledge/km-d1-context-supply.md
+          - "KM-D2 全社知識の正規化": decisions/km-knowledge/km-d2-knowledge-normalization.md
+          - "KM-D3 メモリのスコープと保持": decisions/km-knowledge/km-d3-memory-scope.md
+          - "KM-D4 目的限定と最小化": decisions/km-knowledge/km-d4-purpose-limitation.md
+          - "KM-D5 機密保護の強度": decisions/km-knowledge/km-d5-confidentiality-strength.md
+      - 統合・ツールの意思決定:
+          - decisions/in-integration/index.md
+          - "IN-D1 ツール接続の統制": decisions/in-integration/in-d1-tool-gateway.md
+          - "IN-D2 自前構築 vs 既存資産": decisions/in-integration/in-d2-build-vs-reuse.md
+          - "IN-D3 レート・容量の調停": decisions/in-integration/in-d3-rate-capacity.md
+      - 観測・評価・監査の意思決定:
+          - decisions/ob-observability/index.md
+          - "OB-D1 観測の範囲とログ粒度": decisions/ob-observability/ob-d1-observability-scope.md
+          - "OB-D2 監査と帰責": decisions/ob-observability/ob-d2-audit-attribution.md
+  - 意思決定の手引き:
+      - 価値ユースケース選定ガイド: integration/usecase-selection-guide.md
+      - シナリオ別決定表: decisions/decision-guide.md
+  - 組み合わせと実装:
       - 依存関係と依存チェーン: integration/dependency-chain.md
       - 横断軸: integration/cross-cutting-axes.md
       - 組み合わせレシピ: integration/recipe.md
-      - 価値成熟度ロードマップ: integration/value-maturity-roadmap.md
-      - 価値ユースケース選定ガイド: integration/usecase-selection-guide.md
-      - 定着・アダプション: integration/adoption.md
-      - AI投資ポートフォリオ管理: integration/portfolio.md
       - 部門別適用例:
           - integration/departments/index.md
           - Sales Agent: integration/departments/sales.md
@@ -316,9 +312,7 @@ nav:
           - プロジェクト軸: integration/architecture/project.md
           - メンバー個別軸: integration/architecture/individual.md
   - 価値の回収と拡大:
-      - 価値ユースケース選定ガイド: integration/usecase-selection-guide.md
       - 定着・アダプション: integration/adoption.md
-      - GV-10 三層価値計測: patterns/gv-governance/gv10-two-layer-value-measurement.md
       - 価値成熟度ロードマップ: integration/value-maturity-roadmap.md
       - AI投資ポートフォリオ管理: integration/portfolio.md
       - 価値実現のアンチパターン: integration/value-anti-patterns.md

@@ -22,23 +22,23 @@ As the foundation for safely realizing this value, KM-4 (Scoped Memory), KM-6 (D
 
 ## Applied Patterns and Reasons
 
-### [KM-4 Scoped Memory Hierarchy](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md)
+### [KM-4 Scoped Memory Hierarchy](../../decisions/km-knowledge/km-d3-memory-scope.md)
 
 HR information has a clear hierarchy: "personal scope (viewable by the individual only)," "department scope (department manager only)," and "company-wide scope (entire HR department)." KM-4 embeds this scope in runtime memory management, so even when the agent receives a request to "retrieve and analyze company-wide salary data," it references only data within the scope appropriate to the requester's role. The accident of a department manager accidentally accessing another department's individual performance reviews is prevented at the memory layer.
 
-### [KM-6 DLP & Redaction Boundary](../../patterns/km-knowledge/km6-dlp-redaction-boundary.md)
+### [KM-6 DLP & Redaction Boundary](../../decisions/km-knowledge/km-d5-confidentiality-strength.md)
 
 Salary amounts, performance scores, and disciplinary records often should not be included in agent outputs. When responding to a request like "summarize Department A's headcount composition," KM-6 performs automatic masking to prevent individual salary information from leaking into the response. DLP rules are applied before output, replacing items requiring masking (personal identifiers, salary bands, performance categories) with `[REDACTED]`. The same boundary is applied in logs, Slack notifications, and transfers to external integrations.
 
-### [RT-4 Human Approval Chain](../../patterns/rt-runtime/rt4-human-approval-chain.md)
+### [RT-4 Human Approval Chain](../../decisions/rt-runtime/rt-d2-autonomy-design.md)
 
 Drafting personnel transfers, salary changes, and disciplinary actions must not be automatically executed by the agent. RT-4 requires two-party approval (e.g., direct manager + HR department head) for these operations. The agent handles up to "creating a draft of March salary increase candidates," and the final reflection in Workday is limited to after explicit approval by approvers. Visualization of the pending approval state and automatic escalation on deadline expiry are also handled by RT-4.
 
-### [GV-4 Industry Policy Pack](../../patterns/gv-governance/gv4-industry-policy-pack.md)
+### [GV-4 Industry Policy Pack](../../decisions/gv-governance/gv-d6-industry-regulation.md)
 
 Labor law, personal information protection law, and equal employment opportunity law requirements must be automatically applied to agent operations. GV-4 codifies these laws and internal regulations as a policy pack, blocking and warning the agent before it executes an operation that would violate policy (e.g., attempting to initiate disciplinary proceedings against an employee on maternity leave). Policies are referenced from a repository managed by the external legal team and can be updated when laws change without rewriting agent code.
 
-### [RT-6 SoR Write Boundary](../../patterns/rt-runtime/rt6-sor-write-boundary.md)
+### [RT-6 SoR Write Boundary](../../decisions/rt-runtime/rt-d3-side-effect-safety.md)
 
 Workday is the System of Record (SoR) for HR, and rather than the agent directly hitting the API to write, it must go through the official change request flow (via workflow engine). RT-6 treats writes from the agent to the SoR as "draft requests," prohibiting direct updates. This ensures Workday's internal consistency checks, approval logs, and change history are all recorded through official flows, enabling tracking of agent-mediated changes during audit responses.
 

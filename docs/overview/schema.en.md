@@ -14,7 +14,7 @@ Each pattern is described uniformly across the following 8 items. The "Value Hyp
 |---|---|---|
 | 1 | **Overview** | A one-sentence summary of what this pattern is |
 | 2 | **Enterprise Problem It Solves** | What problem it solves, and which enterprise-specific pressures (leakage, silos, dynamic context, audit, cost) it addresses |
-| 3 | **Value Hypothesis** | How this pattern affects which enterprise value KPIs (revenue/profit / business automation / project productivity / employee efficiency / decision-making speed), via which pathway. 1–3 lines, mapped to the measurement layers of [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) |
+| 3 | **Value Hypothesis** | How this pattern affects which enterprise value KPIs (revenue/profit / business automation / project productivity / employee efficiency / decision-making speed), via which pathway. 1–3 lines, mapped to the measurement layers of [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) |
 | 4 | **Solution and Design** | The solution to the problem, plus the structure, data flow, state transitions, and implementation points that realize it |
 | 5 | **Suitable / Unsuitable For** | Conditions under which this pattern works well, and conditions under which it causes harm or becomes excessive |
 | 6 | **Component Technologies and Existing System Integration** | Representative technologies, standards, and target SaaS systems |
@@ -22,7 +22,7 @@ Each pattern is described uniformly across the following 8 items. The "Value Hyp
 | 8 | **Related Patterns** | Links to other patterns that are similar, complementary, or contrasting |
 
 !!! note "Diagrams in the Solution and Design Section"
-    Structure, data flow, state transitions, and authorization sequences are described with mermaid. In particular, [ID-2 OBO Delegation](../patterns/id-identity/id2-identity-federation-obo.md), [ID-6 PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md), [RT-7 Saga](../patterns/rt-runtime/rt7-enterprise-saga.md), and [RT-10 Event-Driven](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) are recommended to include sequence/flow diagrams.
+    Structure, data flow, state transitions, and authorization sequences are described with mermaid. In particular, [ID-2 OBO Delegation](../decisions/id-identity/id-d2-delegation-method.md), [ID-6 PDP/PEP](../decisions/id-identity/id-d5-authorization-method.md), [RT-7 Saga](../decisions/rt-runtime/rt-d4-long-running-reliability.md), and [RT-10 Event-Driven](../decisions/rt-runtime/rt-d5-trigger-mechanism.md) are recommended to include sequence/flow diagrams.
 
 ## Plane (Category) Design
 
@@ -30,13 +30,13 @@ Patterns are classified into 7 planes according to "which design pressure they a
 
 | Plane | Theme | Focus | Pattern Count |
 |---|---|---|---|
-| [Plane 1: Experience & Gateway (EX)](../patterns/ex-experience/index.md) | Entry point and delivery surface | Reach users where work happens; enforce control at the entry point | 3 |
-| [Plane 2: Control & Governance (GV)](../patterns/gv-governance/index.md) | Governance and control | Central registry, model governance, evaluation, cost, incident response | 10 |
-| [Plane 3: Identity & Trust (ID)](../patterns/id-identity/index.md) | Faithful propagation of permissions | Guarantee who's authority the agent operates under (highest design complexity of all planes) | 8 |
-| [Plane 4: Runtime & Orchestration (RT)](../patterns/rt-runtime/index.md) | Division of labor, execution, automation | Responsibility allocation, autonomy, side effects, long-running tasks, events | 11 |
-| [Plane 5: Knowledge, Memory & Context (KM)](../patterns/km-knowledge/index.md) | Capture and leverage knowledge | Supply cross-cutting context while preserving permissions | 7 |
-| [Plane 6: Integration & Tools (IN)](../patterns/in-integration/index.md) | Existing system integration | Bundle rather than build; absorb system-specific differences | 4 |
-| [Plane 7: Observability & Audit (OB)](../patterns/ob-observability/index.md) | Accountability | Make all actions reconstructable via three-party attribution | 2 |
+| [Plane 1: Experience & Gateway (EX)](../decisions/ex-experience/ex-d1-front-door-channel.md) | Entry point and delivery surface | Reach users where work happens; enforce control at the entry point | 3 |
+| [Plane 2: Control & Governance (GV)](../decisions/gv-governance/gv-d1-control-plane-scope.md) | Governance and control | Central registry, model governance, evaluation, cost, incident response | 10 |
+| [Plane 3: Identity & Trust (ID)](../decisions/id-identity/id-d1-workforce-customer-split.md) | Faithful propagation of permissions | Guarantee who's authority the agent operates under (highest design complexity of all planes) | 8 |
+| [Plane 4: Runtime & Orchestration (RT)](../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md) | Division of labor, execution, automation | Responsibility allocation, autonomy, side effects, long-running tasks, events | 11 |
+| [Plane 5: Knowledge, Memory & Context (KM)](../decisions/km-knowledge/km-d1-context-supply.md) | Capture and leverage knowledge | Supply cross-cutting context while preserving permissions | 7 |
+| [Plane 6: Integration & Tools (IN)](../decisions/in-integration/in-d1-tool-gateway.md) | Existing system integration | Bundle rather than build; absorb system-specific differences | 4 |
+| [Plane 7: Observability & Audit (OB)](../decisions/ob-observability/ob-d1-observability-scope.md) | Accountability | Make all actions reconstructable via three-party attribution | 2 |
 
 ### How to Read the Planes
 
@@ -58,8 +58,8 @@ The design pressures referred to here are forces specific to enterprises, distin
 
 In addition to the 7 planes, the following two function as cross-cutting axes spanning all planes.
 
-- **Org Graph**: The foundation from which all planes consistently derive scope, delegation, and approval based on organizational structure. Serves as the basis for [ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md), [RT-1](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md), [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md), and [KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md).
-- **Zero Trust / Audit**: Every call is authorized and recorded with three-party attribution: human + agent + system. [ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md) and [OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) are the core.
+- **Org Graph**: The foundation from which all planes consistently derive scope, delegation, and approval based on organizational structure. Serves as the basis for [ID-4](../decisions/id-identity/id-d3-permission-reduction.md), [RT-1](../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md), [RT-4](../decisions/rt-runtime/rt-d2-autonomy-design.md), and [KM-4](../decisions/km-knowledge/km-d3-memory-scope.md).
+- **Zero Trust / Audit**: Every call is authorized and recorded with three-party attribution: human + agent + system. [ID-6](../decisions/id-identity/id-d5-authorization-method.md) and [OB-2](../decisions/ob-observability/ob-d2-audit-attribution.md) are the core.
 
 ## Extended Frontmatter (Machine-Readable Metadata)
 

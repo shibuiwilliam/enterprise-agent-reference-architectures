@@ -8,7 +8,7 @@ status: done
 
 ## 概要
 
-エンタープライズAIエージェントの価値は一夜にして出るものではありません。本ロードマップは、Executive の「価値の階段」・[定着・アダプション](adoption.md)のチェンジマネジメント・ロードマップ（0-30 / 30-90 / 90日〜）・[TO-4 Read-only vs Write-capable](../decisions/tradeoff/to4-readonly-vs-write.md) の段階拡張・[RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) のリスク階層を**全社共通の1枚**に統合したものです。「いつ・何の価値が・どの統制の上に出るか」を経営層に示すことが主目的となります。
+エンタープライズAIエージェントの価値は一夜にして出るものではありません。本ロードマップは、Executive の「価値の階段」・[定着・アダプション](adoption.md)のチェンジマネジメント・ロードマップ（0-30 / 30-90 / 90日〜）・[TO-4 Read-only vs Write-capable](../decisions/rt-runtime/rt-d3-side-effect-safety.md) の段階拡張・[RT-3 Risk-Tiered Autonomy](../decisions/rt-runtime/rt-d2-autonomy-design.md) のリスク階層を**全社共通の1枚**に統合したものです。「いつ・何の価値が・どの統制の上に出るか」を経営層に示すことが主な目的です。
 
 ## 4段階の価値成熟度
 
@@ -44,7 +44,7 @@ flowchart LR
 
 ## 因果連鎖：利用率→効率→事業成果
 
-4段階を通じて価値が積み上がる因果経路を示します。この図は[GV-10 価値計測](../patterns/gv-governance/gv10-two-layer-value-measurement.md)の3層と[定着・アダプション](adoption.md)の指標体系を統合したものです。
+4段階を通じて価値が積み上がる因果経路を示します。この図は[GV-10 価値計測](../decisions/gv-governance/gv-d7-value-measurement.md)の3層と[定着・アダプション](adoption.md)の指標体系を統合しています。
 
 ```mermaid
 flowchart LR
@@ -84,7 +84,7 @@ flowchart LR
 
 ## 各部門への適用
 
-本ロードマップは全社共通のフレームワークです。各部門の具体的なユースケース・KPIは以下で参照できます。
+本ロードマップは全社共通のフレームワークです。各部門の具体的なユースケースとKPIは以下のページで参照できます。
 
 - [Sales Agent](departments/sales.md) — 受注率・案件サイクル・パイプライン健全性
 - [HR Agent](departments/hr.md) — 採用リードタイム・離職率・自己解決率
@@ -94,10 +94,10 @@ flowchart LR
 
 ## 関連ページ
 
-- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — 価値計測の正本パターン（本ロードマップの第1層・第2層）
+- [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) — 価値計測の正本パターン（本ロードマップの第1層・第2層）
 - [定着・アダプション](adoption.md) — 定着の運用施策（チェンジマネジメント）
 - [組み合わせレシピ](recipe.md) — パターンの導入順序と価値早期実現トラック
 - [AI投資ポートフォリオ管理](portfolio.md) — ユースケース別の投資配分最適化
 - [ユースケース選定ガイド](usecase-selection-guide.md) — 初期ユースケースの選び方
-- [TO-4 Read-only vs Write-capable](../decisions/tradeoff/to4-readonly-vs-write.md) — 段階的拡張の技術的判断軸
-- [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) — リスク階層に応じた自律度設計
+- [TO-4 Read-only vs Write-capable](../decisions/rt-runtime/rt-d3-side-effect-safety.md) — 段階的拡張の技術的判断軸
+- [RT-3 Risk-Tiered Autonomy](../decisions/rt-runtime/rt-d2-autonomy-design.md) — リスク階層に応じた自律度設計

@@ -7,10 +7,10 @@ description: "A reference architecture collection for safely integrating AI agen
 
 The central challenge of integrating AI agents into an enterprise is not "**making AI smarter**," but rather "**driving it to create value, and governing it so it does not cause harm**." That means safely introducing a new execution actor into the enterprise's existing identity, permissions, accountability, business processes, auditing, data boundaries, and organizational structures — and from that foundation, **generating enterprise value** in the form of improved win rates, business automation, productivity gains, and accelerated decision-making.
 
-This site is a practical reference built on the premise of organizations with tens of thousands of employees, diverse existing SaaS systems (Salesforce / ServiceNow / Workday / Okta / Slack / Box / Jira / Zendesk / Shopify / Bakuraku / Sansan and more), strict access management, and hierarchical organizations. It comprises **45 patterns (safe operation models)** and **value operation pages (value delivery models)**.
+This site is a practical reference built on the premise of organizations with tens of thousands of employees, diverse existing SaaS systems (Salesforce / ServiceNow / Workday / Okta / Slack / Box / Jira / Zendesk / Shopify / Bakuraku / Sansan and more), strict access management, and hierarchical organizations. It comprises **31 decisions (safe operation models)** and **value operation pages (value delivery models)**.
 
 !!! note "Dual Structure of This Site"
-    **45 patterns** (7 planes: Experience 3 + Governance 10 + Identity 8 + Runtime 11 + Knowledge 7 + Integration 4 + Observability 2) provide **design models for safe agent operation**, and **21 selection criteria** (degree 9 + tradeoff 12) provide adjustment and decision axes. In addition, **value operation pages** ([Value Maturity Roadmap](integration/value-maturity-roadmap.md) · [Use Case Selection Guide](integration/usecase-selection-guide.md) · [GV-10 Three-Layer Value Measurement](patterns/gv-governance/gv10-two-layer-value-measurement.md) · [Adoption & Change Management](integration/adoption.md) · [AI Investment Portfolio](integration/portfolio.md)) provide **operational models for delivering value**. The 45 patterns ensure safety; the value operation pages drive outcomes — this dual structure is the design philosophy of this site.
+    **31 decisions** (7 planes: Experience 3 + Governance 10 + Identity 8 + Runtime 11 + Knowledge 7 + Integration 4 + Observability 2) provide **design models for safe agent operation**, and **21 selection criteria** (degree 9 + tradeoff 12) provide adjustment and decision axes. In addition, **value operation pages** ([Value Maturity Roadmap](integration/value-maturity-roadmap.md) · [Use Case Selection Guide](integration/usecase-selection-guide.md) · [GV-10 Three-Layer Value Measurement](decisions/gv-governance/gv-d7-value-measurement.md) · [Adoption & Change Management](integration/adoption.md) · [AI Investment Portfolio](integration/portfolio.md)) provide **operational models for delivering value**. The 31 decisions ensure safety; the value operation pages drive outcomes — this dual structure is the design philosophy of this site.
 
 ## Site Structure
 
@@ -20,15 +20,15 @@ This site is a practical reference built on the premise of organizations with te
 
     Core thesis, agent taxonomy, org graph, 7-plane architecture, and standards alignment.
 
-- :material-shape-outline: **[Pattern Catalog](patterns/index.md)**
+- :material-shape-outline: **[Decision Catalog](decisions/index.md)**
 
-    45 patterns across 7 planes, each described with a common schema.
+    31 decisions across 7 planes, each described with a common schema.
 
-- :material-tune-variant: **[Degree Selection Criteria](decisions/degree/index.md)**
+- :material-tune-variant: **[Degree Selection Criteria](decisions/index.md)**
 
     How to set continuous parameters such as autonomy tier, budget, log three-layer separation, and guardrail strength.
 
-- :material-scale-balance: **[Tradeoff Selection Criteria](decisions/tradeoff/index.md)**
+- :material-scale-balance: **[Tradeoff Selection Criteria](decisions/index.md)**
 
     Decision axes for binary choices such as OBO/SA, central lake/Mesh, Copilot/Autopilot.
 
@@ -38,7 +38,7 @@ This site is a practical reference built on the premise of organizations with te
 
 - :material-chart-line: **[Value Operation Pages](integration/value-maturity-roadmap.md)**
 
-    [Value Maturity Roadmap](integration/value-maturity-roadmap.md) · [Use Case Selection Guide](integration/usecase-selection-guide.md) · [GV-10 Three-Layer Value Measurement](patterns/gv-governance/gv10-two-layer-value-measurement.md) · [Adoption & Change Management](integration/adoption.md) · [AI Investment Portfolio](integration/portfolio.md) · [Value Realization Anti-Patterns](integration/value-anti-patterns.md) · [Department Use Cases](integration/departments/index.md).
+    [Value Maturity Roadmap](integration/value-maturity-roadmap.md) · [Use Case Selection Guide](integration/usecase-selection-guide.md) · [GV-10 Three-Layer Value Measurement](decisions/gv-governance/gv-d7-value-measurement.md) · [Adoption & Change Management](integration/adoption.md) · [AI Investment Portfolio](integration/portfolio.md) · [Value Realization Anti-Patterns](integration/value-anti-patterns.md) · [Department Use Cases](integration/departments/index.md).
 
 </div>
 
@@ -48,10 +48,10 @@ The enterprise value generated by AI agents can be summarized along five axes:
 
 | Value Axis | Example Effects | Related Pages |
 |---|---|---|
-| **Revenue & Profit Improvement** | Win rate improvement, upsell suggestions, churn risk detection | [Sales Agent](integration/departments/sales.md) · [GV-10 Value Measurement (3-layer)](patterns/gv-governance/gv10-two-layer-value-measurement.md) |
-| **Business Automation** | End-to-end back-office processing, zero-touch routine tasks | [Combination Recipes](integration/recipe.md) · [RT-10 Event-Driven](patterns/rt-runtime/rt10-event-driven-orchestrator.md) |
-| **Project Productivity** | Lead time reduction, bottleneck detection, instant information sharing | [RT-11 Digital Twin](patterns/rt-runtime/rt11-project-digital-twin.md) · [Engineering Agent](integration/departments/engineering.md) |
-| **Employee Efficiency** | Information search, draft generation, automated triage | [KM-1 Access-Controlled RAG](patterns/km-knowledge/km1-access-controlled-rag.md) · [Adoption & Change Management](integration/adoption.md) |
+| **Revenue & Profit Improvement** | Win rate improvement, upsell suggestions, churn risk detection | [Sales Agent](integration/departments/sales.md) · [GV-10 Value Measurement (3-layer)](decisions/gv-governance/gv-d7-value-measurement.md) |
+| **Business Automation** | End-to-end back-office processing, zero-touch routine tasks | [Combination Recipes](integration/recipe.md) · [RT-10 Event-Driven](decisions/rt-runtime/rt-d5-trigger-mechanism.md) |
+| **Project Productivity** | Lead time reduction, bottleneck detection, instant information sharing | [RT-11 Digital Twin](decisions/rt-runtime/rt-d6-project-digital-twin.md) · [Engineering Agent](integration/departments/engineering.md) |
+| **Employee Efficiency** | Information search, draft generation, automated triage | [KM-1 Access-Controlled RAG](decisions/km-knowledge/km-d1-context-supply.md) · [Adoption & Change Management](integration/adoption.md) |
 | **Accelerated Decision-Making** | Cross-functional KPI views, scenario analysis, early risk detection | [Executive Agent](integration/departments/executive.md) · [AI Investment Portfolio](integration/portfolio.md) |
 
 !!! tip "Quick Win: First ROI in 90 Days"
@@ -59,7 +59,7 @@ The enterprise value generated by AI agents can be summarized along five axes:
 
 ## Value Loop: Create → Measure → Adopt → Reinvest
 
-The 45 patterns provide a safe execution foundation. Value then circulates through four steps on top of that foundation. Keeping this loop turning is the substance of enterprise value creation.
+The 31 decisions provide a safe execution foundation. Value then circulates through four steps on top of that foundation. Keeping this loop turning is the substance of enterprise value creation.
 
 ```mermaid
 flowchart LR
@@ -75,7 +75,7 @@ flowchart LR
     ADOPT --> REINVEST
     REINVEST --> CREATE
 
-    subgraph Foundation["Governance Foundation (7 Planes · 45 Patterns)"]
+    subgraph Foundation["Governance Foundation (7 Planes · 31 Decisions)"]
         CTRL["Identity · Permissions · Audit · Governance"]
     end
 
@@ -85,7 +85,7 @@ flowchart LR
 | Step | Actor | Key Pages |
 |---|---|---|
 | ① Value Creation | Departmental agents drive outcome KPIs | [Department Use Cases](integration/departments/index.md) · [Combination Recipes](integration/recipe.md) |
-| ② Measurement | Track causation across adoption → productivity → business KPIs (3 layers) | [GV-10 Three-Layer Value Measurement](patterns/gv-governance/gv10-two-layer-value-measurement.md) |
+| ② Measurement | Track causation across adoption → productivity → business KPIs (3 layers) | [GV-10 Three-Layer Value Measurement](decisions/gv-governance/gv-d7-value-measurement.md) |
 | ③ Adoption | Raise utilization to secure the ROI denominator | [Adoption & Change Management](integration/adoption.md) |
 | ④ Reinvestment | Decide to expand, improve, or retire based on measurements | [AI Investment Portfolio](integration/portfolio.md) · [Use Case Selection Guide](integration/usecase-selection-guide.md) |
 

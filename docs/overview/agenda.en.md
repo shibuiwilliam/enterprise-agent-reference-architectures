@@ -11,8 +11,8 @@ status: done
 ### For Human Architects & Engineers
 
 1. **[Design Principles](principles.md)** — Understand the core philosophy
-2. **[Pattern Catalog](../patterns/index.md)** — Browse patterns by facet to identify relevant ones
-3. **[Degree Criteria](../decisions/degree/index.md)** and **[Tradeoff Criteria](../decisions/tradeoff/index.md)** — Calibrate continuous parameters and binary choices
+2. **[Decision Catalog](../decisions/index.md)** — Browse patterns by facet to identify relevant ones
+3. **[Degree Criteria](../decisions/index.md)** and **[Tradeoff Criteria](../decisions/index.md)** — Calibrate continuous parameters and binary choices
 4. **[Composition Recipes](../integration/recipe.md)** — Review proven pattern combinations
 5. **[Department Examples](../integration/departments/index.md)** — See concrete examples for your domain
 
@@ -71,11 +71,11 @@ The central challenge of integrating AI agents into an enterprise is not "**maki
 
 An enterprise AI agent is not just a chat UI. It is a **controllable, auditable, permission-governed "digital business actor"** — one that faithfully reflects the organization's permission structure, binds together the truth of existing systems (System of Record) without disrupting them, and confines all actions to a form that can be audited and governed across the enterprise. Within that safe enclosure, released intelligence functions as an **execution actor that generates enterprise value** in the form of improved win rates, business automation, accelerated decision-making, and cost optimization.
 
-Safe operation is a prerequisite; improving enterprise value is the purpose. The governance design ("who's authority, which data, with what protections, under whose responsibility") encompassed by the 7 planes and 45 patterns of this reference, and the value design ("which outcome KPIs, via which pathways, by when") covered in [Department Use Cases](../integration/departments/index.md), [Adoption & Change Management](../integration/adoption.md), and [AI Investment Portfolio](../integration/portfolio.md) are two wheels of the same vehicle.
+Safe operation is a prerequisite; improving enterprise value is the purpose. The governance design ("who's authority, which data, with what protections, under whose responsibility") encompassed by the 7 planes and 31 decisions of this reference, and the value design ("which outcome KPIs, via which pathways, by when") covered in [Department Use Cases](../integration/departments/index.md), [Adoption & Change Management](../integration/adoption.md), and [AI Investment Portfolio](../integration/portfolio.md) are two wheels of the same vehicle.
 
 ### Value Loop: Create → Measure → Adopt → Reinvest
 
-The governance design (7 planes · 45 patterns) provides a safe execution foundation. Value then circulates through four steps on top of that foundation. Keeping this loop turning is the substance of enterprise value creation.
+The governance design (7 planes · 31 decisions) provides a safe execution foundation. Value then circulates through four steps on top of that foundation. Keeping this loop turning is the substance of enterprise value creation.
 
 ```mermaid
 flowchart LR
@@ -91,7 +91,7 @@ flowchart LR
     ADOPT --> REINVEST
     REINVEST --> CREATE
 
-    subgraph Foundation["Governance Foundation (7 Planes · 45 Patterns)"]
+    subgraph Foundation["Governance Foundation (7 Planes · 31 Decisions)"]
         CTRL["Identity · Permissions · Audit · Governance"]
     end
 
@@ -101,7 +101,7 @@ flowchart LR
 | Step | Actor | Key Pages |
 |---|---|---|
 | ① Value Creation | Departmental agents drive outcome KPIs | [Department Use Cases](../integration/departments/index.md) · [Combination Recipes](../integration/recipe.md) |
-| ② Measurement | Track causation across adoption → productivity → business KPIs (3 layers) | [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) |
+| ② Measurement | Track causation across adoption → productivity → business KPIs (3 layers) | [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) |
 | ③ Adoption | Raise utilization to secure the ROI denominator | [Adoption & Change Management](../integration/adoption.md) |
 | ④ Reinvestment | Decide to expand, improve, or retire based on measurements | [AI Investment Portfolio](../integration/portfolio.md) · [Use Case Selection Guide](../integration/usecase-selection-guide.md) |
 
@@ -206,13 +206,13 @@ The responsibilities of each plane are as follows.
 
 | Plane | Theme | Focus | Pattern Count |
 |---|---|---|---|
-| [Plane 1: Experience & Gateway (EX)](../patterns/ex-experience/index.md) | Entry point and delivery surface | Reach users where work happens; enforce control at the entry point | 3 |
-| [Plane 2: Control & Governance (GV)](../patterns/gv-governance/index.md) | Governance and control | Central registry, model governance, evaluation, cost, incident response | 10 |
-| [Plane 3: Identity & Trust (ID)](../patterns/id-identity/index.md) | Faithful propagation of permissions | Guarantee who's authority the agent operates under (highest design complexity of all planes) | 8 |
-| [Plane 4: Runtime & Orchestration (RT)](../patterns/rt-runtime/index.md) | Division of labor, execution, automation | Responsibility allocation, autonomy, side effects, long-running tasks, events | 11 |
-| [Plane 5: Knowledge, Memory & Context (KM)](../patterns/km-knowledge/index.md) | Capture and leverage knowledge | Supply cross-cutting context while preserving permissions | 7 |
-| [Plane 6: Integration & Tools (IN)](../patterns/in-integration/index.md) | Existing system integration | Bundle rather than build; absorb system-specific differences | 4 |
-| [Plane 7: Observability & Audit (OB)](../patterns/ob-observability/index.md) | Accountability | Make all actions reconstructable via three-party attribution | 2 |
+| [Plane 1: Experience & Gateway (EX)](../decisions/ex-experience/ex-d1-front-door-channel.md) | Entry point and delivery surface | Reach users where work happens; enforce control at the entry point | 3 |
+| [Plane 2: Control & Governance (GV)](../decisions/gv-governance/gv-d1-control-plane-scope.md) | Governance and control | Central registry, model governance, evaluation, cost, incident response | 10 |
+| [Plane 3: Identity & Trust (ID)](../decisions/id-identity/id-d1-workforce-customer-split.md) | Faithful propagation of permissions | Guarantee who's authority the agent operates under (highest design complexity of all planes) | 8 |
+| [Plane 4: Runtime & Orchestration (RT)](../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md) | Division of labor, execution, automation | Responsibility allocation, autonomy, side effects, long-running tasks, events | 11 |
+| [Plane 5: Knowledge, Memory & Context (KM)](../decisions/km-knowledge/km-d1-context-supply.md) | Capture and leverage knowledge | Supply cross-cutting context while preserving permissions | 7 |
+| [Plane 6: Integration & Tools (IN)](../decisions/in-integration/in-d1-tool-gateway.md) | Existing system integration | Bundle rather than build; absorb system-specific differences | 4 |
+| [Plane 7: Observability & Audit (OB)](../decisions/ob-observability/ob-d1-observability-scope.md) | Accountability | Make all actions reconstructable via three-party attribution | 2 |
 
 !!! tip "How to Read This"
     Planes 1–2 handle "entry and governance"; Plane 3 handles "faithful propagation of permissions (high design complexity)"; Planes 4–6 handle "execution, knowledge, and integration"; Plane 7 handles "accountability." The dependency structure stacking these planes is shown in [Dependency Chains](../integration/dependency-chain.md). **Which enterprise value KPIs each pattern affects** is stated in each pattern's "Value Hypothesis" section; concrete outcome KPI mappings by department are in [Department Use Cases](../integration/departments/index.md); phased deployment design is in [Value Maturity Roadmap](../integration/value-maturity-roadmap.md); and how to choose initial use cases is covered in the [Use Case Selection Guide](../integration/usecase-selection-guide.md).
@@ -244,24 +244,24 @@ The following shows which patterns and selection criteria in this reference addr
 
 | Standard / Risk Item | Corresponding Patterns / Selection Criteria |
 |---|---|
-| **OWASP: Prompt Injection** | [ID-7 Policy-as-Code Guardrail](../patterns/id-identity/id7-policy-as-code-guardrail.md), [TO-12 Prompt vs Platform](../decisions/tradeoff/to12-prompt-vs-platform.md) |
-| **OWASP: Sensitive Information Disclosure** | [KM-1 Access-Controlled RAG](../patterns/km-knowledge/km1-access-controlled-rag.md), [KM-6 DLP & Redaction](../patterns/km-knowledge/km6-dlp-redaction-boundary.md), [ID-1 Two-Surface Separation](../patterns/id-identity/id1-workforce-customer-split.md) |
-| **OWASP: Excessive Agency** | [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md), [RT-6 SoR Write Boundary](../patterns/rt-runtime/rt6-sor-write-boundary.md), [ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md) |
-| **OWASP: Unbounded Consumption** | [DC-2 Timeout, Retry, Budget](../decisions/degree/dc2-timeout-retry-budget.md), [GV-8 Cost Quota & Chargeback](../patterns/gv-governance/gv8-cost-quota-chargeback.md) |
-| **NIST AI RMF: Generative AI Risk Management** | [GV-7 Evaluation Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md), [GV-4 Industry Policy Pack](../patterns/gv-governance/gv4-industry-policy-pack.md), [DC-1 Autonomy Tier](../decisions/degree/dc1-risk-tier-boundary.md) |
-| **NIST SP 800-207: Zero Trust** | [ID-6 Zero-Trust PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md), [ID-2 OBO Delegation](../patterns/id-identity/id2-identity-federation-obo.md), [ID-5 JIT Credentials](../patterns/id-identity/id5-jit-scoped-credentials.md) |
-| **RFC 8693: Token Exchange** | [ID-2 OBO Delegation](../patterns/id-identity/id2-identity-federation-obo.md) |
-| **OPA/Rego · Cedar** | [ID-7 Policy-as-Code Guardrail](../patterns/id-identity/id7-policy-as-code-guardrail.md) |
-| **MCP** | [IN-1 Tool / MCP Gateway](../patterns/in-integration/in1-tool-mcp-gateway.md) |
-| **CloudEvents** | [RT-10 Event-Driven Orchestrator](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) |
-| **OpenTelemetry** | [OB-1 Observability Lake](../patterns/ob-observability/ob1-observability-lake.md), [OB-2 Unified Audit](../patterns/ob-observability/ob2-unified-audit-lineage.md) |
+| **OWASP: Prompt Injection** | [ID-7 Policy-as-Code Guardrail](../decisions/id-identity/id-d5-authorization-method.md), [TO-12 Prompt vs Platform](../decisions/id-identity/id-d5-authorization-method.md) |
+| **OWASP: Sensitive Information Disclosure** | [KM-1 Access-Controlled RAG](../decisions/km-knowledge/km-d1-context-supply.md), [KM-6 DLP & Redaction](../decisions/km-knowledge/km-d5-confidentiality-strength.md), [ID-1 Two-Surface Separation](../decisions/id-identity/id-d1-workforce-customer-split.md) |
+| **OWASP: Excessive Agency** | [RT-3 Risk-Tiered Autonomy](../decisions/rt-runtime/rt-d2-autonomy-design.md), [RT-6 SoR Write Boundary](../decisions/rt-runtime/rt-d3-side-effect-safety.md), [ID-4 Permission Mirror](../decisions/id-identity/id-d3-permission-reduction.md) |
+| **OWASP: Unbounded Consumption** | [DC-2 Timeout, Retry, Budget](../decisions/gv-governance/gv-d4-cost-visibility.md), [GV-8 Cost Quota & Chargeback](../decisions/gv-governance/gv-d4-cost-visibility.md) |
+| **NIST AI RMF: Generative AI Risk Management** | [GV-7 Evaluation Pipeline](../decisions/gv-governance/gv-d3-change-eval-rigor.md), [GV-4 Industry Policy Pack](../decisions/gv-governance/gv-d6-industry-regulation.md), [DC-1 Autonomy Tier](../decisions/rt-runtime/rt-d2-autonomy-design.md) |
+| **NIST SP 800-207: Zero Trust** | [ID-6 Zero-Trust PDP/PEP](../decisions/id-identity/id-d5-authorization-method.md), [ID-2 OBO Delegation](../decisions/id-identity/id-d2-delegation-method.md), [ID-5 JIT Credentials](../decisions/id-identity/id-d4-credential-minimization.md) |
+| **RFC 8693: Token Exchange** | [ID-2 OBO Delegation](../decisions/id-identity/id-d2-delegation-method.md) |
+| **OPA/Rego · Cedar** | [ID-7 Policy-as-Code Guardrail](../decisions/id-identity/id-d5-authorization-method.md) |
+| **MCP** | [IN-1 Tool / MCP Gateway](../decisions/in-integration/in-d1-tool-gateway.md) |
+| **CloudEvents** | [RT-10 Event-Driven Orchestrator](../decisions/rt-runtime/rt-d5-trigger-mechanism.md) |
+| **OpenTelemetry** | [OB-1 Observability Lake](../decisions/ob-observability/ob-d1-observability-scope.md), [OB-2 Unified Audit](../decisions/ob-observability/ob-d2-audit-attribution.md) |
 
 ## How to Navigate This Reference
 
 1. **This chapter**: Thesis, integration principles, foundational concepts, 7-plane architecture, standards alignment
 2. **[Item Design and Plane Classification](schema.md)**: Description schema for each pattern and plane (category) design
-3. **[Pattern Catalog](../patterns/index.md)**: The body of 7 planes · 45 patterns (Experience 3 + Governance 10 + Identity 8 + Runtime 11 + Knowledge 7 + Integration 4 + Observability 2)
-4. **[Degree Selection Criteria](../decisions/degree/index.md)**: How to set continuous parameters (9 items)
-5. **[Tradeoff Selection Criteria](../decisions/tradeoff/index.md)**: Decision axes for binary choices (12 items)
+3. **[Decision Catalog](../decisions/index.md)**: The body of 7 planes · 31 decisions (Experience 3 + Governance 10 + Identity 8 + Runtime 11 + Knowledge 7 + Integration 4 + Observability 2)
+4. **[Degree Selection Criteria](../decisions/index.md)**: How to set continuous parameters (9 items)
+5. **[Tradeoff Selection Criteria](../decisions/index.md)**: Decision axes for binary choices (12 items)
 6. **[Integration & Combination](../integration/dependency-chain.md)**: Dependency chains, cross-cutting axes, combination recipes, department use cases, reference architectures
-7. **[Glossary](../glossary.md)**: Definitions of specialized terms
+7. **[Glossary](foundations.md)**: Definitions of specialized terms

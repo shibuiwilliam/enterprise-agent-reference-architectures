@@ -20,13 +20,13 @@ Even with a successful AI agent deployment, falling into these anti-patterns pre
 
 **Symptom**: Time freed by agents is not redirected to higher-value activities. Hours are saved, but outcome KPIs don't move.
 
-**Avoidance**: Track the "productivity improvement → business KPI improvement" causal chain using [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md), and define where freed time should be redirected.
+**Avoidance**: Track the "productivity improvement → business KPI improvement" causal chain using [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md), and define where freed time should be redirected.
 
 ### 3. Deployment Without Measurement
 
 **Symptom**: Continuing to invest in expansion without measuring ROI, eroding executive trust.
 
-**Avoidance**: Start [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) baseline measurement from the pilot phase and demonstrate reportable ROI within 90 days.
+**Avoidance**: Start [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) baseline measurement from the pilot phase and demonstrate reportable ROI within 90 days.
 
 ### 4. Missing Adoption Strategy
 
@@ -50,7 +50,7 @@ Even with a successful AI agent deployment, falling into these anti-patterns pre
 
 **Symptom**: Each department builds its own agents independently, preventing company-wide learning, reuse, and governance.
 
-**Avoidance**: Establish a company-wide registry with [GV-1 Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md), promote cross-department reuse with [GV-2 Catalog](../patterns/gv-governance/gv2-agent-catalog-marketplace.md), and optimize investment allocation with [AI Investment Portfolio](portfolio.md).
+**Avoidance**: Establish a company-wide registry with [GV-1 Control Plane](../decisions/gv-governance/gv-d1-control-plane-scope.md), promote cross-department reuse with [GV-2 Catalog](../decisions/gv-governance/gv-d1-control-plane-scope.md), and optimize investment allocation with [AI Investment Portfolio](portfolio.md).
 
 ## Relationship to the Value Loop
 
@@ -78,6 +78,6 @@ flowchart LR
 - [Use-Case Selection Guide](usecase-selection-guide.md)
 - [Composition Recipes](recipe.md)
 - [Adoption & Change Management](adoption.md)
-- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md)
+- [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md)
 - [Value Maturity Roadmap](value-maturity-roadmap.md)
 - [AI Investment Portfolio](portfolio.md)

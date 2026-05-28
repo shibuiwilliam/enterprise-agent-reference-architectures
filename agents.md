@@ -61,7 +61,7 @@
 各 JSON ファイルは以下のスキーマに従う：
 
 - `index.json`：エントリポイント。各リソースのパスとスキーマバージョン。
-- `patterns.json`：45パターンの id / plane / summary / applies_when / decision_keys / value_drivers / kpis / prerequisites / related / mvp / cost_orientation。
+- `patterns.json`：31意思決定の id / plane / summary / applies_when / decision_keys / value_drivers / kpis / prerequisites / related / mvp / cost_orientation。
 - `decisions.json`：DC/TO 全21項目の id / title / options / default_recommendation。
 - `value-loop.json`：価値ループの6ノードと相互リンク、各ノードが参照するパターン群。
 - `departments.json`：部門別事例の value_usecases / kpis / value_ladder / applied_patterns。

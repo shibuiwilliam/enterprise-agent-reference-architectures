@@ -51,7 +51,7 @@ flowchart LR
 ```
 
 !!! warning "ROI Without Utilization Is an Illusion"
-    Layer 2 business KPIs (revenue impact, cost reduction) are determined by Layer 0 utilization rate × Layer 1 effect size. Even with a high effect size, low utilization means small company-wide impact. Layer 0 measurement makes the "denominator" of ROI visible. This chapter is responsible for operational measures to raise Layer 0; the authoritative measurement is centrally managed by [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md).
+    Layer 2 business KPIs (revenue impact, cost reduction) are determined by Layer 0 utilization rate × Layer 1 effect size. Even with a high effect size, low utilization means small company-wide impact. Layer 0 measurement makes the "denominator" of ROI visible. This chapter is responsible for operational measures to raise Layer 0; the authoritative measurement is centrally managed by [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md).
 
 ## Trust-Building UX Design
 
@@ -79,7 +79,7 @@ Explicitly show the basis for the agent's judgment and confidence level.
 - **Before/After comparison**: Compare and display processing time before introduction vs. after agent use
 
 !!! warning "Tie Estimated Values to GV-10 Baseline"
-    The "estimated X minutes saved" shown in immediate feedback should be calculated based on the [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) baseline (pre-introduction actual measurements or control group measurements). "Inflated numbers" without basis may temporarily encourage use, but when the gap from actual results is discovered, trust is significantly damaged. Keeping the immediate feedback for UX and the numbers for management reporting consistent by calculating from the same baseline maintains integrity.
+    The "estimated X minutes saved" shown in immediate feedback should be calculated based on the [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) baseline (pre-introduction actual measurements or control group measurements). "Inflated numbers" without basis may temporarily encourage use, but when the gap from actual results is discovered, trust is significantly damaged. Keeping the immediate feedback for UX and the numbers for management reporting consistent by calculating from the same baseline maintains integrity.
 
 ## Change Management Roadmap
 
@@ -130,10 +130,10 @@ Safety and governance pitfalls are covered in each pattern page, but **typical f
 | Anti-pattern | Symptoms | Why Value Does Not Emerge | Avoidance |
 |---|---|---|---|
 | **Automating Broken Processes (Paving the Cowpath)** | Transplanting existing inefficient manual work directly to an agent | Running inefficient processes faster does not move outcome KPIs. The validity of the process must be questioned before automation | When selecting automation targets, first verify "is this process truly necessary?" Use the five-axis scoring in [Use Case Selection Guide](usecase-selection-guide.md) to pre-evaluate value impact |
-| **Deflection Causing CSAT Decline (Value Substitution)** | Self-resolution rate (deflection) rises but CSAT falls | Cases requiring human handling are pushed to the agent, damaging customer experience. Cost reduction and customer value are in tradeoff | Use [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) to set escalation thresholds and simultaneously measure CSAT and deflection to find the optimal point |
-| **Uncaptured Free Time (Phantom ROI)** | "X hours saved per month" is reported, but the free time is not reallocated to valuable work | Processing time reduction is a necessary condition, not sufficient. Unless reduced time is converted to sales activities or skill improvement, there is no accounting-level outcome | Use [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) to jointly measure Layer 1 (productivity) and Layer 2 (business KPIs), tracking the causality of time reduction → outcome KPI change |
+| **Deflection Causing CSAT Decline (Value Substitution)** | Self-resolution rate (deflection) rises but CSAT falls | Cases requiring human handling are pushed to the agent, damaging customer experience. Cost reduction and customer value are in tradeoff | Use [RT-3 Risk-Tiered Autonomy](../decisions/rt-runtime/rt-d2-autonomy-design.md) to set escalation thresholds and simultaneously measure CSAT and deflection to find the optimal point |
+| **Uncaptured Free Time (Phantom ROI)** | "X hours saved per month" is reported, but the free time is not reallocated to valuable work | Processing time reduction is a necessary condition, not sufficient. Unless reduced time is converted to sales activities or skill improvement, there is no accounting-level outcome | Use [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) to jointly measure Layer 1 (productivity) and Layer 2 (business KPIs), tracking the causality of time reduction → outcome KPI change |
 | **PoC Bog (Evaluation Continues, Never Goes to Production)** | PoC cycles continue, always "under evaluation," never reaching production deployment | Either pursuit of perfect safety foundation delays starting, or success criteria are ambiguous and termination conditions for PoC are undefined | Adopt the [minimum safe baseline in the combination recipe](recipe.md) and start production with read-only + access-controlled RAG + thin audit layer. Set a deadline and quantitative success criteria for PoC in advance |
-| **Cost Savings Not Recognized in Accounting** | Agent reduces processing time but not recognized as financial outcomes | IT department reports "technically successful" only, without converting to accounting line items (labor costs, outsourcing fees, SaaS fee reductions) recognized by CFO/management | Define correspondence to accounting line items in [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) Layer 2, and report as financial results in [AI Investment Portfolio](portfolio.md) quarterly reviews |
+| **Cost Savings Not Recognized in Accounting** | Agent reduces processing time but not recognized as financial outcomes | IT department reports "technically successful" only, without converting to accounting line items (labor costs, outsourcing fees, SaaS fee reductions) recognized by CFO/management | Define correspondence to accounting line items in [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) Layer 2, and report as financial results in [AI Investment Portfolio](portfolio.md) quarterly reviews |
 
 !!! warning "Value Anti-patterns Are Prevented Structurally, Like Safety Anti-patterns"
     "Trying harder" won't prevent them. Structural avoidance comes from incorporating GV-10 measurement, pre-evaluation using the use case selection guide, and withdrawal decisions through portfolio quarterly reviews as operational processes.
@@ -148,8 +148,8 @@ Adoption is maintained not as one-way "delivery" but through a **bidirectional c
 
 ## Related Patterns
 
-- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — Authoritative measurement for Layer 0 (adoption and retention). This chapter handles the operational measures
-- [GV-7 Evaluation & Governance Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) — Feedback flowing back into quality evaluation
-- [GV-2 Agent Catalog & Marketplace](../patterns/gv-governance/gv2-agent-catalog-marketplace.md) — Cataloging user requests
-- [EX-2 Embedded vs. Independent Portal](../patterns/ex-experience/ex2-embedded-vs-portal.md) — Channel placement supporting business process embedding
-- [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) — Technical foundation for the value staircase (staged autonomy expansion)
+- [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) — Authoritative measurement for Layer 0 (adoption and retention). This chapter handles the operational measures
+- [GV-7 Evaluation & Governance Pipeline](../decisions/gv-governance/gv-d3-change-eval-rigor.md) — Feedback flowing back into quality evaluation
+- [GV-2 Agent Catalog & Marketplace](../decisions/gv-governance/gv-d1-control-plane-scope.md) — Cataloging user requests
+- [EX-2 Embedded vs. Independent Portal](../decisions/ex-experience/ex-d1-front-door-channel.md) — Channel placement supporting business process embedding
+- [RT-3 Risk-Tiered Autonomy](../decisions/rt-runtime/rt-d2-autonomy-design.md) — Technical foundation for the value staircase (staged autonomy expansion)

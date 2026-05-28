@@ -2,6 +2,11 @@
   {
     "id": "customer-support",
     "name": "Customer Support Agent の適用パターン",
+    "value_drivers": [
+      "customer_value",
+      "automation",
+      "employee_efficiency"
+    ],
     "value_usecases": [
       "FAQ自動回答（Deflection）",
       "チケットトリアージ・優先度付け",
@@ -16,11 +21,6 @@
       "初回解決率",
       "平均応答時間"
     ],
-    "value_ladder": [
-      "Step 1: 可視化 — FAQ検索・チケット履歴参照",
-      "Step 2: 分析・自動応答 — FAQ自動回答・トリアージ",
-      "Step 3: 実行支援 — エスカレーション・返金処理"
-    ],
     "applied_patterns": [
       "EX-3",
       "ID-1",
@@ -30,15 +30,28 @@
       "IN-2",
       "OB-2"
     ],
-    "value_drivers": [
-      "customer_value",
-      "automation",
-      "employee_efficiency"
+    "value_ladder": [
+      "Step 1: 可視化 — FAQ検索・チケット履歴参照",
+      "Step 2: 分析・自動応答 — FAQ自動回答・トリアージ",
+      "Step 3: 実行支援 — エスカレーション・返金処理"
+    ],
+    "file": "integration/departments/customer-support.md",
+    "involved_decisions": [
+      "ID-D1",
+      "RT-D2",
+      "KM-D1",
+      "RT-D4",
+      "RT-D5"
     ]
   },
   {
     "id": "engineering",
     "name": "Engineering Agent の適用パターン",
+    "value_drivers": [
+      "project_productivity",
+      "automation",
+      "employee_efficiency"
+    ],
     "value_usecases": [
       "コードレビュー支援",
       "障害トリアージ・根本原因分析",
@@ -53,11 +66,6 @@
       "デプロイ頻度",
       "障害復旧時間"
     ],
-    "value_ladder": [
-      "Step 1: 可視化 — ログ検索・進捗ダッシュボード",
-      "Step 2: 分析・示唆 — コードレビュー・障害トリアージ",
-      "Step 3: 実行支援 — PRマージ・デプロイ・ドキュメント更新"
-    ],
     "applied_patterns": [
       "RT-11",
       "RT-2",
@@ -66,15 +74,28 @@
       "IN-1",
       "OB-1"
     ],
-    "value_drivers": [
-      "project_productivity",
-      "automation",
-      "employee_efficiency"
+    "value_ladder": [
+      "Step 1: 可視化 — ログ検索・進捗ダッシュボード",
+      "Step 2: 分析・示唆 — コードレビュー・障害トリアージ",
+      "Step 3: 実行支援 — PRマージ・デプロイ・ドキュメント更新"
+    ],
+    "file": "integration/departments/engineering.md",
+    "involved_decisions": [
+      "IN-D1",
+      "ID-D5",
+      "RT-D4",
+      "OB-D1",
+      "GV-D5"
     ]
   },
   {
     "id": "executive",
     "name": "Executive Agent の適用パターン",
+    "value_drivers": [
+      "executive_decision",
+      "decision_quality",
+      "audit_compliance"
+    ],
     "value_usecases": [
       "全社KPI横断ダッシュボード",
       "シナリオ分析・What-if シミュレーション",
@@ -88,11 +109,6 @@
       "KPI可視化カバレッジ",
       "MNPI漏洩ゼロ"
     ],
-    "value_ladder": [
-      "Step 1: 可視化 — 全社KPI横断・レポート自動生成",
-      "Step 2: 分析・示唆 — シナリオ分析・リスク察知",
-      "Step 3: 実行支援 — 投資判断・ポートフォリオ配分"
-    ],
     "applied_patterns": [
       "KM-2",
       "KM-3",
@@ -101,15 +117,29 @@
       "GV-7",
       "OB-2"
     ],
-    "value_drivers": [
-      "executive_decision",
-      "decision_quality",
-      "audit_compliance"
+    "value_ladder": [
+      "Step 1: 可視化 — 全社KPI横断・レポート自動生成",
+      "Step 2: 分析・示唆 — シナリオ分析・リスク察知",
+      "Step 3: 実行支援 — 投資判断・ポートフォリオ配分"
+    ],
+    "file": "integration/departments/executive.md",
+    "involved_decisions": [
+      "KM-D2",
+      "KM-D1",
+      "KM-D5",
+      "GV-D4",
+      "GV-D3",
+      "OB-D2"
     ]
   },
   {
     "id": "hr",
     "name": "HR Agent の適用パターン",
+    "value_drivers": [
+      "employee_efficiency",
+      "automation",
+      "audit_compliance"
+    ],
     "value_usecases": [
       "採用候補者スクリーニング",
       "オンボーディング自動化",
@@ -124,11 +154,6 @@
       "従業員満足度",
       "人事問い合わせ対応時間"
     ],
-    "value_ladder": [
-      "Step 1: 可視化（Read-only）— FAQ回答・規程検索",
-      "Step 2: 分析・示唆 — 離職予兆・候補者スクリーニング",
-      "Step 3: 実行支援（書き込み）— オンボーディング自動化"
-    ],
     "applied_patterns": [
       "ID-2",
       "ID-4",
@@ -138,15 +163,28 @@
       "RT-4",
       "KM-6"
     ],
-    "value_drivers": [
-      "employee_efficiency",
-      "automation",
-      "audit_compliance"
+    "value_ladder": [
+      "Step 1: 可視化（Read-only）— FAQ回答・規程検索",
+      "Step 2: 分析・示唆 — 離職予兆・候補者スクリーニング",
+      "Step 3: 実行支援（書き込み）— オンボーディング自動化"
+    ],
+    "file": "integration/departments/hr.md",
+    "involved_decisions": [
+      "KM-D3",
+      "KM-D5",
+      "RT-D2",
+      "GV-D6",
+      "RT-D3"
     ]
   },
   {
     "id": "sales",
     "name": "Sales Agent の適用パターン",
+    "value_drivers": [
+      "revenue_growth",
+      "employee_efficiency",
+      "automation"
+    ],
     "value_usecases": [
       "ネクストベストアクション提案",
       "失注分析と予兆検知",
@@ -162,11 +200,6 @@
       "予測誤差率",
       "一人当たり売上"
     ],
-    "value_ladder": [
-      "Step 1: 効率化（Read-only）— 商談サマリー・情報検索",
-      "Step 2: 示唆提供（分析）— 失注予兆・ネクストアクション",
-      "Step 3: 業務実行（書き込み）— 商談更新・見積作成"
-    ],
     "applied_patterns": [
       "ID-2",
       "ID-4",
@@ -175,10 +208,19 @@
       "RT-5",
       "RT-4"
     ],
-    "value_drivers": [
-      "revenue_growth",
-      "employee_efficiency",
-      "automation"
+    "value_ladder": [
+      "Step 1: 効率化（Read-only）— 商談サマリー・情報検索",
+      "Step 2: 示唆提供（分析）— 失注予兆・ネクストアクション",
+      "Step 3: 業務実行（書き込み）— 商談更新・見積作成"
+    ],
+    "file": "integration/departments/sales.md",
+    "involved_decisions": [
+      "ID-D2",
+      "ID-D3",
+      "IN-D2",
+      "KM-D4",
+      "RT-D3",
+      "RT-D2"
     ]
   }
 ]

@@ -21,11 +21,11 @@ This page provides a decision table for mapping representative use-case scenario
 
 | Decision | Evaluation Axis | Recommendation |
 |---|---|---|
-| [TO-1](tradeoff/to1-obo-vs-service-account.md) | Read-only, permission filtering required | OBO (permission-aware) |
-| [TO-2](tradeoff/to2-lake-vs-mesh.md) | Distributed document stores | Context Mesh |
-| [TO-5](tradeoff/to5-copilot-vs-autopilot.md) | Low risk, user-initiated | Copilot |
-| [DC-4](degree/dc4-context-volume.md) | Large document volume, accuracy focus | top-k=10 with re-ranking |
-| [DC-6](degree/dc6-guardrail-strength.md) | Internal info, moderate sensitivity | Medium-Strong |
+| [TO-1](id-identity/id-d2-delegation-method.md) | Read-only, permission filtering required | OBO (permission-aware) |
+| [TO-2](km-knowledge/km-d1-context-supply.md) | Distributed document stores | Context Mesh |
+| [TO-5](rt-runtime/rt-d2-autonomy-design.md) | Low risk, user-initiated | Copilot |
+| [DC-4](km-knowledge/km-d1-context-supply.md) | Large document volume, accuracy focus | top-k=10 with re-ranking |
+| [DC-6](id-identity/id-d5-authorization-method.md) | Internal info, moderate sensitivity | Medium-Strong |
 
 **Recommended Patterns**: KM-1 + KM-2 + ID-2 + ID-4 + EX-1 + OB-2
 
@@ -37,11 +37,11 @@ This page provides a decision table for mapping representative use-case scenario
 
 | Decision | Evaluation Axis | Recommendation |
 |---|---|---|
-| [TO-1](tradeoff/to1-obo-vs-service-account.md) | CRM read/write, rep accountability | OBO |
-| [TO-4](tradeoff/to4-readonly-vs-write.md) | Score writing required | Write-capable (staged) |
-| [TO-5](tradeoff/to5-copilot-vs-autopilot.md) | Suggestions require human review | Copilot (suggestion mode) |
-| [DC-1](degree/dc1-risk-tier-boundary.md) | Deal updates = medium risk | Tier 2-3 |
-| [DC-8](degree/dc8-model-routing.md) | Prediction accuracy priority | High-performance model |
+| [TO-1](id-identity/id-d2-delegation-method.md) | CRM read/write, rep accountability | OBO |
+| [TO-4](rt-runtime/rt-d3-side-effect-safety.md) | Score writing required | Write-capable (staged) |
+| [TO-5](rt-runtime/rt-d2-autonomy-design.md) | Suggestions require human review | Copilot (suggestion mode) |
+| [DC-1](rt-runtime/rt-d2-autonomy-design.md) | Deal updates = medium risk | Tier 2-3 |
+| [DC-8](gv-governance/gv-d2-model-vendor-routing.md) | Prediction accuracy priority | High-performance model |
 
 **Recommended Patterns**: ID-2 + ID-4 + KM-1 + KM-3 + RT-5 + RT-4 + IN-2 + OB-2
 
@@ -53,11 +53,11 @@ This page provides a decision table for mapping representative use-case scenario
 
 | Decision | Evaluation Axis | Recommendation |
 |---|---|---|
-| [TO-1](tradeoff/to1-obo-vs-service-account.md) | Confidential docs, accountability required | OBO |
-| [TO-5](tradeoff/to5-copilot-vs-autopilot.md) | Legal judgment = human final review | Copilot |
-| [TO-12](tradeoff/to12-prompt-vs-platform.md) | Regulatory compliance | Platform (Policy-as-Code) |
-| [DC-1](degree/dc1-risk-tier-boundary.md) | Contract changes = high risk | Tier 4 (mandatory human approval) |
-| [DC-6](degree/dc6-guardrail-strength.md) | Legal info, high sensitivity | Strong (minimize misses) |
+| [TO-1](id-identity/id-d2-delegation-method.md) | Confidential docs, accountability required | OBO |
+| [TO-5](rt-runtime/rt-d2-autonomy-design.md) | Legal judgment = human final review | Copilot |
+| [TO-12](id-identity/id-d5-authorization-method.md) | Regulatory compliance | Platform (Policy-as-Code) |
+| [DC-1](rt-runtime/rt-d2-autonomy-design.md) | Contract changes = high risk | Tier 4 (mandatory human approval) |
+| [DC-6](id-identity/id-d5-authorization-method.md) | Legal info, high sensitivity | Strong (minimize misses) |
 
 **Recommended Patterns**: ID-2 + ID-7 + KM-5 + KM-6 + RT-4 + GV-4 + OB-2
 
@@ -69,11 +69,11 @@ This page provides a decision table for mapping representative use-case scenario
 
 | Decision | Evaluation Axis | Recommendation |
 |---|---|---|
-| [TO-1](tradeoff/to1-obo-vs-service-account.md) | Customer data access | Service Account + ID-1 separation |
-| [TO-3](tradeoff/to3-single-vs-multi-agent.md) | FAQ + tickets + escalation | Multi-agent (staged) |
-| [TO-5](tradeoff/to5-copilot-vs-autopilot.md) | Standard responses automatable | Autopilot (low-risk responses only) |
-| [TO-11](tradeoff/to11-sync-vs-async.md) | Real-time response required | Synchronous |
-| [DC-1](degree/dc1-risk-tier-boundary.md) | Responses = low-medium risk | Tier 1-2 |
+| [TO-1](id-identity/id-d2-delegation-method.md) | Customer data access | Service Account + ID-1 separation |
+| [TO-3](rt-runtime/rt-d1-single-vs-multi-agent.md) | FAQ + tickets + escalation | Multi-agent (staged) |
+| [TO-5](rt-runtime/rt-d2-autonomy-design.md) | Standard responses automatable | Autopilot (low-risk responses only) |
+| [TO-11](rt-runtime/rt-d5-trigger-mechanism.md) | Real-time response required | Synchronous |
+| [DC-1](rt-runtime/rt-d2-autonomy-design.md) | Responses = low-medium risk | Tier 1-2 |
 
 **Recommended Patterns**: EX-3 + ID-1 + KM-1 + RT-3 + RT-1 + IN-2 + OB-2
 
@@ -85,11 +85,11 @@ This page provides a decision table for mapping representative use-case scenario
 
 | Decision | Evaluation Axis | Recommendation |
 |---|---|---|
-| [TO-2](tradeoff/to2-lake-vs-mesh.md) | Company-wide data, multi-layer permissions | Context Mesh |
-| [TO-5](tradeoff/to5-copilot-vs-autopilot.md) | Executive decision support | Copilot |
-| [TO-7](tradeoff/to7-full-vs-selective-log.md) | Contains MNPI, strictest audit | Full Log |
-| [DC-4](degree/dc4-context-volume.md) | Cross-aggregation, large data | Large (structured via KG) |
-| [DC-8](degree/dc8-model-routing.md) | High accuracy, complex reasoning | Highest-performance model |
+| [TO-2](km-knowledge/km-d1-context-supply.md) | Company-wide data, multi-layer permissions | Context Mesh |
+| [TO-5](rt-runtime/rt-d2-autonomy-design.md) | Executive decision support | Copilot |
+| [TO-7](ob-observability/ob-d1-observability-scope.md) | Contains MNPI, strictest audit | Full Log |
+| [DC-4](km-knowledge/km-d1-context-supply.md) | Cross-aggregation, large data | Large (structured via KG) |
+| [DC-8](gv-governance/gv-d2-model-vendor-routing.md) | High accuracy, complex reasoning | Highest-performance model |
 
 **Recommended Patterns**: KM-2 + KM-3 + KM-6 + ID-2 + GV-8 + GV-7 + OB-2
 
@@ -113,8 +113,8 @@ flowchart TD
 
 ## Related Pages
 
-- [Degree Criteria DC-1 to DC-9](degree/index.md)
-- [Tradeoff Criteria TO-1 to TO-12](tradeoff/index.md)
+- [Degree Criteria DC-1 to DC-9](index.md)
+- [Tradeoff Criteria TO-1 to TO-12](index.md)
 - [Use-Case Selection Guide](../integration/usecase-selection-guide.md)
 - [Composition Recipes](../integration/recipe.md)
 - [Dependencies & Chains](../integration/dependency-chain.md)

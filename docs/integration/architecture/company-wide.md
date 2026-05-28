@@ -8,29 +8,29 @@ status: done
 
 ## 概要
 
-「全従業員が共通で使う基盤」として、Gateway・IdP 連携・モデルゲートウェイ・レジストリ・観測基盤・監査がこの軸に該当します。個別の部署がそれぞれ構築するのではなく、中央のプラットフォームチームが「舗装路とガードレール」として全社に提供します。部署エージェントや個人コパイロットはこの基盤の上に乗ることで、認証・認可・コスト管理・監査を自前で実装する必要がなくなります。基盤が整っていれば、部署は業務ロジックの構築に専念できます。
+「全従業員が共通で使う基盤」として、Gateway・IdP 連携・モデルゲートウェイ・レジストリ・観測基盤・監査がこの軸に該当します。個別の部署がそれぞれ構築するのではなく、中央のプラットフォームチームが「舗装路とガードレール」として全社に提供します。部署エージェントや個人コパイロットはこの基盤の上に乗ることで、認証・認可・コスト管理・監査を自前で実装しなくて済みます。基盤が整っていれば、部署は業務ロジックの構築に専念できます。
 
 ## この軸に配置するパターン
 
 ### 体験・ゲートウェイ（EX）
 
-[EX-1 Enterprise Agent Gateway](../../patterns/ex-experience/ex1-enterprise-agent-gateway.md) はすべてのエージェントリクエストの統一入口です。認証・意図分類・リスクスコアリング・レートリミット・監査入口をここで一括処理します。全社で1つ（または冗長化した複数）の Gateway を運用することで、部署ごとに別々のフロントドアを作る手間が省け、漏れも防げます。
+[EX-1 Enterprise Agent Gateway](../../decisions/ex-experience/ex-d1-front-door-channel.md) はすべてのエージェントリクエストの統一入口です。認証・意図分類・リスクスコアリング・レートリミット・監査入口をここで一括処理します。全社で1つ（または冗長化した複数）の Gateway を運用することで、部署ごとに別々のフロントドアを作る手間が省け、漏れも防ぐことができます。
 
 ### アイデンティティ・信頼（ID）
 
-[ID-1 二面分離](../../patterns/id-identity/id1-workforce-customer-split.md)は従業員面と顧客面の IdP を物理的に分ける原則で、全社設計として最初に確立すべき基盤です。[ID-2 OBO 委譲](../../patterns/id-identity/id2-identity-federation-obo.md)の Token Exchange 基盤も中央で構築し、すべての部署エージェントが本人権限縮退トークンを取得できるよう整備します。[ID-6 Zero-Trust PDP/PEP](../../patterns/id-identity/id6-zero-trust-pdp-pep.md) はポリシー決定ポイントを中央に集約し、全エージェントへのアクセス判定を統一的に処理します。[ID-7 Policy-as-Code](../../patterns/id-identity/id7-policy-as-code-guardrail.md) は OPA 等のポリシーエンジンを全社共通基盤として運用します。
+[ID-1 二面分離](../../decisions/id-identity/id-d1-workforce-customer-split.md)は従業員面と顧客面の IdP を物理的に分ける原則で、全社設計として最初に確立すべき基盤です。[ID-2 OBO 委譲](../../decisions/id-identity/id-d2-delegation-method.md)の Token Exchange 基盤も中央で構築し、すべての部署エージェントが本人権限縮退トークンを取得できるよう整備します。[ID-6 Zero-Trust PDP/PEP](../../decisions/id-identity/id-d5-authorization-method.md) はポリシー決定ポイントを中央に集約し、全エージェントへのアクセス判定を統一的に処理します。[ID-7 Policy-as-Code](../../decisions/id-identity/id-d5-authorization-method.md) は OPA 等のポリシーエンジンを全社共通基盤として運用します。
 
 ### 制御・ガバナンス（GV）
 
-[GV-1 Registry](../../patterns/gv-governance/gv1-agent-control-plane.md) はエージェントのライフサイクル（登録・有効化・無効化・バージョン管理）を管理する中央台帳です。全社で稼働するエージェントを一覧把握できなければガバナンスは成立しません。[GV-5 Central Model Gateway](../../patterns/gv-governance/gv5-central-model-gateway.md) はモデル・ベンダー選択とコスト統制を全社で一元化します。[GV-6 Version Registry](../../patterns/gv-governance/gv6-version-registry.md) はモデル・プロンプト・ポリシーの版管理を全社共通で行います。[GV-7 Eval Pipeline](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) は評価 CI/CD を共通基盤として提供し、部署ごとの評価コストを削減します。[GV-9 Incident Response](../../patterns/gv-governance/gv9-incident-response-kill-switch.md) は全社規模のエージェント停止・緊急対応を中央で担います。
+[GV-1 Registry](../../decisions/gv-governance/gv-d1-control-plane-scope.md) はエージェントのライフサイクル（登録・有効化・無効化・バージョン管理）を管理する中央台帳です。全社で稼働するエージェントを一覧で把握できなければ、ガバナンスは成立しません。[GV-5 Central Model Gateway](../../decisions/gv-governance/gv-d2-model-vendor-routing.md) はモデル・ベンダー選択とコスト統制を全社で一元化します。[GV-6 Version Registry](../../decisions/gv-governance/gv-d3-change-eval-rigor.md) はモデル・プロンプト・ポリシーの版管理を全社共通で行います。[GV-7 Eval Pipeline](../../decisions/gv-governance/gv-d3-change-eval-rigor.md) は評価 CI/CD を共通基盤として提供し、部署ごとの評価コストを削減します。[GV-9 Incident Response](../../decisions/gv-governance/gv-d5-incident-kill-switch.md) は全社規模のエージェント停止・緊急対応を中央で担います。
 
 ### 観測・評価・監査（OB）
 
-[OB-1 Observability Lake](../../patterns/ob-observability/ob1-observability-lake.md) はトレース・メトリクス・ログを一元集約します。部署ごとに分散させると横断的な障害診断が難しくなるため、全社共通での集約が不可欠です。[OB-2 統一監査・系譜](../../patterns/ob-observability/ob2-unified-audit-lineage.md) は「人＋エージェント＋システム」の三者帰責を全社共通フォーマットで記録し、コンプライアンス要件を充足します。
+[OB-1 Observability Lake](../../decisions/ob-observability/ob-d1-observability-scope.md) はトレース・メトリクス・ログを一元集約します。部署ごとに分散させると横断的な障害診断が難しくなるため、全社共通で集約することが不可欠です。[OB-2 統一監査・系譜](../../decisions/ob-observability/ob-d2-audit-attribution.md) は「人＋エージェント＋システム」の三者帰責を全社共通フォーマットで記録し、コンプライアンス要件を充足します。
 
 ### 統合・ツール（IN）
 
-[IN-1 Tool/MCP Gateway](../../patterns/in-integration/in1-tool-mcp-gateway.md) は外部ツール・MCP サーバーへのアクセスを全社共通のゲートウェイ経由に統一します。部署ごとに直接ツールを呼び出すと権限管理が分散し、監査証跡が断片化します。
+[IN-1 Tool/MCP Gateway](../../decisions/in-integration/in-d1-tool-gateway.md) は外部ツール・MCP サーバーへのアクセスを全社共通のゲートウェイ経由に統一します。部署ごとに直接ツールを呼び出すと権限管理が分散し、監査証跡が断片化してしまいます。
 
 ## 全社基盤の構成図
 
@@ -72,7 +72,7 @@ graph TB
 
 ## 中央チームの責務
 
-中央プラットフォームチームが所有・運用するものと部署が担うものを明確に分離します。
+中央プラットフォームチームが所有・運用するものと、部署が担うものを明確に分離します。
 
 | 責務 | 中央チーム | 部署 |
 |---|---|---|
@@ -88,4 +88,4 @@ graph TB
 | 部門別プロンプト・ワークフロー | ガイドライン提供 | 所有 |
 
 !!! note "「舗装路とガードレール」の原則"
-    中央チームは部署の業務に介入するのではなく、安全に走れる道路と逸脱を防ぐガードレールを整備する役割に徹します。部署がガードレールの外に出ようとする場合は、申請・審査プロセスを経て基盤を拡張します。
+    中央チームは部署の業務に介入するのではなく、安全に走れる道路と逸脱を防ぐガードレールを整備する役割に徹します。部署がガードレールの外に出ようとする場合は、申請・審査プロセスを経て基盤を拡張していきます。

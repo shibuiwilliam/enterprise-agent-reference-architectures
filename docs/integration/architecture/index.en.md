@@ -12,7 +12,7 @@ Enterprise AI agents are not deployed in just one place within a company and don
 
 ## Enterprise System Overall Picture
 
-Shows the standard configuration integrating all 7 planes and 45 patterns. Each layer depends on the layer below, and two cross-cutting axes (Org Graph and Zero Trust/Audit) run through all layers.
+Shows the standard configuration integrating all 7 planes and 31 decisions. Each layer depends on the layer below, and two cross-cutting axes (Org Graph and Zero Trust/Audit) run through all layers.
 
 ```mermaid
 graph TB
@@ -105,9 +105,9 @@ graph TB
 
 Two cross-cutting axes run through the layered structure above.
 
-**Org Graph**: A single org graph normalized from Workday (org, roles, reporting lines) / Okta (groups) / project management tools provides the basis for scope, delegation, approval, and sharing across all planes. Reference patterns: [ID-4](../../patterns/id-identity/id4-permission-mirror-least-of.md) / [RT-1](../../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) / [RT-4](../../patterns/rt-runtime/rt4-human-approval-chain.md) / [KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) / [KM-3](../../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md)
+**Org Graph**: A single org graph normalized from Workday (org, roles, reporting lines) / Okta (groups) / project management tools provides the basis for scope, delegation, approval, and sharing across all planes. Reference patterns: [ID-4](../../decisions/id-identity/id-d3-permission-reduction.md) / [RT-1](../../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md) / [RT-4](../../decisions/rt-runtime/rt-d2-autonomy-design.md) / [KM-4](../../decisions/km-knowledge/km-d3-memory-scope.md) / [KM-3](../../decisions/km-knowledge/km-d2-knowledge-normalization.md)
 
-**Zero Trust/Audit**: Authorize and record every call with "person + agent + system" three-party accountability. Reference patterns: [ID-6](../../patterns/id-identity/id6-zero-trust-pdp-pep.md) / [OB-2](../../patterns/ob-observability/ob2-unified-audit-lineage.md) / [ID-7](../../patterns/id-identity/id7-policy-as-code-guardrail.md)
+**Zero Trust/Audit**: Authorize and record every call with "person + agent + system" three-party accountability. Reference patterns: [ID-6](../../decisions/id-identity/id-d5-authorization-method.md) / [OB-2](../../decisions/ob-observability/ob-d2-audit-attribution.md) / [ID-7](../../decisions/id-identity/id-d5-authorization-method.md)
 
 ## Data Flow
 

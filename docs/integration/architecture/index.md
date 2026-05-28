@@ -1,6 +1,6 @@
 ---
 title: "リファレンスアーキテクチャ"
-description: "エンタープライズシステムの全体像と、全社・部署・プロジェクト・個人の4軸でのAIエージェント配置を示す。"
+description: "エンタープライズシステムの全体像と、全社・部署・プロジェクト・個人の4軸でのAIエージェント配置を示します。"
 status: done
 ---
 
@@ -8,11 +8,11 @@ status: done
 
 ## 概要
 
-エンタープライズAIエージェントは、社内のどこか1箇所に配置して終わりではありません。全社共通の基盤・部署ごとの業務エージェント・プロジェクト単位の共有メンバー・個人ごとのコパイロット——企業の組織構造に沿った4つの軸で配置を設計する必要があります。本章では7面の層構造を全体像として示し、各軸でのエージェント配置を説明します。
+エンタープライズAIエージェントは、社内のどこか1箇所に配置して終わりではありません。全社共通の基盤・部署ごとの業務エージェント・プロジェクト単位の共有メンバー・個人ごとのコパイロット——企業の組織構造に沿った4つの軸で配置を設計しなければなりません。本章では7面の層構造を全体像として示し、各軸でのエージェント配置を説明します。
 
 ## エンタープライズシステム全体像
 
-7面・45パターンを統合した標準構成図を示します。各層は下位層に依存し、横断軸（組織グラフ・ゼロトラスト/監査）が全層を貫きます。
+7面・31意思決定を統合した標準構成図を示します。各層は下位層に依存し、横断軸（組織グラフ・ゼロトラスト/監査）が全層を貫きます。
 
 ```mermaid
 graph TB
@@ -105,9 +105,9 @@ graph TB
 
 上記の層構造を貫く横断軸は2つあります。
 
-**組織グラフ**：Workday（組織・職位・レポートライン）/ Okta（グループ）/ プロジェクト管理ツールから名寄せした単一の組織グラフが、全面のスコープ・委譲・承認・共有の根拠となります。参照パターン：[ID-4](../../patterns/id-identity/id4-permission-mirror-least-of.md) / [RT-1](../../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) / [RT-4](../../patterns/rt-runtime/rt4-human-approval-chain.md) / [KM-4](../../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) / [KM-3](../../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md)。
+**組織グラフ**：Workday（組織・職位・レポートライン）/ Okta（グループ）/ プロジェクト管理ツールから名寄せした単一の組織グラフが、全面のスコープ・委譲・承認・共有の根拠となります。参照パターン：[ID-4](../../decisions/id-identity/id-d3-permission-reduction.md) / [RT-1](../../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md) / [RT-4](../../decisions/rt-runtime/rt-d2-autonomy-design.md) / [KM-4](../../decisions/km-knowledge/km-d3-memory-scope.md) / [KM-3](../../decisions/km-knowledge/km-d2-knowledge-normalization.md)。
 
-**ゼロトラスト/監査**：全呼び出しを「人＋エージェント＋システム」の三者で認可・記録します。参照パターン：[ID-6](../../patterns/id-identity/id6-zero-trust-pdp-pep.md) / [OB-2](../../patterns/ob-observability/ob2-unified-audit-lineage.md) / [ID-7](../../patterns/id-identity/id7-policy-as-code-guardrail.md)。
+**ゼロトラスト/監査**：全呼び出しを「人＋エージェント＋システム」の三者で認可・記録します。参照パターン：[ID-6](../../decisions/id-identity/id-d5-authorization-method.md) / [OB-2](../../decisions/ob-observability/ob-d2-audit-attribution.md) / [ID-7](../../decisions/id-identity/id-d5-authorization-method.md)。
 
 ## データフロー
 
@@ -141,7 +141,7 @@ sequenceDiagram
 
 ## 4つの配置軸
 
-7面の層構造はシステム的な分類ですが、実際の組織への配置は「誰が使うか」という軸で整理します。エンタープライズの配置軸は次の4つです。
+7面の層構造はシステム的な分類ですが、実際の組織への配置は「誰が使うか」という軸で整理します。エンタープライズの配置軸は次の4つになります。
 
 | 軸 | 説明 | 主な担当 |
 |---|---|---|
@@ -150,4 +150,4 @@ sequenceDiagram
 | [プロジェクト軸](project.md) | プロジェクト・チーム単位でのエージェント配置。ライフサイクルに連動した共有メモリ・動的権限を設計。 | プロジェクトチーム |
 | [メンバー個別軸](individual.md) | 個人ごとのコパイロット。パーソナルメモリ・権限委譲・コンテキストを個人スコープで管理。 | 個人 |
 
-4軸は独立ではありません。個人軸は部署軸の上に乗り、部署軸は全社横断基盤の上に乗ります。プロジェクト軸は部署をまたいで横断的に形成されることもあります。この階層関係を前提に設計することで、権限の重複・競合を防ぎ、監査証跡を一本化できます。
+4軸は独立ではありません。個人軸は部署軸の上に乗り、部署軸は全社横断基盤の上に乗っています。プロジェクト軸は部署をまたいで横断的に形成されることもあります。この階層関係を前提に設計することで、権限の重複・競合を防ぎ、監査証跡を一本化できます。

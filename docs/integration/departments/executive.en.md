@@ -20,27 +20,27 @@ Executive-level agents function as **value-creating agents that accelerate manag
 
 ## Applied Patterns and Reasons
 
-### [KM-3 Canonical Object & Knowledge Graph](../../patterns/km-knowledge/km3-canonical-object-knowledge-graph.md)
+### [KM-3 Canonical Object & Knowledge Graph](../../decisions/km-knowledge/km-d2-knowledge-normalization.md)
 
 To answer an executive question like "tell me the relationship between this quarter's operating profit and labor costs," Sales revenue data, Finance expense data, and HR labor cost data must be joined. However, in practice there are many inconsistencies: the definition of "department" differs by system, the "revenue" aggregation timing differs. KM-3 manages a normalized company-wide object model (products, customers, employees, projects, etc.) as a knowledge graph and centrally resolves "which system's, which definition's, at what granularity" to retrieve data. Cross-departmental aggregation for executive dashboards stabilizes with this pattern.
 
-### [KM-2 Context Mesh](../../patterns/km-knowledge/km2-context-mesh.md)
+### [KM-2 Context Mesh](../../decisions/km-knowledge/km-d1-context-supply.md)
 
 Each department's data must be provided to the executive agent while preserving its respective permission models. Sales data within what sales staff can view, HR data only for officers with HR authority, financial data within the CFO-approved scope — federating cross-departmentally while maintaining these permission constraints is KM-2's role. Simply "executives can see everything" makes permission boundaries ambiguous and can create legal issues. KM-2 respects each data source's permission policies at the federation layer, always filtering data delivered to the executive agent to the intersection of permissions.
 
-### [KM-6 DLP & Redaction Boundary](../../patterns/km-knowledge/km6-dlp-redaction-boundary.md)
+### [KM-6 DLP & Redaction Boundary](../../decisions/km-knowledge/km-d5-confidentiality-strength.md)
 
 Executive-level agents are likely to handle highly sensitive information (undisclosed M&A information, individual employee evaluations, financial forecasts). KM-6 applies DLP rules to agent outputs, logs, and transfers to external integrations, preventing information that could be problematic under insider trading regulations (MNPI: Material Non-Public Information) from being sent to inappropriate channels. Even when posting meeting minutes summaries to Slack, KM-6 automatically masks undisclosed financial figures and personnel information.
 
-### [GV-8 Cost Quota & Chargeback](../../patterns/gv-governance/gv8-cost-quota-chargeback.md)
+### [GV-8 Cost Quota & Chargeback](../../decisions/gv-governance/gv-d4-cost-visibility.md)
 
 For executives to visualize and allocate company-wide AI costs, a mechanism is needed to accurately measure and report usage costs by department, project, and agent. GV-8 records LLM API costs, infrastructure costs, and tool call costs with tags and generates cost chargeback reports by department. When the executive agent is asked "show me this month's AI costs by department," it can immediately answer from GV-8's data sources. Company-wide cost ceiling (quota) settings and excess alerts are also handled by GV-8.
 
-### [GV-7 Evaluation Governance Pipeline](../../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)
+### [GV-7 Evaluation Governance Pipeline](../../decisions/gv-governance/gv-d3-change-eval-rigor.md)
 
 For agents used in management decisions, "the quality of responses is continuously measured" is mandatory. If the answer to "What are the KPI changes compared to last month?" differs from the facts and cannot be detected after the fact, it does not function as governance. GV-7 runs automated evaluation pipelines periodically, measuring the executive agent's response accuracy, factual consistency, and hallucination rate. Evaluation results are visualized on dashboards, and when quality metrics fall below thresholds, automatic alerts and model update consideration triggers fire.
 
-### [OB-2 Unified Audit Lineage](../../patterns/ob-observability/ob2-unified-audit-lineage.md)
+### [OB-2 Unified Audit Lineage](../../decisions/ob-observability/ob-d2-audit-attribution.md)
 
 Executive operations fall into high-risk classification and require the most stringent audit records. The act of "the executive agent referenced financial data and generated a report" must have a fully traceable lineage (which query, with what data, under whose authority) from the perspectives of securities law and corporate law. OB-2 records the lineage of all agent operations as immutable logs, enabling auditors to go back to any point in time and verify "what was the source data for this report." Tamper prevention for logs, long-term storage, and integration with external audit tools are also handled by OB-2.
 

@@ -8,17 +8,17 @@ status: done
 
 ## 概要
 
-45パターン・複数部門のエージェントを「どの順で、どこに投資すれば全社の価値が最大化するか」を判断するためのフレームワークです。個別ユースケースのROIだけを見るのではなく、ユースケース群をポートフォリオとして管理し、全社最適の投資配分を実現するものです。
+31意思決定・複数部門のエージェントを「どの順で、どこに投資すれば全社の価値が最大化するか」を判断するためのフレームワークです。個別ユースケースのROIだけを見るのではなく、ユースケース群をポートフォリオとして管理し、全社最適の投資配分を実現します。
 
 ## なぜポートフォリオ管理が必要か
 
-エージェント投資が拡大すると、次のような判断が求められる場面が増えます。
+エージェント投資が拡大すると、次のような判断が求められる場面が増えてきます。
 
 - 複数のユースケース候補のうち、どれに先行投資するか
 - 稼働中のエージェントのうち、どれにリソースを集中し、どれを縮小するか
 - 基盤投資（セキュリティ・統治）と価値投資（部門エージェント）のバランスをどう取るか
 
-これらは個別のROI計算では答えが出ません。**価値×コスト×リスクの三軸で全体を俯瞰するポートフォリオ視点**が必要になります。
+これらは個別のROI計算だけでは答えが出ません。**価値×コスト×リスクの三軸で全体を俯瞰するポートフォリオ視点**が必要です。
 
 ## 評価フレームワーク
 
@@ -55,14 +55,14 @@ quadrantChart
 
 ## GV-2 / GV-8 / GV-10 / GV-7 の統合
 
-ポートフォリオ管理は以下の4パターンを束ねることで機能します。
+ポートフォリオ管理は以下の4つのパターンを束ねることで機能します。
 
 | パターン | ポートフォリオでの役割 |
 |---|---|
-| [GV-2 Agent Catalog](../patterns/gv-governance/gv2-agent-catalog-marketplace.md) | ユースケース候補の一覧管理・メタデータ付与 |
-| [GV-8 Cost Quota](../patterns/gv-governance/gv8-cost-quota-chargeback.md) | 各ユースケースの投資コスト（分母）の計測 |
-| [GV-10 Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) | 各ユースケースの価値（分子）の計測 |
-| [GV-7 Evaluation Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) | 品質劣化の検知と改善判断 |
+| [GV-2 Agent Catalog](../decisions/gv-governance/gv-d1-control-plane-scope.md) | ユースケース候補の一覧管理・メタデータ付与 |
+| [GV-8 Cost Quota](../decisions/gv-governance/gv-d4-cost-visibility.md) | 各ユースケースの投資コスト（分母）の計測 |
+| [GV-10 Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) | 各ユースケースの価値（分子）の計測 |
+| [GV-7 Evaluation Pipeline](../decisions/gv-governance/gv-d3-change-eval-rigor.md) | 品質劣化の検知と改善判断 |
 
 ```mermaid
 flowchart TD
@@ -90,9 +90,9 @@ flowchart TD
 
 ## 関連パターン
 
-- [GV-2 Agent Catalog & Marketplace](../patterns/gv-governance/gv2-agent-catalog-marketplace.md) — ユースケース候補の一覧管理
-- [GV-7 Evaluation & Governance Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) — 品質の継続計測と改善トリガー
-- [GV-8 Cost Quota & Chargeback](../patterns/gv-governance/gv8-cost-quota-chargeback.md) — コストの計測と配賦
-- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — 価値の計測とROI算出
+- [GV-2 Agent Catalog & Marketplace](../decisions/gv-governance/gv-d1-control-plane-scope.md) — ユースケース候補の一覧管理
+- [GV-7 Evaluation & Governance Pipeline](../decisions/gv-governance/gv-d3-change-eval-rigor.md) — 品質の継続計測と改善トリガー
+- [GV-8 Cost Quota & Chargeback](../decisions/gv-governance/gv-d4-cost-visibility.md) — コストの計測と配賦
+- [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) — 価値の計測とROI算出
 - [Executive Agent](departments/executive.md) — ポートフォリオ判断を支援する経営エージェント
 - [組み合わせレシピ](recipe.md) — 価値早期実現トラックとの整合

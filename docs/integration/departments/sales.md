@@ -1,6 +1,6 @@
 ---
 title: "Sales Agent の適用パターン"
-description: "営業部門のエージェントに適用するパターンの束と、その理由・具体的な適用場面を解説する。"
+description: "営業部門のエージェントに適用するパターンの束と、その理由・具体的な適用場面を解説します。"
 status: done
 department: sales
 value_drivers: [revenue_growth, employee_efficiency, automation]
@@ -26,33 +26,33 @@ Sales Agent の目的は**受注率の向上・商談サイクルの短縮・パ
 
 ## 適用パターンと理由
 
-### [ID-2 Identity Federation & On-Behalf-Of（OBO委譲）](../../patterns/id-identity/id2-identity-federation-obo.md)
+### [ID-2 Identity Federation & On-Behalf-Of（OBO委譲）](../../decisions/id-identity/id-d2-delegation-method.md)
 
 営業担当が「この商談のステータスを受注に変えて」と依頼したとき、エージェントは**依頼者本人の Salesforce 権限**でのみ操作しなければなりません。ID-2 は RFC 8693 のトークン交換により、エージェントが自分自身のサービスアカウントではなく本人の委譲トークンで Salesforce を呼ぶ仕組みを提供します。これにより「エージェント経由で担当外の商談を書き換えた」という事故のリスクを、Salesforce 側のアクセス制御によって防げるようになります。
 
-### [ID-4 Permission Mirror（最小合成権限）](../../patterns/id-identity/id4-permission-mirror-least-of.md)
+### [ID-4 Permission Mirror（最小合成権限）](../../decisions/id-identity/id-d3-permission-reduction.md)
 
-エージェントが複数の SaaS（Salesforce・Sansan・Google Drive）を横断するとき、各 SaaS の権限の中で**最も制限の厳しいものに合わせる**のが ID-4 の役割です。営業担当が Salesforce で「自分の担当顧客のみ閲覧可」の権限を持つなら、Sansan の名刺情報を Salesforce 商談に紐づける操作にも同じ絞り込みを適用します。エージェントが権限の境界を「うっかり越える」ことをパターンレベルで封じる仕組みとなります。
+エージェントが複数の SaaS（Salesforce・Sansan・Google Drive）を横断するとき、各 SaaS の権限の中で**最も制限の厳しいものに合わせる**のが ID-4 の役割です。営業担当が Salesforce で「自分の担当顧客のみ閲覧可」の権限を持つなら、Sansan の名刺情報を Salesforce 商談に紐づける操作にも同じ絞り込みを適用します。エージェントが権限の境界を「うっかり越える」ことをパターンレベルで封じる仕組みです。
 
-### [IN-2 SaaS Connector / Adapter](../../patterns/in-integration/in2-saas-connector-adapter.md)
+### [IN-2 SaaS Connector / Adapter](../../decisions/in-integration/in-d2-build-vs-reuse.md)
 
-Salesforce の REST API・Sansan の名刺 API・Google Calendar の API は、認証方式・ページネーション・エラーコードがそれぞれ異なります。IN-2 は各 SaaS への接続を標準化されたアダプター層で吸収し、エージェントのロジックが「Salesforce 固有の API 差異」を意識せずに済む構造を提供します。リトライ・タイムアウト・ログ出力をアダプター層に集中させることで、障害時のトレーサビリティが高まる利点もあります。
+Salesforce の REST API・Sansan の名刺 API・Google Calendar の API は、認証方式・ページネーション・エラーコードがそれぞれ異なります。IN-2 は各 SaaS への接続を標準化されたアダプター層で吸収し、エージェントのロジックが「Salesforce 固有の API 差異」を意識せずに済む構造を提供します。リトライ・タイムアウト・ログ出力をアダプター層に集中させることで、障害時のトレーサビリティが高まるという利点もあります。
 
-### [KM-5 Purpose-Bound Context（目的限定コンテキスト）](../../patterns/km-knowledge/km5-purpose-bound-context.md)
+### [KM-5 Purpose-Bound Context（目的限定コンテキスト）](../../decisions/km-knowledge/km-d4-purpose-limitation.md)
 
-「今月のA社との商談フォローアップメールを書いて」という依頼に対し、エージェントが全顧客の商談履歴・競合情報・内部評価メモをすべてコンテキストに詰め込むのは危険です。KM-5 は「このタスクに必要な文脈のみ」を目的に縛って取得する仕組みを提供します。A社担当者のみの商談履歴、直近3回のミーティングメモ、見積書の最新版——この範囲に絞ることで、情報漏洩リスクを下げながら応答品質も高まります。
+「今月のA社との商談フォローアップメールを書いて」という依頼に対し、エージェントが全顧客の商談履歴・競合情報・内部評価メモをすべてコンテキストに詰め込むのは危険です。KM-5 は「このタスクに必要な文脈のみ」を目的に縛って取得する仕組みを提供します。A社担当者のみの商談履歴、直近3回のミーティングメモ、見積書の最新版——この範囲に絞ることで、情報漏洩リスクを下げつつ応答品質も高められます。
 
-### [RT-5 Command Envelope（構造化コマンド）](../../patterns/rt-runtime/rt5-command-envelope.md)
+### [RT-5 Command Envelope（構造化コマンド）](../../decisions/rt-runtime/rt-d3-side-effect-safety.md)
 
 CRM の商談更新・見積書の金額変更・取引先の連絡先更新といった書き込み操作は、自由テキストの指示そのままでは実行させません。RT-5 は操作を「誰が・何を・どのパラメータで・いつ」という構造化コマンドに変換し、人間が検証可能な形式に固定します。承認フローに入力できる「操作の証跡」が生まれ、事後監査でも何が変更されたかを正確に追跡できます。
 
-### [RT-4 Human Approval Chain（人間承認チェーン）](../../patterns/rt-runtime/rt4-human-approval-chain.md)
+### [RT-4 Human Approval Chain（人間承認チェーン）](../../decisions/rt-runtime/rt-d2-autonomy-design.md)
 
 見積金額の変更・契約条件の修正・大口商談のステータス更新は、自動実行ではなく上長承認を経るべき操作です。RT-4 はリスク閾値（例：見積金額100万円以上）を超えた操作を自動的に承認キューに回し、Slack やメールで承認者に通知します。承認が完了するまでエージェントは待機し、否決された場合はロールバック処理を実行します。「エージェントが勝手に大型案件の条件を変えた」という事故を、構造として防ぐ仕組みです。
 
 ## システム構成
 
-Sales Agent がどのような構成要素で成り立ち、各パターンがどこに配置されるかを示します。
+Sales Agent がどのような構成要素で成り立っているか、各パターンがどこに配置されるかを示します。
 
 ```mermaid
 graph TB
@@ -161,7 +161,7 @@ flowchart LR
 
 ## 価値の階段（段階的拡大）
 
-Sales Agent の価値は段階的に引き上げます。
+Sales Agent の価値は段階的に引き上げていきます。
 
 | 段階 | 自律度 | 代表的な機能 | 期待成果 |
 |---|---|---|---|

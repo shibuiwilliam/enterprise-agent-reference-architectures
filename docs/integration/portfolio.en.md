@@ -8,7 +8,7 @@ status: done
 
 ## Overview
 
-This is a framework for deciding "which order, and where to invest, to maximize company-wide value" across 45 patterns and multiple departmental agents. Rather than individual use case ROI alone, it manages use cases as a portfolio to achieve company-wide optimal investment allocation.
+This is a framework for deciding "which order, and where to invest, to maximize company-wide value" across 31 decisions and multiple departmental agents. Rather than individual use case ROI alone, it manages use cases as a portfolio to achieve company-wide optimal investment allocation.
 
 ## Why Portfolio Management Is Necessary
 
@@ -59,10 +59,10 @@ Portfolio management functions by bundling the following four patterns.
 
 | Pattern | Role in Portfolio |
 |---|---|
-| [GV-2 Agent Catalog](../patterns/gv-governance/gv2-agent-catalog-marketplace.md) | Managing list of use case candidates with metadata |
-| [GV-8 Cost Quota](../patterns/gv-governance/gv8-cost-quota-chargeback.md) | Measuring investment cost (denominator) for each use case |
-| [GV-10 Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) | Measuring value (numerator) for each use case |
-| [GV-7 Evaluation Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) | Detecting quality degradation and triggering improvement decisions |
+| [GV-2 Agent Catalog](../decisions/gv-governance/gv-d1-control-plane-scope.md) | Managing list of use case candidates with metadata |
+| [GV-8 Cost Quota](../decisions/gv-governance/gv-d4-cost-visibility.md) | Measuring investment cost (denominator) for each use case |
+| [GV-10 Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) | Measuring value (numerator) for each use case |
+| [GV-7 Evaluation Pipeline](../decisions/gv-governance/gv-d3-change-eval-rigor.md) | Detecting quality degradation and triggering improvement decisions |
 
 ```mermaid
 flowchart TD
@@ -90,9 +90,9 @@ flowchart TD
 
 ## Related Patterns
 
-- [GV-2 Agent Catalog & Marketplace](../patterns/gv-governance/gv2-agent-catalog-marketplace.md) — Managing the list of use case candidates
-- [GV-7 Evaluation & Governance Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md) — Ongoing quality measurement and improvement triggers
-- [GV-8 Cost Quota & Chargeback](../patterns/gv-governance/gv8-cost-quota-chargeback.md) — Cost measurement and allocation
-- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — Value measurement and ROI calculation
+- [GV-2 Agent Catalog & Marketplace](../decisions/gv-governance/gv-d1-control-plane-scope.md) — Managing the list of use case candidates
+- [GV-7 Evaluation & Governance Pipeline](../decisions/gv-governance/gv-d3-change-eval-rigor.md) — Ongoing quality measurement and improvement triggers
+- [GV-8 Cost Quota & Chargeback](../decisions/gv-governance/gv-d4-cost-visibility.md) — Cost measurement and allocation
+- [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) — Value measurement and ROI calculation
 - [Executive Agent](departments/executive.md) — Executive agent supporting portfolio decisions
 - [Combination Recipe](recipe.md) — Alignment with the quick-win track

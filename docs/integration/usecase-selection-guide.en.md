@@ -8,7 +8,7 @@ status: done
 
 ## Overview
 
-The first question from readers faced with tens of thousands of employees, dozens of SaaS systems, and 45 patterns is: "**Which business should I tackle first to get value in the shortest time?**" [AI Investment Portfolio Management](portfolio.md) is a mechanism for optimizing investment allocation after deployment, but this guide covers **pre-implementation use case discovery and prioritization**. It translates the "start with low-risk, high-frequency" principle from [Adoption & Change Management](adoption.md) into a quantitative scoring framework to rationally select the first quick wins.
+The first question from readers faced with tens of thousands of employees, dozens of SaaS systems, and 31 decisions is: "**Which business should I tackle first to get value in the shortest time?**" [AI Investment Portfolio Management](portfolio.md) is a mechanism for optimizing investment allocation after deployment, but this guide covers **pre-implementation use case discovery and prioritization**. It translates the "start with low-risk, high-frequency" principle from [Adoption & Change Management](adoption.md) into a quantitative scoring framework to rationally select the first quick wins.
 
 ## Five-Axis Scoring
 
@@ -84,7 +84,7 @@ Confirm the minimum governance (pattern bundle) required for the selected use ca
 
 ## Connection to Portfolio
 
-Use cases selected and deployed through this guide transition to the management scope of [AI Investment Portfolio Management](portfolio.md). After deployment, measure outcomes with [GV-10 Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) and use the results as material for portfolio investment allocation decisions (reinvest, improve, withdraw).
+Use cases selected and deployed through this guide transition to the management scope of [AI Investment Portfolio Management](portfolio.md). After deployment, measure outcomes with [GV-10 Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) and use the results as material for portfolio investment allocation decisions (reinvest, improve, withdraw).
 
 ```mermaid
 flowchart LR
@@ -100,5 +100,5 @@ flowchart LR
 - [Value Maturity Roadmap](value-maturity-roadmap.md) — Staged deployment plan
 - [Combination Recipe](recipe.md) — Pattern introduction sequence and quick-win track
 - [Adoption & Change Management](adoption.md) — Operational measures for adoption
-- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — Value measurement pattern
+- [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) — Value measurement pattern
 - [Department Examples](departments/index.md) — Outcome KPI mapping for each department

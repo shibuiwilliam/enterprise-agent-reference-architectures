@@ -1,404 +1,384 @@
 [
   {
-    "id": "DC-1",
-    "title": "DC-1 自律度のティア境界（Risk-Tier の引き方）",
-    "type": "degree",
+    "id": "EX-D1",
+    "domain": "ex-experience",
+    "type": "tradeoff",
+    "title": "EX-D1 統一フロントドアとチャネル戦略",
+    "description": "すべてのエージェント要求が通る単一入口の構築と、業務埋め込み・独立ワークベンチ・両用のチャネル配置を決定する。",
+    "question": "統一フロントドアとチャネル戦略（埋め込み／独立ワークベンチ／両用）",
+    "decides_among": [
+      "業務埋め込み中心",
+      "独立ワークベンチ中心",
+      "両用（埋め込み＋ワークベンチ）"
+    ],
+    "building_blocks": [
+      "EX-1",
+      "EX-2",
+      "EX-3"
+    ],
+    "related_decisions": [
+      "ID-D1",
+      "GV-D1",
+      "TO-5",
+      "TO-8"
+    ],
+    "value_drivers": [
+      "employee_efficiency",
+      "audit_compliance",
+      "customer_value",
+      "automation"
+    ],
+    "kpis": [
+      "エージェント利用率",
+      "平均応答時間",
+      "認証失敗率",
+      "タスク完了率",
+      "コンテキスト切り替え回数",
+      "利用頻度",
+      "チャネル横断応答一貫性",
+      "チャネル追加リードタイム"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "単一チャネル（Slack or Web）で認証・レート制限・監査ログを統合したゲートウェイを構築し、主要業務ツール1つにインライン埋め込みを実装",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/ex-experience/ex-d1-front-door-channel.md",
     "options": [
       {
-        "id": "tier1",
-        "name": "自動実行（低リスク）",
-        "patterns": [
-          "KM-1",
-          "EX-1"
-        ],
-        "pros": [
-          "高速応答",
-          "UX向上"
-        ],
-        "cons": [
-          "リスク高操作には不適"
+        "id": "embedded_primary",
+        "label": "業務埋め込み中心",
+        "building_blocks": [
+          "EX-1",
+          "EX-2",
+          "EX-3"
         ],
         "pick_when": [
-          "読み取り専用",
-          "公開情報のみ"
+          "Slack/Teams/Salesforce が日常の中心ツールである",
+          "タスクの大半が短時間の問い合わせ・文脈付き操作",
+          "承認フローが少ない"
+        ],
+        "pros": [
+          "コンテキスト切り替えゼロで採用障壁が低い",
+          "既存ツールの延長で利用開始できる"
+        ],
+        "cons": [
+          "横断調査・承認証跡の管理が困難",
+          "長時間タスクの進捗表示に制限がある"
         ]
       },
       {
-        "id": "tier2_3",
-        "name": "提案＋確認（中リスク）",
-        "patterns": [
-          "RT-3",
-          "RT-5",
-          "ID-2"
-        ],
-        "pros": [
-          "安全性と利便性のバランス"
-        ],
-        "cons": [
-          "応答遅延",
-          "確認工数"
+        "id": "workbench_primary",
+        "label": "独立ワークベンチ中心",
+        "building_blocks": [
+          "EX-1",
+          "EX-2",
+          "EX-3"
         ],
         "pick_when": [
-          "書き込み操作あり",
-          "個人データ参照"
+          "横断調査・長時間タスク・承認フローが主体",
+          "一画面で計画・進捗・承認を確認したい"
+        ],
+        "pros": [
+          "承認アクションと証跡を一体管理できる",
+          "長時間実行の進捗ストリーミングが容易"
+        ],
+        "cons": [
+          "専用画面への遷移が必要で採用障壁が高い",
+          "日常業務からエージェントが切り離されやすい"
         ]
       },
       {
-        "id": "tier4",
-        "name": "必ず人間承認（高リスク）",
+        "id": "hybrid",
+        "label": "両用（埋め込み＋ワークベンチ）",
+        "building_blocks": [
+          "EX-1",
+          "EX-2",
+          "EX-3"
+        ],
+        "pick_when": [
+          "短時間タスクと長時間タスクが混在する",
+          "段階的にチャネルを拡張していく計画がある",
+          "全社展開で最大の採用率と統制の両立が必要"
+        ],
+        "pros": [
+          "タスク性質に応じた最適な体験を提供",
+          "採用障壁が低く統制も確保できる"
+        ],
+        "cons": [
+          "両方の開発・保守コストがかかる",
+          "実装の整合性維持に注意が必要"
+        ]
+      }
+    ],
+    "default_recommendation": "両用（埋め込み＋ワークベンチ）。まず主要業務ツールへの埋め込みから開始し、承認フローが必要になった段階でワークベンチを追加する。"
+  },
+  {
+    "id": "EX-D2",
+    "domain": "ex-experience",
+    "type": "degree",
+    "title": "EX-D2 信頼・価値実感UXの強度",
+    "description": "根拠提示・確信度表示・撤回可能性・価値フィードバックの強度を、利用フェーズとタスク特性に応じて調整する。",
+    "question": "信頼・価値実感UXの強度（根拠提示・確信度・撤回可能性）",
+    "decides_among": [],
+    "building_blocks": [
+      "EX-4"
+    ],
+    "related_decisions": [
+      "EX-D1",
+      "DC-1",
+      "TO-5"
+    ],
+    "value_drivers": [
+      "employee_efficiency",
+      "revenue_growth"
+    ],
+    "kpis": [
+      "ユーザー信頼度スコア",
+      "定着率(WAU/MAU)",
+      "タスク委譲率"
+    ],
+    "maturity_stage": "value_loop",
+    "mvp": "根拠表示＋確信度インジケータ＋簡易フィードバックUI",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/ex-experience/ex-d2-trust-value-ux.md",
+    "default_recommendation": "中強度（根拠表示＋確信度インジケータ＋簡易フィードバックUI）から開始し、利用データに基づいて段階的に強度を調整する。"
+  },
+  {
+    "id": "ID-D1",
+    "domain": "id-identity",
+    "type": "baseline",
+    "title": "ID-D1 従業員面／顧客面の分離",
+    "description": "従業員向けと顧客向けでIdP・データ・エージェント・実行環境・監査を完全分離し、面をまたぐ漏洩を構造的に排除する基本原則。",
+    "question": "従業員面と顧客面のエージェントを、どの境界で・どの粒度で分離するか。",
+    "decides_among": [
+      "完全分離",
+      "共通基盤＋論理分離",
+      "片面のみ"
+    ],
+    "building_blocks": [
+      "ID-1"
+    ],
+    "related_decisions": [
+      "ID-D2",
+      "ID-D5",
+      "EX-D1"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "customer_value"
+    ],
+    "kpis": [
+      "テナント間データ漏洩インシデント数",
+      "顧客データ分離監査合格率"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "従業員面と顧客面でIdPテナントを分離し、面間のネットワーク到達性をゼロにする",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/id-identity/id-d1-workforce-customer-split.md",
+    "default_recommendation": "完全分離（IdP・データ・実行環境・監査を物理的に分離）"
+  },
+  {
+    "id": "ID-D2",
+    "domain": "id-identity",
+    "type": "tradeoff",
+    "title": "ID-D2 実行主体と権限の委譲方式",
+    "description": "エージェントが下流SaaSを操作する際の権限委譲方式（OBO・サービスアカウント・ハイブリッド）と、SaaSごとのトークン取得経路の選択基準。",
+    "question": "エージェントは誰の権限で下流SaaSを操作するか。",
+    "decides_among": [
+      "OBO",
+      "ServiceAccount",
+      "AgentIdentity",
+      "Hybrid"
+    ],
+    "building_blocks": [
+      "ID-2",
+      "ID-3",
+      "ID-4",
+      "TO-1"
+    ],
+    "related_decisions": [
+      "ID-D1",
+      "ID-D3",
+      "ID-D5",
+      "ID-D4"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "employee_efficiency",
+      "automation"
+    ],
+    "kpis": [
+      "監査追跡可能率",
+      "誤アクセス事故件数",
+      "エージェント識別可能率"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "個人CopilotはOBO（主要2〜3 SaaS）、部門Spokeはハイブリッド。委譲非対応系はID-4で近似。",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/id-identity/id-d2-delegation-method.md",
+    "options": [
+      {
+        "id": "OBO",
+        "name": "User OBO",
         "patterns": [
-          "RT-4",
+          "ID-2",
+          "ID-4",
+          "OB-2"
+        ],
+        "pros": [
+          "権限忠実",
+          "本人帰責",
+          "監査追跡可能"
+        ],
+        "cons": [
+          "実装複雑",
+          "レガシー非対応"
+        ],
+        "pick_when": [
+          "個人Copilotの代理操作",
+          "監査要件が厳しい業務"
+        ]
+      },
+      {
+        "id": "ServiceAccount",
+        "name": "Service Account",
+        "patterns": [
+          "ID-3",
           "ID-7",
           "GV-9"
         ],
         "pros": [
-          "最高安全性",
-          "監査対応"
+          "実装容易",
+          "バッチ処理向き"
         ],
         "cons": [
-          "自動化率低下"
+          "過剰権限",
+          "帰責曖昧"
         ],
         "pick_when": [
-          "金額変更",
-          "契約・法務",
-          "規制対応"
+          "全社バッチ処理",
+          "公開情報のみ"
+        ]
+      },
+      {
+        "id": "AgentIdentity",
+        "name": "Agent Identity",
+        "patterns": [
+          "ID-3",
+          "ID-5",
+          "ID-6"
+        ],
+        "pros": [
+          "自律ジョブ向き",
+          "人間IDと分離"
+        ],
+        "cons": [
+          "単体では権限上限なし"
+        ],
+        "pick_when": [
+          "スケジュールバッチ",
+          "Webhookトリガー"
+        ]
+      },
+      {
+        "id": "Hybrid",
+        "name": "Hybrid",
+        "patterns": [
+          "ID-2",
+          "ID-3",
+          "RT-4"
+        ],
+        "pros": [
+          "現実的",
+          "帰責明確",
+          "段階導入可能"
+        ],
+        "cons": [
+          "設計工数増"
+        ],
+        "pick_when": [
+          "部門代表業務",
+          "段階導入",
+          "本番運用"
         ]
       }
     ],
-    "default_recommendation": "Tier 2-3 から開始し、信頼蓄積に応じて Tier 1 を拡大"
+    "default_recommendation": "Hybrid（実行主体はAgent、権限上限はUser）"
   },
   {
-    "id": "DC-2",
-    "title": "DC-2 タイムアウト・リトライ・予算（コスト上限）",
-    "type": "degree",
-    "options": [
-      {
-        "id": "fast",
-        "name": "短タイムアウト・低予算",
-        "patterns": [
-          "EX-1",
-          "GV-5"
-        ],
-        "pros": [
-          "応答速度",
-          "コスト抑制"
-        ],
-        "cons": [
-          "複雑タスク未完了"
-        ],
-        "pick_when": [
-          "対話型",
-          "単純Q&A"
-        ]
-      },
-      {
-        "id": "balanced",
-        "name": "中間設定",
-        "patterns": [
-          "RT-8",
-          "GV-8"
-        ],
-        "pros": [
-          "バランス"
-        ],
-        "cons": [
-          "設定複雑"
-        ],
-        "pick_when": [
-          "複合タスク",
-          "バッチ"
-        ]
-      },
-      {
-        "id": "generous",
-        "name": "長タイムアウト・高予算",
-        "patterns": [
-          "RT-7",
-          "RT-8",
-          "GV-8"
-        ],
-        "pros": [
-          "複雑タスク完了"
-        ],
-        "cons": [
-          "コスト高",
-          "応答遅延"
-        ],
-        "pick_when": [
-          "全社横断分析",
-          "Saga"
-        ]
-      }
+    "id": "ID-D3",
+    "domain": "id-identity",
+    "type": "baseline",
+    "title": "ID-D3 権限の忠実な縮退",
+    "description": "実効権限を常に「エージェント能力∩本人権限∩ポリシー」の最小に縮退させ、Permission Mirrorの位置づけを権威でなく近似として明確にする基本原則。",
+    "question": "エージェントの実効権限をどの粒度で、どの手段で縮退させるか。Permission Mirrorは権威かキャッシュか。",
+    "decides_among": [
+      "SaaSネイティブ認可優先",
+      "Permission Mirror補完",
+      "最小合成"
     ],
-    "default_recommendation": "対話型は30秒・バッチは5分を基準に、GV-8でコスト上限を設定"
-  },
-  {
-    "id": "DC-3",
-    "title": "DC-3 プロンプト/トレースのログ粒度（三層分離）",
-    "type": "degree",
-    "options": [
-      {
-        "id": "full",
-        "name": "全ログ保存",
-        "patterns": [
-          "OB-1",
-          "OB-2"
-        ],
-        "pros": [
-          "完全な再現性",
-          "デバッグ容易"
-        ],
-        "cons": [
-          "ストレージコスト",
-          "プライバシーリスク"
-        ],
-        "pick_when": [
-          "開発環境",
-          "品質改善フェーズ"
-        ]
-      },
-      {
-        "id": "selective",
-        "name": "選択的トレース",
-        "patterns": [
-          "OB-1",
-          "OB-2"
-        ],
-        "pros": [
-          "コストバランス",
-          "監査対応"
-        ],
-        "cons": [
-          "一部再現不能"
-        ],
-        "pick_when": [
-          "本番運用",
-          "通常機密"
-        ]
-      },
-      {
-        "id": "minimal",
-        "name": "最小ログ",
-        "patterns": [
-          "OB-2",
-          "KM-7"
-        ],
-        "pros": [
-          "プライバシー保護"
-        ],
-        "cons": [
-          "品質分析困難"
-        ],
-        "pick_when": [
-          "高機密",
-          "規制要件"
-        ]
-      }
+    "building_blocks": [
+      "ID-4"
     ],
-    "default_recommendation": "本番は選択的トレース、高機密データ処理時は最小ログに切替"
-  },
-  {
-    "id": "DC-4",
-    "title": "DC-4 コンテキスト投入量（top-k・トークン予算）",
-    "type": "degree",
-    "options": [
-      {
-        "id": "small",
-        "name": "小コンテキスト",
-        "patterns": [
-          "KM-1"
-        ],
-        "pros": [
-          "低コスト",
-          "高速"
-        ],
-        "cons": [
-          "回答の網羅性低"
-        ],
-        "pick_when": [
-          "単純Q&A",
-          "定型応答"
-        ]
-      },
-      {
-        "id": "medium",
-        "name": "中コンテキスト",
-        "patterns": [
-          "KM-1",
-          "KM-2"
-        ],
-        "pros": [
-          "精度と速度のバランス"
-        ],
-        "cons": [
-          "リランキング設計必要"
-        ],
-        "pick_when": [
-          "文書横断検索",
-          "部門内分析"
-        ]
-      },
-      {
-        "id": "large",
-        "name": "大コンテキスト",
-        "patterns": [
-          "KM-3",
-          "KM-2"
-        ],
-        "pros": [
-          "高精度",
-          "複雑推論対応"
-        ],
-        "cons": [
-          "高コスト",
-          "レイテンシ"
-        ],
-        "pick_when": [
-          "全社横断",
-          "経営分析"
-        ]
-      }
+    "related_decisions": [
+      "ID-D2",
+      "ID-D5",
+      "KM-D1"
     ],
-    "default_recommendation": "top-k=10＋リランキングを基準に、ユースケースで調整"
-  },
-  {
-    "id": "DC-5",
-    "title": "DC-5 メモリ保持・忘却（TTL・スコープ）",
-    "type": "degree",
-    "options": [
-      {
-        "id": "session_only",
-        "name": "セッションスコープのみ",
-        "patterns": [
-          "KM-4"
-        ],
-        "pros": [
-          "漏洩リスク最小",
-          "実装簡易"
-        ],
-        "cons": [
-          "パーソナライズ不可",
-          "毎回再説明"
-        ],
-        "pick_when": [
-          "一時的タスク",
-          "高機密環境"
-        ]
-      },
-      {
-        "id": "rolling_ttl",
-        "name": "ローリングTTL（90日）",
-        "patterns": [
-          "KM-4",
-          "ID-8"
-        ],
-        "pros": [
-          "パーソナライズ",
-          "業務効率向上"
-        ],
-        "cons": [
-          "鮮度管理必要",
-          "ストレージコスト"
-        ],
-        "pick_when": [
-          "継続利用",
-          "個人アシスタント"
-        ]
-      },
-      {
-        "id": "lifecycle_bound",
-        "name": "ライフサイクル連動失効",
-        "patterns": [
-          "KM-4",
-          "KM-7",
-          "ID-8"
-        ],
-        "pros": [
-          "退職・異動時の自動クリーンアップ"
-        ],
-        "cons": [
-          "人事システム連携が前提"
-        ],
-        "pick_when": [
-          "プロジェクト単位",
-          "人事イベント連動"
-        ]
-      }
+    "value_drivers": [
+      "audit_compliance",
+      "employee_efficiency"
     ],
-    "default_recommendation": "個人スコープは90日ローリングTTL、プロジェクトスコープはライフサイクル連動で設計"
-  },
-  {
-    "id": "DC-6",
-    "title": "DC-6 ガードレール強度（誤検知 vs 見逃し）",
-    "type": "degree",
-    "options": [
-      {
-        "id": "lenient",
-        "name": "軽量ガードレール",
-        "patterns": [
-          "ID-7"
-        ],
-        "pros": [
-          "業務阻害最小",
-          "低レイテンシ"
-        ],
-        "cons": [
-          "危険な出力の見逃しリスク"
-        ],
-        "pick_when": [
-          "低リスク経路",
-          "社内参照のみ"
-        ]
-      },
-      {
-        "id": "strict",
-        "name": "厳格ガードレール",
-        "patterns": [
-          "ID-7",
-          "ID-6",
-          "KM-6"
-        ],
-        "pros": [
-          "見逃しゼロに近い安全性"
-        ],
-        "cons": [
-          "誤検知による業務遅延",
-          "承認疲れ"
-        ],
-        "pick_when": [
-          "外部送信",
-          "機密データアクセス",
-          "顧客向け出力"
-        ]
-      },
-      {
-        "id": "async_sampling",
-        "name": "非同期・サンプリング検査",
-        "patterns": [
-          "ID-7",
-          "OB-1"
-        ],
-        "pros": [
-          "レイテンシ影響なし"
-        ],
-        "cons": [
-          "リアルタイム防御不可"
-        ],
-        "pick_when": [
-          "レイテンシクリティカル",
-          "大量処理"
-        ]
-      }
+    "kpis": [
+      "権限逸脱検知率",
+      "最小権限達成率"
     ],
-    "default_recommendation": "高リスク経路は厳格、低リスク経路は軽量とし、経路ごとに閾値を個別設定"
+    "maturity_stage": "foundation",
+    "mvp": "主要SaaSの権限をキャッシュし、エージェント呼び出し時に交差判定を実装",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/id-identity/id-d3-permission-reduction.md",
+    "default_recommendation": "SaaSネイティブ認可優先 + Permission Mirror補完 + 最小合成による統合評価"
   },
   {
-    "id": "DC-7",
-    "title": "DC-7 キャッシュ積極度・JIT 資格情報 TTL",
+    "id": "ID-D4",
+    "domain": "id-identity",
     "type": "degree",
+    "title": "ID-D4 資格情報の最小・短命化",
+    "description": "長命で広スコープなAPIキー/トークンを廃止し、JITクレデンシャルのTTLを用途リスクに応じて調整する連続量パラメータ。",
+    "question": "資格情報のスコープとTTLをどこまで絞るか。キャッシュとJIT発行のバランスをどう取るか。",
+    "decides_among": [
+      "積極キャッシュ・長TTL",
+      "キャッシュ無効・短TTL",
+      "イベント連動キャッシュ無効化"
+    ],
+    "building_blocks": [
+      "ID-5",
+      "DC-7"
+    ],
+    "related_decisions": [
+      "ID-D2",
+      "ID-D3",
+      "ID-D5"
+    ],
+    "value_drivers": [
+      "audit_compliance"
+    ],
+    "kpis": [
+      "資格情報の平均有効期間",
+      "過剰権限の検知件数"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "高リスク操作のみJIT発行に切り替え、TTL 5分以内",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/id-identity/id-d4-credential-minimization.md",
     "options": [
       {
-        "id": "aggressive",
+        "id": "aggressive_cache",
         "name": "積極キャッシュ・長TTL",
         "patterns": [
           "KM-1",
@@ -441,7 +421,7 @@
         ]
       },
       {
-        "id": "event_driven_invalidation",
+        "id": "event_driven",
         "name": "イベント連動キャッシュ無効化",
         "patterns": [
           "ID-5",
@@ -459,285 +439,251 @@
         ]
       }
     ],
-    "default_recommendation": "低リスク参照は積極キャッシュ、機密・パーソナライズは無効化、権限変更イベントで即時失効"
+    "default_recommendation": "高リスク操作は分単位の短TTL・JIT発行、低リスク参照のみ時間単位キャッシュ許容"
   },
   {
-    "id": "DC-8",
-    "title": "DC-8 モデルの強さ・データ分類別ルーティング",
-    "type": "degree",
-    "options": [
-      {
-        "id": "lightweight_external",
-        "name": "軽量モデル・外部API",
-        "patterns": [
-          "GV-5"
-        ],
-        "pros": [
-          "低コスト",
-          "高速応答"
-        ],
-        "cons": [
-          "複雑推論で品質低下"
-        ],
-        "pick_when": [
-          "単純Q&A",
-          "公開データ",
-          "定型業務"
-        ]
-      },
-      {
-        "id": "cascade",
-        "name": "カスケードエスカレーション",
-        "patterns": [
-          "GV-5",
-          "GV-7"
-        ],
-        "pros": [
-          "コストと品質のバランス"
-        ],
-        "cons": [
-          "エスカレーション時の遅延"
-        ],
-        "pick_when": [
-          "難易度不定",
-          "複合タスク"
-        ]
-      },
-      {
-        "id": "vpc_strong",
-        "name": "VPC内大規模モデル",
-        "patterns": [
-          "GV-5",
-          "KM-7"
-        ],
-        "pros": [
-          "高品質",
-          "データ主権確保"
-        ],
-        "cons": [
-          "インフラコスト高",
-          "モデル更新遅延"
-        ],
-        "pick_when": [
-          "極秘データ",
-          "規制対応",
-          "契約レビュー"
-        ]
-      }
+    "id": "ID-D5",
+    "domain": "id-identity",
+    "type": "baseline+tradeoff+degree",
+    "title": "ID-D5 認可の決定方式",
+    "description": "ゼロトラストPDP/PEP・Policy-as-Code・ガードレール強度・プロンプト vs 実行基盤を統合した認可決定方式の設計判断。安全保証は常に実行基盤側。",
+    "question": "エージェントの行動可否を、誰が・どこで・どの手段で判定するか。プロンプトか実行基盤か。",
+    "decides_among": [
+      "中央PDP/分散PEP",
+      "Policy-as-Code",
+      "プロンプト制御",
+      "多層防御"
     ],
-    "default_recommendation": "軽量モデルで開始しカスケードで品質担保、極秘データはVPC内経路に限定"
-  },
-  {
-    "id": "DC-9",
-    "title": "DC-9 カナリア段階・イベント駆動の頻度制限",
-    "type": "degree",
-    "options": [
-      {
-        "id": "conservative_canary",
-        "name": "多段階カナリア（1%→5%→25%→100%）",
-        "patterns": [
-          "GV-6",
-          "GV-7"
-        ],
-        "pros": [
-          "問題の早期検出",
-          "ロールバックコスト低"
-        ],
-        "cons": [
-          "展開に時間がかかる"
-        ],
-        "pick_when": [
-          "初回デプロイ",
-          "大規模変更",
-          "高リスク"
-        ]
-      },
-      {
-        "id": "accelerated_canary",
-        "name": "段階短縮＋オフライン評価",
-        "patterns": [
-          "GV-6",
-          "GV-7"
-        ],
-        "pros": [
-          "展開速度向上"
-        ],
-        "cons": [
-          "本番トラフィック不足で検証精度低下"
-        ],
-        "pick_when": [
-          "低トラフィック",
-          "軽微な変更"
-        ]
-      },
-      {
-        "id": "throttled_events",
-        "name": "デバウンス＋頻度上限＋予算上限",
-        "patterns": [
-          "RT-10",
-          "GV-8"
-        ],
-        "pros": [
-          "コスト急騰防止",
-          "システム過負荷回避"
-        ],
-        "cons": [
-          "イベント欠落による古い状態での判断"
-        ],
-        "pick_when": [
-          "月次バッチ",
-          "イベントストーム",
-          "大量イベント"
-        ]
-      }
+    "building_blocks": [
+      "ID-6",
+      "ID-7",
+      "TO-12",
+      "DC-6"
     ],
-    "default_recommendation": "カナリアは4段階を基本とし、イベント駆動はデバウンス・頻度上限・予算上限の3重制御"
-  },
-  {
-    "id": "TO-1",
-    "title": "TO-1 OBO委譲 vs サービスアカウント",
-    "type": "tradeoff",
+    "related_decisions": [
+      "ID-D1",
+      "ID-D2",
+      "ID-D3",
+      "ID-D4"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "automation"
+    ],
+    "kpis": [
+      "認可判定の平均レイテンシ",
+      "ポリシー違反検知率",
+      "ガードレール発動率",
+      "誤検知率",
+      "ポリシー更新リードタイム"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "中央PDP(OPA/Cedar)＋主要APIゲートウェイにPEPを配置。高リスク操作のみPolicy-as-Codeで制御。",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/id-identity/id-d5-authorization-method.md",
     "options": [
       {
-        "id": "A",
-        "name": "User-OBO",
+        "id": "platform_enforcement",
+        "name": "実行基盤制御",
         "patterns": [
-          "ID-2",
-          "ID-4",
-          "OB-2"
-        ],
-        "pros": [
-          "権限忠実",
-          "本人帰責",
-          "監査追跡可能"
-        ],
-        "cons": [
-          "実装複雑",
-          "レガシー非対応"
-        ],
-        "pick_when": [
-          "複数SaaSの本人代理操作",
-          "監査要件強"
-        ]
-      },
-      {
-        "id": "B",
-        "name": "Service Account",
-        "patterns": [
-          "ID-3",
+          "ID-6",
           "ID-7",
-          "GV-9"
-        ],
-        "pros": [
-          "実装容易",
-          "バッチ処理向き"
-        ],
-        "cons": [
-          "過剰権限",
-          "帰責曖昧"
-        ],
-        "pick_when": [
-          "バッチ処理",
-          "公開情報のみ"
-        ]
-      },
-      {
-        "id": "C",
-        "name": "Hybrid",
-        "patterns": [
-          "ID-2",
-          "ID-3",
           "RT-4"
         ],
         "pros": [
-          "現実的",
-          "帰責明確"
+          "突破困難",
+          "監査可能",
+          "Policy-as-Codeで体系管理"
         ],
         "cons": [
-          "設計工数増"
+          "基盤整備の初期コスト"
         ],
         "pick_when": [
-          "部門代表業務",
-          "段階導入"
-        ]
-      }
-    ],
-    "default_recommendation": "C (Hybrid) for departmental Spokes; A for personal Copilots"
-  },
-  {
-    "id": "TO-2",
-    "title": "TO-2 中央集権データレイク vs フェデレーテッド Context Mesh",
-    "type": "tradeoff",
-    "options": [
-      {
-        "id": "A",
-        "name": "Central Lake",
-        "patterns": [
-          "KM-1",
-          "KM-3"
-        ],
-        "pros": [
-          "クエリ性能",
-          "一元管理"
-        ],
-        "cons": [
-          "権限複製コスト",
-          "データ鮮度"
-        ],
-        "pick_when": [
-          "小〜中規模",
-          "権限モデルが単純"
+          "アクセス制御",
+          "承認フロー",
+          "DLP出力検証",
+          "サンドボックス隔離"
         ]
       },
       {
-        "id": "B",
-        "name": "Context Mesh",
+        "id": "defense_in_depth",
+        "name": "多層防御（推奨最終形）",
         "patterns": [
-          "KM-2",
-          "KM-1"
+          "ID-6",
+          "ID-7",
+          "RT-4",
+          "RT-5"
         ],
         "pros": [
-          "権限維持",
-          "スケーラブル"
+          "安全性と品質の両立"
         ],
         "cons": [
-          "クエリ複雑",
-          "レイテンシ"
+          "設計・運用の複雑度"
         ],
         "pick_when": [
-          "大規模",
-          "権限モデルが複雑",
-          "データソース自律"
+          "本番運用",
+          "セキュリティと品質の両方が必要"
         ]
       },
       {
-        "id": "C",
-        "name": "Hybrid",
+        "id": "prompt_only",
+        "name": "プロンプト制御のみ",
         "patterns": [
-          "KM-1",
-          "KM-2",
-          "KM-3"
+          "GV-3"
         ],
-        "pros": [
-          "段階的移行可能"
-        ],
+        "pros": [],
         "cons": [
-          "二重管理"
+          "セキュリティ保証にならない"
         ],
         "pick_when": [
-          "移行期間中"
+          "出力フォーマット指定のみ（セキュリティには使わない）"
         ]
       }
     ],
-    "default_recommendation": "大規模企業はContext Mesh(B)を推奨。小規模はCentral Lake(A)で開始"
+    "default_recommendation": "中央PDP/分散PEP + Policy-as-Code + 経路別ガードレール強度"
   },
   {
-    "id": "TO-3",
-    "title": "TO-3 単一エージェント vs RACI マルチエージェント",
-    "type": "tradeoff",
+    "id": "ID-D6",
+    "domain": "id-identity",
+    "type": "degree",
+    "title": "ID-D6 同意と透明化の範囲",
+    "description": "エージェントが本人の権限で動く際の同意取得・スコープ管理・取り消し・透明化ダッシュボードの範囲と粒度を決める。",
+    "question": "エージェントへの委譲同意をどの粒度で取得し、どこまで透明化するか。",
+    "decides_among": [
+      "全スコープ一括同意",
+      "目的別個別同意",
+      "スコープ別選択同意"
+    ],
+    "building_blocks": [
+      "ID-8"
+    ],
+    "related_decisions": [
+      "ID-D2",
+      "ID-D4",
+      "ID-D5"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "employee_efficiency"
+    ],
+    "kpis": [
+      "同意取得率",
+      "透明性レポート提供率"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "エージェント初回利用時にデータアクセス範囲の同意UIを表示し、コンセントレジストリに記録",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/id-identity/id-d6-consent-transparency.md",
     "options": [
       {
-        "id": "A",
+        "id": "blanket",
+        "name": "全スコープ一括同意",
+        "patterns": [
+          "ID-8"
+        ],
+        "pros": [
+          "導入容易",
+          "ユーザー操作最小"
+        ],
+        "cons": [
+          "スコープクリープ",
+          "規制非対応"
+        ],
+        "pick_when": [
+          "低リスク・社内限定",
+          "PoC段階"
+        ]
+      },
+      {
+        "id": "purpose_based",
+        "name": "目的別個別同意",
+        "patterns": [
+          "ID-8",
+          "ID-2",
+          "OB-2"
+        ],
+        "pros": [
+          "目的限定",
+          "期限管理可能",
+          "規制対応"
+        ],
+        "cons": [
+          "同意フローの設計工数"
+        ],
+        "pick_when": [
+          "標準的な業務利用",
+          "複数SaaS横断"
+        ]
+      },
+      {
+        "id": "scope_selective",
+        "name": "スコープ別選択同意",
+        "patterns": [
+          "ID-8",
+          "ID-2",
+          "ID-5",
+          "OB-2"
+        ],
+        "pros": [
+          "最高粒度",
+          "GDPR完全対応"
+        ],
+        "cons": [
+          "同意疲れのリスク",
+          "実装複雑"
+        ],
+        "pick_when": [
+          "GDPR対応必須",
+          "高リスク業務",
+          "顧客向けエージェント"
+        ]
+      }
+    ],
+    "default_recommendation": "目的別個別同意 + ダッシュボードでの透明化 + 即時取り消し"
+  },
+  {
+    "id": "RT-D1",
+    "domain": "rt-runtime",
+    "type": "tradeoff",
+    "title": "RT-D1 単一 vs マルチエージェントと分業",
+    "description": "「複雑だから」ではなく「責任分担が複数に分かれるから」を基準に、単一エージェント・Hub&Spoke・RACIマルチエージェントの構成を選定する意思決定。",
+    "question": "エージェントを単一構成にすべきか、マルチエージェント構成にすべきか。マルチにする場合、Hub&SpokeとRACIのどちらの分業方式を採るか。",
+    "decides_among": [
+      "Single",
+      "HubSpoke",
+      "RACI"
+    ],
+    "building_blocks": [
+      "RT-1",
+      "RT-2",
+      "TO-3"
+    ],
+    "related_decisions": [
+      "RT-D2",
+      "RT-D6",
+      "ID-D2",
+      "GV-D1"
+    ],
+    "value_drivers": [
+      "automation",
+      "project_productivity"
+    ],
+    "kpis": [
+      "ルーティング精度",
+      "スポーク応答率",
+      "タスク完了率",
+      "責任分担の明確性スコア"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "単一エージェントで開始し、責任境界が明確になった部分だけをサブエージェントとして分離",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/rt-runtime/rt-d1-single-vs-multi-agent.md",
+    "options": [
+      {
+        "id": "single",
         "name": "Single Agent",
         "patterns": [
           "RT-1",
@@ -759,16 +705,39 @@
         ]
       },
       {
-        "id": "B",
-        "name": "RACI Multi-Agent",
+        "id": "hub_spoke",
+        "name": "Hub & Spoke (RT-1)",
+        "patterns": [
+          "RT-1",
+          "ID-4",
+          "EX-1"
+        ],
+        "pros": [
+          "コンテキスト分割",
+          "権限縮退",
+          "変更局所化",
+          "独立スケール"
+        ],
+        "cons": [
+          "ルーティング精度依存",
+          "ファンアウトレイテンシ"
+        ],
+        "pick_when": [
+          "複数部門にまたがる意図ルーティングが必要",
+          "組織階層に沿ったエスカレーションが必要"
+        ]
+      },
+      {
+        "id": "raci",
+        "name": "RACI Multi-Agent (RT-2)",
         "patterns": [
           "RT-2",
-          "RT-1",
-          "GV-8"
+          "RT-4",
+          "OB-2"
         ],
         "pros": [
           "責任明確",
-          "専門分化",
+          "監査証跡",
           "帰責分離"
         ],
         "cons": [
@@ -779,12 +748,12 @@
         "pick_when": [
           "複数部門が関与",
           "承認責任が独立",
-          "専門ツールセットが異なる"
+          "監査要件が厳しい"
         ]
       },
       {
-        "id": "C",
-        "name": "Incremental Split",
+        "id": "incremental",
+        "name": "段階的分離",
         "patterns": [
           "RT-1",
           "RT-2",
@@ -803,89 +772,53 @@
         ]
       }
     ],
-    "default_recommendation": "まず単一(A)で開始し、責任分担の境界が明確になった箇所のみ段階的に分離(C→B)"
+    "default_recommendation": "まず単一で開始し、責任分担の境界が明確になった箇所のみ段階的に分離"
   },
   {
-    "id": "TO-4",
-    "title": "TO-4 Read-only vs Write-capable（段階的拡張）",
-    "type": "tradeoff",
-    "options": [
-      {
-        "id": "A",
-        "name": "Read-only",
-        "patterns": [
-          "RT-3",
-          "OB-1"
-        ],
-        "pros": [
-          "安全",
-          "即時導入可",
-          "不可逆被害なし"
-        ],
-        "cons": [
-          "業務自動化の範囲が限定的"
-        ],
-        "pick_when": [
-          "初期導入",
-          "リスク評価未完了",
-          "参照・分析業務"
-        ]
-      },
-      {
-        "id": "B",
-        "name": "Approved Write",
-        "patterns": [
-          "RT-4",
-          "RT-6",
-          "GV-7"
-        ],
-        "pros": [
-          "書き込み可能",
-          "人間が最終確認"
-        ],
-        "cons": [
-          "承認フローの運用負荷",
-          "レイテンシ"
-        ],
-        "pick_when": [
-          "中リスク操作",
-          "承認フロー整備済み",
-          "eval完了"
-        ]
-      },
-      {
-        "id": "C",
-        "name": "Auto Write",
-        "patterns": [
-          "RT-3",
-          "RT-6",
-          "GV-7",
-          "GV-9"
-        ],
-        "pros": [
-          "完全自動化",
-          "高ROI"
-        ],
-        "cons": [
-          "誤操作時の影響大",
-          "kill switch必須"
-        ],
-        "pick_when": [
-          "低リスク高頻度定型",
-          "eval・カナリア通過済み",
-          "監査基盤完備"
-        ]
-      }
+    "id": "RT-D2",
+    "domain": "rt-runtime",
+    "type": "tradeoff+degree",
+    "title": "RT-D2 自律度の設計",
+    "description": "Copilot vs Autopilot、Read-only vs Write、リスクティア境界、承認チェーンの設計を統合し、操作ごとの自律度を決定する意思決定。",
+    "question": "エージェントの各操作にどの程度の自律度を与え、どこに人間承認を挟むか。リスクティアの境界をどう引き、承認フローをどう設計するか。",
+    "decides_among": [
+      "Copilot",
+      "Autopilot",
+      "Hybrid",
+      "TierBoundary",
+      "ApprovalChain"
     ],
-    "default_recommendation": "A (Read-only)で開始し、eval・カナリアを経てB→Cへ段階的に昇格"
-  },
-  {
-    "id": "TO-5",
-    "title": "TO-5 Copilot vs Autopilot",
-    "type": "tradeoff",
+    "building_blocks": [
+      "RT-3",
+      "RT-4",
+      "DC-1",
+      "TO-4",
+      "TO-5"
+    ],
+    "related_decisions": [
+      "RT-D1",
+      "RT-D3",
+      "ID-D5",
+      "GV-D2"
+    ],
+    "value_drivers": [
+      "automation",
+      "audit_compliance"
+    ],
+    "kpis": [
+      "リスクティア判定精度",
+      "人間介入率",
+      "承認リードタイム",
+      "承認拒否率"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "Tier 0（読み取り自動）と Tier 3（書き込みは承認必須）の2段階を定義しポリシーエンジンで強制",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/rt-runtime/rt-d2-autonomy-design.md",
     "options": [
       {
-        "id": "A",
+        "id": "copilot",
         "name": "Copilot (HitL)",
         "patterns": [
           "RT-3",
@@ -908,7 +841,7 @@
         ]
       },
       {
-        "id": "B",
+        "id": "autopilot",
         "name": "Autopilot",
         "patterns": [
           "RT-3",
@@ -931,8 +864,8 @@
         ]
       },
       {
-        "id": "C",
-        "name": "Hybrid per Operation",
+        "id": "hybrid",
+        "name": "ハイブリッド（操作種別ごとに分離）",
         "patterns": [
           "RT-3",
           "RT-4",
@@ -952,381 +885,91 @@
         ]
       }
     ],
-    "default_recommendation": "全操作をCopilot(A)で開始し、承認率・リスクを観測してC経由でBへ段階的に移行"
+    "default_recommendation": "全操作をCopilotで開始し、承認率・リスクを観測してハイブリッド経由でAutopilotへ段階的に移行"
   },
   {
-    "id": "TO-6",
-    "title": "TO-6 個人の記憶 vs プロジェクト/チームの記憶",
-    "type": "tradeoff",
-    "options": [
-      {
-        "id": "A",
-        "name": "Personal Enclave",
-        "patterns": [
-          "KM-4",
-          "ID-8"
-        ],
-        "pros": [
-          "プライバシー保護",
-          "本人のみアクセス"
-        ],
-        "cons": [
-          "チーム知識がサイロ化",
-          "ナレッジ共有不可"
-        ],
-        "pick_when": [
-          "個人設定・業務スタイル",
-          "機密個人情報",
-          "HR・給与・医療情報"
-        ]
-      },
-      {
-        "id": "B",
-        "name": "Project Workspace",
-        "patterns": [
-          "RT-11",
-          "KM-4"
-        ],
-        "pros": [
-          "ナレッジ共有",
-          "サイロ化防止"
-        ],
-        "cons": [
-          "個人情報混入リスク",
-          "スコープ管理が必要"
-        ],
-        "pick_when": [
-          "共有ナレッジ",
-          "プロジェクト文書",
-          "チーム決定事項"
-        ]
-      },
-      {
-        "id": "C",
-        "name": "Hybrid Separated",
-        "patterns": [
-          "KM-4",
-          "RT-11",
-          "ID-8"
-        ],
-        "pros": [
-          "プライバシーと共有の両立",
-          "組織グラフ連動"
-        ],
-        "cons": [
-          "二重管理",
-          "UX設計工数"
-        ],
-        "pick_when": [
-          "個人と共有が混在",
-          "異動・退職への対応が必要"
-        ]
-      }
+    "id": "RT-D3",
+    "domain": "rt-runtime",
+    "type": "baseline",
+    "title": "RT-D3 副作用の安全な実行",
+    "description": "自然言語を構造化コマンドに変換し、SoR書き込み境界を経由させることで、エージェントの副作用を安全に制御する意思決定。",
+    "question": "エージェントが外部システムに書き込む際、どのように副作用の安全性を確保するか。自然言語をそのままAPIに渡してよいか、SoRへの直接書き込みを許可してよいか。",
+    "decides_among": [
+      "CommandEnvelope",
+      "SoRWriteBoundary"
     ],
-    "default_recommendation": "C (Hybrid Separated)を標準とし、個人Enclaveを先行実装してからProject Workspaceを追加"
-  },
-  {
-    "id": "TO-7",
-    "title": "TO-7 全プロンプトログ vs 選択的トレースログ",
-    "type": "tradeoff",
-    "options": [
-      {
-        "id": "A",
-        "name": "Metadata Only",
-        "patterns": [
-          "OB-1",
-          "DC-3"
-        ],
-        "pros": [
-          "低コスト",
-          "機密拡散なし",
-          "即時導入可"
-        ],
-        "cons": [
-          "再現性なし",
-          "デバッグ困難"
-        ],
-        "pick_when": [
-          "初期導入",
-          "極秘処理",
-          "コスト制約が厳しい"
-        ]
-      },
-      {
-        "id": "B",
-        "name": "Three-Layer Separated",
-        "patterns": [
-          "OB-1",
-          "DC-3",
-          "KM-7"
-        ],
-        "pros": [
-          "再現性確保",
-          "監査対応",
-          "品質改善ループ"
-        ],
-        "cons": [
-          "ストレージコスト",
-          "暗号化運用の複雑度"
-        ],
-        "pick_when": [
-          "標準構成",
-          "監査要件あり",
-          "デバッグ需要"
-        ]
-      },
-      {
-        "id": "C",
-        "name": "Selective Encrypted Body",
-        "patterns": [
-          "OB-1",
-          "KM-7",
-          "DC-3"
-        ],
-        "pros": [
-          "コストと再現性のバランス",
-          "規制対応"
-        ],
-        "cons": [
-          "サンプリング漏れ",
-          "アクセス制限による調査遅延"
-        ],
-        "pick_when": [
-          "規制対象データ",
-          "コスト最適化",
-          "エラー時のみフル保存"
-        ]
-      }
+    "building_blocks": [
+      "RT-5",
+      "RT-6"
     ],
-    "default_recommendation": "B (Three-Layer Separated)を標準構成とし、極秘処理はA、コスト制約時はCを併用"
-  },
-  {
-    "id": "TO-8",
-    "title": "TO-8 中央集権プラットフォーム vs 部署フェデレーション",
-    "type": "tradeoff",
-    "options": [
-      {
-        "id": "A",
-        "name": "Central Platform",
-        "patterns": [
-          "GV-1",
-          "ID-7",
-          "GV-8"
-        ],
-        "pros": [
-          "統一ポリシー",
-          "監査一元化",
-          "セキュリティ高"
-        ],
-        "cons": [
-          "部署ニーズへの対応遅延",
-          "野良エージェント乱立リスク"
-        ],
-        "pick_when": [
-          "セキュリティ最優先",
-          "小規模組織"
-        ]
-      },
-      {
-        "id": "B",
-        "name": "Department Federation",
-        "patterns": [
-          "GV-3",
-          "GV-7"
-        ],
-        "pros": [
-          "俊敏性",
-          "ドメイン適合",
-          "部署自律"
-        ],
-        "cons": [
-          "セキュリティばらつき",
-          "監査困難"
-        ],
-        "pick_when": [
-          "ドメイン知識が部署に閉じる",
-          "ユースケース定義"
-        ]
-      },
-      {
-        "id": "C",
-        "name": "Two-Layer Governance",
-        "patterns": [
-          "GV-1",
-          "GV-3",
-          "ID-7",
-          "GV-8"
-        ],
-        "pros": [
-          "安全性と俊敏性の両立",
-          "野良エージェント防止"
-        ],
-        "cons": [
-          "初期設計・調整工数"
-        ],
-        "pick_when": [
-          "中〜大規模組織",
-          "複数部署がエージェント利用"
-        ]
-      }
+    "related_decisions": [
+      "RT-D2",
+      "RT-D4",
+      "ID-D5"
     ],
-    "default_recommendation": "C (Two-Layer Governance)が唯一の実用的な解。中央基盤を先行整備し部署テンプレートで展開"
-  },
-  {
-    "id": "TO-9",
-    "title": "TO-9 コネクタ自前構築 vs 既存 iPaaS 再利用",
-    "type": "tradeoff",
-    "options": [
-      {
-        "id": "A",
-        "name": "iPaaS Reuse",
-        "patterns": [
-          "IN-4",
-          "ID-4"
-        ],
-        "pros": [
-          "低開発コスト",
-          "既存フロー流用",
-          "ベンダー保守"
-        ],
-        "cons": [
-          "認可粒度がiPaaS依存",
-          "MCP対応不確実"
-        ],
-        "pick_when": [
-          "認可粒度検証済み",
-          "監査証跡が紐付け可能",
-          "OBO対応済み"
-        ]
-      },
-      {
-        "id": "B",
-        "name": "Custom MCP Build",
-        "patterns": [
-          "IN-1",
-          "ID-2",
-          "ID-4"
-        ],
-        "pros": [
-          "認可粒度を任意に設計",
-          "MCP標準化",
-          "将来拡張容易"
-        ],
-        "cons": [
-          "開発コスト高",
-          "保守が自社持ち"
-        ],
-        "pick_when": [
-          "新規統合ポイント",
-          "管理者SA埋込コネクタ",
-          "認可粒度が不足"
-        ]
-      },
-      {
-        "id": "C",
-        "name": "Hybrid Validated",
-        "patterns": [
-          "IN-1",
-          "IN-4",
-          "ID-4"
-        ],
-        "pros": [
-          "既存資産活用",
-          "不足分のみ自前実装"
-        ],
-        "cons": [
-          "二系統の管理コスト"
-        ],
-        "pick_when": [
-          "既存資産が混在",
-          "段階的移行"
-        ]
-      }
+    "value_drivers": [
+      "audit_compliance",
+      "automation"
     ],
-    "default_recommendation": "C (Hybrid)で既存資産を認可粒度でスコアリングし、合格分は再利用・不合格分はMCP化"
-  },
-  {
-    "id": "TO-10",
-    "title": "TO-10 内部/オンプレモデル vs 外部 API",
-    "type": "tradeoff",
-    "options": [
-      {
-        "id": "A",
-        "name": "Internal/On-Prem",
-        "patterns": [
-          "GV-5",
-          "KM-7"
-        ],
-        "pros": [
-          "データ主権完全",
-          "規制準拠",
-          "大量定常推論でコスト有利"
-        ],
-        "cons": [
-          "最新モデル追従遅延",
-          "GPU運用コスト",
-          "セットアップ複雑"
-        ],
-        "pick_when": [
-          "極秘データ",
-          "規制対象データ",
-          "大量定常推論"
-        ]
-      },
-      {
-        "id": "B",
-        "name": "External API",
-        "patterns": [
-          "GV-5",
-          "GV-8"
-        ],
-        "pros": [
-          "最新モデル即時利用",
-          "従量制",
-          "即日開始"
-        ],
-        "cons": [
-          "データ主権リスク",
-          "DPA確認必須",
-          "高コストになりやすい"
-        ],
-        "pick_when": [
-          "一般公開情報",
-          "最新性能が必要",
-          "変動需要"
-        ]
-      },
-      {
-        "id": "C",
-        "name": "Hybrid Data-Classification Routing",
-        "patterns": [
-          "GV-5",
-          "KM-7",
-          "GV-8"
-        ],
-        "pros": [
-          "データ分類に応じた最適経路",
-          "開発者の判断負荷排除"
-        ],
-        "cons": [
-          "Gateway設計・運用の複雑度"
-        ],
-        "pick_when": [
-          "機密と一般が混在",
-          "Central Model Gateway導入済み"
-        ]
-      }
+    "kpis": [
+      "構造化コマンド変換率",
+      "不正コマンド検知率",
+      "SoR書き込み成功率",
+      "整合性違反検知数"
     ],
-    "default_recommendation": "C (Hybrid)でGV-5 Central Model Gatewayによるデータ分類ルーティングを標準構成とする"
+    "maturity_stage": "foundation",
+    "mvp": "書き込み操作をJSON構造化し、主要SoR 1〜2系に書き込みゲートを設置",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/rt-runtime/rt-d3-side-effect-safety.md",
+    "default_recommendation": "書き込み操作がある限り両方を採用。MVPは4フィールドのJSONスキーマ＋主要SoR 1〜2系への書き込みゲート"
   },
   {
-    "id": "TO-11",
-    "title": "TO-11 同期 vs 非同期",
-    "type": "tradeoff",
+    "id": "RT-D4",
+    "domain": "rt-runtime",
+    "type": "baseline+tradeoff+degree",
+    "title": "RT-D4 長尺・分散処理の信頼性",
+    "description": "複数SaaSにまたがるSaga、永続ワークフロー、同期vs非同期の選択、タイムアウト/リトライ設計を統合し、長時間・分散処理の信頼性を確保する意思決定。",
+    "question": "長時間にわたる処理や複数SaaSをまたぐ分散処理の整合性・耐障害性をどう確保するか。同期と非同期をどう使い分け、タイムアウト・リトライ・予算をどう設定するか。",
+    "decides_among": [
+      "Synchronous",
+      "Asynchronous",
+      "Hybrid",
+      "Saga",
+      "DurableWorkflow"
+    ],
+    "building_blocks": [
+      "RT-7",
+      "RT-8",
+      "TO-11",
+      "DC-2"
+    ],
+    "related_decisions": [
+      "RT-D3",
+      "RT-D5",
+      "GV-D4"
+    ],
+    "value_drivers": [
+      "automation",
+      "project_productivity",
+      "audit_compliance"
+    ],
+    "kpis": [
+      "Saga完了率",
+      "補償トランザクション発動率",
+      "ワークフロー完了率",
+      "リトライ成功率",
+      "端到端処理時間"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "2ステップSaga（実行＋補償）を1業務プロセスで検証し、Temporal/Durable Functionsで永続化",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/rt-runtime/rt-d4-long-running-reliability.md",
     "options": [
       {
-        "id": "A",
-        "name": "Synchronous",
+        "id": "sync",
+        "name": "同期処理",
         "patterns": [
           "EX-1",
           "RT-3"
@@ -1347,8 +990,8 @@
         ]
       },
       {
-        "id": "B",
-        "name": "Asynchronous",
+        "id": "async",
+        "name": "非同期処理 (RT-8 Durable Workflow)",
         "patterns": [
           "RT-8",
           "RT-4",
@@ -1370,8 +1013,30 @@
         ]
       },
       {
-        "id": "C",
-        "name": "Hybrid (Streaming + Timeout Escalation)",
+        "id": "saga",
+        "name": "Saga (RT-7 Enterprise Saga)",
+        "patterns": [
+          "RT-7",
+          "RT-8",
+          "RT-6"
+        ],
+        "pros": [
+          "分散整合性",
+          "自動補償",
+          "DBロック回避"
+        ],
+        "cons": [
+          "補償設計の複雑さ",
+          "不可逆ステップの制約"
+        ],
+        "pick_when": [
+          "複数SaaSにまたがるトランザクション",
+          "部分失敗時の自動補償が必要"
+        ]
+      },
+      {
+        "id": "hybrid",
+        "name": "ハイブリッド（ストリーミング＋タイムアウト昇格）",
         "patterns": [
           "EX-1",
           "RT-8",
@@ -1388,86 +1053,1617 @@
         ],
         "pick_when": [
           "処理時間が不定",
-          "ストリーミング配信が有効",
-          "段階的導入"
+          "ストリーミング配信が有効"
         ]
       }
     ],
-    "default_recommendation": "同期(A)で開始し、タイムアウト頻発する処理をB/Cへ段階的に非同期化"
+    "default_recommendation": "同期で開始しタイムアウト頻発処理をRT-8で非同期化、複数SaaSまたぎはRT-7 Sagaを適用"
   },
   {
-    "id": "TO-12",
-    "title": "TO-12 プロンプトで守る vs ポリシー/実行基盤で守る",
+    "id": "RT-D5",
+    "domain": "rt-runtime",
+    "type": "baseline+degree",
+    "title": "RT-D5 起動契機",
+    "description": "エージェントを業務キューのワーカーとして参加させるか、SaaSイベントをトリガーに自律起動させるかを決定し、イベント頻度制限の設計を含む意思決定。",
+    "question": "エージェントをどのような契機で起動させるか。既存業務キューへのワーカー参加か、SaaSイベントによる自律起動か。イベントストームにどう備えるか。",
+    "decides_among": [
+      "WorkQueue",
+      "EventDriven",
+      "Hybrid"
+    ],
+    "building_blocks": [
+      "RT-9",
+      "RT-10",
+      "DC-9"
+    ],
+    "related_decisions": [
+      "RT-D4",
+      "RT-D2",
+      "GV-D3"
+    ],
+    "value_drivers": [
+      "automation",
+      "revenue_growth"
+    ],
+    "kpis": [
+      "キュー処理スループット",
+      "バックログ滞留時間",
+      "イベント処理レイテンシ",
+      "自動対応率"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "既存業務キュー1本にエージェントワーカーを接続し、1イベントソースからの自動処理を構築",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/rt-runtime/rt-d5-trigger-mechanism.md",
+    "options": [
+      {
+        "id": "work_queue",
+        "name": "業務キュー参加 (RT-9)",
+        "patterns": [
+          "RT-9",
+          "RT-8"
+        ],
+        "pros": [
+          "既存SLA活用",
+          "人間とのハンドオフ容易",
+          "監査証跡一元化"
+        ],
+        "cons": [
+          "受動的",
+          "キューシステム依存"
+        ],
+        "pick_when": [
+          "既存ITSM運用中",
+          "SLA管理が必要",
+          "人間とのハンドオフが頻発"
+        ]
+      },
+      {
+        "id": "event_driven",
+        "name": "イベント駆動 (RT-10)",
+        "patterns": [
+          "RT-10",
+          "RT-7",
+          "RT-8"
+        ],
+        "pros": [
+          "自律起動",
+          "バックオフィス自動化",
+          "リアルタイム反応"
+        ],
+        "cons": [
+          "イベントストームリスク",
+          "認証・頻度制限の設計コスト"
+        ],
+        "pick_when": [
+          "SaaSイベントを起点とする業務フロー",
+          "非同期バックグラウンド処理",
+          "RPAの代替"
+        ]
+      },
+      {
+        "id": "hybrid",
+        "name": "ハイブリッド（イベント→キュー連携）",
+        "patterns": [
+          "RT-9",
+          "RT-10",
+          "RT-8"
+        ],
+        "pros": [
+          "受動・能動の両方に対応",
+          "柔軟"
+        ],
+        "cons": [
+          "設計複雑度"
+        ],
+        "pick_when": [
+          "キュー処理とイベント駆動の両方が必要"
+        ]
+      }
+    ],
+    "default_recommendation": "既存業務キューへのワーカー参加から開始し、並行してイベント駆動を構築"
+  },
+  {
+    "id": "RT-D6",
+    "domain": "rt-runtime",
+    "type": "baseline",
+    "title": "RT-D6 プロジェクト/チーム単位のエージェント（デジタルツイン）",
+    "description": "エージェントを個人ではなくプロジェクト・チームに紐付け、共有メモリ・動的RBAC・ライフサイクル管理を伴うデジタルツインとして設計する意思決定。",
+    "question": "エージェントを個人アシスタントとして設計するか、プロジェクト・チームに紐付けた共有メンバーとして設計するか。共有メモリの権限モデルとライフサイクルをどう管理するか。",
+    "decides_among": [
+      "PersonalAssistant",
+      "ProjectDigitalTwin"
+    ],
+    "building_blocks": [
+      "RT-11"
+    ],
+    "related_decisions": [
+      "RT-D1",
+      "KM-D1"
+    ],
+    "value_drivers": [
+      "project_productivity",
+      "decision_quality"
+    ],
+    "kpis": [
+      "プロジェクト状況可視化率",
+      "ボトルネック検知リードタイム"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "1プロジェクトのタスク・進捗・リスクを統合ビューで可視化",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/rt-runtime/rt-d6-project-digital-twin.md",
+    "default_recommendation": "Slackチャンネル＋Jiraボードの自動プロビジョニングから開始し、GraphRAG・プロアクティブ監視を段階的に追加"
+  },
+  {
+    "id": "KM-D1",
+    "domain": "km-knowledge",
+    "type": "tradeoff+degree",
+    "title": "KM-D1 文脈供給：集約データレイク vs フェデレーテッド Mesh",
+    "description": "",
+    "question": "エージェントに渡す社内文脈を、中央ベクトル DB に集約するか、フェデレーション（分散問い合わせ）で取得するか。投入量をどう制御するか。",
+    "decides_among": [
+      "CentralLake",
+      "FederatedMesh",
+      "Hybrid"
+    ],
+    "building_blocks": [
+      "KM-1",
+      "KM-2",
+      "KM-3",
+      "TO-2",
+      "DC-4"
+    ],
+    "related_decisions": [
+      "KM-D2",
+      "KM-D4",
+      "KM-D5",
+      "ID-D2",
+      "ID-D3"
+    ],
+    "value_drivers": [
+      "employee_efficiency",
+      "decision_quality",
+      "executive_decision"
+    ],
+    "kpis": [
+      "検索精度(MRR)",
+      "権限フィルタ漏れ率",
+      "応答レイテンシ",
+      "フェデレーション成功率",
+      "横断クエリ応答時間"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "1文書ストア＋ACL同梱インデックスでRAG構築。機密SaaSは2〜3ソースをフェデレーション接続",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/km-knowledge/km-d1-context-supply.md",
+    "options": [
+      {
+        "id": "CentralLake",
+        "building_blocks": [
+          "KM-1",
+          "KM-3"
+        ],
+        "pick_when": [
+          "小〜中規模",
+          "権限モデルが単純",
+          "公開情報中心"
+        ],
+        "pros": [
+          "クエリ性能",
+          "一元管理",
+          "低レイテンシ"
+        ],
+        "cons": [
+          "権限複製コスト",
+          "データ鮮度",
+          "ACL同期遅延リスク"
+        ]
+      },
+      {
+        "id": "FederatedMesh",
+        "building_blocks": [
+          "KM-2",
+          "KM-1"
+        ],
+        "pick_when": [
+          "大規模",
+          "権限モデルが複雑",
+          "データソース自律",
+          "データ所在地規制"
+        ],
+        "pros": [
+          "権限維持",
+          "スケーラブル",
+          "規制対応"
+        ],
+        "cons": [
+          "クエリ複雑",
+          "レイテンシ"
+        ]
+      },
+      {
+        "id": "Hybrid",
+        "building_blocks": [
+          "KM-1",
+          "KM-2",
+          "KM-3"
+        ],
+        "pick_when": [
+          "公開と機密の混在",
+          "段階的移行"
+        ],
+        "pros": [
+          "段階的移行可能",
+          "権限と速度の両立"
+        ],
+        "cons": [
+          "二重管理"
+        ]
+      }
+    ],
+    "default_recommendation": "大規模企業はHybrid（公開→Lake, 機密→Mesh）を推奨。top-k=10＋リランキングを基準にユースケースで調整",
+    "degree": {
+      "parameter": "context_volume",
+      "small": {
+        "top_k": 5,
+        "pick_when": [
+          "単純Q&A",
+          "定型応答"
+        ]
+      },
+      "medium": {
+        "top_k": 10,
+        "pick_when": [
+          "文書横断検索",
+          "部門内分析"
+        ],
+        "note": "リランキング併用"
+      },
+      "large": {
+        "pick_when": [
+          "全社横断",
+          "経営分析"
+        ],
+        "note": "KG経由構造化"
+      }
+    }
+  },
+  {
+    "id": "KM-D2",
+    "domain": "km-knowledge",
+    "type": "baseline",
+    "title": "KM-D2 全社知識の正規化（正規オブジェクト／知識グラフ）",
+    "description": "",
+    "question": "SaaS ごとにバラバラな業務オブジェクトの語彙をどう統一し、エージェントが横断的に文脈を組み立てられるようにするか。",
+    "decides_among": [],
+    "building_blocks": [
+      "KM-3"
+    ],
+    "related_decisions": [
+      "KM-D1",
+      "KM-D3",
+      "RT-D6"
+    ],
+    "value_drivers": [
+      "executive_decision",
+      "decision_quality"
+    ],
+    "kpis": [
+      "エンティティ解決精度",
+      "グラフカバレッジ率"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "主要エンティティ（顧客・製品・従業員）の ID マッピングテーブルを RDB で構築",
+    "cost_orientation": "L",
+    "status": "done",
+    "file": "decisions/km-knowledge/km-d2-knowledge-normalization.md",
+    "options": [
+      {
+        "id": "none",
+        "building_blocks": [],
+        "pick_when": [
+          "単一SaaS完結",
+          "PoC段階"
+        ],
+        "pros": [
+          "導入コストゼロ"
+        ],
+        "cons": [
+          "語彙統一の恩恵なし"
+        ]
+      },
+      {
+        "id": "minimal",
+        "building_blocks": [
+          "KM-3"
+        ],
+        "pick_when": [
+          "システム3〜5個",
+          "初期段階"
+        ],
+        "pros": [
+          "低コスト",
+          "段階的拡張可能"
+        ],
+        "cons": [
+          "スキーマ変更時の手動対応"
+        ]
+      },
+      {
+        "id": "full_graph",
+        "building_blocks": [
+          "KM-3",
+          "KM-1",
+          "KM-2"
+        ],
+        "pick_when": [
+          "システム5個以上",
+          "全社横断AI",
+          "名寄せが必要"
+        ],
+        "pros": [
+          "横断推論",
+          "エンティティ間の関係活用"
+        ],
+        "cons": [
+          "名寄せ精度維持",
+          "運用コスト高"
+        ]
+      }
+    ],
+    "default_recommendation": "Customer/Employee/Projectの3エンティティのIDマッピングから開始し、グラフ化は規模に応じて追加"
+  },
+  {
+    "id": "KM-D3",
+    "domain": "km-knowledge",
+    "type": "tradeoff+degree",
+    "title": "KM-D3 メモリのスコープと保持",
+    "description": "",
+    "question": "エージェントの記憶をどのスコープで分離し、どの程度保持し、いつ忘却させるか。",
+    "decides_among": [
+      "PersonalEnclave",
+      "ProjectWorkspace",
+      "HybridSeparated"
+    ],
+    "building_blocks": [
+      "KM-4",
+      "TO-6",
+      "DC-5"
+    ],
+    "related_decisions": [
+      "KM-D1",
+      "KM-D2",
+      "KM-D4",
+      "ID-D6",
+      "RT-D6"
+    ],
+    "value_drivers": [
+      "employee_efficiency",
+      "project_productivity"
+    ],
+    "kpis": [
+      "コンテキスト再利用率",
+      "メモリ容量効率"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "個人メモリ＋チームメモリの2層で実装。90日ローリング TTL",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/km-knowledge/km-d3-memory-scope.md",
+    "options": [
+      {
+        "id": "PersonalEnclave",
+        "building_blocks": [
+          "KM-4",
+          "ID-8"
+        ],
+        "pick_when": [
+          "個人設定・業務スタイル",
+          "機密個人情報",
+          "HR・給与・医療情報"
+        ],
+        "pros": [
+          "プライバシー保護",
+          "本人のみアクセス"
+        ],
+        "cons": [
+          "チーム知識がサイロ化",
+          "ナレッジ共有不可"
+        ]
+      },
+      {
+        "id": "ProjectWorkspace",
+        "building_blocks": [
+          "RT-11",
+          "KM-4"
+        ],
+        "pick_when": [
+          "共有ナレッジ",
+          "プロジェクト文書",
+          "チーム決定事項"
+        ],
+        "pros": [
+          "ナレッジ共有",
+          "サイロ化防止"
+        ],
+        "cons": [
+          "個人情報混入リスク",
+          "スコープ管理が必要"
+        ]
+      },
+      {
+        "id": "HybridSeparated",
+        "building_blocks": [
+          "KM-4",
+          "RT-11",
+          "ID-8"
+        ],
+        "pick_when": [
+          "個人と共有が混在",
+          "異動・退職への対応が必要"
+        ],
+        "pros": [
+          "プライバシーと共有の両立",
+          "組織グラフ連動"
+        ],
+        "cons": [
+          "二重管理",
+          "UX設計工数"
+        ]
+      }
+    ],
+    "default_recommendation": "HybridSeparated を標準。個人Enclaveを先行実装後にProject Workspaceを追加。個人は90日ローリングTTL、プロジェクトはライフサイクル連動",
+    "degree": {
+      "parameter": "memory_retention_ttl",
+      "session_only": {
+        "pick_when": [
+          "一時的タスク",
+          "高機密環境"
+        ],
+        "pros": [
+          "漏洩リスク最小"
+        ]
+      },
+      "rolling_ttl": {
+        "value": "90日",
+        "pick_when": [
+          "継続利用",
+          "個人アシスタント"
+        ],
+        "pros": [
+          "パーソナライズ"
+        ]
+      },
+      "lifecycle_bound": {
+        "pick_when": [
+          "プロジェクト単位",
+          "人事イベント連動"
+        ],
+        "pros": [
+          "退職・異動時の自動クリーンアップ"
+        ]
+      }
+    }
+  },
+  {
+    "id": "KM-D4",
+    "domain": "km-knowledge",
+    "type": "degree",
+    "title": "KM-D4 目的限定と最小化",
+    "description": "",
+    "question": "エージェントのコンテキストに渡すデータを、業務目的ごとにどこまで絞り込むか。",
+    "decides_among": [],
+    "building_blocks": [
+      "KM-5"
+    ],
+    "related_decisions": [
+      "KM-D1",
+      "KM-D3",
+      "KM-D5",
+      "ID-D5"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "employee_efficiency"
+    ],
+    "kpis": [
+      "コンテキスト最小化率",
+      "目的外データ混入件数"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "タスク定義にコンテキスト範囲を明示し、超過データを除外",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/km-knowledge/km-d4-purpose-limitation.md",
+    "options": [
+      {
+        "id": "unrestricted",
+        "building_blocks": [],
+        "pick_when": [
+          "プロトタイプ",
+          "探索段階",
+          "目的が未確定"
+        ],
+        "pros": [
+          "設計工数ゼロ",
+          "柔軟"
+        ],
+        "cons": [
+          "過剰共有",
+          "目的外利用",
+          "コスト爆発"
+        ]
+      },
+      {
+        "id": "loose",
+        "building_blocks": [
+          "KM-5"
+        ],
+        "pick_when": [
+          "低リスク社内ツール",
+          "公開情報中心"
+        ],
+        "pros": [
+          "設計工数小",
+          "基本的なコスト制御"
+        ],
+        "cons": [
+          "ポリシー形骸化リスク"
+        ]
+      },
+      {
+        "id": "strict",
+        "building_blocks": [
+          "KM-5",
+          "KM-6"
+        ],
+        "pick_when": [
+          "高分類データ",
+          "規制要件あり",
+          "複数業務目的でエージェントを共用"
+        ],
+        "pros": [
+          "目的外利用防止",
+          "コンプライアンス証跡",
+          "トークンコスト最適化"
+        ],
+        "cons": [
+          "ポリシー設計・メンテナンスの工数"
+        ]
+      }
+    ],
+    "default_recommendation": "主要業務目的を1つ定義し、許可データ種別とトークン上限を設定したコンテキストビルダーを実装。OPA等は後続"
+  },
+  {
+    "id": "KM-D5",
+    "domain": "km-knowledge",
+    "type": "degree",
+    "title": "KM-D5 機密保護の強度",
+    "description": "",
+    "question": "エージェントが扱う機密データに対し、DLP・マスキング・隔離推論・揮発処理をどの強度で適用するか。",
+    "decides_among": [],
+    "building_blocks": [
+      "KM-6",
+      "KM-7"
+    ],
+    "related_decisions": [
+      "KM-D1",
+      "KM-D4",
+      "GV-D2",
+      "ID-D5",
+      "OB-D1"
+    ],
+    "value_drivers": [
+      "audit_compliance"
+    ],
+    "kpis": [
+      "機密データ検出率",
+      "誤マスキング率",
+      "揮発性保証達成率",
+      "機密データの処理後残存ゼロ確認率"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "出力パスに DLP ルール（PII 検出＋マスキング）を設置。VPC 内推論＋ログ無効化＋短命メモリは最高機密のみ",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/km-knowledge/km-d5-confidentiality-strength.md",
+    "options": [
+      {
+        "id": "level1_io_dlp",
+        "building_blocks": [
+          "KM-6"
+        ],
+        "pick_when": [
+          "通常業務",
+          "PII含む可能性あり"
+        ],
+        "pros": [
+          "導入容易",
+          "低コスト"
+        ],
+        "cons": [
+          "RAG/ツール/ログの境界が未保護"
+        ]
+      },
+      {
+        "id": "level2_full_dlp",
+        "building_blocks": [
+          "KM-6"
+        ],
+        "pick_when": [
+          "外部LLM API使用",
+          "GDPR/APPI対応",
+          "PII・シークレット・契約情報"
+        ],
+        "pros": [
+          "5境界すべてを保護",
+          "トークナイゼーション対応"
+        ],
+        "cons": [
+          "DLPスキャンのレイテンシ",
+          "過検知リスク"
+        ]
+      },
+      {
+        "id": "level3_vpc_ephemeral",
+        "building_blocks": [
+          "KM-6",
+          "KM-7"
+        ],
+        "pick_when": [
+          "人事評価・M&A・極秘情報",
+          "ログに残せない処理"
+        ],
+        "pros": [
+          "本文が一切残らない",
+          "メタデータのみで観測性を維持"
+        ],
+        "cons": [
+          "デバッグ困難",
+          "検証環境維持コスト",
+          "継続対話不可"
+        ]
+      },
+      {
+        "id": "level4_tee",
+        "building_blocks": [
+          "KM-6",
+          "KM-7"
+        ],
+        "pick_when": [
+          "規制上ホスト管理者からの秘匿が必須",
+          "最上位機密"
+        ],
+        "pros": [
+          "ホストOSからもメモリ秘匿"
+        ],
+        "cons": [
+          "高コスト(1.5-2倍)",
+          "対応環境が限定的",
+          "構築検証に数週間〜数か月"
+        ]
+      }
+    ],
+    "default_recommendation": "Level 2(5境界DLP)を全エージェントの標準。Level 3以上はデータ分類で極秘・最上位機密のみ。TEEは規制要件がある場合に限定"
+  },
+  {
+    "id": "IN-D1",
+    "domain": "in-integration",
+    "type": "baseline",
+    "title": "IN-D1 ツール接続の統制（Tool/MCP Gateway）",
+    "description": "エージェントのツール呼び出しをGateway経由に集約し、認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性を一箇所で統制する基本方針。",
+    "question": "エージェントが SaaS/API/MCP を呼ぶとき、直接呼びを許すか、企業管理の Gateway に集約するか？",
+    "decides_among": [],
+    "building_blocks": [
+      "IN-1"
+    ],
+    "related_decisions": [
+      "ID-D5",
+      "GV-D1",
+      "IN-D2",
+      "IN-D3"
+    ],
+    "value_drivers": [
+      "automation",
+      "employee_efficiency"
+    ],
+    "kpis": [
+      "ツール呼び出し成功率",
+      "ツール追加リードタイム"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "MCP準拠のツールゲートウェイで主要3ツールを接続",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/in-integration/in-d1-tool-gateway.md",
+    "default_recommendation": "Gateway 集約を既定とする"
+  },
+  {
+    "id": "IN-D2",
+    "domain": "in-integration",
     "type": "tradeoff",
+    "title": "IN-D2 自前構築 vs 既存資産（コネクタ・iPaaS再利用）",
+    "description": "SaaS統合をMCPで自前構築するか、既存iPaaS/コネクタを再利用するかを認可粒度・監査証跡・OBO対応で判断する設計指針。",
+    "question": "エージェントの SaaS 統合を自前構築するか、既存 iPaaS 資産を再利用するか、それともハイブリッドにするか？",
+    "decides_among": [],
+    "building_blocks": [
+      "IN-2",
+      "IN-4",
+      "TO-9"
+    ],
+    "related_decisions": [
+      "IN-D1",
+      "ID-D2",
+      "ID-D3",
+      "TO-9"
+    ],
+    "value_drivers": [
+      "automation",
+      "revenue_growth"
+    ],
+    "kpis": [
+      "SaaS接続成功率",
+      "API変更追従リードタイム",
+      "既存iPaaS再利用率",
+      "新規コネクタ開発回避件数"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "主要SaaS 2〜3本にアダプター層を構築、または既存iPaaSの1フローをエージェントから呼び出し",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/in-integration/in-d2-build-vs-reuse.md",
     "options": [
       {
         "id": "A",
-        "name": "Platform Enforcement",
+        "name": "iPaaS Reuse",
         "patterns": [
-          "ID-7",
-          "ID-6",
-          "RT-4"
-        ],
-        "pros": [
-          "突破困難",
-          "監査可能",
-          "Policy-as-Codeで体系管理"
-        ],
-        "cons": [
-          "基盤整備の初期コスト",
-          "実装が複雑"
+          "IN-4",
+          "ID-4"
         ],
         "pick_when": [
-          "アクセス制御",
-          "承認フロー",
-          "DLP出力検証",
-          "サンドボックス隔離"
+          "認可粒度検証済み",
+          "監査証跡が紐付け可能",
+          "OBO対応済み"
         ]
       },
       {
         "id": "B",
-        "name": "Prompt Control",
+        "name": "Custom MCP Build",
         "patterns": [
-          "GV-3"
-        ],
-        "pros": [
-          "即時適用",
-          "柔軟",
-          "低コスト"
-        ],
-        "cons": [
-          "プロンプトインジェクションで突破可能",
-          "監査不可",
-          "セキュリティ保証にならない"
+          "IN-1",
+          "IN-2",
+          "ID-2",
+          "ID-4"
         ],
         "pick_when": [
-          "出力フォーマット指定",
-          "回答スタイル調整",
-          "タスク背景情報提供"
+          "新規統合ポイント",
+          "管理者SA埋込コネクタ",
+          "認可粒度が不足"
         ]
       },
       {
         "id": "C",
-        "name": "Defense in Depth",
+        "name": "Hybrid Validated",
         "patterns": [
-          "ID-7",
-          "ID-6",
-          "RT-4",
-          "RT-5"
-        ],
-        "pros": [
-          "安全性と品質の両立",
-          "多層防御"
-        ],
-        "cons": [
-          "設計・運用の複雑度"
+          "IN-1",
+          "IN-2",
+          "IN-4",
+          "ID-4"
         ],
         "pick_when": [
-          "本番運用",
-          "セキュリティと品質の両方が必要"
+          "既存資産が混在",
+          "段階的移行"
         ]
       }
     ],
-    "default_recommendation": "A (Platform)を必ず先行整備。プロンプトはセキュリティ境界にならない。C (Defense in Depth)が最終形"
+    "default_recommendation": "C (Hybrid)で既存資産を認可粒度でスコアリングし、合格分は再利用・不合格分はMCP化"
+  },
+  {
+    "id": "IN-D3",
+    "domain": "in-integration",
+    "type": "degree",
+    "title": "IN-D3 レート・容量の調停",
+    "description": "SaaS APIレート上限を優先度・テナント公平性・バックプレッシャーを備えたブローカーで集中管理し、バッチジョブによる全社枯渇を防ぐ調停の粒度設計。",
+    "question": "SaaS API のレート枠をどの粒度で管理し、インタラクティブ利用とバッチ利用をどう公平に調停するか？",
+    "decides_among": [],
+    "building_blocks": [
+      "IN-3"
+    ],
+    "related_decisions": [
+      "IN-D1",
+      "GV-D4"
+    ],
+    "value_drivers": [
+      "automation",
+      "audit_compliance"
+    ],
+    "kpis": [
+      "レート制限違反数",
+      "スロットリング発動率"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "主要SaaS APIにレートリミッタを設置",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/in-integration/in-d3-rate-capacity.md",
+    "default_recommendation": "集中 Rate Broker を既定とし、interactive > batch の優先度キューとテナント公平配分を導入する"
+  },
+  {
+    "id": "GV-D1",
+    "domain": "gv-governance",
+    "type": "baseline+tradeoff",
+    "title": "GV-D1 統制プレーンの導入と範囲",
+    "description": "エージェント統制プレーンの導入有無と中央集権・部署フェデレーションの統治範囲を決定する。",
+    "question": "エージェント統制プレーンをどの範囲で導入し、中央と部署の統治境界をどこに置くか？",
+    "decides_among": [
+      "中央集権プラットフォーム",
+      "部署フェデレーション",
+      "二層統治"
+    ],
+    "building_blocks": [
+      "GV-1",
+      "GV-2",
+      "GV-3",
+      "TO-8"
+    ],
+    "related_decisions": [
+      "GV-D2",
+      "GV-D3",
+      "GV-D4",
+      "GV-D5",
+      "GV-D6"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "automation",
+      "employee_efficiency"
+    ],
+    "kpis": [
+      "登録エージェント数",
+      "未登録エージェント検知数",
+      "ライフサイクルイベント追跡率",
+      "カタログ掲載エージェント数",
+      "再利用率",
+      "デプロイリードタイム",
+      "部門エージェント作成リードタイム",
+      "テンプレート利用率"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "エージェントレジストリ＋未登録遮断ゲート＋1部門テンプレートのパイロット",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/gv-governance/gv-d1-control-plane-scope.md",
+    "options": [
+      {
+        "id": "central_platform",
+        "building_blocks": [
+          "GV-1",
+          "ID-7",
+          "GV-8"
+        ],
+        "pick_when": [
+          "セキュリティ最優先",
+          "小規模組織"
+        ],
+        "pros": [
+          "統一ポリシー",
+          "監査一元化",
+          "セキュリティ高"
+        ],
+        "cons": [
+          "部署ニーズへの対応遅延",
+          "野良エージェント乱立リスク"
+        ]
+      },
+      {
+        "id": "department_federation",
+        "building_blocks": [
+          "GV-3",
+          "GV-7"
+        ],
+        "pick_when": [
+          "ドメイン知識が部署に閉じる",
+          "ユースケース定義のみ"
+        ],
+        "pros": [
+          "俊敏性",
+          "ドメイン適合",
+          "部署自律"
+        ],
+        "cons": [
+          "セキュリティばらつき",
+          "監査困難"
+        ]
+      },
+      {
+        "id": "two_layer_governance",
+        "building_blocks": [
+          "GV-1",
+          "GV-2",
+          "GV-3",
+          "ID-7",
+          "GV-8"
+        ],
+        "pick_when": [
+          "中〜大規模組織",
+          "複数部署がエージェント利用"
+        ],
+        "pros": [
+          "安全性と俊敏性の両立",
+          "野良エージェント防止"
+        ],
+        "cons": [
+          "初期設計・調整工数"
+        ]
+      }
+    ],
+    "default_recommendation": "二層統治が唯一の実用的な解。中央基盤（GV-1）を先行整備し、GV-3テンプレートで部署展開する"
+  },
+  {
+    "id": "GV-D2",
+    "domain": "gv-governance",
+    "type": "tradeoff+degree",
+    "title": "GV-D2 モデル・ベンダー・データ経路の統制",
+    "description": "全LLM呼び出しを単一Gatewayに集約し、モデル承認・データ分類ルーティング・ベンダー管理をどう設計するかを決定する。",
+    "question": "モデル・ベンダー・データ経路の統制をどの粒度で行い、内部推論と外部APIをどう使い分けるか？",
+    "decides_among": [
+      "内部/オンプレモデル",
+      "外部API",
+      "ハイブリッドデータ分類ルーティング"
+    ],
+    "building_blocks": [
+      "GV-5",
+      "TO-10",
+      "DC-8"
+    ],
+    "related_decisions": [
+      "GV-D1",
+      "GV-D4",
+      "GV-D3"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "automation"
+    ],
+    "kpis": [
+      "モデル利用の可視化率",
+      "非承認モデル利用件数",
+      "レイテンシP95"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "単一ゲートウェイで全LLM呼び出しを中継しログ記録＋承認済みモデルのホワイトリスト",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/gv-governance/gv-d2-model-vendor-routing.md",
+    "options": [
+      {
+        "id": "internal_onprem",
+        "building_blocks": [
+          "GV-5"
+        ],
+        "pick_when": [
+          "極秘データ",
+          "規制対象データ",
+          "大量定常推論"
+        ],
+        "pros": [
+          "データ主権完全",
+          "規制準拠"
+        ],
+        "cons": [
+          "最新モデル追従遅延",
+          "GPU運用コスト",
+          "セットアップ複雑"
+        ]
+      },
+      {
+        "id": "external_api",
+        "building_blocks": [
+          "GV-5"
+        ],
+        "pick_when": [
+          "一般公開情報",
+          "最新性能が必要",
+          "変動需要"
+        ],
+        "pros": [
+          "最新モデル即時利用",
+          "従量制",
+          "即日開始"
+        ],
+        "cons": [
+          "データ主権リスク",
+          "DPA確認必須"
+        ]
+      },
+      {
+        "id": "hybrid_routing",
+        "building_blocks": [
+          "GV-5"
+        ],
+        "pick_when": [
+          "機密と一般が混在",
+          "Central Model Gateway導入済み"
+        ],
+        "pros": [
+          "データ分類に応じた最適経路",
+          "開発者の判断負荷排除"
+        ],
+        "cons": [
+          "Gateway設計・運用の複雑度"
+        ]
+      }
+    ],
+    "default_recommendation": "ハイブリッドでGV-5 Central Model Gatewayによるデータ分類ルーティングを標準構成とし、軽量モデルで開始しカスケードで品質担保、極秘データはVPC内経路に限定"
+  },
+  {
+    "id": "GV-D3",
+    "domain": "gv-governance",
+    "type": "degree",
+    "title": "GV-D3 変更管理と評価の厳格度",
+    "description": "モデル・プロンプト・ツール・ポリシーの版管理とカナリアリリース・評価パイプラインの厳格度を決定する。",
+    "question": "エージェント構成要素の変更管理と評価パイプラインをどの厳格度で運用するか？",
+    "decides_among": [
+      "軽量版管理",
+      "PR＋評価ゲート＋カナリア",
+      "フル評価パイプライン＋多段階カナリア"
+    ],
+    "building_blocks": [
+      "GV-6",
+      "GV-7",
+      "DC-9"
+    ],
+    "related_decisions": [
+      "GV-D1",
+      "GV-D2",
+      "GV-D5"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "automation",
+      "decision_quality"
+    ],
+    "kpis": [
+      "バージョン追跡率",
+      "ロールバック所要時間",
+      "評価パイプライン実行頻度",
+      "品質閾値違反率",
+      "改善サイクルタイム"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "モデル・プロンプト・ポリシーの版をGitOpsで管理＋主要エージェント1〜2体にCI評価を設定",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/gv-governance/gv-d3-change-eval-rigor.md",
+    "options": [
+      {
+        "id": "lightweight",
+        "building_blocks": [
+          "GV-6"
+        ],
+        "pick_when": [
+          "初期導入",
+          "少数エージェント",
+          "PoC"
+        ],
+        "pros": [
+          "導入容易",
+          "低オーバーヘッド"
+        ],
+        "cons": [
+          "品質劣化の検出遅延",
+          "ロールバック手動"
+        ]
+      },
+      {
+        "id": "pr_eval_canary",
+        "building_blocks": [
+          "GV-6",
+          "GV-7"
+        ],
+        "pick_when": [
+          "本番運用",
+          "継続的なモデル更新"
+        ],
+        "pros": [
+          "変更ごとの品質保証",
+          "自動ロールバック"
+        ],
+        "cons": [
+          "展開速度の低下",
+          "評価基盤構築コスト"
+        ]
+      },
+      {
+        "id": "full_pipeline",
+        "building_blocks": [
+          "GV-6",
+          "GV-7"
+        ],
+        "pick_when": [
+          "規制産業",
+          "大規模展開",
+          "高リスク"
+        ],
+        "pros": [
+          "多層評価で安全性最大化",
+          "本番ドリフト検出"
+        ],
+        "cons": [
+          "シャドーデプロイのコスト倍増",
+          "運用工数大"
+        ]
+      }
+    ],
+    "default_recommendation": "GitOps版管理＋PR時自動評価を基本とし、カナリアは4段階（1%→5%→25%→100%）を標準構成とする"
+  },
+  {
+    "id": "GV-D4",
+    "domain": "gv-governance",
+    "type": "degree",
+    "title": "GV-D4 コストの可視化と配賦",
+    "description": "LLMのトークン・ツール・実行コストを部門・プロジェクト単位で計測し、予算上限と配賦をどう設計するかを決定する。",
+    "question": "AIコストの可視化粒度・予算上限・縮退戦略をどう設計するか？",
+    "decides_among": [
+      "簡易モニタリング",
+      "部門タグ付き計測＋月次レポート",
+      "フル配賦＋予算上限＋縮退"
+    ],
+    "building_blocks": [
+      "GV-8",
+      "DC-2"
+    ],
+    "related_decisions": [
+      "GV-D1",
+      "GV-D2",
+      "GV-D7"
+    ],
+    "value_drivers": [
+      "executive_decision",
+      "automation"
+    ],
+    "kpis": [
+      "部門別AIコスト可視化率",
+      "予算超過アラート件数",
+      "コスト配賦精度"
+    ],
+    "maturity_stage": "execution",
+    "mvp": "全LLM呼び出しにcost_centerタグを付与し、部門別の月次トークン消費量と概算コストをダッシュボードに表示",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/gv-governance/gv-d4-cost-visibility.md",
+    "options": [
+      {
+        "id": "simple_monitoring",
+        "building_blocks": [
+          "GV-8"
+        ],
+        "pick_when": [
+          "PoC段階",
+          "月次コストが無視できる規模"
+        ],
+        "pros": [
+          "導入容易"
+        ],
+        "cons": [
+          "部門別コスト不可視",
+          "予算超過を検知できない"
+        ]
+      },
+      {
+        "id": "tagged_reporting",
+        "building_blocks": [
+          "GV-8"
+        ],
+        "pick_when": [
+          "本番運用開始後",
+          "部門別コスト可視化が必要"
+        ],
+        "pros": [
+          "部門別コスト可視化",
+          "低オーバーヘッド"
+        ],
+        "cons": [
+          "予算制御なし",
+          "縮退戦略なし"
+        ]
+      },
+      {
+        "id": "full_chargeback",
+        "building_blocks": [
+          "GV-8"
+        ],
+        "pick_when": [
+          "大規模展開",
+          "顧客向けAI提供",
+          "マルチエージェント構成"
+        ],
+        "pros": [
+          "フル配賦",
+          "予算超過防止",
+          "ROI計測連携"
+        ],
+        "cons": [
+          "設計・運用の複雑度",
+          "FinOpsツール連携コスト"
+        ]
+      }
+    ],
+    "default_recommendation": "cost_centerタグ付き計測＋月次レポートから始め、段階的に予算上限・縮退戦略を追加する"
+  },
+  {
+    "id": "GV-D5",
+    "domain": "gv-governance",
+    "type": "baseline",
+    "title": "GV-D5 事故対応と停止粒度",
+    "description": "エージェントの誤送信・漏洩・暴走に備えた検知・粒度別停止・調査・復旧の仕組みを決定する。",
+    "question": "エージェントのインシデント対応フローと停止粒度をどう設計するか？",
+    "decides_among": [
+      "全体停止のみ",
+      "粒度別Kill Switch＋Runbook",
+      "フルインシデント対応パイプライン"
+    ],
+    "building_blocks": [
+      "GV-9"
+    ],
+    "related_decisions": [
+      "GV-D1",
+      "GV-D2",
+      "GV-D3"
+    ],
+    "value_drivers": [
+      "audit_compliance"
+    ],
+    "kpis": [
+      "キルスイッチ発動までの平均時間",
+      "インシデント復旧時間"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "全エージェントに即時停止APIを実装し、Slackからワンクリック停止＋停止→通知→原因調査のRunbook",
+    "cost_orientation": "S",
+    "status": "done",
+    "file": "decisions/gv-governance/gv-d5-incident-kill-switch.md",
+    "options": [
+      {
+        "id": "minimal_kill_switch",
+        "building_blocks": [
+          "GV-9"
+        ],
+        "pick_when": [
+          "本番AI全般（必須）"
+        ],
+        "pros": [
+          "即時停止可能",
+          "導入容易"
+        ],
+        "cons": [
+          "粒度が粗い",
+          "リプレイ不可"
+        ]
+      },
+      {
+        "id": "granular_kill_switch",
+        "building_blocks": [
+          "GV-9"
+        ],
+        "pick_when": [
+          "複数エージェント運用"
+        ],
+        "pros": [
+          "影響範囲を最小化",
+          "トレース自動保全"
+        ],
+        "cons": [
+          "設計・運用の複雑度"
+        ]
+      },
+      {
+        "id": "full_incident_pipeline",
+        "building_blocks": [
+          "GV-9"
+        ],
+        "pick_when": [
+          "大規模展開",
+          "規制産業"
+        ],
+        "pros": [
+          "リプレイ可能",
+          "ゲームデーで訓練",
+          "再発防止フィードバック"
+        ],
+        "cons": [
+          "運用工数大"
+        ]
+      }
+    ],
+    "default_recommendation": "エージェント単位のKill Switch＋Runbookを最低限として必ず実装する。粒度の細分化は段階的に追加"
+  },
+  {
+    "id": "GV-D6",
+    "domain": "gv-governance",
+    "type": "baseline",
+    "title": "GV-D6 業界規制の組み込み",
+    "description": "業界特有の規制・慣習・監査要件を再利用可能なポリシーパックとしてエージェント基盤に組み込む方法を決定する。",
+    "question": "業界規制をエージェント基盤にどのレベルで組み込むか？",
+    "decides_among": [
+      "プロンプトベースの規制記述",
+      "ポリシーパック策定＋Policy Engine適用",
+      "フルポリシーパック＋評価＋GRC連携"
+    ],
+    "building_blocks": [
+      "GV-4"
+    ],
+    "related_decisions": [
+      "GV-D1",
+      "GV-D3"
+    ],
+    "value_drivers": [
+      "audit_compliance"
+    ],
+    "kpis": [
+      "規制準拠率",
+      "ポリシー適用カバレッジ"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "自社の主要規制（1〜2本）に対応するポリシーパックを策定しID-7 Policy Engineに適用",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/gv-governance/gv-d6-industry-regulation.md",
+    "options": [
+      {
+        "id": "prompt_based",
+        "building_blocks": [],
+        "pick_when": [
+          "規制の影響が軽微な内部支援AIのみ"
+        ],
+        "pros": [
+          "実装が簡単"
+        ],
+        "cons": [
+          "プロンプトインジェクションで無効化される",
+          "属人的",
+          "監査で説明困難"
+        ]
+      },
+      {
+        "id": "policy_pack",
+        "building_blocks": [
+          "GV-4"
+        ],
+        "pick_when": [
+          "規制産業",
+          "監査対応が必要"
+        ],
+        "pros": [
+          "実行基盤レベルでの強制",
+          "再利用可能",
+          "改正時一括更新"
+        ],
+        "cons": [
+          "パック設計の初期工数"
+        ]
+      },
+      {
+        "id": "full_grc_integration",
+        "building_blocks": [
+          "GV-4"
+        ],
+        "pick_when": [
+          "グローバル展開",
+          "複数規制体系",
+          "外部監査が定期的"
+        ],
+        "pros": [
+          "監査証跡自動生成",
+          "複数規制の統合管理",
+          "コンプライアンスレポート自動化"
+        ],
+        "cons": [
+          "GRCツール連携コスト",
+          "パック間の競合管理"
+        ]
+      }
+    ],
+    "default_recommendation": "規制産業では主要規制1〜2本に対応するポリシーパックをOPA/YAMLで策定しID-7 Policy Engineに適用する"
+  },
+  {
+    "id": "GV-D7",
+    "domain": "gv-governance",
+    "type": "baseline",
+    "title": "GV-D7 価値計測の設計",
+    "description": "採用定着・生産性・経営KPIの三層でAI投資の効果を計測し、価値→計測→学習→再投資ループを回す設計を決定する。",
+    "question": "AI投資の価値計測をどの層で行い、計測→学習→再投資ループをどう設計するか？",
+    "decides_among": [
+      "技術指標のみ",
+      "採用定着＋生産性の二層計測",
+      "三層計測＋価値ループ"
+    ],
+    "building_blocks": [
+      "GV-10"
+    ],
+    "related_decisions": [
+      "GV-D4",
+      "GV-D3"
+    ],
+    "value_drivers": [
+      "executive_decision",
+      "decision_quality"
+    ],
+    "kpis": [
+      "採用定着率",
+      "生産性向上率",
+      "経営KPI改善幅"
+    ],
+    "maturity_stage": "value_loop",
+    "mvp": "1つの業務指標をエージェント利用ログと突合し、導入前後の差分をBIで可視化",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/gv-governance/gv-d7-value-measurement.md",
+    "options": [
+      {
+        "id": "tech_metrics_only",
+        "building_blocks": [],
+        "pick_when": [
+          "PoC段階"
+        ],
+        "pros": [
+          "計測が容易"
+        ],
+        "cons": [
+          "経営承認が得られない",
+          "投資対効果の説明不能"
+        ]
+      },
+      {
+        "id": "two_layer",
+        "building_blocks": [
+          "GV-10"
+        ],
+        "pick_when": [
+          "本番運用開始後",
+          "経営報告が必要"
+        ],
+        "pros": [
+          "採用定着と生産性の可視化",
+          "改善投資の判断根拠"
+        ],
+        "cons": [
+          "業務システムとの時系列結合が必要"
+        ]
+      },
+      {
+        "id": "three_layer_loop",
+        "building_blocks": [
+          "GV-10"
+        ],
+        "pick_when": [
+          "全社展開フェーズ",
+          "複数エージェント並走",
+          "経営承認が必要"
+        ],
+        "pros": [
+          "ROI定量化",
+          "投資配分の客観化",
+          "価値ループによる継続改善"
+        ],
+        "cons": [
+          "Salesforce/Zendesk等との連携構築コスト",
+          "計測期間が必要"
+        ]
+      }
+    ],
+    "default_recommendation": "採用定着率＋1つの業務指標のダッシュボードから始め、段階的に三層計測＋価値ループへ拡張する"
+  },
+  {
+    "id": "OB-D1",
+    "domain": "ob-observability",
+    "type": "degree+tradeoff",
+    "title": "OB-D1 観測の範囲とログ粒度（三層分離、全ログ vs 選択的）",
+    "description": "メタデータはTrace DB、本文は暗号化ストレージ、集計はDWHの三層分離で観測基盤を構成し、コスト・機密・再現性を両立するログ粒度の設計指針。",
+    "question": "エージェントの実行データを、何を・どこまで・どこに記録するか？全プロンプトログか選択的トレースか？",
+    "decides_among": [],
+    "building_blocks": [
+      "OB-1",
+      "DC-3",
+      "TO-7"
+    ],
+    "related_decisions": [
+      "OB-D2",
+      "GV-D3",
+      "ID-D5"
+    ],
+    "value_drivers": [
+      "audit_compliance",
+      "decision_quality"
+    ],
+    "kpis": [
+      "ログ取り込み完全性",
+      "クエリ応答時間",
+      "アラート検知率"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "全エージェントのトレースをOTel準拠で1箇所に集約",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/ob-observability/ob-d1-observability-scope.md",
+    "options": [
+      {
+        "id": "A",
+        "name": "Metadata Only",
+        "patterns": [
+          "OB-1",
+          "DC-3"
+        ],
+        "pick_when": [
+          "初期導入",
+          "極秘処理",
+          "コスト制約が厳しい"
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Three-Layer Separated",
+        "patterns": [
+          "OB-1",
+          "DC-3",
+          "KM-7"
+        ],
+        "pick_when": [
+          "標準構成",
+          "監査要件あり",
+          "デバッグ需要"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Selective Encrypted Body",
+        "patterns": [
+          "OB-1",
+          "KM-7",
+          "DC-3"
+        ],
+        "pick_when": [
+          "規制対象データ",
+          "コスト最適化",
+          "エラー時のみフル保存"
+        ]
+      }
+    ],
+    "default_recommendation": "B (Three-Layer Separated)を標準構成とし、極秘処理はA、コスト制約時はCを併用"
+  },
+  {
+    "id": "OB-D2",
+    "domain": "ob-observability",
+    "type": "baseline",
+    "title": "OB-D2 監査と帰責（三者帰責の系譜）",
+    "description": "すべてのエージェント行為を人＋エージェント＋対象システムの三者で改ざん不能に記録し、完全再構成・規制報告を可能にする監査基盤の基本方針。",
+    "question": "エージェント行為の監査と帰責を、どのフォーマット・どの粒度・どの保全方式で記録するか？",
+    "decides_among": [],
+    "building_blocks": [
+      "OB-2"
+    ],
+    "related_decisions": [
+      "OB-D1",
+      "ID-D2",
+      "ID-D5"
+    ],
+    "value_drivers": [
+      "audit_compliance"
+    ],
+    "kpis": [
+      "監査追跡可能率",
+      "来歴完全性",
+      "監査レスポンス時間"
+    ],
+    "maturity_stage": "foundation",
+    "mvp": "全書き込み操作の来歴（人＋エージェント＋システム三者帰責）を不変ログに記録",
+    "cost_orientation": "M",
+    "status": "done",
+    "file": "decisions/ob-observability/ob-d2-audit-attribution.md",
+    "default_recommendation": "三者帰責（principal + workload + tool/system）を改ざん不能ログに記録し、相関IDで各SaaS監査と一本化する"
   }
 ]

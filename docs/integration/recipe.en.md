@@ -14,17 +14,17 @@ Each recipe can be selected independently, but dependencies exist. Recipe 1 (Sec
 
 ## Recipe 1: Security Foundation (Laid First)
 
-**Pattern bundle**: [ID-2 OBO](../patterns/id-identity/id2-identity-federation-obo.md) + [ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md) + [KM-7 Ephemeral Secure Bus](../patterns/km-knowledge/km7-ephemeral-secure-context-bus.md) + [ID-6 Zero-Trust PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md)
+**Pattern bundle**: [ID-2 OBO](../decisions/id-identity/id-d2-delegation-method.md) + [ID-4 Permission Mirror](../decisions/id-identity/id-d3-permission-reduction.md) + [KM-7 Ephemeral Secure Bus](../decisions/km-knowledge/km-d5-confidentiality-strength.md) + [ID-6 Zero-Trust PDP/PEP](../decisions/id-identity/id-d5-authorization-method.md)
 
 The security foundation is the base of enterprise agents. Without it, all other recipes become "functional but not secure." Below are the roles of the four patterns and what happens in each's absence.
 
-**[ID-2 OBO (On-Behalf-Of Delegation)](../patterns/id-identity/id2-identity-federation-obo.md)** is a pattern for calling downstream SaaS using a delegated token reduced to the requester's own permissions. Without this pattern, the agent operates with service account permissions. It tends to result in a "single all-powerful service account hits all SaaS" configuration, making it impossible to prevent the requester from reaching data they should not access.
+**[ID-2 OBO (On-Behalf-Of Delegation)](../decisions/id-identity/id-d2-delegation-method.md)** is a pattern for calling downstream SaaS using a delegated token reduced to the requester's own permissions. Without this pattern, the agent operates with service account permissions. It tends to result in a "single all-powerful service account hits all SaaS" configuration, making it impossible to prevent the requester from reaching data they should not access.
 
-**[ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md)** is a pattern for running the agent with the most restrictive permission (least common denominator) when spanning multiple SaaS systems. Without this pattern, a person with only view permissions in SaaS-A can call SaaS-B's write API through the agent. Permission propagation is left to each SaaS's individual settings, creating the risk that the agent becomes "an unintended privilege escalation stepping stone."
+**[ID-4 Permission Mirror](../decisions/id-identity/id-d3-permission-reduction.md)** is a pattern for running the agent with the most restrictive permission (least common denominator) when spanning multiple SaaS systems. Without this pattern, a person with only view permissions in SaaS-A can call SaaS-B's write API through the agent. Permission propagation is left to each SaaS's individual settings, creating the risk that the agent becomes "an unintended privilege escalation stepping stone."
 
-**[KM-7 Ephemeral Secure Bus](../patterns/km-knowledge/km7-ephemeral-secure-context-bus.md)** is a pattern for flowing context information passed between agents through a volatile, encrypted channel. Without this pattern, context information (request content, intermediate results, personal information) persists in logs and persistent storage. Compliance retention period violations and unnecessary information leakage to subsequent agents easily occur.
+**[KM-7 Ephemeral Secure Bus](../decisions/km-knowledge/km-d5-confidentiality-strength.md)** is a pattern for flowing context information passed between agents through a volatile, encrypted channel. Without this pattern, context information (request content, intermediate results, personal information) persists in logs and persistent storage. Compliance retention period violations and unnecessary information leakage to subsequent agents easily occur.
 
-**[ID-6 Zero-Trust PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md)** is a pattern for placing an execution point that inserts policy evaluation before every action. Without this pattern, "any authenticated agent can execute anything" becomes the state. An agent that has been compromised or received a prompt injection cannot be stopped from executing arbitrary operations.
+**[ID-6 Zero-Trust PDP/PEP](../decisions/id-identity/id-d5-authorization-method.md)** is a pattern for placing an execution point that inserts policy evaluation before every action. Without this pattern, "any authenticated agent can execute anything" becomes the state. An agent that has been compromised or received a prompt injection cannot be stopped from executing arbitrary operations.
 
 ```mermaid
 graph LR
@@ -36,47 +36,47 @@ graph LR
 ```
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Begin baseline measurement for [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) (processing time and manual task count before introduction). Adoption measures are not yet needed, but running the log infrastructure (OB-1) simultaneously enables subsequent measurement.
+    Begin baseline measurement for [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) (processing time and manual task count before introduction). Adoption measures are not yet needed, but running the log infrastructure (OB-1) simultaneously enables subsequent measurement.
 
 ## Recipe 2: Employee Entry Point
 
-**Pattern bundle**: [RT-1 Org Hub & Spoke](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md) + [EX-1 Enterprise Agent Gateway](../patterns/ex-experience/ex1-enterprise-agent-gateway.md)
+**Pattern bundle**: [RT-1 Org Hub & Spoke](../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md) + [EX-1 Enterprise Agent Gateway](../decisions/ex-experience/ex-d1-front-door-channel.md)
 
 This is the recipe for governing the "entry point" where employees begin using agents. Without a controlled entry point, proprietary tools proliferate by department and "shadow AI" spreads within the organization without security policy applied.
 
-**[RT-1 Org Hierarchical Hub & Spoke](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md)** is a pattern for deploying agents in a central Hub (company-wide agent) and departmental Spoke (specialized agent) structure that reflects the organizational hierarchy. The Hub, functioning as a company-wide portal, routes to the appropriate departmental agent based on the type of request. Employees can enter through the entry point without being aware of "which agent to request."
+**[RT-1 Org Hierarchical Hub & Spoke](../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md)** is a pattern for deploying agents in a central Hub (company-wide agent) and departmental Spoke (specialized agent) structure that reflects the organizational hierarchy. The Hub, functioning as a company-wide portal, routes to the appropriate departmental agent based on the type of request. Employees can enter through the entry point without being aware of "which agent to request."
 
 Without this pattern, the HR department sets up its own HR agent, the sales department sets up its own sales agent, each with separate authentication, logs, and policies. Cross-departmental work (HR × Sales) remains disconnected, and auditing is fragmented.
 
-**[EX-1 Enterprise Agent Gateway](../patterns/ex-experience/ex1-enterprise-agent-gateway.md)** is a pattern for consolidating agent access through a single controlled gateway. Authentication, rate limiting, policy application, and log collection are all processed centrally at the gateway, eliminating the need to implement these mechanisms redundantly in each individual agent.
+**[EX-1 Enterprise Agent Gateway](../decisions/ex-experience/ex-d1-front-door-channel.md)** is a pattern for consolidating agent access through a single controlled gateway. Authentication, rate limiting, policy application, and log collection are all processed centrally at the gateway, eliminating the need to implement these mechanisms redundantly in each individual agent.
 
 Without this pattern, each agent implements its own authentication, log formats are not unified, and some agents continue to run without policy applied. Cost management and understanding usage patterns may also become difficult.
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Begin measuring [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) Layer 0 (adoption rate, retention rate). Implement Phase 1 of [Adoption & Change Management](adoption.md) at this stage (guided first-time experience, limited use case rollout) to increase utilization.
+    Begin measuring [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) Layer 0 (adoption rate, retention rate). Implement Phase 1 of [Adoption & Change Management](adoption.md) at this stage (guided first-time experience, limited use case rollout) to increase utilization.
 
 ## Recipe 3: Actual Business Execution
 
-**Pattern bundle**: [RT-11 Project Digital Twin](../patterns/rt-runtime/rt11-project-digital-twin.md) + [KM-1 Access-Controlled RAG](../patterns/km-knowledge/km1-access-controlled-rag.md) + [KM-2 Context Mesh](../patterns/km-knowledge/km2-context-mesh.md)
+**Pattern bundle**: [RT-11 Project Digital Twin](../decisions/rt-runtime/rt-d6-project-digital-twin.md) + [KM-1 Access-Controlled RAG](../decisions/km-knowledge/km-d1-context-supply.md) + [KM-2 Context Mesh](../decisions/km-knowledge/km-d1-context-supply.md)
 
 Once the foundation and entry point are established via Recipes 1 and 2, add patterns to support actual business execution. The center of this recipe is building an "agent environment as a place where teams advance daily work."
 
-**[RT-11 Project Digital Twin](../patterns/rt-runtime/rt11-project-digital-twin.md)** is a pattern for deploying an agent as a "project twin" that manages project state, context, members, and permissions as a unified whole. Team members can get responses that reflect project-specific context (past decisions, current progress, team agreements) by requesting from "this project's agent."
+**[RT-11 Project Digital Twin](../decisions/rt-runtime/rt-d6-project-digital-twin.md)** is a pattern for deploying an agent as a "project twin" that manages project state, context, members, and permissions as a unified whole. Team members can get responses that reflect project-specific context (past decisions, current progress, team agreements) by requesting from "this project's agent."
 
 Without this pattern, team members repeatedly incur the cost of "explaining the background from scratch." Cross-project information is not shared, and agents remain one-off query windows.
 
-**[KM-1 Access-Controlled RAG](../patterns/km-knowledge/km1-access-controlled-rag.md)** is a pattern for filtering the search scope based on the requester's permissions during document search. Searching "within documents that Person A can view" prevents documents without authorization from being mixed into search results. This requires ID-2/ID-4 from Recipe 1 to be in place.
+**[KM-1 Access-Controlled RAG](../decisions/km-knowledge/km-d1-context-supply.md)** is a pattern for filtering the search scope based on the requester's permissions during document search. Searching "within documents that Person A can view" prevents documents without authorization from being mixed into search results. This requires ID-2/ID-4 from Recipe 1 to be in place.
 
 Without this pattern, the agent searches all documents, and the content of confidential documents seeps into responses for general employees. The RAG "answers anything" experience can only be safely used in enterprises when paired with permission management.
 
-**[KM-2 Context Mesh](../patterns/km-knowledge/km2-context-mesh.md)** is a pattern for assembling cross-cutting context spanning multiple SaaS and internal systems while preserving permissions. Building a response combining "Salesforce customer information + Confluence proposal + Jira task status" requires cross-cutting context collection while having access rights to each system.
+**[KM-2 Context Mesh](../decisions/km-knowledge/km-d1-context-supply.md)** is a pattern for assembling cross-cutting context spanning multiple SaaS and internal systems while preserving permissions. Building a response combining "Salesforce customer information + Confluence proposal + Jira task status" requires cross-cutting context collection while having access rights to each system.
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Confirm Layer 1 ([GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md)) improvements (processing time reduction, information retrieval time reduction). Promote habit formation in Phase 2 of [Adoption & Change Management](adoption.md) (champion program, embedding in business processes).
+    Confirm Layer 1 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) improvements (processing time reduction, information retrieval time reduction). Promote habit formation in Phase 2 of [Adoption & Change Management](adoption.md) (champion program, embedding in business processes).
 
 ## Recipe 4: Value Realization (Cost-Reduction + Revenue Automation)
 
-**Pattern bundle**: [RT-10 Event-Driven Orchestrator](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) + [RT-7 Enterprise Saga](../patterns/rt-runtime/rt7-enterprise-saga.md) + [RT-4 Human Approval Chain](../patterns/rt-runtime/rt4-human-approval-chain.md)
+**Pattern bundle**: [RT-10 Event-Driven Orchestrator](../decisions/rt-runtime/rt-d5-trigger-mechanism.md) + [RT-7 Enterprise Saga](../decisions/rt-runtime/rt-d4-long-running-reliability.md) + [RT-4 Human Approval Chain](../decisions/rt-runtime/rt-d2-autonomy-design.md)
 
 This is the recipe where enterprise agent business value appears most directly. Value comes from two sources:
 
@@ -85,20 +85,20 @@ This is the recipe where enterprise agent business value appears most directly. 
 
 Both go beyond being a mere "assistant that returns answers" — the agent functions as an "execution subject" that actually operates systems.
 
-**[RT-10 Event-Driven Orchestrator](../patterns/rt-runtime/rt10-event-driven-orchestrator.md)** is a pattern for detecting business triggers (invoice receipt, approval completion, deadline arrival) as events and launching appropriate agent workflows. It eliminates the manual "next, input this into that system" work and realizes chains of autonomous processing responding to events.
+**[RT-10 Event-Driven Orchestrator](../decisions/rt-runtime/rt-d5-trigger-mechanism.md)** is a pattern for detecting business triggers (invoice receipt, approval completion, deadline arrival) as events and launching appropriate agent workflows. It eliminates the manual "next, input this into that system" work and realizes chains of autonomous processing responding to events.
 
 Without this pattern, "AI proposes → human copies and pastes to another system" inefficiency remains. Agents stay limited to "sophisticated search tools" without reaching business process automation.
 
-**[RT-7 Enterprise Saga](../patterns/rt-runtime/rt7-enterprise-saga.md)** is a pattern for maintaining consistency in distributed transactions spanning multiple SaaS systems using compensating operations (reverse operations equivalent to rollbacks) at each step. It has a mechanism to cancel the previous two steps when step 3 fails in a 3-step sequence of "create a deal in Salesforce → register a project code in Workday → reserve budget in the accounting system."
+**[RT-7 Enterprise Saga](../decisions/rt-runtime/rt-d4-long-running-reliability.md)** is a pattern for maintaining consistency in distributed transactions spanning multiple SaaS systems using compensating operations (reverse operations equivalent to rollbacks) at each step. It has a mechanism to cancel the previous two steps when step 3 fails in a 3-step sequence of "create a deal in Salesforce → register a project code in Workday → reserve budget in the accounting system."
 
-Traditional 2-phase commits cannot be used for distributed transactions across SaaS in enterprises. The Saga pattern adopts eventual consistency through compensating operations and guarantees consistency in long-running transactions. The state persistence of [RT-8 Durable Workflow](../patterns/rt-runtime/rt8-durable-workflow.md) is a prerequisite.
+Traditional 2-phase commits cannot be used for distributed transactions across SaaS in enterprises. The Saga pattern adopts eventual consistency through compensating operations and guarantees consistency in long-running transactions. The state persistence of [RT-8 Durable Workflow](../decisions/rt-runtime/rt-d4-long-running-reliability.md) is a prerequisite.
 
-**[RT-4 Human Approval Chain](../patterns/rt-runtime/rt4-human-approval-chain.md)** is a pattern for inserting tiered human approval for high-risk operations (large payments, personnel changes, contract signing). Full automation is not applied to all operations. Rules such as "amounts above a threshold require supervisor approval" and "personal information changes require HR confirmation" are defined as policies, and the agent escalates to humans according to those rules.
+**[RT-4 Human Approval Chain](../decisions/rt-runtime/rt-d2-autonomy-design.md)** is a pattern for inserting tiered human approval for high-risk operations (large payments, personnel changes, contract signing). Full automation is not applied to all operations. Rules such as "amounts above a threshold require supervisor approval" and "personal information changes require HR confirmation" are defined as policies, and the agent escalates to humans according to those rules.
 
-For this recipe to function, the security foundation from Recipe 1 (especially ID-7 Policy-as-Code) and state persistence of [RT-8](../patterns/rt-runtime/rt8-durable-workflow.md) must already be in place.
+For this recipe to function, the security foundation from Recipe 1 (especially ID-7 Policy-as-Code) and state persistence of [RT-8](../decisions/rt-runtime/rt-d4-long-running-reliability.md) must already be in place.
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Track the causal chain from Layer 1 → Layer 2 ([GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md)) (processing time reduction → labor cost reduction, win rate improvement → revenue improvement). Avoid value-realization anti-patterns in [Adoption & Change Management](adoption.md) (automating broken processes, uncaptured free time, etc.). Prioritize high-value-potential use cases in [AI Investment Portfolio](portfolio.md).
+    Track the causal chain from Layer 1 → Layer 2 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) (processing time reduction → labor cost reduction, win rate improvement → revenue improvement). Avoid value-realization anti-patterns in [Adoption & Change Management](adoption.md) (automating broken processes, uncaptured free time, etc.). Prioritize high-value-potential use cases in [AI Investment Portfolio](portfolio.md).
 
 ```mermaid
 sequenceDiagram
@@ -122,23 +122,23 @@ sequenceDiagram
 
 ## Recipe 5: Governance Backbone (Runs Throughout All Planes)
 
-**Pattern bundle**: [GV-1 Agent Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md) + [GV-5 Central Model Gateway](../patterns/gv-governance/gv5-central-model-gateway.md) + [OB-2 Unified Audit Lineage](../patterns/ob-observability/ob2-unified-audit-lineage.md) + [ID-7 Policy-as-Code](../patterns/id-identity/id7-policy-as-code-guardrail.md)
+**Pattern bundle**: [GV-1 Agent Control Plane](../decisions/gv-governance/gv-d1-control-plane-scope.md) + [GV-5 Central Model Gateway](../decisions/gv-governance/gv-d2-model-vendor-routing.md) + [OB-2 Unified Audit Lineage](../decisions/ob-observability/ob-d2-audit-attribution.md) + [ID-7 Policy-as-Code](../decisions/id-identity/id-d5-authorization-method.md)
 
 The governance backbone is not something placed before or after a specific recipe — it is a cross-cutting foundation established in parallel with all other recipes. It centrally manages "who can use which agents," "what is permitted," and "what was executed" across the entire organization.
 
-**[GV-1 Agent Control Plane](../patterns/gv-governance/gv1-agent-control-plane.md)** is a pattern providing a control plane for centrally managing agent registration, approval, version management, and deactivation. Agents are authorized to execute only after registering with the control plane. Without the control plane, no overall picture of who is running what agents inside the organization can be grasped. It becomes a breeding ground for shadow AI.
+**[GV-1 Agent Control Plane](../decisions/gv-governance/gv-d1-control-plane-scope.md)** is a pattern providing a control plane for centrally managing agent registration, approval, version management, and deactivation. Agents are authorized to execute only after registering with the control plane. Without the control plane, no overall picture of who is running what agents inside the organization can be grasped. It becomes a breeding ground for shadow AI.
 
-**[GV-5 Central Model Gateway](../patterns/gv-governance/gv5-central-model-gateway.md)** is a pattern for consolidating all LLM requests through a central gateway. Model selection, cost management, rate limiting, and prompt filtering are all handled centrally at the gateway. With each department holding its own API keys and calling models directly, cost visibility, usage policy application, and impact management during model changes all become impossible.
+**[GV-5 Central Model Gateway](../decisions/gv-governance/gv-d2-model-vendor-routing.md)** is a pattern for consolidating all LLM requests through a central gateway. Model selection, cost management, rate limiting, and prompt filtering are all handled centrally at the gateway. With each department holding its own API keys and calling models directly, cost visibility, usage policy application, and impact management during model changes all become impossible.
 
-**[OB-2 Unified Audit Lineage](../patterns/ob-observability/ob2-unified-audit-lineage.md)** is a pattern for recording three-party accountability (person, agent, system) audit trails in a unified format. Regardless of which plane's patterns executed the operation, the same format audit log is generated. In regulatory compliance, internal audits, and incident investigations, the operation chain can be traced as a single lineage.
+**[OB-2 Unified Audit Lineage](../decisions/ob-observability/ob-d2-audit-attribution.md)** is a pattern for recording three-party accountability (person, agent, system) audit trails in a unified format. Regardless of which plane's patterns executed the operation, the same format audit log is generated. In regulatory compliance, internal audits, and incident investigations, the operation chain can be traced as a single lineage.
 
-**[ID-7 Policy-as-Code Guardrail](../patterns/id-identity/id7-policy-as-code-guardrail.md)** is a pattern for managing agent behavior constraints as code. Policies for "what is permitted and what is prohibited" are managed in a Git repository, with changes controlled through review, test, and deployment cycles. Policy changes become auditable, and tests can detect unintended policy relaxation in advance.
+**[ID-7 Policy-as-Code Guardrail](../decisions/id-identity/id-d5-authorization-method.md)** is a pattern for managing agent behavior constraints as code. Policies for "what is permitted and what is prohibited" are managed in a Git repository, with changes controlled through review, test, and deployment cycles. Policy changes become auditable, and tests can detect unintended policy relaxation in advance.
 
 !!! note "Establish the Governance Backbone from the Start"
     The governance backbone is not a "governance layer added later." GV-1 and GV-5 should begin setup at the same time as Recipe 1, and ideally registration and recording function from the moment the first agent starts running. Adding them later results in large inventory and registration costs for existing agents.
 
 !!! tip "Value and Adoption Measures at This Stage"
-    Report Layer 2 ([GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md)) improvements (business KPIs: revenue impact, cost reduction, decision speed) to management. Advance company-wide expansion in Phase 3 of [Adoption & Change Management](adoption.md) (use case expansion, results sharing, horizontal rollout). Decide on expansion, improvement, and withdrawal in the [AI Investment Portfolio](portfolio.md) quarterly review and determine reinvestment targets.
+    Report Layer 2 ([GV-10](../decisions/gv-governance/gv-d7-value-measurement.md)) improvements (business KPIs: revenue impact, cost reduction, decision speed) to management. Advance company-wide expansion in Phase 3 of [Adoption & Change Management](adoption.md) (use case expansion, results sharing, horizontal rollout). Decide on expansion, improvement, and withdrawal in the [AI Investment Portfolio](portfolio.md) quarterly review and determine reinvestment targets.
 
 ---
 
@@ -247,4 +247,4 @@ The value track is not independent from the safety track. They synchronize at th
 This design creates a state where "value use cases are also ready when the safety foundation is complete," minimizing the gap between foundation building and value realization.
 
 !!! note "Connection to the Value Loop"
-    Value created in quick wins is measured with [GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md), utilization is increased with [Adoption & Change Management](adoption.md), and reinvestment decisions are made with [AI Investment Portfolio](portfolio.md). The condition for agent investment to be sustained is turning this **value loop (Create → Measure → Adopt → Reinvest)** once within 90 days. For details, refer to the [Value Maturity Roadmap](value-maturity-roadmap.md).
+    Value created in quick wins is measured with [GV-10](../decisions/gv-governance/gv-d7-value-measurement.md), utilization is increased with [Adoption & Change Management](adoption.md), and reinvestment decisions are made with [AI Investment Portfolio](portfolio.md). The condition for agent investment to be sustained is turning this **value loop (Create → Measure → Adopt → Reinvest)** once within 90 days. For details, refer to the [Value Maturity Roadmap](value-maturity-roadmap.md).

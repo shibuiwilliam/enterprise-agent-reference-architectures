@@ -22,27 +22,27 @@ As the foundation for safely realizing this value, ID-2 (OBO Delegation), ID-4 (
 
 ## Applied Patterns and Reasons
 
-### [ID-2 Identity Federation & On-Behalf-Of (OBO Delegation)](../../patterns/id-identity/id2-identity-federation-obo.md)
+### [ID-2 Identity Federation & On-Behalf-Of (OBO Delegation)](../../decisions/id-identity/id-d2-delegation-method.md)
 
 When a sales rep requests "change this deal status to won," the agent must operate only with **the requester's own Salesforce permissions**. ID-2 uses RFC 8693 token exchange to provide the mechanism for the agent to call Salesforce with the person's delegated token rather than the agent's own service account. This allows Salesforce's own access controls to prevent accidents like "rewrote a deal outside my assigned accounts through the agent."
 
-### [ID-4 Permission Mirror (Least-Privilege Composition)](../../patterns/id-identity/id4-permission-mirror-least-of.md)
+### [ID-4 Permission Mirror (Least-Privilege Composition)](../../decisions/id-identity/id-d3-permission-reduction.md)
 
 When the agent crosses multiple SaaS systems (Salesforce, Sansan, Google Drive), ID-4's role is to **match the most restrictive permission** among each SaaS. For example, if a sales rep has "view only my assigned customers" permissions in Salesforce, the same restriction is applied when linking Sansan business card information to Salesforce deals. The agent "accidentally crossing" permission boundaries is blocked at the pattern level.
 
-### [IN-2 SaaS Connector / Adapter](../../patterns/in-integration/in2-saas-connector-adapter.md)
+### [IN-2 SaaS Connector / Adapter](../../decisions/in-integration/in-d2-build-vs-reuse.md)
 
 Salesforce REST API, Sansan card API, and Google Calendar API all differ in authentication methods, pagination, and error codes. IN-2 absorbs connections to each SaaS through a standardized adapter layer, providing a structure where the agent's logic doesn't need to be aware of "Salesforce-specific API differences." Concentrating retries, timeouts, and log output in the adapter layer also improves traceability during failures.
 
-### [KM-5 Purpose-Bound Context](../../patterns/km-knowledge/km5-purpose-bound-context.md)
+### [KM-5 Purpose-Bound Context](../../decisions/km-knowledge/km-d4-purpose-limitation.md)
 
 For a request like "write a follow-up email for this month's deal with Company A," it would be dangerous for the agent to load all customer deal history, competitive information, and internal evaluation notes into the context. KM-5 provides a mechanism to retrieve "only the context needed for this task" bound to the purpose. Limiting to Company A's deal history only, notes from the last 3 meetings, and the latest version of the quote both reduces information leakage risk and improves response quality.
 
-### [RT-5 Command Envelope](../../patterns/rt-runtime/rt5-command-envelope.md)
+### [RT-5 Command Envelope](../../decisions/rt-runtime/rt-d3-side-effect-safety.md)
 
 Write operations like CRM deal updates, quote amount changes, and contact updates must not be executed as free-text instructions directly. RT-5 converts operations into structured commands of "who, what, with what parameters, when," fixing the operation content in a form that humans can verify. This creates an "operation trail" that can be fed into approval flows, enabling accurate tracking of what was changed in post-hoc audits.
 
-### [RT-4 Human Approval Chain](../../patterns/rt-runtime/rt4-human-approval-chain.md)
+### [RT-4 Human Approval Chain](../../decisions/rt-runtime/rt-d2-autonomy-design.md)
 
 Quote amount changes, contract term modifications, and large deal status updates should go through supervisor approval rather than automatic execution. RT-4 automatically routes operations exceeding risk thresholds (e.g., quotes over 1 million yen) to an approval queue and notifies approvers via Slack or email. The agent waits until approval is complete, and executes rollback processing if rejected. This structurally prevents accidents like "the agent arbitrarily changed the terms of a large deal."
 

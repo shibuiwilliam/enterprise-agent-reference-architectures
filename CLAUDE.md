@@ -40,7 +40,7 @@ uv run python scripts/build_machine_index.py  # Regenerate machine-readable JSON
 ## Writing Conventions
 
 ### Tone & Style
-- Japanese pages: use 常体 (だ・である). Concise, technical. Keep sentences short.
+- Japanese pages: use 敬体 (ですます). 丁寧で親しみやすく、読みやすい文章を心がける。Keep sentences short.
 - English pages (`.en.md`): professional, accessible, active voice where possible.
 - No subjective superiority claims or exaggeration. Present tradeoffs neutrally.
 - Do not add facts or proper nouns not in the source. If adding, cite explicitly and avoid definitive assertions.

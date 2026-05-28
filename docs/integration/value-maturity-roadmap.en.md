@@ -8,7 +8,7 @@ status: done
 
 ## Overview
 
-The value of enterprise AI agents does not emerge overnight. This roadmap integrates the Executive's "value staircase," the change management roadmap from [Adoption & Change Management](adoption.md) (0-30 / 30-90 / 90+ days), the staged expansion of [TO-4 Read-only vs Write-capable](../decisions/tradeoff/to4-readonly-vs-write.md), and the risk tiers of [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) into **a single company-wide page** — to show management "when, what value, on top of what governance."
+The value of enterprise AI agents does not emerge overnight. This roadmap integrates the Executive's "value staircase," the change management roadmap from [Adoption & Change Management](adoption.md) (0-30 / 30-90 / 90+ days), the staged expansion of [TO-4 Read-only vs Write-capable](../decisions/rt-runtime/rt-d3-side-effect-safety.md), and the risk tiers of [RT-3 Risk-Tiered Autonomy](../decisions/rt-runtime/rt-d2-autonomy-design.md) into **a single company-wide page** — to show management "when, what value, on top of what governance."
 
 ## Four-Stage Value Maturity
 
@@ -44,7 +44,7 @@ flowchart LR
 
 ## Causal Chain: Utilization → Efficiency → Business Outcomes
 
-The causal path through which value accumulates across the four stages is shown below. This diagram integrates the three layers of [GV-10 Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) with the metrics system from [Adoption & Change Management](adoption.md).
+The causal path through which value accumulates across the four stages is shown below. This diagram integrates the three layers of [GV-10 Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) with the metrics system from [Adoption & Change Management](adoption.md).
 
 ```mermaid
 flowchart LR
@@ -94,10 +94,10 @@ This roadmap is a company-wide framework; specific use cases and KPIs by departm
 
 ## Related Pages
 
-- [GV-10 Three-Layer Value Measurement](../patterns/gv-governance/gv10-two-layer-value-measurement.md) — The authoritative pattern for value measurement (Layer 1 and Layer 2 of this roadmap)
+- [GV-10 Three-Layer Value Measurement](../decisions/gv-governance/gv-d7-value-measurement.md) — The authoritative pattern for value measurement (Layer 1 and Layer 2 of this roadmap)
 - [Adoption & Change Management](adoption.md) — Operational measures for adoption (change management)
 - [Combination Recipe](recipe.md) — Pattern introduction sequence and quick-win track
 - [AI Investment Portfolio Management](portfolio.md) — Investment allocation optimization by use case
 - [Use Case Selection Guide](usecase-selection-guide.md) — How to select initial use cases
-- [TO-4 Read-only vs Write-capable](../decisions/tradeoff/to4-readonly-vs-write.md) — Technical decision axis for staged expansion
-- [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) — Autonomy design based on risk tiers
+- [TO-4 Read-only vs Write-capable](../decisions/rt-runtime/rt-d3-side-effect-safety.md) — Technical decision axis for staged expansion
+- [RT-3 Risk-Tiered Autonomy](../decisions/rt-runtime/rt-d2-autonomy-design.md) — Autonomy design based on risk tiers

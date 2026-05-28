@@ -14,7 +14,7 @@ status: done
 |---|---|---|
 | 1 | **概要** | 何であるかの一文要約 |
 | 2 | **解決する企業課題** | どういう課題を解決するために、どのエンタープライズ固有の力（漏洩・サイロ・動的文脈・監査・コスト）に応えるか |
-| 3 | **価値仮説** | このパターンがどの企業価値KPI（売上・利益／業務自動化／プロジェクト生産性／従業員効率／経営判断速度）に、どの経路で効くか。1〜3行で記載し、[GV-10](../patterns/gv-governance/gv10-two-layer-value-measurement.md) の計測層と対応づける |
+| 3 | **価値仮説** | このパターンがどの企業価値KPI（売上・利益／業務自動化／プロジェクト生産性／従業員効率／経営判断速度）に、どの経路で効くか。1〜3行で記載し、[GV-10](../decisions/gv-governance/gv-d7-value-measurement.md) の計測層と対応づける |
 | 4 | **解決策と設計** | 課題の解決策と、それを実現する設計としての構造・データフロー・状態遷移・実装上の要点 |
 | 5 | **向き／不向き** | 採用が効く条件と、害・過剰になる条件 |
 | 6 | **要素技術・既存システム連携** | 代表技術・標準・対象SaaS |
@@ -22,21 +22,21 @@ status: done
 | 8 | **関連パターン** | 類似・補完・対比される他のパターンへのリンク |
 
 !!! note "解決策と設計節の図"
-    構造・データフロー・状態遷移・認可シーケンスは mermaid で記述します。特に [ID-2 OBO委譲](../patterns/id-identity/id2-identity-federation-obo.md)、[ID-6 PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md)、[RT-7 Saga](../patterns/rt-runtime/rt7-enterprise-saga.md)、[RT-10 イベント駆動](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) はシーケンス/フロー図を推奨します。
+    構造・データフロー・状態遷移・認可シーケンスは mermaid で記述します。特に [ID-2 OBO委譲](../decisions/id-identity/id-d2-delegation-method.md)、[ID-6 PDP/PEP](../decisions/id-identity/id-d5-authorization-method.md)、[RT-7 Saga](../decisions/rt-runtime/rt-d4-long-running-reliability.md)、[RT-10 イベント駆動](../decisions/rt-runtime/rt-d5-trigger-mechanism.md) はシーケンス/フロー図を推奨します。
 
 ## 面（カテゴリ）設計
 
-パターンは「どの設計圧力に応えるか」で7面に分類します。この分類は責務境界とも一致し、[リファレンスアーキテクチャ](../integration/architecture/index.md)の層構造にそのまま対応しています。
+パターンは「どの設計圧力に応えるか」で7面に分類しています。この分類は責務境界とも一致し、[リファレンスアーキテクチャ](../integration/architecture/index.md)の層構造にそのまま対応しています。
 
 | 面 | テーマ | 主眼 | パターン数 |
 |---|---|---|---|
-| [面1 体験・ゲートウェイ (EX)](../patterns/ex-experience/index.md) | 入口と提供面 | 仕事のある場所に届け、入口で統制する | 3 |
-| [面2 制御・ガバナンス (GV)](../patterns/gv-governance/index.md) | 統治・統制 | 一元レジストリ・モデル統制・評価・コスト・事故対応 | 10 |
-| [面3 アイデンティティ・信頼 (ID)](../patterns/id-identity/index.md) | 権限の忠実な伝播 | 誰の権限で動くかを保証する（全面の中で最も設計難度が高い） | 8 |
-| [面4 実行・オーケストレーション (RT)](../patterns/rt-runtime/index.md) | 分業・実行・自動化 | 責任分担・自律度・副作用・長尺・イベント | 11 |
-| [面5 知識・メモリ・コンテキスト (KM)](../patterns/km-knowledge/index.md) | 漏らさず活かす | 権限を保ったまま横断文脈を供給 | 7 |
-| [面6 統合・ツール (IN)](../patterns/in-integration/index.md) | 既存システム連携 | 作らず束ね、固有差を吸収 | 4 |
-| [面7 観測・評価・監査 (OB)](../patterns/ob-observability/index.md) | 説明責任 | 三者帰責で全行為を再構成可能に | 2 |
+| [面1 体験・ゲートウェイ (EX)](../decisions/ex-experience/ex-d1-front-door-channel.md) | 入口と提供面 | 仕事のある場所に届け、入口で統制する | 3 |
+| [面2 制御・ガバナンス (GV)](../decisions/gv-governance/gv-d1-control-plane-scope.md) | 統治・統制 | 一元レジストリ・モデル統制・評価・コスト・事故対応 | 10 |
+| [面3 アイデンティティ・信頼 (ID)](../decisions/id-identity/id-d1-workforce-customer-split.md) | 権限の忠実な伝播 | 誰の権限で動くかを保証する（全面の中で最も設計難度が高い） | 8 |
+| [面4 実行・オーケストレーション (RT)](../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md) | 分業・実行・自動化 | 責任分担・自律度・副作用・長尺・イベント | 11 |
+| [面5 知識・メモリ・コンテキスト (KM)](../decisions/km-knowledge/km-d1-context-supply.md) | 漏らさず活かす | 権限を保ったまま横断文脈を供給 | 7 |
+| [面6 統合・ツール (IN)](../decisions/in-integration/in-d1-tool-gateway.md) | 既存システム連携 | 作らず束ね、固有差を吸収 | 4 |
+| [面7 観測・評価・監査 (OB)](../decisions/ob-observability/ob-d1-observability-scope.md) | 説明責任 | 三者帰責で全行為を再構成可能に | 2 |
 
 ### 面の読み方
 
@@ -44,7 +44,7 @@ status: done
 
 ### エンタープライズ固有の設計圧力
 
-設計圧力とは、一般的なソフトウェア設計ではあまり表面化しない、エンタープライズ固有の力のことを指します。
+設計圧力とは、一般的なソフトウェア設計ではあまり表面化しない、エンタープライズ固有の力のことです。
 
 | 設計圧力 | 具体例 |
 |---|---|
@@ -58,12 +58,12 @@ status: done
 
 7面に加えて、以下の2つが全面を貫く横断軸として機能します。
 
-- **組織グラフ**：全面がスコープ・委譲・承認を組織構造から一貫して導く土台です。[ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md)・[RT-1](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md)・[RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md)・[KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) の根拠となります。
-- **ゼロトラスト／監査**：全呼び出しを「人＋エージェント＋システム」の三者で認可・記録します。[ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md)・[OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) が中核を担います。
+- **組織グラフ**：全面がスコープ・委譲・承認を組織構造から一貫して導く土台です。[ID-4](../decisions/id-identity/id-d3-permission-reduction.md)・[RT-1](../decisions/rt-runtime/rt-d1-single-vs-multi-agent.md)・[RT-4](../decisions/rt-runtime/rt-d2-autonomy-design.md)・[KM-4](../decisions/km-knowledge/km-d3-memory-scope.md) の根拠となります。
+- **ゼロトラスト／監査**：全呼び出しを「人＋エージェント＋システム」の三者で認可・記録します。[ID-6](../decisions/id-identity/id-d5-authorization-method.md)・[OB-2](../decisions/ob-observability/ob-d2-audit-attribution.md) が中核を担います。
 
 ## フロントマター拡張（機械可読メタデータ）
 
-本文の8項目スキーマに加え、各パターンページのフロントマター（YAML）に以下のフィールドを必須化します。コーディングエージェントはこのメタデータを `docs/_machine/patterns.json` から一括参照できるようになっています。
+本文の8項目スキーマに加え、各パターンページのフロントマター（YAML）に以下のフィールドを必須としています。コーディングエージェントはこのメタデータを `docs/_machine/patterns.json` から一括参照できます。
 
 | フィールド | 型 | 説明 |
 |---|---|---|
@@ -81,7 +81,7 @@ status: done
 
 ### 価値ドライバ語彙（統一タグ）
 
-全パターン・全部門事例の `value_drivers` フィールドで使用する語彙を以下に統一しています。
+全パターン・全部門事例の `value_drivers` フィールドで使用する語彙は、以下に統一しています。
 
 | タグ | 意味 |
 |---|---|
@@ -96,7 +96,7 @@ status: done
 
 ### Decision Summary ブロック（末尾必須）
 
-各パターンページの末尾に、以下の形式で機械可読＋人間可読の Decision Summary YAML ブロックを置きます。
+各パターンページの末尾に、以下の形式で機械可読かつ人間可読の Decision Summary YAML ブロックを配置します。
 
 ````markdown
 ## Decision Summary
@@ -121,4 +121,4 @@ decision_summary:
 ```
 ````
 
-`scripts/build_machine_index.py` がこのブロックを抽出し、`docs/_machine/patterns.json` 等の機械可読 JSON を自動生成する仕組みになっています。
+`scripts/build_machine_index.py` がこのブロックを抽出し、`docs/_machine/patterns.json` 等の機械可読 JSON を自動生成します。

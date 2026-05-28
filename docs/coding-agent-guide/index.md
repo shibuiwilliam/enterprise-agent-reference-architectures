@@ -12,16 +12,16 @@ status: done
 
 コーディングエージェントは以下の順序で本サイトを参照するとよいでしょう。
 
-1. **リポジトリルートの `agents.md`** を最初に読みます。推論手順と出力テンプレートの全体像を把握します。
-2. **`docs/_machine/index.json`** からスキーマバージョンと各リソースのパスを取得します。
-3. 要件に応じて `patterns.json`・`decisions.json`・`value-loop.json`・`departments.json` を参照します。
-4. 詳細が必要な場合のみ、個別のマークダウンページを読みます。
+1. **リポジトリルートの `agents.md`** を最初に読んでください。推論手順と出力テンプレートの全体像を把握できます。
+2. **`docs/_machine/index.json`** からスキーマバージョンと各リソースのパスを取得してください。
+3. 要件に応じて `patterns.json`・`decisions.json`・`value-loop.json`・`departments.json` を参照してください。
+4. 詳細が必要な場合のみ、個別のマークダウンページを読んでください。
 
 ## 推論手順：要件→候補パターン→アーキテクチャ提案
 
 ### Step 1：要件の構造化
 
-ユーザーの要件から以下を抽出します。
+ユーザーの要件から以下を抽出してください。
 
 | 抽出項目 | 例 |
 |---|---|
@@ -33,11 +33,11 @@ status: done
 
 ### Step 2：意思決定基準の評価
 
-`decisions.json` から関連する DC/TO を特定し、各オプションの pick_when 条件と要件を照合します。
+`decisions.json` から関連する DC/TO を特定し、各オプションの pick_when 条件と要件を照合してください。
 
 ### Step 3：パターンの選定と依存解決
 
-選択したオプションが要求する patterns を `patterns.json` から取得し、prerequisites を再帰的に解決します。
+選択したオプションが要求する patterns を `patterns.json` から取得し、prerequisites を再帰的に解決してください。
 
 ### Step 4：組み合わせの構成
 
@@ -49,11 +49,11 @@ status: done
 
 ### Step 5：出力の生成
 
-`agents.md` に定義された出力テンプレートに従い、人間に提示するアーキテクチャ提案を生成します。
+`agents.md` に定義された出力テンプレートに従い、人間に提示するアーキテクチャ提案を生成してください。
 
 ## 出力テンプレート
 
-提案は以下の構造で出力します。
+提案は以下の構造で出力してください。
 
 | セクション | 内容 |
 |---|---|
@@ -67,7 +67,7 @@ status: done
 
 ## 機械可読データの参照方法
 
-`docs/_machine/` 配下の JSON ファイルを直接パースして利用します。
+`docs/_machine/` 配下の JSON ファイルを直接パースして利用してください。
 
 | ファイル | 用途 |
 |---|---|
@@ -95,5 +95,5 @@ status: done
 - [価値ユースケース選定ガイド](../integration/usecase-selection-guide.md)
 - [組み合わせレシピ](../integration/recipe.md)
 - [定着・アダプション](../integration/adoption.md)
-- [GV-10 三層価値計測](../patterns/gv-governance/gv10-two-layer-value-measurement.md)
+- [GV-10 三層価値計測](../decisions/gv-governance/gv-d7-value-measurement.md)
 - [意思決定の手引き](../decisions/decision-guide.md)
