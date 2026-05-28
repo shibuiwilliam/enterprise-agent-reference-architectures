@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Decisions Index",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "title"],
+    "properties": {
+      "id": {"type": "string", "pattern": "^(DC|TO)-\\d+$"},
+      "title": {"type": "string"},
+      "type": {"type": "string", "enum": ["degree", "tradeoff"]},
+      "options": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "name": {"type": "string"},
+            "patterns": {"type": "array", "items": {"type": "string"}},
+            "pros": {"type": "array", "items": {"type": "string"}},
+            "cons": {"type": "array", "items": {"type": "string"}},
+            "pick_when": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      },
+      "default_recommendation": {"type": "string"}
+    }
+  }
+}

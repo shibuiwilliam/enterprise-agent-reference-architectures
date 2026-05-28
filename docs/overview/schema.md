@@ -8,7 +8,7 @@ status: done
 
 ## 共通記述スキーマ
 
-各パターンを以下の8項目で統一記述する。「価値仮説」は各パターンが企業価値のどこに効くかを明示するための項目だ。「落とし穴」は事故に直結しやすいため、独立した明示項目として設けた。
+各パターンを以下の8項目で統一記述します。「価値仮説」は各パターンが企業価値のどこに効くかを明示するための項目であり、「落とし穴」は事故に直結しやすいため独立した明示項目として設けました。
 
 | # | 項目 | 記述内容 |
 |---|---|---|
@@ -22,11 +22,11 @@ status: done
 | 8 | **関連パターン** | 類似・補完・対比される他のパターンへのリンク |
 
 !!! note "解決策と設計節の図"
-    構造・データフロー・状態遷移・認可シーケンスは mermaid で記述する。特に [ID-2 OBO委譲](../patterns/id-identity/id2-identity-federation-obo.md)、[ID-6 PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md)、[RT-7 Saga](../patterns/rt-runtime/rt7-enterprise-saga.md)、[RT-10 イベント駆動](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) はシーケンス/フロー図を推奨する。
+    構造・データフロー・状態遷移・認可シーケンスは mermaid で記述します。特に [ID-2 OBO委譲](../patterns/id-identity/id2-identity-federation-obo.md)、[ID-6 PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md)、[RT-7 Saga](../patterns/rt-runtime/rt7-enterprise-saga.md)、[RT-10 イベント駆動](../patterns/rt-runtime/rt10-event-driven-orchestrator.md) はシーケンス/フロー図を推奨します。
 
 ## 面（カテゴリ）設計
 
-パターンは「どの設計圧力に応えるか」で7面に分類する。この分類は責務境界とも一致し、[リファレンスアーキテクチャ](../integration/architecture/index.md)の層構造にそのまま対応する。
+パターンは「どの設計圧力に応えるか」で7面に分類します。この分類は責務境界とも一致し、[リファレンスアーキテクチャ](../integration/architecture/index.md)の層構造にそのまま対応しています。
 
 | 面 | テーマ | 主眼 | パターン数 |
 |---|---|---|---|
@@ -40,11 +40,11 @@ status: done
 
 ### 面の読み方
 
-面1〜2が「入口と統治」、面3が「権限の忠実な伝播（設計難度が高い）」、面4〜6が「実行と知識と連携」、面7が「説明責任」に当たる。積み上げる依存関係は[依存関係と依存チェーン](../integration/dependency-chain.md)で示す。
+面1〜2が「入口と統治」、面3が「権限の忠実な伝播（設計難度が高い）」、面4〜6が「実行と知識と連携」、面7が「説明責任」に当たります。積み上げる依存関係は[依存関係と依存チェーン](../integration/dependency-chain.md)で示します。
 
 ### エンタープライズ固有の設計圧力
 
-設計圧力とは、一般的なソフトウェア設計ではあまり表面化しない、エンタープライズ固有の力のことだ。
+設計圧力とは、一般的なソフトウェア設計ではあまり表面化しない、エンタープライズ固有の力のことを指します。
 
 | 設計圧力 | 具体例 |
 |---|---|
@@ -56,7 +56,69 @@ status: done
 
 ### 横断軸
 
-7面に加えて、以下の2つが全面を貫く横断軸として機能する。
+7面に加えて、以下の2つが全面を貫く横断軸として機能します。
 
-- **組織グラフ**：全面がスコープ・委譲・承認を組織構造から一貫して導く土台。[ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md)・[RT-1](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md)・[RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md)・[KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) の根拠となる。
-- **ゼロトラスト／監査**：全呼び出しを「人＋エージェント＋システム」の三者で認可・記録する。[ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md)・[OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) が中核を担う。
+- **組織グラフ**：全面がスコープ・委譲・承認を組織構造から一貫して導く土台です。[ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md)・[RT-1](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md)・[RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md)・[KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md) の根拠となります。
+- **ゼロトラスト／監査**：全呼び出しを「人＋エージェント＋システム」の三者で認可・記録します。[ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md)・[OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) が中核を担います。
+
+## フロントマター拡張（機械可読メタデータ）
+
+本文の8項目スキーマに加え、各パターンページのフロントマター（YAML）に以下のフィールドを必須化します。コーディングエージェントはこのメタデータを `docs/_machine/patterns.json` から一括参照できるようになっています。
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `id` / `pattern_id` | string | パターンID（例：`ID-2`） |
+| `applies_when` | list | 採用が有効な条件タグ |
+| `not_applicable_when` | list | 採用が不適切な条件タグ |
+| `decision_keys` | list | 参加する意思決定基準（DC/TO）のID |
+| `value_drivers` | list | 効く企業価値ドライバ（下記語彙から選択） |
+| `kpis` | list | GV-10 連携の代表指標 |
+| `prerequisites` / `requires` | list | 依存する上流パターンのID |
+| `related` / `required_by` | list | 双方向リンク対象のパターンID |
+| `maturity_stage` | string | `foundation` / `execution` / `value_loop` のいずれか |
+| `mvp` | string | 最小成立構成の一文説明 |
+| `cost_orientation` | string | 相対コスト感 `S` / `M` / `L` |
+
+### 価値ドライバ語彙（統一タグ）
+
+全パターン・全部門事例の `value_drivers` フィールドで使用する語彙を以下に統一しています。
+
+| タグ | 意味 |
+|---|---|
+| `employee_efficiency` | 従業員の業務効率化 |
+| `decision_quality` | 意思決定の質と速度向上 |
+| `automation` | 業務プロセスの自動化 |
+| `revenue_growth` | 売上・利益の成長 |
+| `customer_value` | 顧客体験・満足度向上 |
+| `audit_compliance` | 監査・コンプライアンスの確保 |
+| `executive_decision` | 経営判断の加速 |
+| `project_productivity` | プロジェクト生産性向上 |
+
+### Decision Summary ブロック（末尾必須）
+
+各パターンページの末尾に、以下の形式で機械可読＋人間可読の Decision Summary YAML ブロックを置きます。
+
+````markdown
+## Decision Summary
+
+```yaml
+decision_summary:
+  pattern: ID-2
+  participates_in:
+    - decision: TO-1
+      role: option_a
+  recommended_if:
+    - "複数SaaSへ本人権限で書き込みが発生する"
+  avoid_if:
+    - "委譲を受理しないSaaS（ID-4で代替）"
+  combines_with: [ID-4, KM-1, RT-5, OB-2]
+  conflicts_with: []
+  value_outcome:
+    drivers: [audit_compliance, employee_efficiency]
+    kpis: [監査追跡可能率, 誤アクセス事故件数]
+  mvp: "主要2〜3 SaaSのみOBO化、残りはID-4で近似"
+  cost: M
+```
+````
+
+`scripts/build_machine_index.py` がこのブロックを抽出し、`docs/_machine/patterns.json` 等の機械可読 JSON を自動生成する仕組みになっています。

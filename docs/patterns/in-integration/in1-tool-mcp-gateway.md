@@ -10,30 +10,36 @@ applies_when: [multi_agent, cross_saas, audit_required, enterprise_scale]
 not_applicable_when: [poc_phase, single_team, public_data_only]
 risk_tiers: [1, 2, 3, 4]
 key_technologies: [MCP Gateway, "API Gateway (Kong / Envoy)", "Tool Registry (JSON Schema)", Secret Manager, "OPA / Cedar (ID-6)", Idempotency Key]
+decision_keys: [TO-9]
+value_drivers: [automation, employee_efficiency]
+kpis: ["ツール呼び出し成功率", "ツール追加リードタイム"]
+maturity_stage: foundation
+mvp: "MCP準拠のツールゲートウェイで主要3ツールを接続"
+cost_orientation: M
 ---
 
 # IN-1 Enterprise Tool / MCP Gateway
 
 ## 概要
 
-エージェントが Salesforce API や社内 REST API を直接呼ぶと、API キーが散在し、認可もログもバラバラになる。このパターンはすべてのツール呼び出しを企業管理の Tool Gateway に集約し、認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性チェックを一箇所で済ませる。MCP サーバが増えても Gateway が統制する。いわば AI 時代の Enterprise Service Bus だ。
+エージェントが Salesforce API や社内 REST API を直接呼ぶと、API キーが散在し、認可もログもバラバラになります。このパターンはすべてのツール呼び出しを企業管理の Tool Gateway に集約し、認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性チェックを一箇所で済ませます。MCP サーバが増えても Gateway が統制します。いわば AI 時代の Enterprise Service Bus です。
 
 ## 解決する企業課題
 
-エージェントが SaaS を直接呼ぶと、認証情報の管理が各エージェントに分散し、API キーの漏洩リスクが高まる。ツールごとに認可が異なる状況では、どのエージェントが何の権限でどの API を呼んでいるかを把握できず、セキュリティ監査も障害調査も困難になってしまう。
+エージェントが SaaS を直接呼ぶと、認証情報の管理が各エージェントに分散し、API キーの漏洩リスクが高まります。ツールごとに認可が異なる状況では、どのエージェントが何の権限でどの API を呼んでいるかを把握できず、セキュリティ監査も障害調査も困難になってしまいます。
 
-MCP（Model Context Protocol）の普及により、エージェントが呼び出せるツールの種類は爆発的に増えた。MCP サーバが野良接続で増殖すると信頼境界の管理は崩れる。プロンプトインジェクションによってエージェントが意図しないツールを呼び出す攻撃も、ツール直接接続の状況では防ぐ手段がない。過剰権限（必要以上に広い API スコープ）、SaaS ごとの監査差（一部 SaaS の呼び出しだけ記録が残る）——これらを「すべての呼び出しを Gateway 経由にする」という構造で一括解決する。
+MCP（Model Context Protocol）の普及により、エージェントが呼び出せるツールの種類は爆発的に増えました。MCP サーバが野良接続で増殖すると信頼境界の管理は崩れます。プロンプトインジェクションによってエージェントが意図しないツールを呼び出す攻撃も、ツール直接接続の状況では防ぎようがありません。過剰権限（必要以上に広い API スコープ）、SaaS ごとの監査差（一部 SaaS の呼び出しだけ記録が残る）——これらを「すべての呼び出しを Gateway 経由にする」という構造で一括解決します。
 
 !!! tip "最小成立条件（MVP）"
-    API Gateway（既存の Kong / Envoy 等）の背後に MCP サーバを1つ配置し、認証チェックと呼び出しログ記録を Gateway で一元化する。ツールカタログやドライラン機能は後続で追加すればよい。
+    API Gateway（既存の Kong / Envoy 等）の背後に MCP サーバを1つ配置し、認証チェックと呼び出しログ記録を Gateway で一元化します。ツールカタログやドライラン機能は後続で追加すればよいです。
 
 ## 価値仮説
 
-ツール接続の標準化により、新SaaS連携の追加コストを削減し展開速度を向上させる。エージェントが利用可能なツールの増加は、自動化可能な業務範囲の拡大に直結する。
+ツール接続の標準化により、新SaaS連携の追加コストを削減し展開速度を向上させます。エージェントが利用可能なツールの増加は、自動化可能な業務範囲の拡大に直結します。
 
 ## 解決策と設計
 
-ツールカタログ（スキーマ・権限・コスト）を管理し、有効化/無効化/版を運用制御する。MCP サーバ群は信頼境界ごとに分離して束ねる。認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性・ドライランをすべて Gateway で一元適用する。
+ツールカタログ（スキーマ・権限・コスト）を管理し、有効化/無効化/版を運用制御します。MCP サーバ群は信頼境界ごとに分離して束ねます。認証・認可・スキーマ検証・レート制御・DLP・監査・冪等性・ドライランをすべて Gateway で一元適用します。
 
 ```mermaid
 flowchart LR
@@ -68,7 +74,7 @@ flowchart LR
     TGW --> Tools
 ```
 
-ツールカタログは JSON Schema でスキーマを定義し、エージェントが呼び出せるツールの一覧・入力仕様・必要権限・推定コストを管理する。Gateway はリクエストのスキーマ適合性を検証し、[ID-6 PDP/PEP](../id-identity/id6-zero-trust-pdp-pep.md) で認可を評価する。通過したリクエストのみをバックエンドのツールへ転送する形だ。API キーや認証情報はエージェントには渡さず、Secret Manager が Gateway 側で保持する。
+ツールカタログは JSON Schema でスキーマを定義し、エージェントが呼び出せるツールの一覧・入力仕様・必要権限・推定コストを管理します。Gateway はリクエストのスキーマ適合性を検証し、[ID-6 PDP/PEP](../id-identity/id6-zero-trust-pdp-pep.md) で認可を評価します。通過したリクエストのみをバックエンドのツールへ転送します。API キーや認証情報はエージェントには渡さず、Secret Manager が Gateway 側で保持します。
 
 ## 向き／不向き
 
@@ -90,15 +96,15 @@ flowchart LR
 ## 落とし穴／選定の勘所
 
 !!! danger "「接続できること」と「接続してよいこと」の混同"
-    「接続できること」を優先し「接続してよいこと」の統制を欠くのが最大の落とし穴である。ツールの有効化は審査を経て、認可を Gateway で強制する。「とりあえず全ツールを有効化して開発を進める」は本番環境では通用しない。
+    「接続できること」を優先し「接続してよいこと」の統制を欠くのが最大の落とし穴です。ツールの有効化は審査を経て、認可を Gateway で強制します。「とりあえず全ツールを有効化して開発を進める」は本番環境では通用しません。
 
-- MCP サーバは信頼境界ごとに分離する。社内用と顧客面用を同一プロセスで動かしてはいけない。信頼境界をまたぐ通信は Gateway を必ず経由させる。
-- ドライラン機能で副作用なしに実行結果をプレビューできるようにし、高リスク操作の検証を支援する。本番実行の前にドライランを人間承認ステップとして挟む運用も有効だ。
-- ツールの版管理（[GV-6](../gv-governance/gv6-version-registry.md)）で、ツールスキーマの変更による意図しない動作変化を防ぐ。ツールスキーマの変更は全エージェントに影響するため、後方互換性を保つか段階的に移行すること。
+- MCP サーバは信頼境界ごとに分離します。社内用と顧客面用を同一プロセスで動かしてはいけません。信頼境界をまたぐ通信は Gateway を必ず経由させます。
+- ドライラン機能で副作用なしに実行結果をプレビューできるようにし、高リスク操作の検証を支援します。本番実行の前にドライランを人間承認ステップとして挟む運用も有効です。
+- ツールの版管理（[GV-6](../gv-governance/gv6-version-registry.md)）で、ツールスキーマの変更による意図しない動作変化を防げます。ツールスキーマの変更は全エージェントに影響するため、後方互換性を保つか段階的に移行してください。
 
 ## Interfaces
 
-以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+以下はこのパターンを実装する際の主要インターフェイスです。コーディングエージェントはこの定義からスタブコードを生成できます。
 
 ```yaml
 interfaces:
@@ -236,6 +242,28 @@ interfaces:
 
 - [IN-2 SaaS Connector Adapter](in2-saas-connector-adapter.md) — 補完：Gateway 配下の各 SaaS 固有差を吸収するアダプタ層
 - [IN-3 Rate / Quota Broker](in3-rate-quota-broker.md) — 補完：Gateway 内または Gateway 後段での SaaS API レート制限の集中調停
-- [ID-6 Zero-Trust PDP/PEP](../id-identity/id6-zero-trust-pdp-pep.md) — 補完：ツール呼び出しの認可をゼロトラストで評価する
+- [ID-6 Zero-Trust PDP/PEP](../id-identity/id6-zero-trust-pdp-pep.md) — 補完：ツール呼び出しの認可をゼロトラストで評価します
 - [ID-5 JIT Scoped Credentials](../id-identity/id5-jit-scoped-credentials.md) — 補完：ツール用の短命・スコープ限定資格情報の発行
 - [GV-1 Agent Control Plane](../gv-governance/gv1-agent-control-plane.md) — 補完：ツールカタログを含むエージェント全体の統制基盤
+
+## Decision Summary
+
+```yaml
+decision_summary:
+  pattern: IN-1
+  participates_in:
+    - decision: TO-9
+      role: enabler
+  recommended_if:
+    - "エージェントから複数ツール・APIを統一的に呼び出したい"
+    - "ツール追加時の実装コストを下げたい"
+  avoid_if:
+    - "単一APIのみでゲートウェイ不要"
+  combines_with: [IN-2, IN-3, EX-1]
+  conflicts_with: []
+  value_outcome:
+    drivers: [automation, employee_efficiency]
+    kpis: [ツール呼び出し成功率, ツール追加リードタイム]
+  mvp: "MCP準拠のツールゲートウェイで主要3ツールを接続"
+  cost: M
+```

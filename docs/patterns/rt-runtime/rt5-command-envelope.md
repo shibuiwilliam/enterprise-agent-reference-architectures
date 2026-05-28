@@ -10,34 +10,40 @@ applies_when: [cross_saas, write_operations, audit_required, multi_agent]
 not_applicable_when: [poc_phase, public_data_only]
 risk_tiers: [2, 3, 4]
 key_technologies: [JSON Schema, Command Bus, DDD Command Pattern, OPA, Cedar]
+decision_keys: [TO-4, DC-1]
+value_drivers: [audit_compliance, automation]
+kpis: ["構造化コマンド変換率", "不正コマンド検知率"]
+maturity_stage: foundation
+mvp: "書き込み操作をJSON構造化し、承認フローに接続"
+cost_orientation: S
 ---
 
 # RT-5 Intent-to-Enterprise Command Envelope（構造化コマンド封筒）
 
 ## 概要
 
-「来週の会議を設定して」という自然言語を、そのまま Google Calendar API に渡してはいけない。自然言語はユーザーとの対話には向いているが、内部プロトコルとしては曖昧すぎて監査もポリシー検証もできない。このパターンでは自然言語をまず構造化された Command Envelope（actor / agent / target_system / action / risk_tier 等）に変換し、ポリシーチェック → 承認 → SaaS アダプタという一貫したパイプラインに流す。
+「来週の会議を設定して」という自然言語を、そのまま Google Calendar API に渡してはいけません。自然言語はユーザーとの対話には向いていますが、内部プロトコルとしては曖昧すぎて監査もポリシー検証もできません。このパターンでは自然言語をまず構造化された Command Envelope（actor / agent / target_system / action / risk_tier 等）に変換し、ポリシーチェック → 承認 → SaaS アダプタという一貫したパイプラインに流します。
 
 ## 解決する企業課題
 
-自然言語を直接 API に渡す設計では、LLM の出力がそのまま SaaS の書き込み操作になる。曖昧な指示・誤解釈・プロンプトインジェクションが実害を引き起こすリスクは高い。「顧客に連絡して」という一文から生成されたテキストがそのまま CRM の送信 API に渡る構造は、エンタープライズのガバナンス観点から到底許容できない。
+自然言語を直接 API に渡す設計では、LLM の出力がそのまま SaaS の書き込み操作になります。曖昧な指示・誤解釈・プロンプトインジェクションが実害を引き起こすリスクは高くなります。「顧客に連絡して」という一文から生成されたテキストがそのまま CRM の送信 API に渡る構造は、エンタープライズのガバナンス観点から到底許容できるものではありません。
 
-監査要件も深刻な問題だ。自然言語のログでは「誰が・どのエージェントを通じて・何を・なぜ実行したか」を正確に再現できない。規制対応や内部統制審査で操作の意図と実行内容の対応を証明できなければ、法的リスクに直結する。
+監査要件も深刻な問題です。自然言語のログでは「誰が・どのエージェントを通じて・何を・なぜ実行したか」を正確に再現できません。規制対応や内部統制審査で操作の意図と実行内容の対応を証明できなければ、法的リスクに直結します。
 
-SaaS の API 仕様変更も継続的な課題だ。Salesforce・Workday のバージョンアップのたびにエージェントのプロンプトやコードを修正する設計は維持コストが高い。エージェントと SaaS の間に安定した契約（Envelope）を置くことで、変更の影響を局所化できる。
+SaaS の API 仕様変更も継続的な課題です。Salesforce・Workday のバージョンアップのたびにエージェントのプロンプトやコードを修正する設計は維持コストが高くなります。エージェントと SaaS の間に安定した契約（Envelope）を置くことで、変更の影響を局所化できる点が大きな利点となります。
 
 !!! tip "最小成立条件（MVP）"
-    actor・target_system・action・params の4フィールドを持つ JSON スキーマを定義し、LLM 出力を必ずこのスキーマでバリデーションしてから後続処理に渡す構成。risk_tier や承認連携は後から追加できる。
+    actor・target_system・action・params の4フィールドを持つ JSON スキーマを定義し、LLM 出力を必ずこのスキーマでバリデーションしてから後続処理に渡す構成。risk_tier や承認連携は後から追加できます。
 
 ## 価値仮説
 
-操作の構造化により監査可能性と再現性を確保し、エージェントによる書き込み操作を安全に拡大する。書き込み自動化の拡大は業務プロセス全体の効率化に直結する。
+操作の構造化により監査可能性と再現性を確保し、エージェントによる書き込み操作を安全に拡大します。書き込み自動化の拡大は業務プロセス全体の効率化に直結します。
 
 ## 解決策と設計
 
-解決策の核心は「自然言語 UI とエンタープライズプロトコルを明示的に分離すること」だ。LLM は意図を解釈してエンティティを抽出し、その結果を検証済みの構造体（Command Envelope）に変換してから後続処理に渡す。エージェントの不確定性を Command Envelope というバリアで食い止める設計だ。
+解決策の核心は「自然言語 UI とエンタープライズプロトコルを明示的に分離すること」です。LLM は意図を解釈してエンティティを抽出し、その結果を検証済みの構造体（Command Envelope）に変換してから後続処理に渡します。エージェントの不確定性を Command Envelope というバリアで食い止める設計です。
 
-Command Envelope は以下のフィールドを持つ JSON オブジェクトである。
+Command Envelope は以下のフィールドを持つ JSON オブジェクトです。
 
 ```json
 {
@@ -53,7 +59,7 @@ Command Envelope は以下のフィールドを持つ JSON オブジェクトで
 }
 ```
 
-処理フローは以下の通りである。
+処理フローは以下の通りです。
 
 ```mermaid
 flowchart LR
@@ -71,21 +77,21 @@ flowchart LR
     REJECT --> AUDIT
 ```
 
-意図解析は LLM が担うが、その出力は Command Envelope スキーマでバリデーションする。スキーマ不適合の Envelope は後続処理に進めない。ポリシーエンジン（ID-7）は Envelope を入力として actor の権限・risk_tier・target_system の組み合わせを評価する。risk_tier はエージェントが自己申告するのではなく、ポリシーエンジンが Envelope の他フィールドから独立して算出する——この点が設計上の要所だ。
+意図解析は LLM が担いますが、その出力は Command Envelope スキーマでバリデーションします。スキーマ不適合の Envelope は後続処理に進めません。ポリシーエンジン（ID-7）は Envelope を入力として actor の権限・risk_tier・target_system の組み合わせを評価します。risk_tier はエージェントが自己申告するのではなく、ポリシーエンジンが Envelope の他フィールドから独立して算出します。この点が設計上の要所です。
 
 ## 向き／不向き
 
 | 向き | 不向き |
 |---|---|
 | 複数の SaaS への書き込み操作を伴う自動化業務 | 読み取り専用のクエリエージェント（書き込みリスクがなく Envelope の恩恵が薄い） |
-| ポリシーチェック・承認フロー・監査要件が厳しいエンタープライズ環境 | プロトタイプ段階で Envelope スキーマ設計のコストが高すぎる場合（後から導入も可能だが、初期に設計しておく方がよい） |
+| ポリシーチェック・承認フロー・監査要件が厳しいエンタープライズ環境 | プロトタイプ段階で Envelope スキーマ設計のコストが高すぎる場合（後から導入も可能ですが、初期に設計しておく方がよいです） |
 | 多様なエージェントが同一 SaaS を操作する環境（Envelope によりアダプタを共通化できる） | — |
 
 ## 要素技術・既存システム連携
 
 - JSON Schema：Command Envelope の構造定義とバリデーション
 - コマンドバス：Envelope を受け取り適切なハンドラへルーティングするメッセージング基盤
-- ドメインコマンドパターン（DDD）：Envelope はドメインコマンドとして設計する
+- ドメインコマンドパターン（DDD）：Envelope はドメインコマンドとして設計します
 - ポリシーエンジン：OPA、Cedar（ID-7）による Envelope の評価
 - 承認ワークフロー：RT-4 Human Approval Chain
 - SaaS アダプタ：IN-2（Salesforce、Workday、Slack 等）
@@ -93,17 +99,17 @@ flowchart LR
 
 ## 落とし穴／選定の勘所
 
-**自然言語を直接 API に渡す**。最も頻出するアンチパターンだ。「LLM が生成したテキストをそのまま API の引数にする」設計は、LLM の不確定性を本番システムに直接暴露する。どれほど小さな操作でも必ず Envelope を経由させること。
+**自然言語を直接 API に渡す**。最も頻出するアンチパターンです。「LLM が生成したテキストをそのまま API の引数にする」設計は、LLM の不確定性を本番システムに直接暴露します。どれほど小さな操作でも必ず Envelope を経由させてください。
 
-**Envelope スキーマの肥大化**。全ユースケースを1つのスキーマで吸収しようとすると、フィールドが膨大になり必須フィールドが曖昧になる。ドメインごとにコマンドタイプを分け、共通フィールドと拡張フィールドを明確に分離すること。
+**Envelope スキーマの肥大化**。全ユースケースを1つのスキーマで吸収しようとすると、フィールドが膨大になり必須フィールドが曖昧になります。ドメインごとにコマンドタイプを分け、共通フィールドと拡張フィールドを明確に分離してください。
 
-**risk_tier の自己申告**。エージェントが自分で risk_tier を設定する設計では、誤設定や意図的な低設定が発生しうる。risk_tier はポリシーエンジンが Envelope の他フィールドから独立して計算する設計にすること。
+**risk_tier の自己申告**。エージェントが自分で risk_tier を設定する設計では、誤設定や意図的な低設定が発生しえます。risk_tier はポリシーエンジンが Envelope の他フィールドから独立して計算するよう設計してください。
 
-**理由（reason）フィールドの形骸化**。reason を空文字列や定型文で埋めるだけでは、監査時の価値がない。reason はユーザの意図を忠実に言語化したものであり、LLM が要約・整形した説明文を入れること。
+**理由（reason）フィールドの形骸化**。reason を空文字列や定型文で埋めるだけでは、監査時の価値がありません。reason はユーザの意図を忠実に言語化したものであり、LLM が要約・整形した説明文を入れてください。
 
 ## Interfaces
 
-以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+以下はこのパターンを実装する際の主要インターフェイスです。コーディングエージェントはこの定義からスタブコードを生成できます。
 
 ```yaml
 interfaces:
@@ -241,8 +247,32 @@ interfaces:
 
 ## 関連パターン
 
-- [RT-4 Human Approval Chain](rt4-human-approval-chain.md)：補完関係。Envelope の `requires_approval` フラグを受けて、承認フローを起動する上位パターン。
-- [RT-6 System-of-Record Write Boundary](rt6-sor-write-boundary.md)：補完関係。Envelope がドメインサービスに渡り、SoR への書き込み境界を経由する設計と組み合わせる。
-- [ID-7 Policy-as-Code Guardrail](../id-identity/id7-policy-as-code-guardrail.md)：補完関係。Envelope のポリシーチェックを実行基盤側のガードレールとして実装する。
-- [IN-2 SaaS Adapter & Connector](../in-integration/in2-saas-connector-adapter.md)：補完関係。Envelope を受け取って各 SaaS の API を呼び出すアダプタ層。Envelope はアダプタとエージェントの安定した契約となる。
-- [OB-2 Unified Audit & Lineage](../ob-observability/ob2-unified-audit-lineage.md)：補完関係。Envelope とその実行結果を監査ログに記録し、操作の完全なトレーサビリティを確保する。
+- [RT-4 Human Approval Chain](rt4-human-approval-chain.md)：補完関係。Envelope の `requires_approval` フラグを受けて、承認フローを起動する上位パターンです。
+- [RT-6 System-of-Record Write Boundary](rt6-sor-write-boundary.md)：補完関係。Envelope がドメインサービスに渡り、SoR への書き込み境界を経由する設計と組み合わせます。
+- [ID-7 Policy-as-Code Guardrail](../id-identity/id7-policy-as-code-guardrail.md)：補完関係。Envelope のポリシーチェックを実行基盤側のガードレールとして実装します。
+- [IN-2 SaaS Adapter & Connector](../in-integration/in2-saas-connector-adapter.md)：補完関係。Envelope を受け取って各 SaaS の API を呼び出すアダプタ層です。Envelope はアダプタとエージェントの安定した契約となります。
+- [OB-2 Unified Audit & Lineage](../ob-observability/ob2-unified-audit-lineage.md)：補完関係。Envelope とその実行結果を監査ログに記録し、操作の完全なトレーサビリティを確保します。
+
+## Decision Summary
+
+```yaml
+decision_summary:
+  pattern: RT-5
+  participates_in:
+    - decision: TO-4
+      role: enabler
+    - decision: DC-1
+      role: enabler
+  recommended_if:
+    - "エージェントの書き込み操作を構造化して監査可能にする"
+    - "承認フローへの入力に機械可読な形式が必要"
+  avoid_if:
+    - "読み取り専用エージェント"
+  combines_with: [RT-4, RT-6, RT-7, ID-2]
+  conflicts_with: []
+  value_outcome:
+    drivers: [audit_compliance, automation]
+    kpis: [構造化コマンド変換率, 不正コマンド検知率]
+  mvp: "書き込み操作をJSON構造化し承認フローに接続"
+  cost: S
+```

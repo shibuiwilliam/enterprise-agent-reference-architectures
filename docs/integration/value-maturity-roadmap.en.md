@@ -8,7 +8,7 @@ status: done
 
 ## Overview
 
-The value of enterprise AI agents does not emerge overnight. This roadmap integrates the Executive's "value staircase," the change management roadmap from [Adoption & Change Management](adoption.md) (0-30 / 30-90 / 90+ days), the staged expansion of [TO-4 Read-only vs Write-capable](../selection/tradeoff/to4-readonly-vs-write.md), and the risk tiers of [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) into **a single company-wide page** — to show management "when, what value, on top of what governance."
+The value of enterprise AI agents does not emerge overnight. This roadmap integrates the Executive's "value staircase," the change management roadmap from [Adoption & Change Management](adoption.md) (0-30 / 30-90 / 90+ days), the staged expansion of [TO-4 Read-only vs Write-capable](../decisions/tradeoff/to4-readonly-vs-write.md), and the risk tiers of [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) into **a single company-wide page** — to show management "when, what value, on top of what governance."
 
 ## Four-Stage Value Maturity
 
@@ -99,5 +99,5 @@ This roadmap is a company-wide framework; specific use cases and KPIs by departm
 - [Combination Recipe](recipe.md) — Pattern introduction sequence and quick-win track
 - [AI Investment Portfolio Management](portfolio.md) — Investment allocation optimization by use case
 - [Use Case Selection Guide](usecase-selection-guide.md) — How to select initial use cases
-- [TO-4 Read-only vs Write-capable](../selection/tradeoff/to4-readonly-vs-write.md) — Technical decision axis for staged expansion
+- [TO-4 Read-only vs Write-capable](../decisions/tradeoff/to4-readonly-vs-write.md) — Technical decision axis for staged expansion
 - [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md) — Autonomy design based on risk tiers

@@ -31,7 +31,9 @@ Only `docs/` is published. `reference/` is writing material and is not published
 ├── pyproject.toml              # Dependencies managed by uv (mkdocs-material, pymdown-extensions)
 ├── uv.lock                     # uv lock file
 ├── .github/workflows/deploy.yml# GitHub Pages auto-deploy
-├── scripts/build_nav.sh        # Regenerate nav from docs tree
+├── scripts/
+│   ├── build_machine_index.py  # Generate docs/_machine/*.json from frontmatter
+│   └── check_sync.sh           # Check EN/JA file sync
 ├── reference/
 │   └── source-unified-enterprise.md   # Primary source (unpublished)
 └── docs/
@@ -80,7 +82,18 @@ Each pattern page has the following headings in this order. No section may be le
 7. `## Pitfalls & Selection Tips` — Typical anti-patterns and guidance for avoidance.
 8. `## Related Patterns` — Relative links to similar, complementary, or contrasting patterns.
 
-Frontmatter: `title` (`"<ID> <Name>"`), `description` (one sentence), `status` (`draft` → `done`).
+Frontmatter (required fields):
+
+- `title` (`"<ID> <Name>"`), `description` (one sentence), `status` (`draft` → `done`)
+- `pattern_id`, `facet`, `requires`, `required_by`, `applies_when`, `not_applicable_when`, `risk_tiers`, `key_technologies`
+- `decision_keys` — DC/TO IDs this pattern participates in
+- `value_drivers` — unified tags from `employee_efficiency`, `decision_quality`, `automation`, `revenue_growth`, `customer_value`, `audit_compliance`, `executive_decision`, `project_productivity`
+- `kpis` — representative GV-10-linked metrics
+- `maturity_stage` — `foundation` / `execution` / `value_loop`
+- `mvp` — one-sentence minimum viable configuration
+- `cost_orientation` — `S` / `M` / `L`
+
+Each page must end with a `## Decision Summary` section containing a `decision_summary:` YAML block. See `overview/schema.md` for the full specification.
 
 ### 4.2 Pattern List (All 45)
 

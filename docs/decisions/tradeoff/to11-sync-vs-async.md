@@ -1,0 +1,120 @@
+---
+title: "TO-11 同期 vs 非同期"
+description: "所要時間と承認フローの有無で処理方式を選択し、部分結果のストリーミングと重い処理の非同期化を組み合わせるハイブリッド設計指針。"
+status: done
+---
+
+# TO-11 同期 vs 非同期
+
+## 概要
+
+「今日の予定を教えて」は2秒で返ってほしいです。しかし「過去3年分の契約書を分析して」は数分かかっても構いません。途中で上長の承認が入る業務なら、承認待ちの間ずっとブラウザを開いたまま待つのは非現実的です。処理の所要時間と承認ステップの有無に応じて、同期・非同期・ハイブリッドをどう使い分けるかを示します。
+
+<!-- machine-readable decision rules for coding agents -->
+```yaml
+id: TO-11
+decision_rules:
+  - condition: "expected_duration_seconds <= 5 AND steps_include_human_approval == false AND operation_type == 'simple_qa'"
+    recommendation: synchronous
+    reason: "処理が数秒以内に完了するシンプルなQ&A・検索・文書要約等は同期処理が適切"
+  - condition: "expected_duration_seconds > 10 OR steps_include_human_approval == true"
+    recommendation: asynchronous
+    reason: "処理が10秒を超える、または多段階処理・承認待ちステップ・複数外部API呼び出しがある場合は非同期処理（RT-8）が必要"
+  - condition: "multi_system_transaction == true AND compensation_required == true"
+    recommendation: saga_transactional
+    reason: "複数システムにまたがる操作でトランザクション整合性が必要かつ途中失敗時の補償処理が必要な条件はSagaパターン（RT-7）"
+  - condition: "expected_duration_seconds > 5 AND expected_duration_seconds <= 30 AND ux_responsiveness_important == true"
+    recommendation: streaming_sync
+    reason: "LLMの生成結果をトークン単位でストリーミング配信する。数秒〜30秒程度の処理でユーザーは「読みながら待つ」体験になる"
+  - condition: "expected_duration_seconds <= 5 AND expected_duration_seconds > 10"
+    recommendation: hybrid_timeout_escalation
+    reason: "同期で開始した処理が想定時間を超えた場合、自動的に非同期モードに切り替え、完了通知をWebhookまたはメールで送る"
+```
+
+## 比較
+
+| 観点 | 同期処理 | 非同期処理（[RT-8](../../patterns/rt-runtime/rt8-durable-workflow.md)） |
+|---|---|---|
+| ユーザー体験 | リアルタイムで結果を受け取る | 完了後に通知・ポーリングで結果確認 |
+| 向き | 数秒で終わる対話・検索・Q&A | 10秒超・多段階処理・承認待ち業務 |
+| 障害耐性 | ネットワーク切断で処理消失 | 永続ストレージで状態を保持・再開可能 |
+| スケーラビリティ | コネクション維持がボトルネック | キューを介して並列処理しやすい |
+| 実装複雑さ | シンプル | 状態管理・通知機構が必要 |
+
+## 判断基準
+
+処理の特性に応じて同期・非同期・ハイブリッドを選びます。
+
+**同期処理が適切な条件**：
+
+- 処理が数秒以内に完了する
+- ユーザーが結果を即座に必要とし、待機できる
+- シンプルなQ&A・検索・文書要約等
+
+**非同期処理（[RT-8](../../patterns/rt-runtime/rt8-durable-workflow.md)）が必要な条件**：
+
+- 処理が10秒を超える、または所要時間が不定
+- 多段階の処理（情報収集→分析→承認→実行）を含む
+- 人間の承認待ち（[RT-4](../../patterns/rt-runtime/rt4-human-approval-chain.md)）ステップがある
+- 複数の外部APIを順次または並列に呼び出す
+- ネットワーク切断が起きても処理を継続・再開する必要がある
+
+**Sagaパターン（[RT-7](../../patterns/rt-runtime/rt7-enterprise-saga.md)）が必要な条件**：
+
+- 複数システムにまたがる操作でトランザクション整合性が必要
+- 途中失敗時の補償処理（ロールバック）が必要
+
+## ハイブリッド・段階的アプローチ
+
+部分結果を即ストリーム配信し、重い処理を非同期化するハイブリッドが実用的です。
+
+- **ストリーミング同期**：LLM の生成結果をトークン単位でストリーミング配信します。ユーザーは「待つ」のではなく「読みながら待つ」体験になります。数秒〜30 秒程度の処理に特に有効です。
+- **部分完了通知**：非同期タスクの中間状態（「情報収集完了」「承認待ち中」）をリアルタイムで通知し、ユーザーが進捗を把握できるようにします。
+- **タイムアウト昇格**：同期で開始した処理が想定時間を超えた場合、自動的に非同期モードに切り替え、完了通知を Webhook またはメールで送ります。
+
+段階的な導入順序：
+
+1. まず同期処理で基本機能を実装します。
+2. タイムアウトが頻発する処理を特定し、非同期化の対象とします。
+3. [RT-8](../../patterns/rt-runtime/rt8-durable-workflow.md) の永続ワークフローを導入し、承認待ちステップを安全に処理できるようにします。
+4. ストリーミング配信（[EX-1](../../patterns/ex-experience/ex1-enterprise-agent-gateway.md)）を追加し、長時間処理の UX を改善します。
+
+## 関連パターン
+
+- [RT-8 Durable Workflow](../../patterns/rt-runtime/rt8-durable-workflow.md)
+- [RT-7 Enterprise Saga](../../patterns/rt-runtime/rt7-enterprise-saga.md)
+- [EX-1 Enterprise Agent Gateway](../../patterns/ex-experience/ex1-enterprise-agent-gateway.md)
+
+## 候補と推奨
+
+| 状況／前提 | 推奨オプション | 必要パターン | 緩和トレードオフ |
+|---|---|---|---|
+| 数秒以内のQ&A・検索 | 同期処理（A） | EX-1, RT-3 | ネットワーク切断で処理消失 |
+| 10秒超・承認待ち・多段階処理 | 非同期処理（B） | RT-8, RT-4, RT-7 | 状態管理・通知機構の実装コスト |
+| ストリーミング＋タイムアウト昇格 | ハイブリッド（C） | EX-1, RT-8, RT-4 | UX設計・モード切替の複雑度 |
+
+```yaml
+decision:
+  id: TO-11
+  title: "同期 vs 非同期"
+  options:
+    - id: A
+      name: "Synchronous"
+      patterns: [EX-1, RT-3]
+      pros: [シンプル, リアルタイム応答, 実装容易]
+      cons: [ネットワーク切断で消失, スケーラビリティ限界]
+      pick_when: ["数秒以内の処理", "シンプルQ&A・検索", "承認ステップなし"]
+    - id: B
+      name: "Asynchronous"
+      patterns: [RT-8, RT-4, RT-7]
+      pros: [障害耐性, 承認待ち対応, スケーラブル]
+      cons: [状態管理・通知機構が必要, 実装複雑]
+      pick_when: ["10秒超の処理", "承認待ちステップあり", "複数API順次呼び出し"]
+    - id: C
+      name: "Hybrid (Streaming + Timeout Escalation)"
+      patterns: [EX-1, RT-8, RT-4]
+      pros: [UX最適化, 部分結果即時配信, 自動モード切替]
+      cons: [UX設計の複雑度, モード切替の実装コスト]
+      pick_when: ["処理時間が不定", "ストリーミング配信が有効", "段階的導入"]
+  default_recommendation: "同期(A)で開始し、タイムアウト頻発する処理をB/Cへ段階的に非同期化"
+```

@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "generated": "2026-05-28",
+  "resources": {
+    "patterns": {
+      "path": "patterns.json",
+      "description": "45 architecture patterns with metadata"
+    },
+    "decisions": {
+      "path": "decisions.json",
+      "description": "21 decision criteria (DC-1..DC-9, TO-1..TO-12)"
+    },
+    "value_loop": {
+      "path": "value-loop.json",
+      "description": "Value loop nodes and connections"
+    },
+    "departments": {
+      "path": "departments.json",
+      "description": "Department use cases and KPIs"
+    }
+  },
+  "value_drivers_vocabulary": [
+    "employee_efficiency",
+    "decision_quality",
+    "automation",
+    "revenue_growth",
+    "customer_value",
+    "audit_compliance",
+    "executive_decision",
+    "project_productivity"
+  ]
+}

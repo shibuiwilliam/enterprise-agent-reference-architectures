@@ -6,49 +6,49 @@ status: done
 
 # パターン選定ウィザード
 
-以下の質問に順番に答えると、あなたのシナリオに必要なパターンの最小セットが明らかになる。
+以下の質問に順番に答えると、あなたのシナリオに必要なパターンの最小セットが明らかになります。
 
 ## Q1: エージェントは外部顧客と直接やり取りするか？
 
-- **はい** → [ID-1 二面分離](patterns/id-identity/id1-workforce-customer-split.md) が必須。Q2へ進む。
-- **いいえ** → Q2へ進む。
+- **はい** → [ID-1 二面分離](patterns/id-identity/id1-workforce-customer-split.md) が必須です。Q2へ進んでください。
+- **いいえ** → Q2へ進んでください。
 
 ## Q2: 接続する SaaS の数は？
 
-- **0（社内システムのみ）** → Q3へ進む。
-- **1つ** → [IN-2 SaaS Adapter](patterns/in-integration/in2-saas-connector-adapter.md) を推奨。Q3へ進む。
-- **2つ以上** → [EX-1 Gateway](patterns/ex-experience/ex1-enterprise-agent-gateway.md) + [IN-1 Tool Gateway](patterns/in-integration/in1-tool-mcp-gateway.md) + [IN-2 SaaS Adapter](patterns/in-integration/in2-saas-connector-adapter.md) + [ID-2 OBO](patterns/id-identity/id2-identity-federation-obo.md) が必須。Q3へ進む。
+- **0（社内システムのみ）** → Q3へ進んでください。
+- **1つ** → [IN-2 SaaS Adapter](patterns/in-integration/in2-saas-connector-adapter.md) を推奨します。Q3へ進んでください。
+- **2つ以上** → [EX-1 Gateway](patterns/ex-experience/ex1-enterprise-agent-gateway.md) + [IN-1 Tool Gateway](patterns/in-integration/in1-tool-mcp-gateway.md) + [IN-2 SaaS Adapter](patterns/in-integration/in2-saas-connector-adapter.md) + [ID-2 OBO](patterns/id-identity/id2-identity-federation-obo.md) が必須です。Q3へ進んでください。
 
 ## Q3: SoR（基幹システム）への書き込みはあるか？
 
-- **いいえ（参照のみ）** → [KM-1 権限認識RAG](patterns/km-knowledge/km1-access-controlled-rag.md) を推奨。Q5へ進む。
-- **はい** → [RT-5 Command Envelope](patterns/rt-runtime/rt5-command-envelope.md) + [RT-6 SoR Write Boundary](patterns/rt-runtime/rt6-sor-write-boundary.md) が必須。Q4へ進む。
+- **いいえ（参照のみ）** → [KM-1 権限認識RAG](patterns/km-knowledge/km1-access-controlled-rag.md) を推奨します。Q5へ進んでください。
+- **はい** → [RT-5 Command Envelope](patterns/rt-runtime/rt5-command-envelope.md) + [RT-6 SoR Write Boundary](patterns/rt-runtime/rt6-sor-write-boundary.md) が必須です。Q4へ進んでください。
 
 ## Q4: 複数システムにまたがる多段処理があるか？
 
-- **はい** → [RT-7 Saga](patterns/rt-runtime/rt7-enterprise-saga.md) + [RT-8 Durable Workflow](patterns/rt-runtime/rt8-durable-workflow.md) を追加。Q5へ進む。
-- **いいえ** → Q5へ進む。
+- **はい** → [RT-7 Saga](patterns/rt-runtime/rt7-enterprise-saga.md) + [RT-8 Durable Workflow](patterns/rt-runtime/rt8-durable-workflow.md) を追加します。Q5へ進んでください。
+- **いいえ** → Q5へ進んでください。
 
 ## Q5: データの機密レベルは？
 
-- **公開情報のみ** → 最小限のアイデンティティパターンで十分。Q6へ進む。
-- **社内一般〜機密** → [ID-4 Permission Mirror](patterns/id-identity/id4-permission-mirror-least-of.md) + [KM-6 DLP](patterns/km-knowledge/km6-dlp-redaction-boundary.md) を追加。Q6へ進む。
-- **極秘（人事評価・M&A等）** → 上記に加え [KM-7 揮発セキュアバス](patterns/km-knowledge/km7-ephemeral-secure-context-bus.md) を追加。Q6へ進む。
+- **公開情報のみ** → 最小限のアイデンティティパターンで十分です。Q6へ進んでください。
+- **社内一般〜機密** → [ID-4 Permission Mirror](patterns/id-identity/id4-permission-mirror-least-of.md) + [KM-6 DLP](patterns/km-knowledge/km6-dlp-redaction-boundary.md) を追加します。Q6へ進んでください。
+- **極秘（人事評価・M&A等）** → 上記に加え [KM-7 揮発セキュアバス](patterns/km-knowledge/km7-ephemeral-secure-context-bus.md) を追加します。Q6へ進んでください。
 
 ## Q6: エージェントの起動方式は？
 
-- **ユーザーが呼び出す** → [ID-2 OBO](patterns/id-identity/id2-identity-federation-obo.md)（Q2で未追加なら追加）。Q7へ進む。
-- **イベント駆動（Webhook等）** → [RT-10 イベント駆動](patterns/rt-runtime/rt10-event-driven-orchestrator.md) + [ID-3 Workload Identity](patterns/id-identity/id3-workload-agent-identity.md) を追加。Q7へ進む。
-- **定時バッチ** → [ID-3 Workload Identity](patterns/id-identity/id3-workload-agent-identity.md) を追加。Q7へ進む。
+- **ユーザーが呼び出す** → [ID-2 OBO](patterns/id-identity/id2-identity-federation-obo.md)（Q2で未追加なら追加）。Q7へ進んでください。
+- **イベント駆動（Webhook等）** → [RT-10 イベント駆動](patterns/rt-runtime/rt10-event-driven-orchestrator.md) + [ID-3 Workload Identity](patterns/id-identity/id3-workload-agent-identity.md) を追加します。Q7へ進んでください。
+- **定時バッチ** → [ID-3 Workload Identity](patterns/id-identity/id3-workload-agent-identity.md) を追加します。Q7へ進んでください。
 
 ## Q7: 高リスク操作（金銭・契約・人事）を含むか？
 
-- **はい** → [RT-3 Risk-Tiered Autonomy](patterns/rt-runtime/rt3-risk-tiered-autonomy.md) + [RT-4 Human Approval](patterns/rt-runtime/rt4-human-approval-chain.md) + [ID-7 Policy-as-Code](patterns/id-identity/id7-policy-as-code-guardrail.md) を追加。
-- **いいえ** → スキップ。
+- **はい** → [RT-3 Risk-Tiered Autonomy](patterns/rt-runtime/rt3-risk-tiered-autonomy.md) + [RT-4 Human Approval](patterns/rt-runtime/rt4-human-approval-chain.md) + [ID-7 Policy-as-Code](patterns/id-identity/id7-policy-as-code-guardrail.md) を追加します。
+- **いいえ** → スキップします。
 
 ## 常に必須のパターン
 
-どの回答であっても、以下は本番環境で常に必須となる:
+どの回答であっても、以下は本番環境で常に必須となります。
 
 - [GV-1 Control Plane](patterns/gv-governance/gv1-agent-control-plane.md) — エージェント登録
 - [OB-2 Unified Audit](patterns/ob-observability/ob2-unified-audit-lineage.md) — 監査証跡
@@ -56,7 +56,7 @@ status: done
 
 ## コーディングエージェント向け：YAML 判定木
 
-以下の YAML をプログラム的に評価することで、質問への回答からパターンセットを自動導出できる。
+以下の YAML をプログラム的に評価することで、質問への回答からパターンセットを自動導出できます。
 
 ```yaml
 wizard:

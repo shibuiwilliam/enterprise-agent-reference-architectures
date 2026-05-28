@@ -24,11 +24,11 @@ This site is a practical reference built on the premise of organizations with te
 
     45 patterns across 7 planes, each described with a common schema.
 
-- :material-tune-variant: **[Degree Selection Criteria](selection/degree/index.md)**
+- :material-tune-variant: **[Degree Selection Criteria](decisions/degree/index.md)**
 
     How to set continuous parameters such as autonomy tier, budget, log three-layer separation, and guardrail strength.
 
-- :material-scale-balance: **[Tradeoff Selection Criteria](selection/tradeoff/index.md)**
+- :material-scale-balance: **[Tradeoff Selection Criteria](decisions/tradeoff/index.md)**
 
     Decision axes for binary choices such as OBO/SA, central lake/Mesh, Copilot/Autopilot.
 
@@ -38,7 +38,7 @@ This site is a practical reference built on the premise of organizations with te
 
 - :material-chart-line: **[Value Operation Pages](integration/value-maturity-roadmap.md)**
 
-    [Value Maturity Roadmap](integration/value-maturity-roadmap.md) · [Use Case Selection Guide](integration/usecase-selection-guide.md) · [GV-10 Three-Layer Value Measurement](patterns/gv-governance/gv10-two-layer-value-measurement.md) · [Adoption & Change Management](integration/adoption.md) · [AI Investment Portfolio](integration/portfolio.md) · [Department Use Cases](integration/departments/index.md).
+    [Value Maturity Roadmap](integration/value-maturity-roadmap.md) · [Use Case Selection Guide](integration/usecase-selection-guide.md) · [GV-10 Three-Layer Value Measurement](patterns/gv-governance/gv10-two-layer-value-measurement.md) · [Adoption & Change Management](integration/adoption.md) · [AI Investment Portfolio](integration/portfolio.md) · [Value Realization Anti-Patterns](integration/value-anti-patterns.md) · [Department Use Cases](integration/departments/index.md).
 
 </div>
 

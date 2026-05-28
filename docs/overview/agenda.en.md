@@ -12,7 +12,7 @@ status: done
 
 1. **[Design Principles](principles.md)** — Understand the core philosophy
 2. **[Pattern Catalog](../patterns/index.md)** — Browse patterns by facet to identify relevant ones
-3. **[Degree Criteria](../selection/degree/index.md)** and **[Tradeoff Criteria](../selection/tradeoff/index.md)** — Calibrate continuous parameters and binary choices
+3. **[Degree Criteria](../decisions/degree/index.md)** and **[Tradeoff Criteria](../decisions/tradeoff/index.md)** — Calibrate continuous parameters and binary choices
 4. **[Composition Recipes](../integration/recipe.md)** — Review proven pattern combinations
 5. **[Department Examples](../integration/departments/index.md)** — See concrete examples for your domain
 
@@ -20,49 +20,50 @@ status: done
 
 This reference is designed to help coding agents (Claude Code, Cursor, GitHub Copilot Workspace, etc.) assist in designing and developing software that integrates AI agents into enterprise systems.
 
-1. **Start here**: [`agent-digest.en.md`](../agent-digest.en.md) — A single-file digest of all patterns, selection criteria, dependency graph, and interface listings
-2. **Structured data**: [`patterns-index.yaml`](../patterns-index.yaml) — Machine-readable metadata for all patterns (requires, applies_when, interfaces). Filter by `applies_when` to match a scenario, resolve dependencies via `requires`
-3. **Decision support**: [`selection-rules.yaml`](../selection-rules.yaml) — Evaluable decision rules for tradeoffs (TO-1–TO-12) and degree criteria (DC-1–DC-9). Evaluate user constraints and return recommendations
+1. **Start here**: `agents.md` (repository root) — reasoning process, output template, and value driver vocabulary
+2. **Machine-readable data**: [`docs/_machine/`](../_machine/index.json) JSON files — all patterns, decision criteria, department use cases, and value loop as structured data
+    - `patterns.json` — 45 pattern metadata (applies_when, decision_keys, value_drivers, requires, etc.)
+    - `decisions.json` — all 21 DC/TO options and pick_when conditions
+    - `departments.json` — department-level value use cases and KPIs
+    - `value-loop.json` — 6-node value loop with cross-links
+3. **Decision guide**: [Decision Guide](../decisions/decision-guide.md) — scenario-based decision tables and decision flow
 4. **Detailed design**: Each pattern page has a `## Interfaces` section with YAML interface definitions. Generate stub code from these
-5. **Bulk ingestion**: For file-upload workflows, use `agent-digest.en.md`. For a larger bundle, use `assets/full-reference.en.md` (at the repository root)
+5. **Full guide**: [Coding Agent Guide](../coding-agent-guide/index.md) — detailed reasoning process, output templates, and machine-readable data reference
 
 !!! tip "Hint for Coding Agents"
-    When a user asks "design an AI agent system for [scenario]", start by loading `patterns-index.yaml`, filter patterns by `applies_when` matching the scenario, resolve dependencies via `requires`, then read the individual pattern pages for the matched set.
+    When a user asks "design an AI agent system for [scenario]", start by loading `patterns.json`, filter patterns by `applies_when` matching the scenario, resolve dependencies via `requires`, then read the individual pattern pages for the matched set.
 
 ### For Coding Agents: End-to-End Example
 
 **Scenario**: A user asks "Design a Sales AI agent that connects to Salesforce and Slack."
 
-**Step 1 — Load the scenario catalog**
+**Step 1 — Extract value_drivers and constraints from requirements**
 
-Read `docs/scenarios.yaml` and find the `sales_agent` scenario.
+Load `decisions.json` and identify relevant DC/TO. For a Sales scenario, TO-1 (OBO vs SA), DC-1 (risk tier), and TO-4 (Read/Write) are primary.
 
-→ Result: minimum = [EX-1, ID-2, ID-4, RT-5, RT-4, OB-2, GV-1, ID-6, ...]
+→ Result: value_drivers = [revenue_growth, employee_efficiency], constraints = [cross_saas, write_operations]
 
-**Step 2 — Resolve dependencies**
+**Step 2 — Select patterns and resolve dependencies**
 
-Read `docs/patterns-index.yaml` and check `requires` for each pattern. For example, ID-2 requires EX-1 and ID-6. Add any missing dependency patterns to the set.
+Filter `patterns.json` by matching `applies_when`, then recursively resolve `requires`.
 
-→ Result: Dependency-resolved minimum pattern set
+→ Result: [EX-1, ID-2, ID-4, RT-5, RT-4, IN-2, KM-5, OB-2, GV-1, ID-6, ...]
 
 **Step 3 — Read pattern details**
 
 For each pattern, read the `## Interfaces` section from the pattern page. Generate stub code from the `code_examples` TypeScript/Python type definitions.
 
-**Step 4 — Evaluate selection criteria**
+**Step 4 — Evaluate decision criteria**
 
-Set variables according to the `input_schema` in `docs/selection-rules.yaml`:
+Match each option's `pick_when` in `decisions.json` against requirements:
 
-- `purpose` = `personal_assistance`
-- `saas_supports_obo` = `true`
-- `data_classification` = `confidential`
-- `action_type` = `write_with_approval`
-
-Evaluate TO-1 → recommendation = obo. Evaluate DC-1 → CRM writes are tier 3 → require_approval.
+- TO-1: Personal CRM operations → OBO (option A)
+- DC-1: CRM writes = medium risk → Tier 2-3 (suggest + confirm)
+- TO-4: Deal updates required → Write-capable (staged)
 
 **Step 5 — Generate architecture**
 
-Combine the pattern designs into a system diagram and implementation plan.
+Follow the output template in `agents.md` to combine pattern designs into an architecture proposal.
 
 ## Core Thesis
 
@@ -243,11 +244,11 @@ The following shows which patterns and selection criteria in this reference addr
 
 | Standard / Risk Item | Corresponding Patterns / Selection Criteria |
 |---|---|
-| **OWASP: Prompt Injection** | [ID-7 Policy-as-Code Guardrail](../patterns/id-identity/id7-policy-as-code-guardrail.md), [TO-12 Prompt vs Platform](../selection/tradeoff/to12-prompt-vs-platform.md) |
+| **OWASP: Prompt Injection** | [ID-7 Policy-as-Code Guardrail](../patterns/id-identity/id7-policy-as-code-guardrail.md), [TO-12 Prompt vs Platform](../decisions/tradeoff/to12-prompt-vs-platform.md) |
 | **OWASP: Sensitive Information Disclosure** | [KM-1 Access-Controlled RAG](../patterns/km-knowledge/km1-access-controlled-rag.md), [KM-6 DLP & Redaction](../patterns/km-knowledge/km6-dlp-redaction-boundary.md), [ID-1 Two-Surface Separation](../patterns/id-identity/id1-workforce-customer-split.md) |
 | **OWASP: Excessive Agency** | [RT-3 Risk-Tiered Autonomy](../patterns/rt-runtime/rt3-risk-tiered-autonomy.md), [RT-6 SoR Write Boundary](../patterns/rt-runtime/rt6-sor-write-boundary.md), [ID-4 Permission Mirror](../patterns/id-identity/id4-permission-mirror-least-of.md) |
-| **OWASP: Unbounded Consumption** | [DC-2 Timeout, Retry, Budget](../selection/degree/dc2-timeout-retry-budget.md), [GV-8 Cost Quota & Chargeback](../patterns/gv-governance/gv8-cost-quota-chargeback.md) |
-| **NIST AI RMF: Generative AI Risk Management** | [GV-7 Evaluation Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md), [GV-4 Industry Policy Pack](../patterns/gv-governance/gv4-industry-policy-pack.md), [DC-1 Autonomy Tier](../selection/degree/dc1-risk-tier-boundary.md) |
+| **OWASP: Unbounded Consumption** | [DC-2 Timeout, Retry, Budget](../decisions/degree/dc2-timeout-retry-budget.md), [GV-8 Cost Quota & Chargeback](../patterns/gv-governance/gv8-cost-quota-chargeback.md) |
+| **NIST AI RMF: Generative AI Risk Management** | [GV-7 Evaluation Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md), [GV-4 Industry Policy Pack](../patterns/gv-governance/gv4-industry-policy-pack.md), [DC-1 Autonomy Tier](../decisions/degree/dc1-risk-tier-boundary.md) |
 | **NIST SP 800-207: Zero Trust** | [ID-6 Zero-Trust PDP/PEP](../patterns/id-identity/id6-zero-trust-pdp-pep.md), [ID-2 OBO Delegation](../patterns/id-identity/id2-identity-federation-obo.md), [ID-5 JIT Credentials](../patterns/id-identity/id5-jit-scoped-credentials.md) |
 | **RFC 8693: Token Exchange** | [ID-2 OBO Delegation](../patterns/id-identity/id2-identity-federation-obo.md) |
 | **OPA/Rego · Cedar** | [ID-7 Policy-as-Code Guardrail](../patterns/id-identity/id7-policy-as-code-guardrail.md) |
@@ -260,7 +261,7 @@ The following shows which patterns and selection criteria in this reference addr
 1. **This chapter**: Thesis, integration principles, foundational concepts, 7-plane architecture, standards alignment
 2. **[Item Design and Plane Classification](schema.md)**: Description schema for each pattern and plane (category) design
 3. **[Pattern Catalog](../patterns/index.md)**: The body of 7 planes · 45 patterns (Experience 3 + Governance 10 + Identity 8 + Runtime 11 + Knowledge 7 + Integration 4 + Observability 2)
-4. **[Degree Selection Criteria](../selection/degree/index.md)**: How to set continuous parameters (9 items)
-5. **[Tradeoff Selection Criteria](../selection/tradeoff/index.md)**: Decision axes for binary choices (12 items)
+4. **[Degree Selection Criteria](../decisions/degree/index.md)**: How to set continuous parameters (9 items)
+5. **[Tradeoff Selection Criteria](../decisions/tradeoff/index.md)**: Decision axes for binary choices (12 items)
 6. **[Integration & Combination](../integration/dependency-chain.md)**: Dependency chains, cross-cutting axes, combination recipes, department use cases, reference architectures
 7. **[Glossary](../glossary.md)**: Definitions of specialized terms

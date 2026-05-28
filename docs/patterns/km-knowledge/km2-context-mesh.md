@@ -10,30 +10,36 @@ applies_when: [confidential_data, data_residency, cross_saas, audit_required]
 not_applicable_when: [public_data_only, real_time_latency]
 risk_tiers: [2, 3, 4]
 key_technologies: [Federated Search, Context Router, Retrieval Proxy, Embedding Index per Scope, JIT Retrieval]
+decision_keys: [TO-2]
+value_drivers: [employee_efficiency, executive_decision]
+kpis: ["フェデレーション成功率", "横断クエリ応答時間"]
+maturity_stage: execution
+mvp: "2〜3データソースをフェデレーション接続しACLを維持"
+cost_orientation: M
 ---
 
 # KM-2 Access-Controlled Context Mesh（フェデレーテッド文脈）
 
 ## 概要
 
-Salesforce の案件情報も Workday の人事データも「一箇所に集めれば便利」に見える。だがコピーした時点で元の権限モデルは崩れる。このパターンはデータを集約せず、本人の OBO トークンで各 SaaS に分散問い合わせ（フェデレーション）してリアルタイムに文脈を取得する。公開情報は中央ベクトル DB でインデックス化し、機密 SaaS データは JIT 取得するハイブリッド構成が実務的な解だ。データ所在地規制への対応もしやすくなる。
+Salesforce の案件情報も Workday の人事データも「一箇所に集めれば便利」に見えます。しかしコピーした時点で元の権限モデルは崩れます。このパターンはデータを集約せず、本人の OBO トークンで各 SaaS に分散問い合わせ（フェデレーション）してリアルタイムに文脈を取得します。公開情報は中央ベクトル DB でインデックス化し、機密 SaaS データは JIT 取得するハイブリッド構成が実務的な解です。データ所在地規制への対応もしやすくなります。
 
 ## 解決する企業課題
 
-全社データレイクや統一ベクトル DB に機密データを集約すると、複数の問題が同時に発生する。データをコピーした時点で元の権限モデルが失われる（[KM-1](km1-access-controlled-rag.md) の ACL 問題）。さらに Salesforce の案件情報・Workday の人事データが一つのインデックスに混在すると、ユーザーの所属や役職に関係なく全データが参照対象になりうる。コピーが増えるほど監査・データカタログ・変更追跡も複雑になる。
+全社データレイクや統一ベクトル DB に機密データを集約すると、複数の問題が同時に発生します。データをコピーした時点で元の権限モデルが失われます（[KM-1](km1-access-controlled-rag.md) の ACL 問題）。さらに Salesforce の案件情報・Workday の人事データが一つのインデックスに混在すると、ユーザーの所属や役職に関係なく全データが参照対象になりえます。コピーが増えるほど、監査・データカタログ・変更追跡も複雑になっていきます。
 
-データ所在地規制（GDPR、個人情報保護法）の観点でも、データを本国外インフラにコピーすることが制約となるケースがある。フェデレーション型は「集約しない」を設計原則とし、権限・規制・監査の三課題を一度に解決する。KM-1 との使い分けとしては、ACL を確実に同梱できる文書系は KM-1 でインデックス化し、機密 SaaS データは本パターンで JIT 取得するハイブリッドが実務的な解だ。
+データ所在地規制（GDPR、個人情報保護法）の観点でも、データを本国外インフラにコピーすることが制約となるケースがあります。フェデレーション型は「集約しない」を設計原則とし、権限・規制・監査の三課題を一度に解決します。KM-1 との使い分けとしては、ACL を確実に同梱できる文書系は KM-1 でインデックス化し、機密 SaaS データは本パターンで JIT 取得するハイブリッドが実務的な解になります。
 
 !!! tip "最小成立条件（MVP）"
-    2〜3 の SaaS に対する Context Provider を用意し、本人の OBO トークンで JIT 取得する構成。Context Router の並列化やキャッシュは後続で追加すればよく、まずは「コピーせず都度取得」の原則を1業務で実証する。
+    2〜3 の SaaS に対する Context Provider を用意し、本人の OBO トークンで JIT 取得する構成。Context Router の並列化やキャッシュは後続で追加すればよく、まずは「コピーせず都度取得」の原則を1業務で実証します。
 
 ## 価値仮説
 
-複数SaaSの文脈を横断統合することで、部門を越えた知見を活用した高品質な判断支援を実現する。サイロ化された情報の統合は経営判断の精度向上と機会損失の削減に効く。
+複数SaaSの文脈を横断統合することで、部門を越えた知見を活用した高品質な判断支援を実現します。サイロ化された情報の統合は経営判断の精度向上と機会損失の削減に効きます。
 
 ## 解決策と設計
 
-Context Router がクエリを各 Context Provider に分散し、各プロバイダが ACL-aware な取得で権限を維持したまま結果を収集する。機密データは集約せずに、本人の OBO トークンで都度取得する。
+Context Router がクエリを各 Context Provider に分散し、各プロバイダが ACL-aware な取得で権限を維持したまま結果を収集します。機密データは集約せずに、本人の OBO トークンで都度取得します。
 
 ```mermaid
 flowchart LR
@@ -54,7 +60,7 @@ flowchart LR
     PKG --> LLM[LLM処理]
 ```
 
-各 Context Provider は本人の OBO トークン（[ID-2](../id-identity/id2-identity-federation-obo.md)）で SaaS を呼び、見てよいデータのみを返す。OBO 非対応の SaaS では [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) で権限フィルタを適用する。Context Router は各プロバイダへの問い合わせを並列実行し、プロバイダごとに独立したタイムアウトで応答を待つ。取得した結果は Context Package にまとめ、[KM-5](km5-purpose-bound-context.md) の目的ポリシーで最終フィルタリングしてから LLM に渡す形だ。
+各 Context Provider は本人の OBO トークン（[ID-2](../id-identity/id2-identity-federation-obo.md)）で SaaS を呼び、見てよいデータのみを返します。OBO 非対応の SaaS では [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) で権限フィルタを適用します。Context Router は各プロバイダへの問い合わせを並列実行し、プロバイダごとに独立したタイムアウトで応答を待ちます。取得した結果は Context Package にまとめ、[KM-5](km5-purpose-bound-context.md) の目的ポリシーで最終フィルタリングしてから LLM に渡します。
 
 ## 向き／不向き
 
@@ -75,15 +81,15 @@ flowchart LR
 ## 落とし穴／選定の勘所
 
 !!! warning "レイテンシを嫌い集約に戻る罠"
-    レイテンシを嫌い結局コピーに戻り ACL 同梱を怠ると、権限保証が崩れる。レイテンシ改善はキャッシュ（短 TTL）・並列取得・プリフェッチで対処し、コピーは最終手段とする。コピーする場合は必ず ACL を同梱し（[KM-1](km1-access-controlled-rag.md)）、検索時の再評価を実装する。
+    レイテンシを嫌い結局コピーに戻り ACL 同梱を怠ると、権限保証が崩れます。レイテンシ改善はキャッシュ（短 TTL）・並列取得・プリフェッチで対処し、コピーは最終手段とします。コピーする場合は必ず ACL を同梱し（[KM-1](km1-access-controlled-rag.md)）、検索時の再評価を実装します。
 
-- 公開社内規程は中央ベクトル DB へ、機密 SaaS データは本人トークンでの JIT 取得へ——ハイブリッドが実務的な解である。設計初期に「各データ源をどちらに分類するか」を整理しておく。
-- 「速いから機密も索引化」は禁忌。索引化する場合も ACL 同梱（[KM-1](km1-access-controlled-rag.md)）を必須にする。
-- Context Provider の数が増えるとレイテンシが線形に伸びる可能性がある。並列取得とプロバイダごとの独立タイムアウトを設計し、一部プロバイダの遅延が全体をブロックしないようにする。
+- 公開社内規程は中央ベクトル DB へ、機密 SaaS データは本人トークンでの JIT 取得へ——ハイブリッドが実務的な解です。設計初期に「各データ源をどちらに分類するか」を整理しておきましょう。
+- 「速いから機密も索引化」は禁忌です。索引化する場合も ACL 同梱（[KM-1](km1-access-controlled-rag.md)）を必須にします。
+- Context Provider の数が増えるとレイテンシが線形に伸びる可能性があります。並列取得とプロバイダごとの独立タイムアウトを設計し、一部プロバイダの遅延が全体をブロックしないようにします。
 
 ## Interfaces
 
-以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+以下はこのパターンを実装する際の主要インターフェイスです。コーディングエージェントはこの定義からスタブコードを生成できます。
 
 ```yaml
 interfaces:
@@ -220,5 +226,27 @@ interfaces:
 - [KM-1 Access-Controlled RAG](km1-access-controlled-rag.md) — 対比：索引化する場合の ACL 同梱アプローチ（集約型 vs. フェデレーション型の使い分け）
 - [ID-2 Identity Federation & OBO](../id-identity/id2-identity-federation-obo.md) — 補完：本人トークンでの JIT 取得を支える委譲トークン発行
 - [ID-4 Permission Mirror](../id-identity/id4-permission-mirror-least-of.md) — 補完：OBO 非対応 SaaS での権限フィルタ適用
-- [KM-5 Purpose-Bound Context](km5-purpose-bound-context.md) — 補完：フェデレーション取得結果を業務目的に限定する
+- [KM-5 Purpose-Bound Context](km5-purpose-bound-context.md) — 補完：フェデレーション取得結果を業務目的に限定します
 - [IN-2 SaaS Connector Adapter](../in-integration/in2-saas-connector-adapter.md) — 補完：各 Context Provider の SaaS 固有差を吸収するアダプタ層
+
+## Decision Summary
+
+```yaml
+decision_summary:
+  pattern: KM-2
+  participates_in:
+    - decision: TO-2
+      role: option_b
+  recommended_if:
+    - "データソースが分散しており中央集約が困難"
+    - "各データソースの権限モデルを維持したい"
+  avoid_if:
+    - "中央データレイクに全データを集約済み"
+  combines_with: [KM-1, KM-3, ID-4]
+  conflicts_with: []
+  value_outcome:
+    drivers: [employee_efficiency, executive_decision]
+    kpis: [フェデレーション成功率, 横断クエリ応答時間]
+  mvp: "2〜3データソースをフェデレーション接続"
+  cost: M
+```

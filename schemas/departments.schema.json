@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Departments Index",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "name"],
+    "properties": {
+      "id": {"type": "string"},
+      "name": {"type": "string"},
+      "value_usecases": {"type": "array", "items": {"type": "string"}},
+      "kpis": {"type": "array", "items": {"type": "string"}},
+      "value_ladder": {"type": "array", "items": {"type": "string"}},
+      "applied_patterns": {"type": "array", "items": {"type": "string"}},
+      "value_drivers": {"type": "array", "items": {"type": "string"}}
+    }
+  }
+}

@@ -10,30 +10,36 @@ applies_when: [cross_saas, multi_agent, enterprise_scale]
 not_applicable_when: [single_team, poc_phase]
 risk_tiers: [1, 2, 3]
 key_technologies: [Adapter Pattern, "Anti-Corruption Layer", OpenAPI, GraphQL Federation, Connector SDK, Error Normalization]
+decision_keys: [TO-9]
+value_drivers: [automation, revenue_growth]
+kpis: ["SaaS接続成功率", "API変更追従リードタイム"]
+maturity_stage: foundation
+mvp: "主要SaaS 2〜3本にアダプター層を構築"
+cost_orientation: M
 ---
 
 # IN-2 SaaS Connector Adapter（腐敗防止）
 
 ## 概要
 
-Salesforce は REST、Workday は SOAP、ServiceNow は Table API——SaaS ごとに API 仕様がバラバラで、その差がプロンプトやロジックに染み出すと保守が地獄になる。このパターンは SaaS 固有の差をアダプタに閉じ込め、エージェントには `get_customer`・`create_ticket` のような業務語彙だけを見せる腐敗防止層（Anti-Corruption Layer）だ。SaaS を差し替えても影響はアダプタ内部で完結する。
+Salesforce は REST、Workday は SOAP、ServiceNow は Table API——SaaS ごとに API 仕様がバラバラで、その差がプロンプトやロジックに染み出すと保守が地獄になります。このパターンは SaaS 固有の差をアダプタに閉じ込め、エージェントには `get_customer`・`create_ticket` のような業務語彙だけを見せる腐敗防止層（Anti-Corruption Layer）です。SaaS を差し替えても影響はアダプタ内部で完結します。
 
 ## 解決する企業課題
 
-複数の SaaS を横断するエージェントシステムを構築すると、各 SaaS の独自仕様がプロンプトやオーケストレーションロジックに染み出す「保守地獄」が生じる。Salesforce の REST API、Workday の SOAP、ServiceNow の Table API——それぞれ認証方式・レート制限・エラーコード・ページネーション仕様が異なる。これらの差異が上流に露出すると、SaaS 仕様変更のたびにプロンプトやロジックへの修正が波及してしまう。
+複数の SaaS を横断するエージェントシステムを構築すると、各 SaaS の独自仕様がプロンプトやオーケストレーションロジックに染み出す「保守地獄」が生じます。Salesforce の REST API、Workday の SOAP、ServiceNow の Table API——それぞれ認証方式・レート制限・エラーコード・ページネーション仕様が異なります。これらの差異が上流に露出すると、SaaS 仕様変更のたびにプロンプトやロジックへの修正が波及してしまいます。
 
-SaaS の差し替えや追加（例：ServiceNow から Jira Service Management への移行）が必要になったとき、アダプタ層がなければ影響範囲が全エージェント・全プロンプトに及ぶ。腐敗防止層はこの変更の影響をアダプタ内部に閉じ込める。認証方式の差異（OAuth 2.0 / API Key / SAML）も吸収するため、上流はビジネスロジックに専念できる。
+SaaS の差し替えや追加（例：ServiceNow から Jira Service Management への移行）が必要になったとき、アダプタ層がなければ影響範囲が全エージェント・全プロンプトに及びます。腐敗防止層はこの変更の影響をアダプタ内部に閉じ込める利点があります。認証方式の差異（OAuth 2.0 / API Key / SAML）も吸収するため、上流はビジネスロジックに専念できます。
 
 !!! tip "最小成立条件（MVP）"
-    最も利用頻度の高い SaaS 1つに対し、3つの主要操作（例：get / create / update）を共通インターフェイスで定義したアダプタを1本作る。共通モデルの網羅性より「プロンプトから SaaS 固有語彙を排除する」ことを優先する。
+    最も利用頻度の高い SaaS 1つに対し、3つの主要操作（例：get / create / update）を共通インターフェイスで定義したアダプタを1本作ります。共通モデルの網羅性より「プロンプトから SaaS 固有語彙を排除する」ことを優先します。
 
 ## 価値仮説
 
-SaaS固有のAPI差異を吸収し、エージェントの業務カバー範囲を低コストで拡張する。接続先SaaSが増えるほど、横断的な業務自動化の価値が非線形に増大する。
+SaaS固有のAPI差異を吸収し、エージェントの業務カバー範囲を低コストで拡張します。接続先SaaSが増えるほど、横断的な業務自動化の価値が非線形に増大します。
 
 ## 解決策と設計
 
-エージェントのコマンドは業務語彙で記述し、SaaS Adapter が各 SaaS の固有仕様に変換する。スキル/プロンプトは業務語彙で書き、SaaS 差し替え時の影響を局所化する。
+エージェントのコマンドは業務語彙で記述し、SaaS Adapter が各 SaaS の固有仕様に変換します。スキル/プロンプトは業務語彙で書き、SaaS 差し替え時の影響を局所化します。
 
 ```mermaid
 flowchart LR
@@ -52,7 +58,7 @@ flowchart LR
     AD5 --> CS[独自 API]
 ```
 
-各アダプタは対象 SaaS の認証・ページネーション・レート制限・エラー形式をカプセル化する。共通インターフェイスは業務語彙（例：`get_customer`、`create_ticket`、`update_opportunity`）で定義し、Salesforce の Account ID と Workday の Worker ID のような内部概念の差異はアダプタが吸収する。エラー正規化（各 SaaS のエラーコードを共通エラー型に変換）もアダプタの責務だ。
+各アダプタは対象 SaaS の認証・ページネーション・レート制限・エラー形式をカプセル化します。共通インターフェイスは業務語彙（例：`get_customer`、`create_ticket`、`update_opportunity`）で定義します。Salesforce の Account ID と Workday の Worker ID のような内部概念の差異はアダプタが吸収し、エラー正規化（各 SaaS のエラーコードを共通エラー型に変換）もアダプタの責務となります。
 
 ## 向き／不向き
 
@@ -74,15 +80,15 @@ flowchart LR
 ## 落とし穴／選定の勘所
 
 !!! warning "共通モデルの作り込みすぎ"
-    共通モデルを作り込みすぎると実態と乖離する。薄く必要分だけ翻訳し、SaaS 固有の機能が必要な場合はパススルーも許容する。最初は「3つの主要操作を共通化する」程度から始め、過剰な抽象化を避ける。
+    共通モデルを作り込みすぎると実態と乖離します。薄く必要分だけ翻訳し、SaaS 固有の機能が必要な場合はパススルーも許容します。最初は「3つの主要操作を共通化する」程度から始め、過剰な抽象化を避けます。
 
-- アダプタの認可粒度が粗いと権限忠実性（[ID-4](../id-identity/id4-permission-mirror-least-of.md)）が崩れる。万能サービスアカウント1個でアダプタを動かすと、エージェントのユーザーに関係なく全権限でアクセスしてしまう。SaaS 側の権限モデルを忠実に伝播する設計が必要だ。
-- SaaS の API バージョンアップをアダプタで吸収し、上流のエージェントに影響を波及させない。アダプタにバージョン管理を持ち、旧 API から新 API への移行はアダプタ内で完結させる。
-- アダプタのテストは SaaS の Sandbox 環境で行い、本番 API への副作用を防ぐこと。
+- アダプタの認可粒度が粗いと権限忠実性（[ID-4](../id-identity/id4-permission-mirror-least-of.md)）が崩れます。万能サービスアカウント1個でアダプタを動かすと、エージェントのユーザーに関係なく全権限でアクセスしてしまいます。SaaS 側の権限モデルを忠実に伝播する設計が必要です。
+- SaaS の API バージョンアップをアダプタで吸収し、上流のエージェントに影響を波及させません。アダプタにバージョン管理を持ち、旧 API から新 API への移行はアダプタ内で完結させます。
+- アダプタのテストは SaaS の Sandbox 環境で行い、本番 API への副作用を防いでください。
 
 ## Interfaces
 
-以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+以下はこのパターンを実装する際の主要インターフェイスです。コーディングエージェントはこの定義からスタブコードを生成できます。
 
 ```yaml
 interfaces:
@@ -218,8 +224,30 @@ interfaces:
 
 ## 関連パターン
 
-- [IN-1 Tool / MCP Gateway](in1-tool-mcp-gateway.md) — 補完：アダプタを Gateway 配下で統制し認証・認可・監査を一元適用する
+- [IN-1 Tool / MCP Gateway](in1-tool-mcp-gateway.md) — 補完：アダプタを Gateway 配下で統制し認証・認可・監査を一元適用します
 - [IN-4 Existing iPaaS Reuse](in4-existing-ipaas-reuse.md) — 類似：既存統合資産（MuleSoft/Workato 等）をアダプタとして再利用するアプローチ
 - [RT-5 Command Envelope](../rt-runtime/rt5-command-envelope.md) — 補完：業務語彙でのコマンド記述と実行エンベロープ
-- [KM-3 Canonical Object](../km-knowledge/km3-canonical-object-knowledge-graph.md) — 補完：各 SaaS のデータを正準オブジェクトに変換する
-- [ID-2 Identity Federation & OBO](../id-identity/id2-identity-federation-obo.md) — 補完：アダプタ経由でも OBO トークンを伝播して権限を忠実に渡す
+- [KM-3 Canonical Object](../km-knowledge/km3-canonical-object-knowledge-graph.md) — 補完：各 SaaS のデータを正準オブジェクトに変換します
+- [ID-2 Identity Federation & OBO](../id-identity/id2-identity-federation-obo.md) — 補完：アダプタ経由でも OBO トークンを伝播して権限を忠実に渡します
+
+## Decision Summary
+
+```yaml
+decision_summary:
+  pattern: IN-2
+  participates_in:
+    - decision: TO-9
+      role: option_a
+  recommended_if:
+    - "複数SaaSのAPI差異を吸収したい"
+    - "SaaS APIの変更に追従する保守コストを下げたい"
+  avoid_if:
+    - "単一SaaSのみでアダプター不要"
+  combines_with: [IN-1, IN-3, ID-2]
+  conflicts_with: []
+  value_outcome:
+    drivers: [automation, revenue_growth]
+    kpis: [SaaS接続成功率, API変更追従リードタイム]
+  mvp: "主要SaaS 2〜3本にアダプター層を構築"
+  cost: M
+```

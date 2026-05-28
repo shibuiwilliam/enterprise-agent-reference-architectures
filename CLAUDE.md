@@ -21,7 +21,7 @@ uv sync
 ```bash
 uv run mkdocs serve              # Local preview (http://127.0.0.1:8000, hot reload)
 uv run mkdocs build --strict     # Production-equivalent build. Treats link breaks & nav mismatches as errors
-bash scripts/build_nav.sh        # Regenerate nav from docs tree
+uv run python scripts/build_machine_index.py  # Regenerate machine-readable JSON indexes
 ```
 
 **Always pass `mkdocs build --strict` before committing.** Zero warnings is the quality gate.
@@ -84,9 +84,9 @@ status: done
 
 ## Navigation (nav) Handling
 
-- When adding or renaming pages, update `nav` in `mkdocs.yml`.
-- After adding/removing files, run **`bash scripts/build_nav.sh`** to regenerate nav safely (prevents title misses and ordering issues).
-- After regeneration, check `git diff mkdocs.yml` to ensure hand-edited sections are not broken.
+- When adding or renaming pages, update `nav` in `mkdocs.yml` manually.
+- After modifying pattern/decision/department pages, run **`uv run python scripts/build_machine_index.py`** to regenerate `docs/_machine/*.json`.
+- After nav changes, check `git diff mkdocs.yml` to ensure no unintended differences.
 
 ## Deploy
 

@@ -10,28 +10,34 @@ applies_when: [enterprise_scale, confidential_data, external_llm_api, cost_mgmt_
 not_applicable_when: [poc_phase, single_team]
 risk_tiers: [1, 2, 3, 4, 5]
 key_technologies: [LiteLLM, Portkey Proxy, Amazon Bedrock, "Azure OpenAI (VNet integration)", vLLM, "TGI (Text Generation Inference)", "KM-6 DLP & Redaction Boundary"]
+decision_keys: [TO-10, DC-8]
+value_drivers: [audit_compliance, automation]
+kpis: ["モデル利用の可視化率", "非承認モデル利用件数", "レイテンシP95"]
+maturity_stage: foundation
+mvp: "単一ゲートウェイで全LLM呼び出しを中継しログ記録"
+cost_orientation: M
 ---
 
 # GV-5 Central Model Gateway（モデル・ベンダー統制）
 
 ## 概要
 
-社内のあらゆる LLM 呼び出しが必ず通るモデル専用ゲートウェイを置く。承認されていないモデルは使えず、極秘データは VPC 内の社内推論基盤へ、一般データは外部 API（Bedrock や Azure OpenAI）へと自動で振り分けられる。各チームが勝手に外部 LLM に機密を送る事態を構造的に防ぎ、ベンダー管理・データ所在地・PII 検出・コスト計測・監査をこの一箇所でまとめて制御する。
+社内のあらゆる LLM 呼び出しが必ず通るモデル専用ゲートウェイを置きます。承認されていないモデルは使えず、極秘データは VPC 内の社内推論基盤へ、一般データは外部 API（Bedrock や Azure OpenAI）へと自動で振り分けられます。各チームが勝手に外部 LLM に機密を送る事態を構造的に防ぎ、ベンダー管理・データ所在地・PII 検出・コスト計測・監査をこの一箇所でまとめて制御できます。
 
 ## 解決する企業課題
 
-各チームが独自に外部 LLM API を直接呼び出す運用が定着すると、機密データが承認なしに外部へ送信される事故が起きる。どのチームがどのモデルを使っているか把握できず、ベンダーが乱立してコストも不可視になる。データ所在地（リージョン）要件や DPA（データ処理契約）が守られているかを確認する手段もなくなっていく。プロバイダが無告知でモデルを更新すると挙動の変化を検知できない。LLM 呼び出しのコストを部門別に集計できなければ、コスト配賦（GV-8）も ROI 計測（GV-10）も成立しない。これらをすべて個別管理しようとすると統制コストが爆発する——Gateway を唯一の通路にすることで、まとめて解決できる。
+各チームが独自に外部 LLM API を直接呼び出す運用が定着すると、機密データが承認なしに外部へ送信される事故が起きます。どのチームがどのモデルを使っているか把握できず、ベンダーが乱立してコストも不可視になります。データ所在地（リージョン）要件や DPA（データ処理契約）が守られているかを確認する手段もなくなっていきます。プロバイダが無告知でモデルを更新すると挙動の変化を検知できません。LLM 呼び出しのコストを部門別に集計できなければ、コスト配賦（GV-8）も ROI 計測（GV-10）も成立しません。これらをすべて個別管理しようとすると統制コストが爆発します——Gateway を唯一の通路にすることで、まとめて解決できます。
 
 !!! tip "最小成立条件（MVP）"
-    LiteLLM 等のプロキシを1台立て、承認済みモデルのホワイトリストと egress 制御による直接 API 呼び出しの遮断を設定する。PII 検出やデータ分類ルーティングは段階的に追加すればよい。
+    LiteLLM 等のプロキシを1台立て、承認済みモデルのホワイトリストと egress 制御による直接 API 呼び出しの遮断を設定します。PII 検出やデータ分類ルーティングは段階的に追加すればよいです。
 
 ## 価値仮説
 
-モデル利用の一元管理によりAPI費用の可視化と最適化を実現し、AI運用コストを削減する。モデル切替・更新を集中制御することで、全社のAI品質維持コストも低減する。
+モデル利用の一元管理により API 費用の可視化と最適化が実現し、AI 運用コストを削減できます。モデル切り替え・更新を集中制御することで、全社の AI 品質維持コストも低減します。
 
 ## 解決策と設計
 
-承認済みモデルのみ許可し、データ分類に応じてルーティングする。極秘データは VPC 内/社内推論基盤へ、一般データは外部 API へ振り分ける。DPA・リージョン・保持ポリシーを強制し、本文はストレージに退避してメタデータのみ監査に送る。
+承認済みモデルのみ許可し、データ分類に応じてルーティングします。極秘データは VPC 内/社内推論基盤へ、一般データは外部 API へ振り分けます。DPA・リージョン・保持ポリシーを強制し、本文はストレージに退避してメタデータのみ監査に送ります。
 
 ```mermaid
 flowchart TB
@@ -85,15 +91,15 @@ flowchart TB
 ## 落とし穴／選定の勘所
 
 !!! danger "迂回ルートの放置"
-    Gateway を設置しても、開発者が直接外部 API を叩く迂回ルートを放置すれば意味をなさない。egress 制御（ネットワークポリシー/ファイアウォール）で LLM API への直接通信を遮断する。
+    Gateway を設置しても、開発者が直接外部 API を叩く迂回ルートを放置すれば意味をなしません。egress 制御（ネットワークポリシー/ファイアウォール）で LLM API への直接通信を遮断します。
 
-- 本文をログ基盤に直接入れると容量大・高コスト・PII リスクになる。本文はストレージに退避し、メタデータのみ監査に送る（三層分離）。
-- モデルベンダーのサイレントアップデートに備えて、[GV-6 Version Registry](gv6-version-registry.md) と連携してモデル版を記録しておく。
-- Gateway のレイテンシが業務に影響しないよう、接続プール・キャッシュ・非同期処理を適切に設計する。
+- 本文をログ基盤に直接入れると容量大・高コスト・PII リスクになります。本文はストレージに退避し、メタデータのみ監査に送ります（三層分離）。
+- モデルベンダーのサイレントアップデートに備え、[GV-6 Version Registry](gv6-version-registry.md) と連携してモデル版を記録しておきます。
+- Gateway のレイテンシが業務に影響しないよう、接続プール・キャッシュ・非同期処理を適切に設計します。
 
 ## Interfaces
 
-以下はこのパターンを実装する際の主要インターフェイスである。コーディングエージェントはこの定義からスタブコードを生成できる。
+以下はこのパターンを実装する際の主要インターフェイスです。コーディングエージェントはこの定義からスタブコードを生成できます。
 
 ```yaml
 interfaces:
@@ -232,3 +238,27 @@ interfaces:
 - [GV-8 Cost Quota & Chargeback](gv8-cost-quota-chargeback.md) — 補完：Gateway で計測したコストを部門別配賦に供給する
 - [KM-6 DLP & Redaction Boundary](../km-knowledge/km6-dlp-redaction-boundary.md) — 補完：Gateway 到達前の入力における機密検出と削除
 - [KM-7 Ephemeral Secure Context Bus](../km-knowledge/km7-ephemeral-secure-context-bus.md) — 補完：極秘処理を VPC 内に閉じるための安全なコンテキスト転送
+
+## Decision Summary
+
+```yaml
+decision_summary:
+  pattern: GV-5
+  participates_in:
+    - decision: TO-10
+      role: enabler
+    - decision: DC-8
+      role: enforcer
+  recommended_if:
+    - "複数のLLMプロバイダを利用する"
+    - "モデル利用の統制・コスト可視化が必要"
+  avoid_if:
+    - "単一モデルのみでゲートウェイのオーバーヘッドが過大"
+  combines_with: [GV-1, GV-8, IN-3]
+  conflicts_with: []
+  value_outcome:
+    drivers: [audit_compliance, automation]
+    kpis: [モデル利用の可視化率, 非承認モデル利用件数]
+  mvp: "単一ゲートウェイで全LLM呼び出しを中継しログ記録"
+  cost: M
+```

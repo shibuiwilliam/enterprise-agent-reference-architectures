@@ -24,6 +24,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Install dependencies
         run: uv sync
+      - name: Generate machine-readable indexes
+        run: uv run python scripts/build_machine_index.py
       - name: Build (strict)
         run: uv run mkdocs build --strict
       - uses: actions/upload-pages-artifact@v3

@@ -6,6 +6,8 @@ status: done
 
 # Design Principles
 
+> **Move to create value; govern to sustain it.** The purpose is enterprise value creation. Controls (permissions, organization, audit) are the foundation that sustains that value over time. This dual proposition underpins every design principle below.
+
 The following twelve design principles underpin the enterprise AI agent architecture.
 
 ## Principle List
@@ -104,7 +106,7 @@ Continuously tune autonomy, logs, budget, cache, and other continuous quantities
 
 Agent deployment is not a binary choice between "fully automated" and "manual." Autonomy tier boundaries, three-layer log separation (meta/body/aggregate), cost budget, cache TTL, and guardrail strength — all are continuous quantities, tuned incrementally based on business risk, data sensitivity, and organizational maturity. This tuning is not decided once at release and forgotten; it is updated continuously through feedback from Observability Lake traces and evaluation pipeline outputs.
 
-Reference: [Degree Selection Criteria](../selection/degree/index.md) / [GV-7 Eval Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)
+Reference: [Degree Selection Criteria](../decisions/degree/index.md) / [GV-7 Eval Pipeline](../patterns/gv-governance/gv7-evaluation-governance-pipeline.md)
 
 ---
 

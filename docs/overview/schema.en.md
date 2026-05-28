@@ -60,3 +60,40 @@ In addition to the 7 planes, the following two function as cross-cutting axes sp
 
 - **Org Graph**: The foundation from which all planes consistently derive scope, delegation, and approval based on organizational structure. Serves as the basis for [ID-4](../patterns/id-identity/id4-permission-mirror-least-of.md), [RT-1](../patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md), [RT-4](../patterns/rt-runtime/rt4-human-approval-chain.md), and [KM-4](../patterns/km-knowledge/km4-scoped-memory-hierarchy.md).
 - **Zero Trust / Audit**: Every call is authorized and recorded with three-party attribution: human + agent + system. [ID-6](../patterns/id-identity/id6-zero-trust-pdp-pep.md) and [OB-2](../patterns/ob-observability/ob2-unified-audit-lineage.md) are the core.
+
+## Extended Frontmatter (Machine-Readable Metadata)
+
+In addition to the 8-section body schema, each pattern page includes the following mandatory YAML frontmatter fields. Coding agents can access this metadata in bulk via `docs/_machine/patterns.json`.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` / `pattern_id` | string | Pattern ID (e.g., `ID-2`) |
+| `applies_when` | list | Condition tags where adoption is effective |
+| `not_applicable_when` | list | Condition tags where adoption is inappropriate |
+| `decision_keys` | list | DC/TO decision criteria IDs this pattern participates in |
+| `value_drivers` | list | Enterprise value drivers (from unified vocabulary below) |
+| `kpis` | list | Representative metrics linked to GV-10 |
+| `prerequisites` / `requires` | list | Upstream pattern IDs this depends on |
+| `related` / `required_by` | list | Bidirectional link target pattern IDs |
+| `maturity_stage` | string | One of `foundation` / `execution` / `value_loop` |
+| `mvp` | string | One-sentence minimum viable configuration |
+| `cost_orientation` | string | Relative cost: `S` / `M` / `L` |
+
+### Value Driver Vocabulary (Unified Tags)
+
+| Tag | Meaning |
+|---|---|
+| `employee_efficiency` | Employee productivity improvement |
+| `decision_quality` | Decision quality and speed improvement |
+| `automation` | Business process automation |
+| `revenue_growth` | Revenue and profit growth |
+| `customer_value` | Customer experience and satisfaction improvement |
+| `audit_compliance` | Audit and compliance assurance |
+| `executive_decision` | Executive decision acceleration |
+| `project_productivity` | Project productivity improvement |
+
+### Decision Summary Block (Mandatory at End)
+
+Each pattern page must include a machine-readable + human-readable Decision Summary YAML block at the end.
+
+`scripts/build_machine_index.py` extracts these blocks to auto-generate `docs/_machine/patterns.json` and other machine-readable JSON files.
