@@ -61,8 +61,49 @@ nav:
       - 設計提案プロトコル: usage/design-protocol.md
       - 提案テンプレート: usage/proposal-template.md
       - パターン記述フォーマット規約: usage/pattern-schema.md
-  - 程度: selection/degree-criteria.md
-  - 相反: selection/tension-criteria.md
+  - 程度:
+      - 程度の選定基準: selection/degree-criteria.md
+      - D01 ログ詳細度: selection/degrees/d01-log-verbosity.md
+      - D02 タイムアウト: selection/degrees/d02-timeout.md
+      - D03 リトライ回数: selection/degrees/d03-retry-count.md
+      - D04 コンテキスト量: selection/degrees/d04-context-volume.md
+      - D05 メモリ保持: selection/degrees/d05-memory-retention.md
+      - D06 ガードレール強度: selection/degrees/d06-guardrail-strength.md
+      - D07 HITL対象範囲: selection/degrees/d07-hitl-scope.md
+      - D08 自律レベル: selection/degrees/d08-autonomy-level.md
+      - D09 モデルサイズ: selection/degrees/d09-model-size.md
+      - D10 キャッシュ類似閾値: selection/degrees/d10-cache-threshold.md
+      - D11 ツール露出数: selection/degrees/d11-tool-exposure.md
+      - D12 eval網羅度: selection/degrees/d12-eval-coverage.md
+      - D13 temperature: selection/degrees/d13-temperature.md
+      - D14 棄権閾値: selection/degrees/d14-abstention-threshold.md
+      - D15 コンテキスト読込: selection/degrees/d15-context-prefetch.md
+      - D16 フィードバック収集量: selection/degrees/d16-feedback-volume.md
+      - D17 知識鮮度(TTL): selection/degrees/d17-knowledge-ttl.md
+      - D18 データ主権の厳格度: selection/degrees/d18-data-sovereignty.md
+      - D19 プロンプト変更の統制: selection/degrees/d19-prompt-change-control.md
+  - 相反:
+      - 相反の選定基準: selection/tension-criteria.md
+      - F01 従業員向け vs 顧客向け: selection/forks/f01-employee-vs-customer.md
+      - F02 同期 vs 非同期: selection/forks/f02-sync-vs-async.md
+      - F03 シングル vs マルチ: selection/forks/f03-single-vs-multi.md
+      - F04 埋め込み vs ハブ: selection/forks/f04-embedded-vs-hub.md
+      - F05 自律 vs 決定論WF: selection/forks/f05-autonomous-vs-deterministic.md
+      - F06 コンパイル時 vs ランタイム: selection/forks/f06-compile-vs-runtime.md
+      - F07 事前 vs 事後検証: selection/forks/f07-pre-vs-post-verification.md
+      - F08 RAG/FT/長文脈/ツール: selection/forks/f08-rag-ft-longcontext-tool.md
+      - F09 Pull vs Push: selection/forks/f09-pull-vs-push.md
+      - F10 ツール vs コード生成: selection/forks/f10-tool-call-vs-codegen.md
+      - F11 オンライン vs オフライン: selection/forks/f11-online-vs-offline.md
+      - F12 集中 vs 連合メモリ: selection/forks/f12-centralized-vs-federated-memory.md
+      - F13 楽観 vs 悲観ロック: selection/forks/f13-optimistic-vs-pessimistic.md
+      - F14 汎用大モデル vs 小型FT: selection/forks/f14-large-model-vs-small-ft.md
+      - F15 ストリーミング vs バッチ: selection/forks/f15-streaming-vs-batch.md
+      - F16 集中ID vs 連合認証: selection/forks/f16-centralized-vs-federated-id.md
+      - F17 自前構築 vs 購入: selection/forks/f17-build-vs-buy.md
+      - F18 LLM-judge vs 人手: selection/forks/f18-llm-judge-vs-human.md
+      - F19 HITL vs HOTL vs 全自動: selection/forks/f19-hitl-vs-hotl-vs-auto.md
+      - F20 強整合 vs 結果整合: selection/forks/f20-strong-vs-eventual-consistency.md
   - パターン:
       - パターン索引: patterns/index.md
       - 信頼境界:
