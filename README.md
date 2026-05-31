@@ -1,33 +1,26 @@
-# Enterprise AI Agent Architecture Reference
+# エンタープライズAIエージェント アーキテクチャパターン
 
-A collection of architecture patterns (7 facets, 45 patterns) for safely integrating AI agents into enterprises with tens of thousands of employees, diverse existing SaaS, strict permission management, and hierarchical organizations. Built with MkDocs (Material theme) and published on GitHub Pages.
+数万人規模の従業員・顧客と多様なSaaS・独自システムが併存する企業に、AIエージェントを
+本番システムへ組み込むためのアーキテクチャパターン集（全40パターン）です。
+**人間とコーディングエージェントの双方**を読者とし、MkDocs（Material）＋ GitHub Pages で公開します。
 
-## Quick Start
+## クイックスタート
 
 ```bash
-uv sync                          # Install dependencies
-uv run mkdocs serve              # http://127.0.0.1:8000
-uv run mkdocs build --strict     # Production-equivalent build (zero warnings = quality gate)
+pip install -r requirements.txt
+mkdocs serve          # http://127.0.0.1:8000 でプレビュー
+mkdocs build --strict # 公開前チェック
 ```
 
-## Documentation Roles
+## ドキュメントを書く
 
-- **[PROJECT.md](PROJECT.md)** — What to build, why, and in what order (specification, plan, full 45-pattern list, Definition of Done).
-- **[CLAUDE.md](CLAUDE.md)** — Operational manual for Claude Code (commands, writing conventions, prohibitions).
-- **`reference/source-unified-enterprise.md`** — Primary source for all pages (unpublished material).
+- 執筆・運用の規約は **[CLAUDE.md](./CLAUDE.md)**（正本）。
+- プロジェクト定義・進捗マニフェストは **[PROJECT.md](./PROJECT.md)**。
+- 1パターン＝1ファイル（`docs/patterns/<category>/<id>-<slug>.md`）。
+- 正本サンプル：`docs/patterns/trust-boundary/p01-trust-boundary-split.md`、`p02-...md`。
 
-## Publishing (GitHub Pages)
+## 公開（GitHub Pages）
 
-1. Create a GitHub repository and push (default branch `main`).
-2. Update `site_url` / `repo_url` / `repo_name` in `mkdocs.yml` to match your repository.
-3. Pushing to `main` triggers `.github/workflows/deploy.yml`, which auto-deploys to GitHub Pages.
-4. In repository Settings → Pages → Source, select **GitHub Actions**.
-
-## Structure (7 Facets)
-
-```text
-Facet 1 EX Experience & Gateway / Facet 2 GV Control & Governance / Facet 3 ID Identity & Trust (hardest)
-Facet 4 RT Runtime & Orchestration / Facet 5 KM Knowledge & Memory / Facet 6 IN Integration & Tools / Facet 7 OB Observability & Audit
-```
-
-See [PROJECT.md](PROJECT.md) for the full directory structure and pattern list.
+1. `mkdocs.yml` の `site_url` / `repo_url` を自分のリポジトリに合わせる。
+2. `main` に push すると GitHub Actions（`.github/workflows/deploy.yml`）が `gh-pages` へ公開。
+3. 初回のみ `Settings > Pages` で「Deploy from a branch → `gh-pages` / `(root)`」を設定。

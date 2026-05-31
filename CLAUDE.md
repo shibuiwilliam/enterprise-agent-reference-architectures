@@ -1,116 +1,136 @@
-# CLAUDE.md
+# CLAUDE.md — Claude Code 向け 執筆・運用ガイド
 
-Operational manual for Claude Code. **What to build** is in `PROJECT.md`; this document defines **how to work**. Before starting any page, always read the corresponding section in the primary source (`reference/source-unified-enterprise.md`).
+このリポジトリは MkDocs（Material）＋ GitHub Pages で公開する、エンタープライズ向け
+AIエージェント・アーキテクチャパターン集（全40パターン）です。あなた（Claude Code）の
+仕事は `docs/` 配下の各ページを下記の規約に厳密に従って執筆・改善することです。
+プロジェクト全体像と進捗は `PROJECT.md` を参照してください。
 
----
+## 0. 最初にやること
 
-## Repository Overview
+- `PROJECT.md` のマニフェストで担当パターンと現在の `status` を確認する。
+- **正本サンプル `docs/patterns/trust-boundary/p01-trust-boundary-split.md` と
+  `p02-multi-tenant-isolation.md` を必ず読み**、トーン・粒度・フィールド構成・
+  admonition の使い方を踏襲する。
+- スタブ（`status: draft`）には執筆テンプレートが HTML コメントで埋め込まれている。
+  コメントを実際の内容に置き換える。
 
-An MkDocs (Material theme) documentation site. Edit `docs/`, auto-publish to GitHub Pages. Content: enterprise AI agent architecture patterns (7 facets, 45 patterns). Only `docs/` is published. `reference/` is writing material — **do not edit or publish**.
-
-Core thesis: not "making AI smarter" but "safely onboarding a new execution entity into the enterprise's ID, permissions, responsibilities, processes, auditing, and organizational structure." Maintain this perspective throughout every page.
-
-## Environment Setup
-
-```bash
-uv sync
-```
-
-## Common Commands
+## 1. 環境・コマンド
 
 ```bash
-uv run mkdocs serve              # Local preview (http://127.0.0.1:8000, hot reload)
-uv run mkdocs build --strict     # Production-equivalent build. Treats link breaks & nav mismatches as errors
-uv run python scripts/build_machine_index.py  # Regenerate machine-readable JSON indexes
+uv sync                           # 初回のみ（依存を pyproject.toml から解決）
+uv run mkdocs serve               # ローカルプレビュー（http://127.0.0.1:8000）
+uv run mkdocs build --strict      # 公開前の必須チェック（警告ゼロであること）
 ```
 
-**Always pass `mkdocs build --strict` before committing.** Zero warnings is the quality gate.
+- **コミット前に必ず `mkdocs build --strict` を実行**し、警告・エラーが無いことを確認する。
+- 1パターン＝1コミットを基本とする。コミットメッセージ例：`docs(P03): write AI-GATEWAY pattern`。
 
-## Writing Workflow (1 pattern = 1 work unit)
+## 2. ディレクトリと配置のルール
 
-1. Pick a target ID (e.g., `ID-2`) from the pattern list in `PROJECT.md`.
-2. **Read the primary source**: the corresponding section in `reference/source-unified-enterprise.md`.
-3. Open the target file (e.g., `docs/patterns/id-identity/id2-identity-federation-obo.md`).
-4. Fill all sections of the common schema, following the source's intent (see conventions below).
-5. Update frontmatter: fill `description` with one sentence, change `status: draft` → `status: done`.
-6. Add **relative links** to dependent/related patterns in `## Related Patterns`.
-7. Pass `mkdocs build --strict`.
-8. 1 pattern = 1 commit (keep granularity small).
+- 1パターン＝1ファイル。`docs/patterns/<category>/<id小文字>-<slug小文字>.md`。
+  例：`docs/patterns/integration/p03-ai-gateway.md`。
+- **ファイル名・`id`・`slug` は不変**。これらは安定参照子であり、他ページやRAGから参照される。
+  変更が必要な場合は人間に確認する。
+- 新規ページを追加したら **必ず `mkdocs.yml` の `nav` にも追加**する
+  （strict ビルドは nav 外のページを警告する）。
 
-## Writing Conventions
+## 3. パターンページの記述フォーマット（正本）
 
-### Tone & Style
-- Japanese pages: use 敬体 (ですます). 丁寧で親しみやすく、読みやすい文章を心がける。Keep sentences short.
-- English pages (`.en.md`): professional, accessible, active voice where possible.
-- No subjective superiority claims or exaggeration. Present tradeoffs neutrally.
-- Do not add facts or proper nouns not in the source. If adding, cite explicitly and avoid definitive assertions.
+各パターンページは以下の構造を厳守する。フィールドの順序・見出しレベルを変えない。
 
-### Structure (Pattern Pages)
-- Headings follow the 8 sections in `PROJECT.md` §4.1 — **fixed order, fixed names**. Do not add or remove sections.
-- Each section is primarily prose. Bullet lists are limited to element enumeration (technologies, SaaS, etc.) and each item should be brief.
-- "When to Use / When Not to Use" should present paired conditions.
-- "Pitfalls & Selection Tips" should describe concrete anti-patterns (e.g., "using a single all-powerful service account to call every SaaS").
-
-### Frontmatter
-```yaml
+```markdown
 ---
-title: "ID-2 Identity Federation & On-Behalf-Of (OBO Delegation)"
-description: "Calls downstream SaaS using delegation tokens scoped to the requester's own permissions, faithfully propagating authorization."
-status: done
+id: P03
+slug: AI-GATEWAY
+title: "P03 · AI-GATEWAY — AIエージェント・ゲートウェイ"
+category: 統合
+audience: both          # both | employee | customer
+maturity: 基盤          # 基盤 | 標準 | 高度
+related: [P08, P09, P23, P24, P25, P27]
+status: draft           # draft | review | done
 ---
+
+# P03 · AI-GATEWAY — AIエージェント・ゲートウェイ
+
+!!! abstract "メタ"
+    **カテゴリ**: 統合 ／ **対象**: 両方 ／ **成熟度**: 基盤 ／ **関連**: [P08](../identity/p08-token-exchange-obo.md), ...
+
+**トリガ（採用検討の条件）**: <要件と機械照合できるIF条件。1〜2文>
+
+## 概要
+<2〜4文で、何をするパターンか>
+
+## 設計
+<構成・主要コンポーネント・データフロー。箇条書き可>
+
+## 解決する課題
+<適用しないと起きる問題>
+
+## ユースケース
+<前提企業のSaaSに即した具体例>
+
+## 向き / 不向き
+- **向き**: <条件>
+- **不向き**: <条件>
+
+## 要素技術
+<代表的な実装技術をカンマ区切りまたは箇条書きで>
 ```
 
-### Cross-Links
-- Same facet: `[ID-4 Permission Mirror](id4-permission-mirror-least-of.md)`
-- Different facet: `[KM-1 Access-Controlled RAG](../km-knowledge/km1-access-controlled-rag.md)`
-- Link targets use **file paths (with .md)**. `--strict` validates paths.
+必要に応じて、本文中の該当箇所に以下を挿入する（無理に付けない。該当する時だけ）。
 
-### Diagrams & Tables (Material Features)
-- Flows, structures, state transitions, and **authorization sequences** use mermaid. Sequence/flow diagrams are especially recommended for ID-2 (OBO/Token Exchange), ID-6 (PDP/PEP), RT-7 (Saga), RT-10 (Event-Driven):
-  ````markdown
-  ```mermaid
-  sequenceDiagram
-    participant U as User
-    participant GW as Agent Gateway
-    participant SF as Salesforce
-    U->>GW: Request (ID Token)
-    GW->>GW: Token Exchange (RFC 8693) → OBO Token
-    GW->>SF: API call with user's own permissions
+- 「程度の判断」がある場合（パラメータのチューニング軸）：
+  ```markdown
+  !!! warning "程度の判断（露出ツール数）"
+      ツールが20〜30を超えると選択精度が落ちる。tool RAG で動的に絞るか…
   ```
-  ````
-- Comparisons (OBO vs. SA, Central Lake vs. Mesh, etc.) use Markdown tables.
-- Supplements and warnings use admonitions: `!!! note` / `!!! warning` / `!!! tip`. Critical security warnings use `!!! danger`.
-- Alternatives use `=== "Tab Name"` (pymdownx.tabbed).
+- 「相反する仕組みの選定」がある場合（二者択一の判断基準）：
+  ```markdown
+  !!! note "相反する仕組みの選定（埋め込み vs ハブ）"
+      単一システム完結・滞在が長い → 埋め込み。横断業務・入口一本化 → ハブ。…
+  ```
 
-## Navigation (nav) Handling
+## 4. 文章・内容のルール
 
-- When adding or renaming pages, update `nav` in `mkdocs.yml` manually.
-- After modifying pattern/decision/department pages, run **`uv run python scripts/build_machine_index.py`** to regenerate `docs/_machine/*.json`.
-- After nav changes, check `git diff mkdocs.yml` to ensure no unintended differences.
+- **言語は日本語**。技術用語（OAuth Token Exchange, MCP, OPA/Cedar 等）は原語のまま使う。
+- **トリガは必ず IF 条件として書く**。「連携SaaSが10種以上」「副作用が不可逆」のように、
+  要件と機械照合できる形にする。これがコーディングエージェントの選定根拠になる。
+- 各パターンは**自己完結**させる。他ページを読まないと意味が通らない記述を避ける
+  （関連は相互リンクで補う）。
+- 具体例には**前提企業の実在SaaSを使う**（Salesforce / ServiceNow / Slack / Jira /
+  Zendesk / Box / Workday / Okta / Auth0 / Shopify など）。
+- 断定しすぎない。「程度」は **初期値 ＋ 計測指標 ＋ 調整方針** の3点で書き、
+  「実測で調整する前提」を残す。
+- 数値・タイムアウト値などは「目安」「起点」と明示し、絶対値として断定しない。
 
-## Deploy
+## 5. 相互リンク（related）の張り方
 
-- Pushing to `main` triggers `.github/workflows/deploy.yml`, which deploys to GitHub Pages.
-- First time only: in GitHub repository Settings → Pages → Source, select **GitHub Actions**.
-- Update `site_url` / `repo_url` / `repo_name` in `mkdocs.yml` to match the actual repository.
+- フロントマターの `related` は機械可読のID配列（不変）。
+- 本文（メタ admonition など）では**相対パスのMarkdownリンク**を使う。
+  例：同一カテゴリ `[P06](p06-agent-hub.md)`、別カテゴリ `[P08](../identity/p08-token-exchange-obo.md)`。
+- リンク先ファイルが存在しない状態でリンクを張らない（strict ビルドが落ちる）。
+  未執筆の相手にはリンクを張らず、執筆が進んだ時点で張る。
 
-## Prohibited Actions (Including Enterprise-Specific Cautions)
+## 6. やってはいけないこと（重要）
 
-- Editing or publishing `reference/` (primary source / unpublished material).
-- Altering the common schema sections (order, names, or count).
-- Leaving mismatches between nav and frontmatter `title`.
-- Committing with `mkdocs build --strict` warnings remaining.
-- Fabricating content not in the source, or making definitive claims about specific vendor product superiority.
-- **Writing design examples that cross the workforce/customer boundary** (violates ID-1 principle — maintain two-face separation).
-- **Writing anything that reads as "security is enforced via prompts"** (violates ID-7 principle — safety guarantees belong on the execution platform side).
-- Using real company system names, real data, or real personal information in examples (use fictitious examples).
-- Committing `site/` (build artifacts) — already in `.gitignore`.
+- ❌ `id` / `slug` / ファイル名を変更する（人間の承認なしに）。
+- ❌ カタログに無いパターンを勝手に「正規パターン」として追加する。
+  新案は本文中に `> **拡張案（extension）:**` として根拠とともに併記し、人間の判断に委ねる。
+- ❌ 表（程度・相反の選定基準）を散文に作り変える。表は表のまま維持する。
+- ❌ `mkdocs.yml` の `nav` 構造やカテゴリ分類を独断で再編する（人間に提案する）。
+- ❌ 認証・認可・データ分類・不可逆な副作用に関する設計判断を断定する。
+  これらは「人間のレビュー必須」と明記する。
+- ❌ HTMLの直書きや独自CSSの追加（Material の admonition / 表 / コードブロックで表現する）。
 
-## Completion Checklist (Per Page)
+## 7. 元資料との整合
 
-- [ ] Reflects the corresponding section of the primary source
-- [ ] All sections have content with no TODOs remaining
-- [ ] `title` matches nav, `description` filled, `status: done`
-- [ ] Internal links are valid (`mkdocs build --strict` has no warnings)
-- [ ] mermaid diagrams are present where needed (especially authorization, Saga, event-driven flows)
-- [ ] Does not violate the principles of workforce/customer separation, least-privilege composition, or platform-side defense
+各パターンの内容は、既存の統合レポート（40パターンの設計ガイド）に基づく。
+事実関係・パターンの定義・選定基準はそれと矛盾させない。レポートに無い新規主張を
+加える場合は、推測であることを明示するか、人間に確認する。
+
+## 8. コミット／PRの粒度
+
+- 1パターン＝1コミット／1PRを基本とする。
+- PR説明には「どのパターンを `done` にしたか」「strict ビルド結果」「張った相互リンク」を書く。
+- 共通ページ（index / usage / selection / reference-architecture）の編集は内容が大きいので
+  単独PRにする。

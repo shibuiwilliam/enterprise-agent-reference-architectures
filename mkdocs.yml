@@ -1,309 +1,121 @@
-site_name: エンタープライズAIエージェント・アーキテクチャ・リファレンス
-site_description: エンタープライズにAIエージェントを安全に組み込むための意思決定駆動アーキテクチャ・リファレンス
-site_author: ""
-site_url: https://shibuiwilliam.github.io/enterprise-agent-reference-architectures/
-repo_url: https://github.com/shibuiwilliam/enterprise-agent-reference-architectures
-repo_name: shibuiwilliam/enterprise-agent-reference-architectures
+site_name: エンタープライズAIエージェント アーキテクチャパターン
+site_description: >-
+  数万人規模の従業員・顧客と多様なSaaSが併存する企業に、AIエージェントを組み込む
+  ためのアーキテクチャパターン・カタログ。人間とコーディングエージェントの双方を読者とする。
+site_author: "TODO（あなたの組織名）"
+
+# GitHub Pages 公開用。リポジトリ名に合わせて site_url / repo_url を変更すること。
+site_url: https://YOUR-ORG.github.io/enterprise-ai-agent-docs/
+repo_url: https://github.com/YOUR-ORG/enterprise-ai-agent-docs
+repo_name: enterprise-ai-agent-docs
 edit_uri: edit/main/docs/
 
 theme:
   name: material
   language: ja
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - content.code.copy
+    - search.suggest
+    - search.highlight
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
-      accent: teal
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/weather-night
         name: ダークモードへ
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
-      accent: teal
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/weather-sunny
         name: ライトモードへ
-  features:
-    - navigation.tracking
-    - navigation.tabs
-    - navigation.sections
-    - navigation.indexes
-    - navigation.top
-    - toc.follow
-    - content.code.copy
-    - search.suggest
-    - search.highlight
 
 markdown_extensions:
   - admonition
   - attr_list
   - md_in_html
   - tables
-  - footnotes
   - toc:
       permalink: true
+      toc_depth: 3
   - pymdownx.details
+  - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 plugins:
   - search:
-      lang:
-        - ja
-        - en
-  - redirects:
-      redirect_maps:
-        # Pattern catalog → Decision pages
-        'patterns/index.md': 'decisions/index.md'
-        'patterns/ex-experience/index.md': 'decisions/ex-experience/index.md'
-        'patterns/ex-experience/ex1-enterprise-agent-gateway.md': 'decisions/ex-experience/ex-d1-front-door-channel.md'
-        'patterns/ex-experience/ex2-embedded-vs-portal.md': 'decisions/ex-experience/ex-d1-front-door-channel.md'
-        'patterns/ex-experience/ex3-channel-agnostic-frontdoor.md': 'decisions/ex-experience/ex-d1-front-door-channel.md'
-        'patterns/ex-experience/ex4-trust-value-ux.md': 'decisions/ex-experience/ex-d2-trust-value-ux.md'
-        'patterns/gv-governance/index.md': 'decisions/gv-governance/index.md'
-        'patterns/gv-governance/gv1-agent-control-plane.md': 'decisions/gv-governance/gv-d1-control-plane-scope.md'
-        'patterns/gv-governance/gv2-agent-catalog-marketplace.md': 'decisions/gv-governance/gv-d1-control-plane-scope.md'
-        'patterns/gv-governance/gv3-department-agent-factory.md': 'decisions/gv-governance/gv-d1-control-plane-scope.md'
-        'patterns/gv-governance/gv4-industry-policy-pack.md': 'decisions/gv-governance/gv-d6-industry-regulation.md'
-        'patterns/gv-governance/gv5-central-model-gateway.md': 'decisions/gv-governance/gv-d2-model-vendor-routing.md'
-        'patterns/gv-governance/gv6-version-registry.md': 'decisions/gv-governance/gv-d3-change-eval-rigor.md'
-        'patterns/gv-governance/gv7-evaluation-governance-pipeline.md': 'decisions/gv-governance/gv-d3-change-eval-rigor.md'
-        'patterns/gv-governance/gv8-cost-quota-chargeback.md': 'decisions/gv-governance/gv-d4-cost-visibility.md'
-        'patterns/gv-governance/gv9-incident-response-kill-switch.md': 'decisions/gv-governance/gv-d5-incident-kill-switch.md'
-        'patterns/gv-governance/gv10-two-layer-value-measurement.md': 'decisions/gv-governance/gv-d7-value-measurement.md'
-        'patterns/id-identity/index.md': 'decisions/id-identity/index.md'
-        'patterns/id-identity/id1-workforce-customer-split.md': 'decisions/id-identity/id-d1-workforce-customer-split.md'
-        'patterns/id-identity/id2-identity-federation-obo.md': 'decisions/id-identity/id-d2-delegation-method.md'
-        'patterns/id-identity/id3-workload-agent-identity.md': 'decisions/id-identity/id-d2-delegation-method.md'
-        'patterns/id-identity/id4-permission-mirror-least-of.md': 'decisions/id-identity/id-d3-permission-reduction.md'
-        'patterns/id-identity/id5-jit-scoped-credentials.md': 'decisions/id-identity/id-d4-credential-minimization.md'
-        'patterns/id-identity/id6-zero-trust-pdp-pep.md': 'decisions/id-identity/id-d5-authorization-method.md'
-        'patterns/id-identity/id7-policy-as-code-guardrail.md': 'decisions/id-identity/id-d5-authorization-method.md'
-        'patterns/id-identity/id8-consent-access-transparency.md': 'decisions/id-identity/id-d6-consent-transparency.md'
-        'patterns/rt-runtime/index.md': 'decisions/rt-runtime/index.md'
-        'patterns/rt-runtime/rt1-org-hierarchical-hub-spoke.md': 'decisions/rt-runtime/rt-d1-single-vs-multi-agent.md'
-        'patterns/rt-runtime/rt2-raci-multi-agent.md': 'decisions/rt-runtime/rt-d1-single-vs-multi-agent.md'
-        'patterns/rt-runtime/rt3-risk-tiered-autonomy.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
-        'patterns/rt-runtime/rt4-human-approval-chain.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
-        'patterns/rt-runtime/rt5-command-envelope.md': 'decisions/rt-runtime/rt-d3-side-effect-safety.md'
-        'patterns/rt-runtime/rt6-sor-write-boundary.md': 'decisions/rt-runtime/rt-d3-side-effect-safety.md'
-        'patterns/rt-runtime/rt7-enterprise-saga.md': 'decisions/rt-runtime/rt-d4-long-running-reliability.md'
-        'patterns/rt-runtime/rt8-durable-workflow.md': 'decisions/rt-runtime/rt-d4-long-running-reliability.md'
-        'patterns/rt-runtime/rt9-work-queue-agent.md': 'decisions/rt-runtime/rt-d5-trigger-mechanism.md'
-        'patterns/rt-runtime/rt10-event-driven-orchestrator.md': 'decisions/rt-runtime/rt-d5-trigger-mechanism.md'
-        'patterns/rt-runtime/rt11-project-digital-twin.md': 'decisions/rt-runtime/rt-d6-project-digital-twin.md'
-        'patterns/km-knowledge/index.md': 'decisions/km-knowledge/index.md'
-        'patterns/km-knowledge/km1-access-controlled-rag.md': 'decisions/km-knowledge/km-d1-context-supply.md'
-        'patterns/km-knowledge/km2-context-mesh.md': 'decisions/km-knowledge/km-d1-context-supply.md'
-        'patterns/km-knowledge/km3-canonical-object-knowledge-graph.md': 'decisions/km-knowledge/km-d2-knowledge-normalization.md'
-        'patterns/km-knowledge/km4-scoped-memory-hierarchy.md': 'decisions/km-knowledge/km-d3-memory-scope.md'
-        'patterns/km-knowledge/km5-purpose-bound-context.md': 'decisions/km-knowledge/km-d4-purpose-limitation.md'
-        'patterns/km-knowledge/km6-dlp-redaction-boundary.md': 'decisions/km-knowledge/km-d5-confidentiality-strength.md'
-        'patterns/km-knowledge/km7-ephemeral-secure-context-bus.md': 'decisions/km-knowledge/km-d5-confidentiality-strength.md'
-        'patterns/in-integration/index.md': 'decisions/in-integration/index.md'
-        'patterns/in-integration/in1-tool-mcp-gateway.md': 'decisions/in-integration/in-d1-tool-gateway.md'
-        'patterns/in-integration/in2-saas-connector-adapter.md': 'decisions/in-integration/in-d2-build-vs-reuse.md'
-        'patterns/in-integration/in3-rate-quota-broker.md': 'decisions/in-integration/in-d3-rate-capacity.md'
-        'patterns/in-integration/in4-existing-ipaas-reuse.md': 'decisions/in-integration/in-d2-build-vs-reuse.md'
-        'patterns/ob-observability/index.md': 'decisions/ob-observability/index.md'
-        'patterns/ob-observability/ob1-observability-lake.md': 'decisions/ob-observability/ob-d1-observability-scope.md'
-        'patterns/ob-observability/ob2-unified-audit-lineage.md': 'decisions/ob-observability/ob-d2-audit-attribution.md'
-        # Old selection → Decision pages
-        'decisions/degree/index.md': 'decisions/index.md'
-        'decisions/degree/dc1-risk-tier-boundary.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
-        'decisions/degree/dc2-timeout-retry-budget.md': 'decisions/gv-governance/gv-d4-cost-visibility.md'
-        'decisions/degree/dc3-log-granularity.md': 'decisions/ob-observability/ob-d1-observability-scope.md'
-        'decisions/degree/dc4-context-volume.md': 'decisions/km-knowledge/km-d1-context-supply.md'
-        'decisions/degree/dc5-memory-retention.md': 'decisions/km-knowledge/km-d3-memory-scope.md'
-        'decisions/degree/dc6-guardrail-strength.md': 'decisions/id-identity/id-d5-authorization-method.md'
-        'decisions/degree/dc7-cache-jit-ttl.md': 'decisions/id-identity/id-d4-credential-minimization.md'
-        'decisions/degree/dc8-model-routing.md': 'decisions/gv-governance/gv-d2-model-vendor-routing.md'
-        'decisions/degree/dc9-canary-event-throttle.md': 'decisions/gv-governance/gv-d3-change-eval-rigor.md'
-        'decisions/tradeoff/index.md': 'decisions/index.md'
-        'decisions/tradeoff/to1-obo-vs-service-account.md': 'decisions/id-identity/id-d2-delegation-method.md'
-        'decisions/tradeoff/to2-lake-vs-mesh.md': 'decisions/km-knowledge/km-d1-context-supply.md'
-        'decisions/tradeoff/to3-single-vs-multi-agent.md': 'decisions/rt-runtime/rt-d1-single-vs-multi-agent.md'
-        'decisions/tradeoff/to4-readonly-vs-write.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
-        'decisions/tradeoff/to5-copilot-vs-autopilot.md': 'decisions/rt-runtime/rt-d2-autonomy-design.md'
-        'decisions/tradeoff/to6-personal-vs-team-memory.md': 'decisions/km-knowledge/km-d3-memory-scope.md'
-        'decisions/tradeoff/to7-full-vs-selective-log.md': 'decisions/ob-observability/ob-d1-observability-scope.md'
-        'decisions/tradeoff/to8-central-vs-federation.md': 'decisions/gv-governance/gv-d1-control-plane-scope.md'
-        'decisions/tradeoff/to9-custom-vs-ipaas.md': 'decisions/in-integration/in-d2-build-vs-reuse.md'
-        'decisions/tradeoff/to10-onprem-vs-external.md': 'decisions/gv-governance/gv-d2-model-vendor-routing.md'
-        'decisions/tradeoff/to11-sync-vs-async.md': 'decisions/rt-runtime/rt-d4-long-running-reliability.md'
-        'decisions/tradeoff/to12-prompt-vs-platform.md': 'decisions/id-identity/id-d5-authorization-method.md'
-        # Glossary → Concepts
-        'glossary.md': 'overview/concepts-and-principles.md'
-        # Wizard → Decision guide
-        'wizard.md': 'decisions/decision-guide.md'
-        # Old overview pages → Concepts and Principles
-        'overview/agenda.md': 'overview/concepts-and-principles.md'
-        'overview/schema.md': 'overview/concepts-and-principles.md'
-        'overview/principles.md': 'overview/concepts-and-principles.md'
-        'overview/foundations.md': 'overview/concepts-and-principles.md'
-        # Old value pages → Decision Guide
-        'integration/usecase-selection-guide.md': 'decisions/decision-guide.md'
-        'integration/adoption.md': 'decisions/decision-guide.md'
-        'integration/value-maturity-roadmap.md': 'decisions/decision-guide.md'
-        'integration/portfolio.md': 'decisions/decision-guide.md'
-        'integration/value-anti-patterns.md': 'decisions/decision-guide.md'
-  - i18n:
-      docs_structure: suffix
-      languages:
-        - locale: ja
-          default: true
-          name: 日本語
-          build: true
-        - locale: en
-          name: English
-          build: true
-          site_name: Enterprise AI Agent Architecture Reference
-          nav_translations:
-            ホーム: Home
-            概念と原則: Concepts & Principles
-            意思決定カタログ: Decision Catalog
-            概要: Overview
-            体験・ゲートウェイの意思決定: "D-EX: Experience & Gateway"
-            ガバナンス・統制の意思決定: "D-GV: Governance & Control"
-            アイデンティティ・信頼の意思決定: "D-ID: Identity & Trust"
-            実行・オーケストレーションの意思決定: "D-RT: Runtime & Orchestration"
-            知識・メモリの意思決定: "D-KM: Knowledge & Memory"
-            統合・ツールの意思決定: "D-IN: Integration & Tools"
-            観測・評価・監査の意思決定: "D-OB: Observability & Audit"
-            意思決定の手引き: Decision Guidance
-            組み合わせと実装: Compositions & Implementation
-            依存関係と依存チェーン: Dependencies & Chains
-            横断軸: Cross-Cutting Axes
-            組み合わせレシピ: Composition Recipes
-            部門別適用例: Department Examples
-            リファレンスアーキテクチャ: Reference Architecture
-            全社横断軸: Company-Wide Axis
-            部署軸: Department Axis
-            プロジェクト軸: Project Axis
-            メンバー個別軸: Individual Axis
-            コーディングエージェント向けガイド: Coding Agent Guide
-            # Decision translations
-            "EX-D1 統一フロントドアとチャネル戦略": "EX-D1 Unified Front Door & Channel Strategy"
-            "EX-D2 信頼・価値実感UXの強度": "EX-D2 Trust & Value UX Strength"
-            "GV-D1 統制プレーンの導入と範囲": "GV-D1 Control Plane Scope"
-            "GV-D2 モデル・ベンダー・データ経路の統制": "GV-D2 Model & Vendor Routing"
-            "GV-D3 変更管理と評価の厳格度": "GV-D3 Change Management & Eval Rigor"
-            "GV-D4 コストの可視化と配賦": "GV-D4 Cost Visibility & Chargeback"
-            "GV-D5 事故対応と停止粒度": "GV-D5 Incident Response & Kill Switch"
-            "GV-D6 業界規制の組み込み": "GV-D6 Industry Regulation"
-            "GV-D7 価値計測の設計": "GV-D7 Value Measurement Design"
-            "ID-D1 従業員面／顧客面の分離": "ID-D1 Workforce/Customer Split"
-            "ID-D2 実行主体と権限の委譲方式": "ID-D2 Delegation Method"
-            "ID-D3 権限の忠実な縮退": "ID-D3 Permission Reduction"
-            "ID-D4 資格情報の最小・短命化": "ID-D4 Credential Minimization"
-            "ID-D5 認可の決定方式": "ID-D5 Authorization Method"
-            "ID-D6 同意と透明化の範囲": "ID-D6 Consent & Transparency"
-            "RT-D1 単一 vs マルチエージェントと分業": "RT-D1 Single vs. Multi-Agent"
-            "RT-D2 自律度の設計": "RT-D2 Autonomy Design"
-            "RT-D3 副作用の安全な実行": "RT-D3 Side-Effect Safety"
-            "RT-D4 長尺・分散処理の信頼性": "RT-D4 Long-Running Reliability"
-            "RT-D5 起動契機": "RT-D5 Trigger Mechanism"
-            "RT-D6 プロジェクト・デジタルツイン": "RT-D6 Project Digital Twin"
-            "KM-D1 文脈供給の方式と投入量": "KM-D1 Context Supply"
-            "KM-D2 全社知識の正規化": "KM-D2 Knowledge Normalization"
-            "KM-D3 メモリのスコープと保持": "KM-D3 Memory Scope & Retention"
-            "KM-D4 目的限定と最小化": "KM-D4 Purpose Limitation"
-            "KM-D5 機密保護の強度": "KM-D5 Confidentiality Strength"
-            "IN-D1 ツール接続の統制": "IN-D1 Tool Gateway"
-            "IN-D2 自前構築 vs 既存資産": "IN-D2 Build vs. Reuse"
-            "IN-D3 レート・容量の調停": "IN-D3 Rate & Capacity"
-            "OB-D1 観測の範囲とログ粒度": "OB-D1 Observability Scope"
-            "OB-D2 監査と帰責": "OB-D2 Audit & Attribution"
+      lang: ja
 
-extra_css:
-  - stylesheets/nav.css
-
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/shibuiwilliam/enterprise-agent-reference-architectures
-
-# nav は手動管理。機械可読インデックスは scripts/build_machine_index.py で再生成する
 nav:
   - ホーム: index.md
-  - 概念と原則: overview/concepts-and-principles.md
-  - 意思決定カタログ:
-      - 概要: decisions/index.md
-      - 体験・ゲートウェイの意思決定:
-          - decisions/ex-experience/index.md
-          - "EX-D1 統一フロントドアとチャネル戦略": decisions/ex-experience/ex-d1-front-door-channel.md
-          - "EX-D2 信頼・価値実感UXの強度": decisions/ex-experience/ex-d2-trust-value-ux.md
-      - ガバナンス・統制の意思決定:
-          - decisions/gv-governance/index.md
-          - "GV-D1 統制プレーンの導入と範囲": decisions/gv-governance/gv-d1-control-plane-scope.md
-          - "GV-D2 モデル・ベンダー・データ経路の統制": decisions/gv-governance/gv-d2-model-vendor-routing.md
-          - "GV-D3 変更管理と評価の厳格度": decisions/gv-governance/gv-d3-change-eval-rigor.md
-          - "GV-D4 コストの可視化と配賦": decisions/gv-governance/gv-d4-cost-visibility.md
-          - "GV-D5 事故対応と停止粒度": decisions/gv-governance/gv-d5-incident-kill-switch.md
-          - "GV-D6 業界規制の組み込み": decisions/gv-governance/gv-d6-industry-regulation.md
-          - "GV-D7 価値計測の設計": decisions/gv-governance/gv-d7-value-measurement.md
-      - アイデンティティ・信頼の意思決定:
-          - decisions/id-identity/index.md
-          - "ID-D1 従業員面／顧客面の分離": decisions/id-identity/id-d1-workforce-customer-split.md
-          - "ID-D2 実行主体と権限の委譲方式": decisions/id-identity/id-d2-delegation-method.md
-          - "ID-D3 権限の忠実な縮退": decisions/id-identity/id-d3-permission-reduction.md
-          - "ID-D4 資格情報の最小・短命化": decisions/id-identity/id-d4-credential-minimization.md
-          - "ID-D5 認可の決定方式": decisions/id-identity/id-d5-authorization-method.md
-          - "ID-D6 同意と透明化の範囲": decisions/id-identity/id-d6-consent-transparency.md
-      - 実行・オーケストレーションの意思決定:
-          - decisions/rt-runtime/index.md
-          - "RT-D1 単一 vs マルチエージェントと分業": decisions/rt-runtime/rt-d1-single-vs-multi-agent.md
-          - "RT-D2 自律度の設計": decisions/rt-runtime/rt-d2-autonomy-design.md
-          - "RT-D3 副作用の安全な実行": decisions/rt-runtime/rt-d3-side-effect-safety.md
-          - "RT-D4 長尺・分散処理の信頼性": decisions/rt-runtime/rt-d4-long-running-reliability.md
-          - "RT-D5 起動契機": decisions/rt-runtime/rt-d5-trigger-mechanism.md
-          - "RT-D6 プロジェクト・デジタルツイン": decisions/rt-runtime/rt-d6-project-digital-twin.md
-      - 知識・メモリの意思決定:
-          - decisions/km-knowledge/index.md
-          - "KM-D1 文脈供給の方式と投入量": decisions/km-knowledge/km-d1-context-supply.md
-          - "KM-D2 全社知識の正規化": decisions/km-knowledge/km-d2-knowledge-normalization.md
-          - "KM-D3 メモリのスコープと保持": decisions/km-knowledge/km-d3-memory-scope.md
-          - "KM-D4 目的限定と最小化": decisions/km-knowledge/km-d4-purpose-limitation.md
-          - "KM-D5 機密保護の強度": decisions/km-knowledge/km-d5-confidentiality-strength.md
-      - 統合・ツールの意思決定:
-          - decisions/in-integration/index.md
-          - "IN-D1 ツール接続の統制": decisions/in-integration/in-d1-tool-gateway.md
-          - "IN-D2 自前構築 vs 既存資産": decisions/in-integration/in-d2-build-vs-reuse.md
-          - "IN-D3 レート・容量の調停": decisions/in-integration/in-d3-rate-capacity.md
-      - 観測・評価・監査の意思決定:
-          - decisions/ob-observability/index.md
-          - "OB-D1 観測の範囲とログ粒度": decisions/ob-observability/ob-d1-observability-scope.md
-          - "OB-D2 監査と帰責": decisions/ob-observability/ob-d2-audit-attribution.md
-  - 意思決定の手引き: decisions/decision-guide.md
-  - 組み合わせと実装:
-      - 依存関係と依存チェーン: integration/dependency-chain.md
-      - 横断軸: integration/cross-cutting-axes.md
-      - 組み合わせレシピ: integration/recipe.md
-      - 部門別適用例:
-          - integration/departments/index.md
-          - Sales Agent: integration/departments/sales.md
-          - HR Agent: integration/departments/hr.md
-          - Customer Support Agent: integration/departments/customer-support.md
-          - Engineering Agent: integration/departments/engineering.md
-          - Executive Agent: integration/departments/executive.md
-      - リファレンスアーキテクチャ:
-          - integration/architecture/index.md
-          - 全社横断軸: integration/architecture/company-wide.md
-          - 部署軸: integration/architecture/department.md
-          - プロジェクト軸: integration/architecture/project.md
-          - メンバー個別軸: integration/architecture/individual.md
-  - コーディングエージェント向けガイド:
-      - coding-agent-guide/index.md
+  - 使い方（エージェント向け）:
+      - 設計プロトコル: usage/design-protocol.md
+      - パターン記述フォーマット規約: usage/pattern-schema.md
+      - 提案テンプレート: usage/proposal-template.md
+  - パターン一覧:
+      - 索引（機械可読）: patterns/index.md
+      - 信頼境界:
+          - P01 信頼境界の二層分離: patterns/trust-boundary/p01-trust-boundary-split.md
+          - P02 マルチテナント分離: patterns/trust-boundary/p02-multi-tenant-isolation.md
+      - 統合トポロジー:
+          - P03 AIエージェント・ゲートウェイ: patterns/integration/p03-ai-gateway.md
+          - P04 MCPゲートウェイ: patterns/integration/p04-mcp-gateway.md
+          - P05 インアプリ・コパイロット: patterns/integration/p05-in-app-copilot.md
+          - P06 エージェント・ハブ: patterns/integration/p06-agent-hub.md
+          - P07 イベント駆動エージェント: patterns/integration/p07-event-driven-agent.md
+      - アイデンティティ・認可:
+          - P08 トークン交換(OBO): patterns/identity/p08-token-exchange-obo.md
+          - P09 動的認可(PDP/PBAC): patterns/identity/p09-dynamic-authz-pdp.md
+          - P10 コンテキスト・ファイアウォール: patterns/identity/p10-context-firewall.md
+          - P11 ゼロトラスト/サンドボックス: patterns/identity/p11-zero-trust-sandbox.md
+      - メモリ・コンテキスト:
+          - P12 階層化メモリ: patterns/memory/p12-layered-memory.md
+          - P13 コンテキスト・ブローカー: patterns/memory/p13-context-broker.md
+          - P14 セマンティックレイヤー: patterns/memory/p14-semantic-layer.md
+      - オーケストレーション:
+          - P15 シングル vs マルチ: patterns/orchestration/p15-single-vs-multi.md
+          - P16 スーパーバイザ/ルーター: patterns/orchestration/p16-supervisor-router.md
+          - P17 決定論ワークフロー併用: patterns/orchestration/p17-deterministic-workflow-hybrid.md
+          - P18 HITL承認ゲート: patterns/orchestration/p18-hitl-approval-gate.md
+      - 確率→決定論:
+          - P19 コンパイル型エージェント: patterns/determinism/p19-compiled-agent.md
+          - P20 二重トラック検証: patterns/determinism/p20-dual-track-verification.md
+          - P21 信頼度ゲート棄権: patterns/determinism/p21-confidence-gated-abstention.md
+      - 信頼性・運用・コスト:
+          - P22 非同期ジョブ＋コールバック: patterns/reliability/p22-async-job-callback.md
+          - P23 サーキットブレーカ/フォールバック: patterns/reliability/p23-circuit-breaker-fallback.md
+          - P24 セマンティック/プロンプトキャッシュ: patterns/reliability/p24-semantic-cache.md
+          - P25 オブザーバビリティ/トレース: patterns/reliability/p25-observability-tracing.md
+          - P26 評価ゲート/カナリア: patterns/reliability/p26-eval-gate-canary.md
+          - P27 コストガバナンス: patterns/reliability/p27-cost-governance.md
+      - レイテンシ先進:
+          - P28 投機的・先読み実行: patterns/latency/p28-speculative-execution.md
+          - P29 バックプレッシャ/優先度キュー: patterns/latency/p29-backpressure-load-shedding.md
+          - P30 オフライン/オンライン分離: patterns/latency/p30-offline-online-split.md
+      - 知識鮮度・ドリフト:
+          - P31 CDC駆動の知識鮮度: patterns/freshness/p31-cdc-freshness.md
+          - P32 スキーマ/契約ドリフト耐性: patterns/freshness/p32-schema-drift-resilience.md
+      - 組織マッピング:
+          - P33 部署スコープのエージェント: patterns/organization/p33-department-scoped-agent.md
+          - P34 プロジェクト/チームスコープ: patterns/organization/p34-project-scoped-agent.md
+          - P35 エージェント・レジストリ: patterns/organization/p35-agent-registry.md
+      - ライフサイクル・ガバナンス:
+          - P36 デジタル従業員ライフサイクル: patterns/governance/p36-digital-employee-lifecycle.md
+          - P37 プロンプト・サプライチェーン: patterns/governance/p37-prompt-supply-chain.md
+      - 規制・主権・改善:
+          - P38 データ主権/地域分離: patterns/regulation/p38-data-sovereignty.md
+          - P39 意思決定プロベナンス: patterns/regulation/p39-decision-provenance.md
+          - P40 フィードバックループ: patterns/regulation/p40-feedback-flywheel.md
+  - 選定基準:
+      - 程度の選定基準: selection/degree-criteria.md
+      - 相反する仕組みの選定基準: selection/tension-criteria.md
+  - 参照アーキテクチャ・導入順序: reference-architecture.md

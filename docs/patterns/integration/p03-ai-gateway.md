@@ -1,0 +1,50 @@
+---
+id: P03
+slug: AI-GATEWAY
+title: "P03 · AI-GATEWAY — AIエージェント・ゲートウェイ"
+category: 統合
+audience: both
+maturity: 基盤
+related: [P08, P09, P23, P24, P25, P27]
+status: done
+---
+
+# P03 · AI-GATEWAY — AIエージェント・ゲートウェイ
+
+!!! abstract "メタ"
+    **カテゴリ**: 統合 ／ **対象**: 両方 ／ **成熟度**: 基盤 ／ **関連**: [P08](../identity/p08-token-exchange-obo.md), [P09](../identity/p09-dynamic-authz-pdp.md), [P23](../reliability/p23-circuit-breaker-fallback.md), [P24](../reliability/p24-semantic-cache.md), [P25](../reliability/p25-observability-tracing.md), [P27](../reliability/p27-cost-governance.md)
+
+**トリガ（採用検討の条件）**: 全社的にAI利用を解禁する／複数モデルを使い分ける／シャドーAI・コスト不可視を防ぎたい。
+
+## 概要
+
+全エージェント呼び出しが通る中央コントロールプレーン。認証・レート制限・コスト計上・モデルルーティング・ロギング・ガードレール・PIIマスキングを一箇所に集約し、組織全体のAI利用を可視化・統制する。モデルプロバイダの抽象化により、ロックインを回避しつつ統一的なポリシー適用を可能にする。
+
+## 設計
+
+- **北向き（統一エンドポイント）**: 全エージェント・アプリケーションからのリクエストを受け付ける単一のAPIエンドポイント。
+- **南向き（マルチプロバイダ）**: 複数LLMプロバイダ（OpenAI / Anthropic / Bedrock / Azure OpenAI 等）への抽象化ルーティング。モデル選択・フォールバックを透過的に処理。
+- **横断機能**: トークン交換（[P08](../identity/p08-token-exchange-obo.md)）・PDP呼び出し（[P09](../identity/p09-dynamic-authz-pdp.md)）・セマンティックキャッシュ（[P24](../reliability/p24-semantic-cache.md)）・トレース送出（[P25](../reliability/p25-observability-tracing.md)）・メータリング・入出力ガードレールを集約。
+- テナント/部署別クォータを強制し、コスト按分（[P27](../reliability/p27-cost-governance.md)）の基盤とする。
+
+## 解決する課題
+
+- **シャドーAI**: 各チームが独自にAPIキーを取得し、管理外のモデル利用が拡散する。
+- **コスト不可視**: 部署・プロジェクト単位のコスト把握ができず、暴走を検知できない。
+- **モデルロックイン**: 特定プロバイダに直結し、切替・比較が困難。
+- **監査不能**: 誰が何を問い合わせたか追跡できず、コンプライアンス要件を満たせない。
+- **ガードレール重複**: 各アプリが個別に安全対策を実装し、品質がばらつく。
+
+## ユースケース
+
+- 全社AI解禁の初期基盤として、Slack・Salesforce・ServiceNow 等の各業務アプリからのAI呼び出しを単一ゲートウェイに集約し、部署別コスト可視化・PII自動マスキング・モデル切替を一元管理する。
+- 規制業種（金融・医療）で、全推論リクエストの監査ログを確実に取得し、入出力ガードレール（機密情報フィルタ・トピック制限）を統一適用する。
+
+## 向き / 不向き
+
+- **向き**: 中〜大規模組織でガバナンス重視、複数モデル・複数チームがAIを利用する環境。
+- **不向き**: 小規模PoCで統制より速度優先の段階、超低レイテンシが最優先で中間層を許容できない用途。
+
+## 要素技術
+
+LiteLLM、Portkey、Kong AI Gateway、Cloudflare AI Gateway、Amazon Bedrock、OPA/Cedar（ポリシー評価）、OpenTelemetry GenAI semantic conventions、Redis（レート制限・キャッシュ）。
