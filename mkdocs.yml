@@ -57,17 +57,19 @@ plugins:
 
 nav:
   - ホーム: index.md
-  - 使い方（エージェント向け）:
-      - 設計プロトコル: usage/design-protocol.md
-      - パターン記述フォーマット規約: usage/pattern-schema.md
+  - エージェント向け:
+      - 設計提案プロトコル: usage/design-protocol.md
       - 提案テンプレート: usage/proposal-template.md
-  - パターン一覧:
-      - 索引（機械可読）: patterns/index.md
+      - パターン記述フォーマット規約: usage/pattern-schema.md
+  - 程度: selection/degree-criteria.md
+  - 相反: selection/tension-criteria.md
+  - パターン:
+      - パターン索引: patterns/index.md
       - 信頼境界:
           - P01 信頼境界の二層分離: patterns/trust-boundary/p01-trust-boundary-split.md
           - P02 マルチテナント分離: patterns/trust-boundary/p02-multi-tenant-isolation.md
-      - 統合トポロジー:
-          - P03 AIエージェント・ゲートウェイ: patterns/integration/p03-ai-gateway.md
+      - 統合:
+          - P03 AIゲートウェイ: patterns/integration/p03-ai-gateway.md
           - P04 MCPゲートウェイ: patterns/integration/p04-mcp-gateway.md
           - P05 インアプリ・コパイロット: patterns/integration/p05-in-app-copilot.md
           - P06 エージェント・ハブ: patterns/integration/p06-agent-hub.md
@@ -90,32 +92,29 @@ nav:
           - P19 コンパイル型エージェント: patterns/determinism/p19-compiled-agent.md
           - P20 二重トラック検証: patterns/determinism/p20-dual-track-verification.md
           - P21 信頼度ゲート棄権: patterns/determinism/p21-confidence-gated-abstention.md
-      - 信頼性・運用・コスト:
+      - 信頼性・運用:
           - P22 非同期ジョブ＋コールバック: patterns/reliability/p22-async-job-callback.md
           - P23 サーキットブレーカ/フォールバック: patterns/reliability/p23-circuit-breaker-fallback.md
-          - P24 セマンティック/プロンプトキャッシュ: patterns/reliability/p24-semantic-cache.md
-          - P25 オブザーバビリティ/トレース: patterns/reliability/p25-observability-tracing.md
+          - P24 セマンティックキャッシュ: patterns/reliability/p24-semantic-cache.md
+          - P25 オブザーバビリティ: patterns/reliability/p25-observability-tracing.md
           - P26 評価ゲート/カナリア: patterns/reliability/p26-eval-gate-canary.md
           - P27 コストガバナンス: patterns/reliability/p27-cost-governance.md
-      - レイテンシ先進:
-          - P28 投機的・先読み実行: patterns/latency/p28-speculative-execution.md
-          - P29 バックプレッシャ/優先度キュー: patterns/latency/p29-backpressure-load-shedding.md
+      - レイテンシ:
+          - P28 投機的実行: patterns/latency/p28-speculative-execution.md
+          - P29 バックプレッシャ: patterns/latency/p29-backpressure-load-shedding.md
           - P30 オフライン/オンライン分離: patterns/latency/p30-offline-online-split.md
-      - 知識鮮度・ドリフト:
+      - 知識鮮度:
           - P31 CDC駆動の知識鮮度: patterns/freshness/p31-cdc-freshness.md
-          - P32 スキーマ/契約ドリフト耐性: patterns/freshness/p32-schema-drift-resilience.md
-      - 組織マッピング:
-          - P33 部署スコープのエージェント: patterns/organization/p33-department-scoped-agent.md
-          - P34 プロジェクト/チームスコープ: patterns/organization/p34-project-scoped-agent.md
+          - P32 スキーマドリフト耐性: patterns/freshness/p32-schema-drift-resilience.md
+      - 組織:
+          - P33 部署スコープ: patterns/organization/p33-department-scoped-agent.md
+          - P34 プロジェクトスコープ: patterns/organization/p34-project-scoped-agent.md
           - P35 エージェント・レジストリ: patterns/organization/p35-agent-registry.md
-      - ライフサイクル・ガバナンス:
+      - ガバナンス:
           - P36 デジタル従業員ライフサイクル: patterns/governance/p36-digital-employee-lifecycle.md
           - P37 プロンプト・サプライチェーン: patterns/governance/p37-prompt-supply-chain.md
-      - 規制・主権・改善:
-          - P38 データ主権/地域分離: patterns/regulation/p38-data-sovereignty.md
+      - 規制・改善:
+          - P38 データ主権: patterns/regulation/p38-data-sovereignty.md
           - P39 意思決定プロベナンス: patterns/regulation/p39-decision-provenance.md
           - P40 フィードバックループ: patterns/regulation/p40-feedback-flywheel.md
-  - 選定基準:
-      - 程度の選定基準: selection/degree-criteria.md
-      - 相反する仕組みの選定基準: selection/tension-criteria.md
-  - 参照アーキテクチャ・導入順序: reference-architecture.md
+  - 参照アーキテクチャ: reference-architecture.md
