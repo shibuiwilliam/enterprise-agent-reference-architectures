@@ -5,7 +5,7 @@ title: "P01 · TRUST-BOUNDARY-SPLIT — 信頼境界の二層分離"
 category: 信頼境界
 audience: both
 maturity: 基盤
-related: [P02, P10, P29]
+related: [P02, P10, P22]
 status: done
 ---
 
@@ -77,4 +77,4 @@ status: done
 
 - [P02 マルチテナント分離](p02-multi-tenant-isolation.md) — 顧客向けで複数テナントが同居する場合に併用
 - [P10 コンテキスト・ファイアウォール](../identity/p10-context-firewall.md) — 複数ソースのACL継承付き集約
-- [P29 バックプレッシャ/優先度キュー](../latency/p29-backpressure-load-shedding.md) — 顧客向けのスパイク制御
+- [P22 非同期ジョブ＋負荷制御](../reliability/p22-async-job-callback.md) — 顧客向けのスパイク制御

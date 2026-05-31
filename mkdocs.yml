@@ -71,50 +71,39 @@ nav:
       - 統合:
           - P03 AIゲートウェイ: patterns/integration/p03-ai-gateway.md
           - P04 MCPゲートウェイ: patterns/integration/p04-mcp-gateway.md
-          - P05 インアプリ・コパイロット: patterns/integration/p05-in-app-copilot.md
-          - P06 エージェント・ハブ: patterns/integration/p06-agent-hub.md
+          - P06 体験トポロジー: patterns/integration/p06-agent-hub.md
           - P07 イベント駆動エージェント: patterns/integration/p07-event-driven-agent.md
       - アイデンティティ・認可:
           - P08 トークン交換(OBO): patterns/identity/p08-token-exchange-obo.md
           - P09 動的認可(PDP/PBAC): patterns/identity/p09-dynamic-authz-pdp.md
-          - P10 コンテキスト・ファイアウォール: patterns/identity/p10-context-firewall.md
+          - P10 コンテキスト・ファイアウォール＋データ主権: patterns/identity/p10-context-firewall.md
           - P11 ゼロトラスト/サンドボックス: patterns/identity/p11-zero-trust-sandbox.md
       - メモリ・コンテキスト:
-          - P12 階層化メモリ: patterns/memory/p12-layered-memory.md
-          - P13 コンテキスト・ブローカー: patterns/memory/p13-context-broker.md
+          - P12 階層化メモリ＋コンテキストブローカー: patterns/memory/p12-layered-memory.md
           - P14 セマンティックレイヤー: patterns/memory/p14-semantic-layer.md
       - オーケストレーション:
           - P15 シングル vs マルチ: patterns/orchestration/p15-single-vs-multi.md
           - P16 スーパーバイザ/ルーター: patterns/orchestration/p16-supervisor-router.md
-          - P17 決定論ワークフロー併用: patterns/orchestration/p17-deterministic-workflow-hybrid.md
+          - P17 決定論ワークフロー＋コンパイル型: patterns/orchestration/p17-deterministic-workflow-hybrid.md
           - P18 HITL承認ゲート: patterns/orchestration/p18-hitl-approval-gate.md
       - 確率→決定論:
-          - P19 コンパイル型エージェント: patterns/determinism/p19-compiled-agent.md
           - P20 二重トラック検証: patterns/determinism/p20-dual-track-verification.md
           - P21 信頼度ゲート棄権: patterns/determinism/p21-confidence-gated-abstention.md
       - 信頼性・運用:
-          - P22 非同期ジョブ＋コールバック: patterns/reliability/p22-async-job-callback.md
+          - P22 非同期ジョブ＋負荷制御: patterns/reliability/p22-async-job-callback.md
           - P23 サーキットブレーカ/フォールバック: patterns/reliability/p23-circuit-breaker-fallback.md
           - P24 セマンティックキャッシュ: patterns/reliability/p24-semantic-cache.md
-          - P25 オブザーバビリティ: patterns/reliability/p25-observability-tracing.md
+          - P25 オブザーバビリティ＋プロベナンス: patterns/reliability/p25-observability-tracing.md
           - P26 評価ゲート/カナリア: patterns/reliability/p26-eval-gate-canary.md
           - P27 コストガバナンス: patterns/reliability/p27-cost-governance.md
-      - レイテンシ:
-          - P28 投機的実行: patterns/latency/p28-speculative-execution.md
-          - P29 バックプレッシャ: patterns/latency/p29-backpressure-load-shedding.md
-          - P30 オフライン/オンライン分離: patterns/latency/p30-offline-online-split.md
       - 知識鮮度:
           - P31 CDC駆動の知識鮮度: patterns/freshness/p31-cdc-freshness.md
-          - P32 スキーマドリフト耐性: patterns/freshness/p32-schema-drift-resilience.md
       - 組織:
-          - P33 部署スコープ: patterns/organization/p33-department-scoped-agent.md
-          - P34 プロジェクトスコープ: patterns/organization/p34-project-scoped-agent.md
+          - P33 組織スコープ: patterns/organization/p33-department-scoped-agent.md
           - P35 エージェント・レジストリ: patterns/organization/p35-agent-registry.md
       - ガバナンス:
           - P36 デジタル従業員ライフサイクル: patterns/governance/p36-digital-employee-lifecycle.md
           - P37 プロンプト・サプライチェーン: patterns/governance/p37-prompt-supply-chain.md
       - 規制・改善:
-          - P38 データ主権: patterns/regulation/p38-data-sovereignty.md
-          - P39 意思決定プロベナンス: patterns/regulation/p39-decision-provenance.md
           - P40 フィードバックループ: patterns/regulation/p40-feedback-flywheel.md
   - 参照アーキテクチャ: reference-architecture.md

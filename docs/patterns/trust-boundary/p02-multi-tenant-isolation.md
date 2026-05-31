@@ -5,7 +5,7 @@ title: "P02 · MULTI-TENANT-ISOLATION — マルチテナント分離"
 category: 信頼境界
 audience: customer
 maturity: 基盤
-related: [P01, P24, P29]
+related: [P01, P24, P22]
 status: done
 ---
 
@@ -40,7 +40,7 @@ status: done
 - セマンティックキャッシュ（[P24](../reliability/p24-semantic-cache.md)）はテナント単位で名前空間を分離する
   （共有キャッシュは越境事故の典型的な温床）。
 - テナント別のレート制限・コストクォータを設け、「1顧客の暴走」が全体を巻き込まないようにする
-  （ノイジーネイバー対策、[P29](../latency/p29-backpressure-load-shedding.md) と連動）。
+  （ノイジーネイバー対策、[P22](../reliability/p22-async-job-callback.md) と連動）。
 
 ## 駆動変数とチューニング（程度）
 
@@ -66,4 +66,4 @@ status: done
 
 - [P01 信頼境界の二層分離](p01-trust-boundary-split.md)
 - [P24 セマンティックキャッシュ](../reliability/p24-semantic-cache.md)
-- [P29 バックプレッシャ/優先度キュー](../latency/p29-backpressure-load-shedding.md)
+- [P22 非同期ジョブ＋負荷制御](../reliability/p22-async-job-callback.md)

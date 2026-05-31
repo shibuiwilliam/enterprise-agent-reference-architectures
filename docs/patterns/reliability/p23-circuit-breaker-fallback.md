@@ -5,7 +5,7 @@ title: "P23 · CIRCUIT-BREAKER-FALLBACK — サーキットブレーカ＋モデ
 category: 信頼性/運用
 audience: both
 maturity: 標準
-related: [P03, P30]
+related: [P03, P22]
 status: done
 ---
 
@@ -56,4 +56,4 @@ status: done
 **カテゴリ**: 信頼性/運用 ／ **対象**: 両方 ／ **成熟度**: 標準
 
 - [P03 AIゲートウェイ](../integration/p03-ai-gateway.md) — ゲートウェイにサーキットブレーカを組み込む
-- [P30 オフライン・オンライン分離](../latency/p30-offline-online-split.md) — オンライン/オフライン分離との連携
+- [P22 非同期ジョブ＋負荷制御](../reliability/p22-async-job-callback.md) — オンライン/オフライン分離との連携
